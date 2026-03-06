@@ -123,3 +123,94 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+* {
+  box-sizing: border-box;
+  padding: 0px;
+  margin: 0px;
+  font-family: "inter", sans-serif;
+  scroll-behavior: smooth;
+}
+
+
+@theme {
+  /* Colors */
+  --color-primary: #15803d;
+  --color-primary-hover: #1e5230;
+  --color-btn: #186737;
+  --color-heading: #186737;
+
+  /* Spacing */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+
+  /* Font Size */
+  --font-size-xxs: 0.625rem;
+
+  /* Border Radius */
+  --radius-xl: 1.25rem;
+
+  /* Font Family */
+  /* --font-family-sans: "Inter", sans-serif;
+  --font-family-arabic: "Noto Sans Arabic", sans-serif; */
+}
+
+
+img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+
+.global-container {
+  @apply max-w-[1440px] mx-auto px-[50px]; 
+}
+
+/* Responsive Media Queries */
+/* Arshad Khan */
+@media only screen and (min-width: 1920px) {
+  .global-container {
+    @apply max-w-[1820px] mx-auto px-6;
+  }
+
+  .responsive-text {
+    @apply text-[17px]; 
+  }
+}
+
+@media only screen and (max-width: 1580px) {
+  .global-container {
+    @apply max-w-[1480px] mx-auto px-[40px];
+  }
+
+  .responsive-text {
+    @apply text-[14px]; 
+  }
+}
+
+@media only screen and (max-width: 1024px) {
+  .responsive-text {
+    @apply text-lg; 
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .global-container {
+    @apply max-w-[1440px] mx-auto px-[15px];
+  }
+
+  .responsive-text {
+    @apply text-base; 
+  }
+}
+
+@media only screen and (max-width: 340px) {
+  .global-container {
+    @apply px-4;
+  }
+
+  .responsive-text {
+    @apply text-sm; 
+  }
+}

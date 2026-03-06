@@ -1,0 +1,66 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "noData": "No data found"
+  },
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "categories": "Categories",
+    "brands": "Brands",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "My Profile",
+    "orders": "My Orders"
+  },
+  "home": {
+    "hero_title": "Best Hospitality Supplies",
+    "hero_subtitle": "For Hotels, Restaurants & Cafes",
+    "featured_products": "Featured Products",
+    "shop_now": "Shop Now"
+  },
+  "product": {
+    "add_to_cart": "Add to Cart",
+    "add_to_wishlist": "Add to Wishlist",
+    "in_stock": "In Stock",
+    "out_of_stock": "Out of Stock",
+    "price": "Price",
+    "quantity": "Quantity",
+    "description": "Description",
+    "reviews": "Reviews",
+    "related_products": "Related Products"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "checkout": "Proceed to Checkout",
+    "remove": "Remove"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "shipping": "Shipping Address",
+    "payment": "Payment Method",
+    "place_order": "Place Order"
+  },
+  "auth": {
+    "login_title": "Login to your account",
+    "register_title": "Create new account",
+    "email": "Email",
+    "password": "Password",
+    "forgot_password": "Forgot Password?",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?"
+  }
+}
