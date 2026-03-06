@@ -1,4 +1,4 @@
-# 🍽️ HorecaStore — Next.js 14 (App Router)
+# 🍽️ HorecaStore — Next.js 16 (App Router)
 
 > **B2B Hospitality Supply E-Commerce Platform**  
 > Serving **UAE 🇦🇪** and **USA 🇺🇸** from a single unified Next.js codebase.
@@ -38,7 +38,7 @@ Both regions share the **same Next.js codebase**, with region-specific logic han
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | State Management | Zustand / Redux Toolkit |
@@ -71,7 +71,7 @@ horeca-store/
 │
 ├── src/
 │   │
-│   ├── app/                                    # Next.js 14 App Router
+│   ├── app/                                    # Next.js 16 App Router
 │   │   │
 │   │   ├── (customer)/                        # Customer Section
 │   │   │   │
@@ -376,7 +376,7 @@ NEXT_PUBLIC_CURRENCY_SYMBOL=د.إ
 NEXT_PUBLIC_VAT_RATE=5
 NEXT_PUBLIC_GTM_ID=GTM-YYYYYYY
 NEXT_PUBLIC_PHONE=+971 4 XXX XXXX
-NEXT_PUBLIC_PHONE_TEL=tel:+97140000000
+NEXT_PUBLIC_PHONE_TEL=tel:+97160000000
 ```
 
 ### 2. Region Config Helper

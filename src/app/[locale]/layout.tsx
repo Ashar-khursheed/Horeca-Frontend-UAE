@@ -1,39 +1,29 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import GlobalLayout from "@/layouts/global-layout";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
-import { routing } from "@/i18n/routing";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { routing } from '@/i18n/routing';
 
-
-export const metadata: Metadata = {
-  title: "HorecaStore",
-  description: "Best Hospitality Supplies",
-};
-
-// ✅ Static params for SSG
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
-
-export default async function RootLayout({
+export default async function LocaleLayout({
   children,
   params,
-}: Readonly<{
+}: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
-}>) {
+}) {
   const { locale } = await params;
-  const messages = await getMessages();
 
-  // ✅ Arabic = RTL, English = LTR
-  const dir = locale === "ar" ? "rtl" : "ltr";
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
+  const messages = await getMessages();
+  const isRTL = locale === 'ar';
 
   return (
-    <html lang={locale} dir={dir}>
-      <body >
-        <NextIntlClientProvider messages={messages}>
-          <GlobalLayout>{children}</GlobalLayout>
+    <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'}>
+      <body>
+        <NextIntlClientProvider locale={locale} messages={messages}> {/* ← yeh */}
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>
