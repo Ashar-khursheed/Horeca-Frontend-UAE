@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header
     //   dir={locale === "ar" ? "rtl" : "ltr"}
-      className="w-full sticky top-0 z-50 "
+      className="w-full stickys top-0 z-50 "
     >
         <TopBar  />
          <NavigationStatic

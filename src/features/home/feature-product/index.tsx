@@ -718,7 +718,7 @@ export const FeaturedProducts = () => {
         </div>
 
         {/* TABLET + DESKTOP — grid */}
-        <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5  3xl:grid-cols-6 gap-3">
           {products.map((product) => (
             <ProductCard
               key={product.id}
