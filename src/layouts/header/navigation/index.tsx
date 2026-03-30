@@ -6064,7 +6064,7 @@ const HeaderMenu = () => {
           </div>
 
           {/* ── RIGHT: phone · financing · sale ── */}
-         <div> <div className="flex gap-3 items-center justify-end text-white font-normal">
+         <div> <div className="flex gap-3 items-center justify-end text-white font-normal hidden">
             {/* Phone */}
             <a
               href="tel:+18664467322"

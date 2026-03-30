@@ -250,9 +250,12 @@
 
 "use client";
 import SEOMainContent from "@/seo/seo-main-content";
-import ShopByCategories from "@/components/category-card";
 import HeroBanner from "./hero-banner";
 import FeaturedProducts from "./feature-product";
+import FeaturedBrands from "./features-brand";
+import { BlogsCard } from "@/components/blog-card";
+import NewsletterSection from "@/components/newsletter";
+import ShopByCategories from "./shop-by-category";
 
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -264,6 +267,16 @@ export const Home = () => {
       <SEOMainContent/>
       <ShopByCategories/>
       <FeaturedProducts/>
+      <div className="w-full py-10">
+        <div className="global-container">
+        <div className="grid grid-cols-1">
+          <img src="https://www.thehorecastore.com/images/Banners/Food%20Truck/Hero%20Banner.webp" alt="" className="rounded-sm" />
+        </div>
+        </div>
+      </div>
+      <FeaturedBrands/>
+      <BlogsCard showAll={false} />
+      {/* <NewsletterSection/> */}
     </>
   );
 };

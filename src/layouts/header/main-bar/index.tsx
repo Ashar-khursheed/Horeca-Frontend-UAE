@@ -178,6 +178,7 @@ import {
   SheetTitle,
   SheetClose,
 } from "@/components/ui/sheet";
+import { CATEGORIES, NAV_LINKS } from "@/data";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Category {
@@ -189,137 +190,9 @@ interface Category {
 }
 
 // ── Dummy nav links ────────────────────────────────────────────────────────────
-const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
+
 
 // ── Categories (same data as HeaderMenu) ──────────────────────────────────────
-const CATEGORIES: Category[] = [
-  {
-    id: 1,
-    name: "Restaurant Equipment",
-    slug: "restaurant-equipment",
-    children: [
-      {
-        id: 11,
-        name: "Commercial Coffee Machines",
-        slug: "commercial-coffee-machines",
-        children: [
-          {
-            id: 111,
-            name: "Commercial Espresso Machine",
-            slug: "commercial-espresso-machine",
-          },
-          { id: 112, name: "Espresso Grinder", slug: "espresso-grinder" },
-          { id: 113, name: "Coffee Bean Grinder", slug: "coffee-bean-grinder" },
-          { id: 114, name: "Coffee Urn", slug: "coffee-urn" },
-        ],
-      },
-      {
-        id: 12,
-        name: "Beverage Equipment",
-        slug: "beverage-equipment",
-        children: [
-          { id: 121, name: "Juice Dispenser", slug: "juice-dispenser" },
-          { id: 122, name: "Soda Fountain", slug: "soda-fountain" },
-          { id: 123, name: "Blender", slug: "blender" },
-        ],
-      },
-      {
-        id: 13,
-        name: "Commercial Shelving",
-        slug: "commercial-shelving",
-        children: [],
-      },
-      {
-        id: 14,
-        name: "Commercial Cooking Equipment",
-        slug: "commercial-cooking",
-        children: [
-          { id: 141, name: "Commercial Range", slug: "commercial-range" },
-          { id: 142, name: "Convection Oven", slug: "convection-oven" },
-          { id: 143, name: "Deep Fryer", slug: "deep-fryer" },
-        ],
-      },
-      { id: 15, name: "Food Prep Equipment", slug: "food-prep", children: [] },
-      {
-        id: 16,
-        name: "Commercial Oven",
-        slug: "commercial-oven",
-        children: [],
-      },
-      {
-        id: 17,
-        name: "Food Display & Merchandiser",
-        slug: "food-display",
-        children: [],
-      },
-      {
-        id: 18,
-        name: "Commercial Dishwasher",
-        slug: "commercial-dishwasher",
-        children: [],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Refrigeration",
-    slug: "refrigeration",
-    children: [
-      {
-        id: 21,
-        name: "Reach-In Refrigerators",
-        slug: "reach-in-refrigerators",
-        children: [
-          { id: 211, name: "Single Door Fridge", slug: "single-door-fridge" },
-          { id: 212, name: "Double Door Fridge", slug: "double-door-fridge" },
-        ],
-      },
-      {
-        id: 22,
-        name: "Walk-In Coolers",
-        slug: "walk-in-coolers",
-        children: [],
-      },
-      {
-        id: 23,
-        name: "Undercounter Refrigerators",
-        slug: "undercounter-refrigerators",
-        children: [],
-      },
-      {
-        id: 24,
-        name: "Ice Cream Freezers",
-        slug: "ice-cream-freezers",
-        children: [],
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Tableware",
-    slug: "tableware",
-    children: [
-      {
-        id: 31,
-        name: "Dinnerware",
-        slug: "dinnerware",
-        children: [
-          { id: 311, name: "Dinner Plates", slug: "dinner-plates" },
-          { id: 312, name: "Side Plates", slug: "side-plates" },
-        ],
-      },
-      { id: 32, name: "Glassware", slug: "glassware", children: [] },
-      { id: 33, name: "Cutlery", slug: "cutlery", children: [] },
-    ],
-  },
-  { id: 4, name: "Disposables", slug: "disposables", children: [] },
-  { id: 5, name: "Hotel Supplies", slug: "hotel-supplies", children: [] },
-  { id: 6, name: "Shop By Brands", slug: "shop-by-brands", children: [] },
-];
 
 // ══════════════════════════════════════════════════════════════════════════════
 // MobileNavItem — recursive accordion row (image-style)
@@ -482,7 +355,7 @@ export default function NavigationStatic() {
                 onMouseEnter={handleProfileEnter}
                 onMouseLeave={handleProfileLeave}
               >
-                <button className="hidden sm:flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors group">
+                <button className="hidden lg:flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors group">
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#186737]/10 transition-colors">
                     <User
                       size={16}

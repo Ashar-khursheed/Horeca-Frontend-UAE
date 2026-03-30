@@ -4,16 +4,15 @@ import LangSwitcher from "@/components/LangSwitcher";
 
 const NAV_LINKS = [
   { label: "Track your order", href: "/search-order" },
+  { label: "Financing", href: "/financing" },
   { label: "Contact Us", href: "/pages/contact-us" },
   { label: "Terms & Conditions", href: "/pages/return-policy" },
-  
 ];
 
 const TopBar = () => {
   return (
     <div className="bg-gray-50  hidden lg:block">
       <div className="global-container flex items-center justify-between py-1.5">
-        
         {/* Left: Tagline */}
         <p className="text-[14px] text-gray-500 tracking-wide">
           Discover Exceptional Products and Unmatched Service.
@@ -50,7 +49,6 @@ const TopBar = () => {
             <LangSwitcher />
           </li>
         </ul>
-
       </div>
     </div>
   );

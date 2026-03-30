@@ -8,6 +8,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
+import Footer from "../footer";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
       {/* <Provider store={store}> */}
       <Header />
         {children}
+        <Footer/>
       {/* </Provider> */}
     </>
   );
