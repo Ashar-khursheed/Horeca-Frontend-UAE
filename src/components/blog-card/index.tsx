@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  Clock,
   Eye,
   Heart,
   Share2,
-  Clock,
   TrendingUp,
-  ChevronRight,
-  Sparkles,
-  Calendar,
-  User,
-  BookOpen,
+  User
 } from "lucide-react";
+import Link from "next/link";
+import React, { useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Blog {
@@ -216,13 +215,13 @@ const cardVariants = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as number[] },
+    transition: { duration: 0.5, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] },
   },
 };
 
 const headerVariants = {
   hidden: { opacity: 0, x: -30 },
-  show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] } },
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -271,6 +270,7 @@ const BlogCard: React.FC<{ item: Blog; index: number }> = ({ item, index }) => {
         boxShadow:
           "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05)",
       }}
+      
     >
       {/* Hover glow border */}
       <motion.div

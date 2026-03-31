@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, MoveLeft, MoveRight, Phone } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-export interface Category {
+
+// ── Dummy Data ─────────────────────────────────────────────────────────────────
+interface Category {
   id: number;
   name: string;
   slug: string;
-  image?: string;
-  children?: Category[];
+  parent_id: number;
+  productCount: number;
+  image: string;
+  order: number;
+  children: Category[];
+  last_children: Category[];
 }
 
-// ── Dummy Data ─────────────────────────────────────────────────────────────────
 const CATEGORIES: Category[] =[
     {
         "id": 1,
@@ -4304,7 +4309,7 @@ const CATEGORIES: Category[] =[
             {
                 "id": 1078,
                 "name": "Lockers",
-                "slug": null,
+                "slug": "",
                 "parent_id": 96,
                 "productCount": 1,
                 "image": "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/bGlHdEsmgDxUitSbVHIh10dI6IBsFMFR0MY9Qa28.png",
