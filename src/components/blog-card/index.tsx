@@ -474,7 +474,7 @@ export const BlogsCard: React.FC<{ showAll?: boolean }> = ({
   const blogs = showAll ? DUMMY_BLOGS : DUMMY_BLOGS.slice(0, 6);
 
   return (
-    <section className="my-16 px-4 sm:px-6 lg:px-8 global-container">
+    <section className="my-16 px-4 sm:px-6 lg:px-8 global-container hidden md:block">
       {/* Header */}
       <motion.div
         variants={headerVariants}

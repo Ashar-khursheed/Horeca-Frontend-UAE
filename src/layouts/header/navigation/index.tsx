@@ -6011,13 +6011,13 @@ const HeaderMenu = () => {
   return (
     <div
       ref={menuRef}
-      className="relative w-full bg-green-700 py-3 border-b border-green-800 hidden lg:block"
+      className="relative w-full bg-green-700 py-3 border-b border-green-800 hidden xl:block"
     >
       <div className="global-container">
         <div className="grid grid-cols-[75%_25%]">
 
           {/* ── LEFT: scrollable category links ── */}
-          <div className="relative flexw items-center">
+          <div className="relative flex items-center">
             {/* {showLeftArrow && (
               <button
                 onClick={doScrollLeft}
@@ -6064,24 +6064,24 @@ const HeaderMenu = () => {
           </div>
 
           {/* ── RIGHT: phone · financing · sale ── */}
-         <div> <div className="flex gap-3 items-center justify-end text-white font-normal hidden">
+         <div> <div className="flex gap-3 items-center justify-end text-white font-normal ">
             {/* Phone */}
-            <a
+            {/* <a
               href="tel:+18664467322"
               className="hover:font-semibold transition-colors duration-200 2xl:text-[15px] md:text-[13px] text-xs flex gap-1 items-center test-phone"
               style={{ textDecoration: "none" }}
             >
               <Phone className="w-4 h-4" />
            +1 (866) 446-7322
-            </a>
+            </a> */}
 
             {/* Financing */}
-            <button
-              className="hover:font-semibold transition-colors duration-200 2xl:text-[15px] md:text-[14px] text-xs bg-transparent border-none text-white cursor-pointer"
-              onClick={() => alert("Get a Financing Quote")}
-            >
-              Financing
-            </button>
+         <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1.5  font-extrabold text-white  tracking-wider">
+  <span className="relative z-10">Mega Sale</span>
+
+  {/* animated border ring */}
+  <span className="confetti-ring"></span>
+</button>
 
             {/* Mega Sale */}
             {/* <Link href="/sale" style={{ textDecoration: "none" }}>

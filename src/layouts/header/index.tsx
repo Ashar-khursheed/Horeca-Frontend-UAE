@@ -64,6 +64,7 @@ import { HeaderProps } from "@/utils/types";
 import NavigationStatic from "./main-bar";
 import DropdownPanel from "./navigation";
 import TopBar from "./top-bar";
+import BottomNav from "@/components/bottom-nav";
 
 
 
@@ -87,6 +88,7 @@ const Header: React.FC<HeaderProps> = ({
          <NavigationStatic
       />
       <DropdownPanel/>
+      <BottomNav/>
     </header>
   );
 };

@@ -1529,3 +1529,276 @@ const CATEGORIESMAIN = [
     "productCount": 20,
   },
 ];
+
+
+
+
+
+
+export const categories = [
+  {
+    name: "Commercial Cooking Equipment",
+    slug: "commercial-cooking-equipment",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🔥",
+    subCategories: [
+      { name: "Commercial Range", slug: "commercial-range" },
+      { name: "Commercial Grill & Griddle", slug: "commercial-grill-griddle" },
+      { name: "Commercial Fryer", slug: "commercial-fryer" },
+      { name: "Salamander Broiler", slug: "salamander-broiler" },
+      { name: "Commercial Toaster", slug: "commercial-toaster" },
+      { name: "Rice Cookers / Warmers", slug: "rice-cookers-warmers" },
+      { name: "Waffle Maker", slug: "waffle-maker" },
+      { name: "Exhaust Hood", slug: "exhaust-hood" },
+    ],
+  },
+  {
+    name: "Food Prep Equipment",
+    slug: "food-prep-equipment",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🍽️",
+    subCategories: [
+      {
+        name: "Commercial Food Processors",
+        slug: "commercial-food-processors",
+      },
+      { name: "Commercial Blender", slug: "commercial-blender" },
+      {
+        name: "Dough Processing Equipment",
+        slug: "dough-processing-equipment",
+      },
+      { name: "Meat Processing Equipment", slug: "meat-processing-equipment" },
+      { name: "Planetary Mixer", slug: "planetary-mixer" },
+      { name: "Commercial Scale", slug: "commercial-scale" },
+      {
+        name: "Food Preparation Parts & Accessories",
+        slug: "food-prep-parts-accessories",
+      },
+    ],
+  },
+  {
+    name: "Commercial Work Tables",
+    slug: "commercial-work-tables",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🪑",
+    subCategories: [
+      {
+        name: "Stainless Steel Work Tables with Undershelf",
+        slug: "stainless-steel-work-tables",
+      },
+      { name: "Sink Table", slug: "sink-table" },
+    ],
+  },
+  {
+    name: "Commercial Coffee Machines",
+    slug: "commercial-coffee-machines",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "☕",
+    subCategories: [
+      {
+        name: "Commercial Espresso Machine",
+        slug: "commercial-espresso-machine",
+      },
+      { name: "Espresso Grinder", slug: "espresso-grinder" },
+      { name: "Coffee Bean Grinder", slug: "coffee-bean-grinder" },
+      { name: "Coffee Urn", slug: "coffee-urn" },
+    ],
+  },
+  {
+    name: "Commercial Oven",
+    slug: "commercial-oven",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🔲",
+    subCategories: [
+      { name: "Commercial Pizza Oven", slug: "commercial-pizza-oven" },
+      { name: "Deck Oven", slug: "deck-oven" },
+      {
+        name: "Commercial Convection Oven",
+        slug: "commercial-convection-oven",
+      },
+      { name: "High Speed Oven", slug: "high-speed-oven" },
+      {
+        name: "Countertop Convection Oven",
+        slug: "countertop-convection-oven",
+      },
+      { name: "Oven Parts & Accessories", slug: "oven-parts-accessories" },
+      { name: "Commercial Microwave Oven", slug: "commercial-microwave-oven" },
+      { name: "Tandoor Oven", slug: "tandoor-oven" },
+      { name: "Conveyor Oven", slug: "conveyor-oven" },
+    ],
+  },
+  {
+    name: "Beverage Equipment",
+    slug: "beverage-equipment",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🥤",
+    subCategories: [
+      { name: "Beverage Equipment Parts", slug: "beverage-equipment-parts" },
+      { name: "Granita / Slushy Machine", slug: "granita-slushy-machine" },
+      {
+        name: "Refrigerated Beverage Dispenser",
+        slug: "refrigerated-beverage-dispenser",
+      },
+      { name: "Citrus Juicer", slug: "citrus-juicer" },
+      { name: "Juice Extractor", slug: "juice-extractor" },
+      { name: "Milkshake Mixer", slug: "milkshake-mixer" },
+      { name: "Citrus Squeezer", slug: "citrus-squeezer" },
+      { name: "Frozen Drink Machine", slug: "frozen-drink-machine" },
+      { name: "Juice Dispenser", slug: "juice-dispenser" },
+    ],
+  },
+  {
+    name: "Food Display Case & Merchandiser",
+    slug: "food-display-case-merchandiser",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🍦",
+    subCategories: [
+      { name: "Snow Cone Equipment", slug: "snow-cone-equipment" },
+      { name: "Candy Machine", slug: "candy-machine" },
+      {
+        name: "Commercial Popcorn Equipment",
+        slug: "commercial-popcorn-equipment",
+      },
+      { name: "Food Display Case", slug: "food-display-case" },
+      {
+        name: "Food Warmers & Holding Equipment",
+        slug: "food-warmers-holding-equipment",
+      },
+    ],
+  },
+  {
+    name: "Commercial Dishwasher",
+    slug: "commercial-dishwasher",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🚿",
+    subCategories: [
+      {
+        name: "Commercial Pot & Pan Washer",
+        slug: "commercial-pot-pan-washer",
+      },
+      {
+        name: "Commercial Undercounter Dishwasher",
+        slug: "commercial-undercounter-dishwasher",
+      },
+      { name: "Commercial Glasswasher", slug: "commercial-glasswasher" },
+      { name: "Conveyor Dishwasher", slug: "conveyor-dishwasher" },
+      { name: "Undercounter Dishwasher", slug: "undercounter-dishwasher" },
+      { name: "Dish Tables", slug: "dish-tables" },
+      { name: "Dish Cabinet", slug: "dish-cabinet" },
+    ],
+  },
+  {
+    name: "Commercial Sink",
+    slug: "commercial-sink",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "🪣",
+    subCategories: [
+      { name: "Portable Sink", slug: "portable-sink" },
+      { name: "Hand Wash Sink", slug: "hand-wash-sink" },
+      { name: "2 Compartment Sink", slug: "2-compartment-sink" },
+      { name: "3 Compartment Sink", slug: "3-compartment-sink" },
+      {
+        name: "Faucet, Sink & Drain Accessories",
+        slug: "faucet-sink-drain-accessories",
+      },
+    ],
+  },
+  {
+    name: "Commercial Shelving",
+    slug: "commercial-shelving",
+    image:
+      "https:\/\/d1p9kdrbe10xzz.cloudfront.net\/categories\/categories\/cooking-equipment-1.png",
+    icon: "📦",
+    subCategories: [
+      { name: "Steel Pan Rack", slug: "steel-pan-rack" },
+      { name: "Wire Shelving", slug: "wire-shelving" },
+      { name: "Green Epoxy Shelving", slug: "green-epoxy-shelving" },
+      { name: "Chrome Wire Shelving", slug: "chrome-wire-shelving" },
+      { name: "Steel Mounted Shelving", slug: "steel-mounted-shelving" },
+    ],
+  },
+];
+
+export const ItemsAccordion = [
+  {
+    value: "item-1",
+    trigger: "How do I reset my password?",
+    content:
+      "Click on 'Forgot Password' on the login page, enter your email address, and we'll send you a link to reset your password. The link will expire in 24 hours.",
+  },
+  {
+    value: "item-2",
+    trigger: "Can I change my subscription plan?",
+    content:
+      "Yes, you can upgrade or downgrade your plan at any time from your account settings. Changes will be reflected in your next billing cycle.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+  {
+    value: "item-3",
+    trigger: "What payment methods do you accept?",
+    content:
+      "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+  },
+];

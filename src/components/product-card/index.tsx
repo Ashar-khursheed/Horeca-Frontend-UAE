@@ -1,15 +1,15 @@
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
-import Link from "next/link";
 import {
+  CheckCircle,
   Heart,
   Minus,
   Plus,
   ShoppingCart,
   Star,
   Truck,
-  CheckCircle,
 } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface ApiProduct {
@@ -345,7 +345,7 @@ export const ProductCard = ({
             )}
           </div>
         ) : (
-          <span className="text-[13px] text-slate-900 italic py-1.5">No reviews yet</span>
+          <span className="text-[13px] text-slate-900 italic py-1.5 mb-5 ">   </span>
         )}
 
         {/* Shipping row */}

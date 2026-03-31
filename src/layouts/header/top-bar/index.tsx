@@ -11,7 +11,7 @@ const NAV_LINKS = [
 
 const TopBar = () => {
   return (
-    <div className="bg-gray-50  hidden lg:block">
+    <div className="bg-gray-50  hidden xl:block">
       <div className="global-container flex items-center justify-between py-1.5">
         {/* Left: Tagline */}
         <p className="text-[14px] text-gray-500 tracking-wide">

@@ -656,28 +656,28 @@ export const Footer = () => {
     <footer className="bg-white border-t border-gray-100">
 
       {/* ── Top CTA Banner ── */}
-      <div className="header-bg">
+      <div className="bg-[#f3f4f8]">
         <div className="global-container py-8 sm:py-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="text-center sm:text-left">
-              <p className="text-white/70 text-sm font-medium tracking-wide uppercase mb-1">
+              <p className="text-[#7e859b] text-sm font-medium tracking-wide uppercase mb-1">
                 Need Help Getting Started?
               </p>
-              <h2 className="text-white text-xl sm:text-2xl font-bold">
+              <h2 className="text-black text-xl sm:text-2xl font-bold">
                 We're Always Here To Help
               </h2>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
               <a
                 href="tel:+18664467322"
-                className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-xl transition-all duration-200"
+                className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-black px-5 py-3 rounded-xl transition-all duration-200"
               >
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <Phone className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/60 text-[10px] font-medium uppercase tracking-wide">Call Us</p>
-                  <p className="text-white font-semibold text-sm">+1 (866) 446-7322</p>
+                  <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">Call Us</p>
+                  <p className="text-black font-semibold text-base">+1 (866) 446-7322</p>
                 </div>
               </a>
               <a
@@ -688,8 +688,8 @@ export const Footer = () => {
                   <Mail className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/60 text-[10px] font-medium uppercase tracking-wide">Email Support</p>
-                  <p className="text-white font-semibold text-sm">support@horecastore.com</p>
+                  <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">Email Support</p>
+                  <p className="text-black font-semibold text-base">support@horecastore.com</p>
                 </div>
               </a>
             </div>
