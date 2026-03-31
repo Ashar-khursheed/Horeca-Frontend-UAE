@@ -1,0 +1,2 @@
+export const generateDynamicCSSProductCard = "hidden sm:grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5  2xl:grid-cols-6 3xl:grid-cols-6 gap-3";
+export const generateDynamicCSSCategoryCard = "hidden sm:grid sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 grid-rows-2 overflow-hidden lg:gap-10 md:gap-6 gap-3";

@@ -44,6 +44,8 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+    --breakpoint-3xl: 1920px;
 }
 
 :root {
@@ -114,6 +116,8 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+/* custom.css */
+
 
 @layer base {
   * {
@@ -124,15 +128,23 @@
   }
 }
 
-
-* {
-  box-sizing: border-box;
-  padding: 0px;
-  margin: 0px;
-  font-family: "inter", sans-serif;
-  scroll-behavior: smooth;
+body{
+  font-family: var(--font-inter, "Inter", sans-serif);
 }
+@layer base {
+  * {
+    box-sizing: border-box;
+    padding: 0px;
+    margin: 0px;
+   /* font-family: "inter", sans-serif; */
+    scroll-behavior: smooth;
+  }
 
+  img {
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+}
 
 @theme {
   /* Colors */
@@ -156,15 +168,178 @@
   --font-family-arabic: "Noto Sans Arabic", sans-serif; */
 }
 
-
 img {
   user-select: none;
   -webkit-user-drag: none;
 }
 
+.heading-font-size {
+  font-size: 1.5rem;
+}
+.sub-heading-font-size {
+  font-size: 1.2rem;
+}
 
+
+@keyframes slideDownFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes itemReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.dropdown-enter {
+  animation: slideDownFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.menu-item {
+  animation: itemReveal 0.25s ease-out forwards;
+  opacity: 0;
+}
+.chevron-icon {
+  transition: transform 0.2s ease;
+}
+.menu-row:hover .chevron-icon {
+  transform: translateX(3px);
+}
+
+.profile-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.profile-scroll::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 10px;
+}
+.profile-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e0, #94a3b8);
+  border-radius: 10px;
+}
+.profile-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+.profile-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f8fafc;
+  scroll-behavior: smooth;
+}
+
+.normal-row {
+  border-left: 3px solid transparent;
+}
+.header-bg {
+  background: linear-gradient(135deg, #186737 0%, #22a34e 50%, #186737 100%);
+}
+.nav-shadow {
+  box-shadow:
+    0 1px 0 0 #e5e7eb,
+    0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+
+
+/* ══════════════════════════════════════════════════════
+   SWIPER GLOBAL STYLES — HorecaStore
+   ══════════════════════════════════════════════════════ */
+
+/* ── Base imports (yeh globals.css ke top pe hone chahiye) ── */
+
+
+/* ── Pagination bullets ── */
+.swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+.swiper-pagination-bullet-active {
+  background: #fff;
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Dark pagination (white bg sliders ke liye) */
+.swiper-pagination-dark .swiper-pagination-bullet {
+  background: rgba(24, 103, 55, 0.3);
+}
+.swiper-pagination-dark .swiper-pagination-bullet-active {
+  background: #186737;
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* ── Nav arrows — shared base ── */
+.swiper-button-prev,
+.swiper-button-next {
+  width: 36px !important;
+  height: 36px !important;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
+}
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  transform: scale(1.08);
+}
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 13px !important;
+  font-weight: 900;
+  color: #186737;
+}
+.swiper-button-prev { left: 12px !important; }
+.swiper-button-next { right: 12px !important; }
+
+/* ── Slide image zoom animation ── */
+@keyframes swiperZoom {
+  from { transform: scale(1.05); }
+  to   { transform: scale(1); }
+}
+.swiper-slide-active .swiper-zoom-img {
+  animation: swiperZoom 6s ease-out forwards;
+}
+
+/* ── Fade effect ── */
+.swiper-fade .swiper-slide {
+  pointer-events: none;
+}
+.swiper-fade .swiper-slide-active {
+  pointer-events: auto;
+}
+
+/* ── Side banner hover (reusable) ── */
+.swiper-side-banner {
+  overflow: hidden;
+  border-radius: 8px;
+}
+.swiper-side-banner img {
+  transition: transform 0.4s ease;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.swiper-side-banner:hover img {
+  transform: scale(1.04);
+}
+
+.custom-padding{}
 .global-container {
-  @apply max-w-[1440px] mx-auto px-[50px]; 
+  @apply max-w-[1720px] mx-auto px-[50px];
 }
 
 /* Responsive Media Queries */
@@ -175,7 +350,10 @@ img {
   }
 
   .responsive-text {
-    @apply text-[17px]; 
+    @apply text-[17px];
+  }
+  .custom-padding{
+   padding: 40px 15px;
   }
 }
 
@@ -185,13 +363,16 @@ img {
   }
 
   .responsive-text {
-    @apply text-[14px]; 
+    @apply text-[14px];
+  }
+ .custom-padding{
+   padding: 40px 15px;
   }
 }
 
 @media only screen and (max-width: 1024px) {
   .responsive-text {
-    @apply text-lg; 
+    @apply text-lg;
   }
 }
 
@@ -201,8 +382,14 @@ img {
   }
 
   .responsive-text {
-    @apply text-base; 
+    @apply text-base;
   }
+  .heading-font-size {
+  font-size: 1.1rem;
+}
+.sub-heading-font-size {
+  font-size: 1rem;
+}
 }
 
 @media only screen and (max-width: 340px) {
@@ -211,6 +398,127 @@ img {
   }
 
   .responsive-text {
-    @apply text-sm; 
+    @apply text-sm;
+  }
+  .heading-font-size {
+  font-size: 1.1rem;
+}
+.sub-heading-font-size {
+  font-size: 1rem;
+}
+}
+
+/* #devtools-indicator{
+  display: none !important;
+} */
+
+
+
+
+
+
+
+.mega-sale-btn {
+  background: linear-gradient(145deg, #ff3b0a, #ff0000);
+  border-radius: 10px;
+  clip-path: polygon(
+    0% 0%,
+    85% 0%,
+    100% 50%,
+    85% 100%,
+    0% 100%
+  );
+  box-shadow:
+    0 8px 20px rgba(255, 59, 10, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.35);
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+/* shiny sweep */
+.mega-sale-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255,255,255,0.6),
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  animation: saleShine 3s infinite;
+}
+
+/* hover effect */
+.mega-sale-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 14px 30px rgba(255, 0, 0, 0.6),
+    0 0 25px rgba(255, 0, 0, 0.4);
+}
+
+/* animation */
+@keyframes saleShine {
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.mega-sale-pill {
+  position: relative;
+  background: linear-gradient(145deg, #ff3b0a, #ff0000);
+  border-radius: 7px; /* 🔥 perfect round */
+  overflow: hidden;
+  z-index: 1;
+
+  box-shadow:
+    0 10px 25px rgba(255, 0, 0, 0.45),
+    inset 0 2px 4px rgba(255, 255, 255, 0.35);
+
+  transition: all 0.25s ease;
+}
+
+/* hover lift */
+.mega-sale-pill:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 16px 35px rgba(255, 0, 0, 0.6),
+    0 0 25px rgba(255, 0, 0, 0.45);
+}
+
+/* 🌈 animated rounded border */
+.confetti-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    #ff0,
+    #ff3b0a,
+    #00e5ff,
+    #ff00c8,
+    #22c55e,
+    #ff0
+  );
+  z-index: 0;
+  filter: blur(6px);
+  animation: ringSpin 4s linear infinite;
+}
+
+/* inner mask */
+.mega-sale-pill::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background: linear-gradient(145deg, #ff3b0a, #ff0000);
+  z-index: 0;
+}
+
+/* spin */
+@keyframes ringSpin {
+  to {
+    transform: rotate(360deg);
   }
 }

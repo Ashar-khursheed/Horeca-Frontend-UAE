@@ -1,14 +1,12 @@
 import { useTranslations } from 'next-intl';
 import LangSwitcher from '@/components/LangSwitcher';
+import HomePage from '@/features/home';
 
-export default function HomePage() {
-  const t = useTranslations('home');
+export default function Page() {
 
   return (
     <main>
-      <h1>{t('title')}</h1>
-      <p>{t('subtitle')}</p>
-      <LangSwitcher />
+      <HomePage />
     </main>
   );
 }
