@@ -61,17 +61,33 @@
 //   ],
 // };
 
-import createMiddleware from "next-intl/middleware";
-import { NextRequest } from "next/server";
+// import createMiddleware from "next-intl/middleware";
+// import { NextRequest } from "next/server";
 
-const intlMiddleware = createMiddleware({
-  locales: ["en", "ar"],
-  defaultLocale: "en",
-  localePrefix: "never", // Koi bhi /en/ ya /ar/ prefix nahi
-});
+// const intlMiddleware = createMiddleware({
+//   locales: ["en", "ar"],
+//   defaultLocale: "en",
+//   localePrefix: "never", // Koi bhi /en/ ya /ar/ prefix nahi
+// });
+
+// export default function middleware(request: NextRequest) {
+//   return intlMiddleware(request);
+// }
+
+// export const config = {
+//   matcher: [
+//     "/((?!api|_next|_vercel|.*\\..*).*)",
+//   ],
+// };
+
+
+
+
+
+import { NextRequest, NextResponse } from "next/server";
 
 export default function middleware(request: NextRequest) {
-  return intlMiddleware(request);
+  return NextResponse.next(); // Kuch mat karo, bas pass karo
 }
 
 export const config = {
