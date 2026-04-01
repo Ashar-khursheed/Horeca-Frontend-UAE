@@ -84,14 +84,23 @@
 
 
 
-import { NextRequest, NextResponse } from "next/server";
+// import { NextRequest, NextResponse } from "next/server";
 
-export default function middleware(request: NextRequest) {
-  return NextResponse.next(); // Kuch mat karo, bas pass karo
-}
+// export default function middleware(request: NextRequest) {
+//   return NextResponse.next(); // Kuch mat karo, bas pass karo
+// }
+
+// export const config = {
+//   matcher: [
+//     "/((?!api|_next|_vercel|.*\\..*).*)",
+//   ],
+// };
+
+import { routing } from '@/i18n/routing';
+import createMiddleware from 'next-intl/middleware';
+
+export default createMiddleware(routing);
 
 export const config = {
-  matcher: [
-    "/((?!api|_next|_vercel|.*\\..*).*)",
-  ],
+  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
 };
