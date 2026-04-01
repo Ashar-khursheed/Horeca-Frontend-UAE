@@ -96,10 +96,11 @@
 //   ],
 // };
 
-import { routing } from '@/i18n/routing';
-import createMiddleware from 'next-intl/middleware';
+import { NextRequest, NextResponse } from 'next/server';
 
-export default createMiddleware(routing);
+export default function middleware(_request: NextRequest) {
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
