@@ -1,7 +1,7 @@
 "use client";
 
+import { CheckCircle } from "lucide-react";
 import React, { useState } from "react";
-import { CheckCircle, Lock } from "lucide-react";
 
 export const NewsletterSection: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -44,7 +44,7 @@ export const NewsletterSection: React.FC = () => {
 
         {/* Form / Success */}
         {status === "success" ? (
-          <div className="flex items-center gap-3 max-w-md mx-auto bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4">
+          <div className="flex items-center gap-3 max-w-md mx-auto bg-emerald-50 border border-emerald-200 rounded-[7px] px-5 py-4">
             <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0">
               <CheckCircle className="w-4 h-4 text-white" strokeWidth={3} />
             </div>
@@ -57,7 +57,7 @@ export const NewsletterSection: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-            <div className="flex rounded-xl overflow-hidden border-[1.5px] border-emerald-300 bg-white shadow-md shadow-emerald-100 mb-3">
+            <div className="flex rounded-[7px] overflow-hidden border-[1.5px] border-emerald-300 bg-white shadow-md shadow-emerald-100 mb-3">
               <input
                 type="email"
                 value={email}

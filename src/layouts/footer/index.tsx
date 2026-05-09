@@ -177,7 +177,7 @@
 //             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
 //               <a
 //                 href="tel:+18664467322"
-//                 className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-xl transition-all duration-200 group"
+//                 className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-[7px] transition-all duration-200 group"
 //               >
 //                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
 //                   <Phone className="w-4 h-4 text-white" />
@@ -191,7 +191,7 @@
 //               </a>
 //               <a
 //                 href="mailto:support@horecastore.com"
-//                 className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-xl transition-all duration-200"
+//                 className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-[7px] transition-all duration-200"
 //               >
 //                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
 //                   <Mail className="w-4 h-4 text-white" />
@@ -313,7 +313,7 @@
 //             </h4>
 //             <ul className="flex flex-col gap-3">
 //               <li className="flex items-start gap-3">
-//                 <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+//                 <div className="w-7 h-7 rounded-[7px] bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
 //                   <Phone className="w-3.5 h-3.5 text-[#186737]" />
 //                 </div>
 //                 <div>
@@ -327,7 +327,7 @@
 //                 </div>
 //               </li>
 //               <li className="flex items-start gap-3">
-//                 <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+//                 <div className="w-7 h-7 rounded-[7px] bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
 //                   <Mail className="w-3.5 h-3.5 text-[#186737]" />
 //                 </div>
 //                 <div>
@@ -341,7 +341,7 @@
 //                 </div>
 //               </li>
 //               <li className="flex items-start gap-3">
-//                 <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+//                 <div className="w-7 h-7 rounded-[7px] bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
 //                   <MapPin className="w-3.5 h-3.5 text-[#186737]" />
 //                 </div>
 //                 <div>
@@ -368,9 +368,9 @@
 //               <input
 //                 type="email"
 //                 placeholder="Your email address"
-//                 className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-[13px] text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all"
+//                 className="w-full border border-gray-200 rounded-[7px] px-3.5 py-2.5 text-[13px] text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all"
 //               />
-//               <button className="w-full bg-[#186737] hover:bg-[#145a2f] text-white text-[13px] font-semibold py-2.5 rounded-lg transition-colors duration-200">
+//               <button className="w-full bg-[#186737] hover:bg-[#145a2f] text-white text-[13px] font-semibold py-2.5 rounded-[7px] transition-colors duration-200">
 //                 Subscribe
 //               </button>
 //             </div>
@@ -388,7 +388,7 @@
 //                     target="_blank"
 //                     rel="noopener noreferrer"
 //                     aria-label={label}
-//                     className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#186737] hover:text-[#186737] hover:bg-green-50 transition-all duration-200"
+//                     className="w-8 h-8 rounded-[7px] border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#186737] hover:text-[#186737] hover:bg-green-50 transition-all duration-200"
 //                   >
 //                     <Icon className="w-3.5 h-3.5" />
 //                   </a>
@@ -418,7 +418,7 @@
 //             {["VISA", "MC", "AMEX", "PayPal", "CASH"].map((method) => (
 //               <div
 //                 key={method}
-//                 className="h-7 px-2 border border-gray-200 rounded-md flex items-center justify-center bg-gray-50"
+//                 className="h-7 px-2 border border-gray-200 rounded-[7px] flex items-center justify-center bg-gray-50"
 //               >
 //                 <span className="text-[10px] font-bold text-gray-500">{method}</span>
 //               </div>
@@ -454,20 +454,20 @@
 
 "use client";
 
-import Link from "next/link";
 import {
-  Phone,
-  Mail,
-  MapPin,
-  Facebook,
-  Twitter,
-  Instagram,
-  Linkedin,
-  Youtube,
-  ChevronDown,
-  ChevronUp,
-  ArrowUpRight,
+    ArrowUpRight,
+    ChevronDown,
+    ChevronUp,
+    Facebook,
+    Instagram,
+    Linkedin,
+    Mail,
+    MapPin,
+    Phone,
+    Twitter,
+    Youtube,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -670,10 +670,10 @@ export const Footer = () => {
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
               <a
                 href="tel:+18664467322"
-                className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-black px-5 py-3 rounded-xl transition-all duration-200"
+                className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-black px-5 py-3 rounded-[7px] transition-all duration-200"
               >
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <Phone className="w-4 h-4 text-white" />
+                  <Phone className="w-4 h-4 text-black" />
                 </div>
                 <div>
                   <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">Call Us</p>
@@ -682,10 +682,10 @@ export const Footer = () => {
               </a>
               <a
                 href="mailto:support@horecastore.com"
-                className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-xl transition-all duration-200"
+                className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-[7px] transition-all duration-200"
               >
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <Mail className="w-4 h-4 text-white" />
+                  <Mail className="w-4 h-4 text-black" />
                 </div>
                 <div>
                   <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">Email Support</p>
@@ -820,7 +820,7 @@ export const Footer = () => {
             </h4>
             <ul className="flex flex-col gap-3">
               <li className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-[7px] bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Phone className="w-3.5 h-3.5 text-[#186737]" />
                 </div>
                 <div>
@@ -831,7 +831,7 @@ export const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-[7px] bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Mail className="w-3.5 h-3.5 text-[#186737]" />
                 </div>
                 <div>
@@ -842,7 +842,7 @@ export const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-[7px] bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <MapPin className="w-3.5 h-3.5 text-[#186737]" />
                 </div>
                 <div>
@@ -868,9 +868,9 @@ export const Footer = () => {
               <input
                 type="email"
                 placeholder="Your email address"
-                className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-[13px] text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all"
+                className="w-full border border-gray-200 rounded-[7px] px-3.5 py-2.5 text-[13px] text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all"
               />
-              <button className="w-full bg-[#186737] hover:bg-[#145a2f] text-white text-[13px] font-semibold py-2.5 rounded-lg transition-colors duration-200">
+              <button className="w-full bg-[#186737] hover:bg-[#145a2f] text-white text-[13px] font-semibold py-2.5 rounded-[7px] transition-colors duration-200">
                 Subscribe
               </button>
             </div>
@@ -886,7 +886,7 @@ export const Footer = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#186737] hover:text-[#186737] hover:bg-green-50 transition-all duration-200"
+                    className="w-8 h-8 rounded-[7px] border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#186737] hover:text-[#186737] hover:bg-green-50 transition-all duration-200"
                   >
                     <Icon className="w-3.5 h-3.5" />
                   </a>
@@ -911,7 +911,7 @@ export const Footer = () => {
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-400 mr-1">We Accept:</span>
             {["VISA", "MC", "AMEX", "PayPal", "CASH"].map((method) => (
-              <div key={method} className="h-7 px-2 border border-gray-200 rounded-md flex items-center justify-center bg-gray-50">
+              <div key={method} className="h-7 px-2 border border-gray-200 rounded-[7px] flex items-center justify-center bg-gray-50">
                 <span className="text-[10px] font-bold text-gray-500">{method}</span>
               </div>
             ))}

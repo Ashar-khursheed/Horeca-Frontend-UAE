@@ -4,8 +4,6 @@
 // import DropdownPanel from "./navigation";
 // import TopBar from "./top-bar";
 
-
-
 // // ── Types ──────────────────────────────────────────────────────────────────
 
 // interface HeaderProps {
@@ -52,12 +50,6 @@
 
 // export default Header;
 
-
-
-
-
-
-
 "use client";
 
 import { HeaderProps } from "@/utils/types";
@@ -66,10 +58,7 @@ import DropdownPanel from "./navigation";
 import TopBar from "./top-bar";
 import BottomNav from "@/components/bottom-nav";
 
-
-
 // ── Types ──────────────────────────────────────────────────────────────────
-
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -81,14 +70,11 @@ const Header: React.FC<HeaderProps> = ({
   deliverTo,
 }) => {
   return (
-    <header
-      className="w-full stickys top-0 z-50 "
-    >
-        <TopBar  />
-         <NavigationStatic
-      />
-      <DropdownPanel/>
-      <BottomNav/>
+    <header className="w-full stickys top-0 z-50 ">
+      <TopBar />
+      <NavigationStatic />
+      <DropdownPanel />
+      <BottomNav />
     </header>
   );
 };

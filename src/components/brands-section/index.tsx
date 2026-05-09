@@ -43,7 +43,7 @@ export default function BrandsSection() {
         </div>
 
         {/* ── Brand Grid Table ── */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="border border-gray-200 rounded-[7px] overflow-hidden">
           <div
             className="grid"
             style={{

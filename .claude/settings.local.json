@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p = require\\('c:/Arshad/Arshad-All-Personal/Arshad Khan/Horeca-NextJS-FRONTEND/node_modules/swiper/package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.exports || {}\\).filter\\(k => k.includes\\('css'\\) || k.includes\\('pagination'\\)\\), null, 2\\)\\)\")"
+    ]
+  }
+}

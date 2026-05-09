@@ -14,7 +14,7 @@ const TopBar = () => {
     <div className="bg-gray-50  hidden xl:block">
       <div className="global-container flex items-center justify-between py-1.5">
         {/* Left: Tagline */}
-        <p className="text-[14px] text-gray-500 tracking-wide">
+        <p className="text-[12px] text-gray-500 tracking-wide">
           Discover Exceptional Products and Unmatched Service.
         </p>
 
@@ -25,7 +25,7 @@ const TopBar = () => {
               <Link
                 href={link.href}
                 className="
-                  text-[15px] text-gray-500 px-3 py-0.5
+                  text-[12px] text-gray-500 px-3 py-0.5
                   relative
                   hover:text-[#186737]
                   transition-colors duration-200 ease-in-out

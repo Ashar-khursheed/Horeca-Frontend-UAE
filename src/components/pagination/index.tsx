@@ -158,7 +158,7 @@ function PageButton({
       onClick={onClick}
       title={`Go to page ${page}`}
       className={`
-        relative w-9 h-9 text-[13px] font-semibold rounded-xl
+        relative w-9 h-9 text-[13px] font-semibold rounded-[7px]
         transition-all duration-200 ease-out
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#186737]/50
         ${
@@ -171,7 +171,7 @@ function PageButton({
       `}
     >
       {/* {isActive && (
-        <span className="absolute inset-0 rounded-xl ring-2 ring-[#186737]/30 animate-ping opacity-60 pointer-events-none" />
+        <span className="absolute inset-0 rounded-[7px] ring-2 ring-[#186737]/30 animate-ping opacity-60 pointer-events-none" />
       )} */}
       {page}
     </button>
@@ -195,7 +195,7 @@ function NavButton({
       disabled={disabled}
       title={title}
       className={`
-        w-9 h-9 flex items-center justify-center rounded-xl
+        w-9 h-9 flex items-center justify-center rounded-[7px]
         border transition-all duration-200 ease-out
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#186737]/50
         ${

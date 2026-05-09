@@ -1,12 +1,12 @@
 "use client";
 import {
-  CheckCircle,
-  Heart,
-  Minus,
-  Plus,
-  ShoppingCart,
-  Star,
-  Truck,
+    CheckCircle,
+    Heart,
+    Minus,
+    Plus,
+    ShoppingCart,
+    Star,
+    Truck,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -246,7 +246,7 @@ export const ProductCard = ({
 
   return (
     <div
-      className="bg-white rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden cursor-pointer flex flex-col h-full border border-transparent hover:border-[#dceee4] hover:shadow-[0_4px_20px_rgba(0,0,0,0.11)] transition-all duration-200"
+      className="bg-white rounded-[7px] shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden cursor-pointer flex flex-col h-full border border-transparent hover:border-[#dceee4] hover:shadow-[0_4px_20px_rgba(0,0,0,0.11)] transition-all duration-200"
       onMouseEnter={startSlide}
       onMouseLeave={stopSlide}
     >
@@ -389,12 +389,12 @@ export const ProductCard = ({
                     -{Math.round(discountPct)}%
                   </span>
                 )}
-                <div className="flex items-baseline gap-[1px]">
+                <div className="flex items-baseline xl:text-[22px]  lg:text-[18px] md:text-base  gap-[1px]">
                   <b
                     className={`font-bold leading-none ${
                       hasSale ? "text-[#186737]" : "text-gray-900"
                     }`}
-                    style={{ fontSize: "22px" }}
+                    
                   >
                     $
                     {priceInt}

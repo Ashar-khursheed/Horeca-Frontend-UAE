@@ -1,19 +1,19 @@
 "use client";
-import ProductCard from "@/components/product-card";
-import { categories, FEATURED_DATA, ItemsAccordion } from "@/data";
-import Link from "next/link";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import BrandsSection from "@/components/brands-section";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import SeoContent from "@/seo/seo-content";
 import Breadcrumb from "@/components/breadcum";
+import ProductCard from "@/components/product-card";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
+import { categories, FEATURED_DATA, ItemsAccordion } from "@/data";
+import SeoContent from "@/seo/seo-content";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { Navigation } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SubCategory {
   name: string;
@@ -37,9 +37,9 @@ function CategoryCard({ category }: { category: Category }) {
   const remaining = category.subCategories.length - visibleSubs.length;
 
   return (
-    <div className="group relative bg-white border border-gray-100 rounded-2xl md:p-6 p-4 hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
+    <div className="group relative bg-white border border-gray-100 rounded-[7px] md:p-6 p-4 hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
       {/* Icon */}
-      <div className="w-full md:h-[250px] h-[100px] bg-orange-50a rounded-xl flex items-center justify-center text-2xl">
+      <div className="w-full md:h-[250px] h-[100px] bg-orange-50a rounded-[7px] flex items-center justify-center text-2xl">
         {category.image ? (
           <img
             src={category.image}
@@ -56,7 +56,7 @@ function CategoryCard({ category }: { category: Category }) {
         <h2 className="text-[12px] md:text-xl font-bold uppercase tracking-wide text-gray-900 leading-tight mb-2">
           {category.name}
         </h2>
-        <span className="inline-block md:text-xs text-[10px] font-bold  tracking-wider uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-md">
+        <span className="inline-block md:text-xs text-[10px] font-bold  tracking-wider uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-[7px]">
           {category.subCategories.length} Categories
         </span>
       </div>
@@ -145,42 +145,42 @@ export default function CategoriesPage() {
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"
                 alt=""
-                className="rounded-md"
+                className="rounded-[7px]"
               />
             </div>
             <div>
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"
                 alt=""
-                className="rounded-md"
+                className="rounded-[7px]"
               />
             </div>
             <div>
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"
                 alt=""
-                className="rounded-md"
+                className="rounded-[7px]"
               />
             </div>
             <div>
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"
                 alt=""
-                className="rounded-md"
+                className="rounded-[7px]"
               />
             </div>
             <div>
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"
                 alt=""
-                className="rounded-md"
+                className="rounded-[7px]"
               />
             </div>
             <div>
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"
                 alt=""
-                className="rounded-md"
+                className="rounded-[7px]"
               />
             </div>
           </div>

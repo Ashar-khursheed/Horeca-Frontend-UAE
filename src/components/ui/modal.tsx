@@ -60,7 +60,7 @@ export const Modal = ({
       } ${isAnimating ? 'animate-fadeIn' : 'opacity-0'}`}
     >
       <div 
-        className={`bg-white rounded-md shadow-2xl ${width} w-full max-h-[90vh] overflow-hidden ${
+        className={`bg-white rounded-[7px] shadow-2xl ${width} w-full max-h-[90vh] overflow-hidden ${
           isAnimating ? 'animate-slideUp' : 'opacity-0 translate-y-5'
         }`}
         onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
@@ -91,7 +91,7 @@ export const Modal = ({
           <div className="flex gap-3 p-6 border-t border-gray-200">
             <button
               onClick={onClose}
-              className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+              className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-[7px] font-medium hover:bg-gray-300 transition-colors duration-200"
             >
               Cancel
             </button>
@@ -100,7 +100,7 @@ export const Modal = ({
                 onConfirm?.();
                 onClose();
               }}
-              className="flex-1 bg-[#186737] text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              className="flex-1 bg-[#186737] text-white px-4 py-2 rounded-[7px] font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
             >
               {footerBtnText ?? 'Confirm'}
             </button>

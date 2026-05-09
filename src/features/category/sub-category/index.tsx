@@ -3,23 +3,31 @@
 import FilterSidebar from "@/components/filters";
 import Pagination from "@/components/pagination";
 import ProductCard from "@/components/product-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FEATURED_DATA } from "@/data";
 import {
-    ChevronDown,
-    ChevronRight,
-    ChevronUp,
-    Grid2x2,
-    Home,
-    Rows3,
-    Search,
-    Shield,
-    SlidersHorizontal,
-    Star,
-    Truck,
-    X
+  ChevronLeft,
+  ChevronRight,
+  Grid2x2,
+  Home,
+  Rows3,
+  Search,
+  SlidersHorizontal,
+  Star,
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { Navigation } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
+import Breadcrumb from "@/components/breadcum";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -136,46 +144,46 @@ const SHOW_OPTIONS = [20, 50, 100];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Breadcrumb() {
-  const crumbs = [
-    { label: "Home", href: "/" },
-    { label: "Categories", href: "/categories" },
-    { label: "Restaurant Equipment", href: "/restaurant-equipment" },
-    { label: "Commercial Cooking Equipment", href: null },
-  ];
+// function Breadcrumb() {
+//   const crumbs = [
+//     { label: "Home", href: "/" },
+//     { label: "Categories", href: "/categories" },
+//     { label: "Restaurant Equipment", href: "/restaurant-equipment" },
+//     { label: "Commercial Cooking Equipment", href: null },
+//   ];
 
-  return (
-    <nav className="bg-white border-b border-gray-100">
-      <div className="global-container mx-auto px-4 sm:px-6">
-        <ol className="flex items-center flex-wrap gap-y-1 h-10 text-xs">
-          {crumbs.map((crumb, i) => (
-            <li key={i} className="flex items-center">
-              {i > 0 && (
-                <ChevronRight size={12} className="mx-1.5 text-gray-300" />
-              )}
-              {crumb.href ? (
-                <Link
-                  href={crumb.href}
-                  className="text-gray-400 hover:text-[#186737] transition-colors flex items-center gap-1"
-                >
-                  {i === 0 && <Home size={11} />}
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span className="text-[#186737] font-semibold">
-                  {crumb.label}
-                </span>
-              )}
-            </li>
-          ))}
-        </ol>
-      </div>
-      {/* <div className="h-[2px] bg-gray-100">
-        <div className="h-full w-full bg-[#186737] rounded-r-full" />
-      </div> */}
-    </nav>
-  );
-}
+//   return (
+//     <nav className="bg-white border-b border-gray-100">
+//       <div className="global-container mx-auto px-4 sm:px-6">
+//         <ol className="flex items-center flex-wrap gap-y-1 h-10 text-xs">
+//           {crumbs.map((crumb, i) => (
+//             <li key={i} className="flex items-center">
+//               {i > 0 && (
+//                 <ChevronRight size={12} className="mx-1.5 text-gray-300" />
+//               )}
+//               {crumb.href ? (
+//                 <Link
+//                   href={crumb.href}
+//                   className="text-gray-400 hover:text-[#186737] transition-colors flex items-center gap-1"
+//                 >
+//                   {i === 0 && <Home size={11} />}
+//                   {crumb.label}
+//                 </Link>
+//               ) : (
+//                 <span className="text-[#186737] font-semibold">
+//                   {crumb.label}
+//                 </span>
+//               )}
+//             </li>
+//           ))}
+//         </ol>
+//       </div>
+//       {/* <div className="h-[2px] bg-gray-100">
+//         <div className="h-full w-full bg-[#186737] rounded-r-full" />
+//       </div> */}
+//     </nav>
+//   );
+// }
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -216,7 +224,7 @@ function BadgePill({ badge }: { badge: Product["badge"] }) {
 //   const [qty, setQty] = useState(1);
 
 //   return (
-//     <div className="group bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-gray-100 hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
+//     <div className="group bg-white border border-gray-100 rounded-[7px] overflow-hidden hover:shadow-lg hover:shadow-gray-100 hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
 //       {/* Image */}
 //       <div className="relative bg-white aspect-square overflow-hidden">
 //         <img
@@ -291,7 +299,7 @@ function BadgePill({ badge }: { badge: Product["badge"] }) {
 //           </div>
 
 //           {/* Qty stepper */}
-//           <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+//           <div className="flex items-center border border-gray-200 rounded-[7px] overflow-hidden">
 //             <button
 //               onClick={() => setQty((q) => Math.max(1, q - 1))}
 //               className="w-6 h-7 text-gray-500 hover:bg-gray-50 text-sm font-medium transition-colors"
@@ -312,7 +320,7 @@ function BadgePill({ badge }: { badge: Product["badge"] }) {
 
 //         <button
 //           disabled={!product.inStock}
-//           className="w-full flex items-center justify-center gap-1.5 bg-[#186737] hover:bg-[#1e5230] disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-[12px] font-semibold py-2 rounded-lg transition-colors duration-200"
+//           className="w-full flex items-center justify-center gap-1.5 bg-[#186737] hover:bg-[#1e5230] disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-[12px] font-semibold py-2 rounded-[7px] transition-colors duration-200"
 //         >
 //           <ShoppingCart size={13} />
 //           Add to Cart
@@ -324,25 +332,28 @@ function BadgePill({ badge }: { badge: Product["badge"] }) {
 
 // ─── Reusable Checkbox Filter Section ────────────────────────────────────────
 
-
-
 // ─── Sidebar Filter ───────────────────────────────────────────────────────────
-
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SubCategoryPage() {
-  const [priceRange, setPriceRange] = useState<PriceRange>({ min: 10, max: 78000 });
+  const [priceRange, setPriceRange] = useState<PriceRange>({
+    min: 10,
+    max: 78000,
+  });
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string[]>>({});
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string[]>>(
+    {},
+  );
   const [sortBy, setSortBy] = useState("Default Sorting");
   const [showCount, setShowCount] = useState(50);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const swiperRef = useRef<SwiperType | null>(null);
 
   const handleBrandToggle = useCallback((brand: string) => {
     setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand],
     );
   }, []);
 
@@ -385,54 +396,87 @@ export default function SubCategoryPage() {
           </p>
         </div>
 
-        {/* Subcategory Grid */}
-        <div className="mb-6 bg-white border border-gray-100 rounded-2xl p-4 md:p-5 md:pt-0">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2">
+        {/* Subcategory Slider */}
+        <div className="mb-6 bg-white border border-gray-100 rounded-[7px] p-4 md:p-5 relative">
+          <button
+            onClick={() => swiperRef.current?.slidePrev()}
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <button
+            onClick={() => swiperRef.current?.slideNext()}
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+          >
+            <ChevronRight size={14} />
+          </button>
+          <Swiper
+            modules={[Navigation]}
+            onSwiper={(swiper) => { swiperRef.current = swiper; }}
+            spaceBetween={8}
+            breakpoints={{
+              0:    { slidesPerView: 3 },
+              480:  { slidesPerView: 4 },
+              640:  { slidesPerView: 5 },
+              768:  { slidesPerView: 6 },
+              1024: { slidesPerView: 6 },
+              1280: { slidesPerView: 9 },
+              1536: { slidesPerView: 11 },
+            }}
+            className="px-6"
+          >
             {SUBCATEGORIES.map((sub) => (
-              <Link
-                key={sub.slug}
-                href={`/restaurant-equipment/commercial-cooking-equipment/${sub.slug}`}
-                className="group flex flex-col items-center gap-1.5 p-2s rounded-xl hover:bg-green-50z hover:border-green-100zz border border-transparent transition-all duration-200"
-              >
-                <div className="">
-                {/* <div className="w-12 h-12 md:w-28 md:h-22 rounded-xl bg-gray-50z group-hover:bg-white border border-gray-100z group-hover:border-green-200z flex items-center justify-center overflow-hidden transition-all duration-200"> */}
+              <SwiperSlide key={sub.slug}>
+                <Link
+                  href={`/restaurant-equipment/commercial-cooking-equipment/${sub.slug}`}
+                  className="group flex flex-col items-center gap-1.5 rounded-[7px] border border-transparent hover:border-green-100 hover:bg-green-50 transition-all duration-200 p-1"
+                >
                   <img
                     src={sub.image}
                     alt={sub.name}
-                    className="w-28 h-28 object-contain group-hover:scale-110 transition-transform duration-300"
+                    className="w-full aspect-square object-contain group-hover:scale-110 transition-transform duration-300"
                   />
-                </div>
-                <span className="text-[9px] md:text-[13px] font-medium text-gray-500 group-hover:text-[#186737] text-center leading-tight transition-colors duration-200 line-clamp-2">
-                  {sub.name}
-                </span>
-              </Link>
+                  <span className="text-[9px] md:text-[13px] font-light text-gray-500 group-hover:text-[#186737] text-center leading-tight transition-colors duration-200 line-clamp-2">
+                    {sub.name}
+                  </span>
+                </Link>
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         </div>
 
-        {/* Mobile Filter Toggle */}
-        <div className="md:hidden mb-3">
+        {/* Mobile Filter + Sort Bar */}
+        <div className="md:hidden mb-3 flex items-center justify-between bg-white border border-gray-100 rounded-[7px] px-3 py-2.5">
           <button
-            onClick={() => setMobileFilterOpen((p) => !p)}
-            className="flex items-center gap-2 text-[13px] font-semibold text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-xl hover:border-[#186737] transition-colors"
+            onClick={() => setMobileFilterOpen(true)}
+            className="flex items-center gap-2 text-[13px] font-semibold text-gray-700"
           >
-            <SlidersHorizontal size={14} />
+            <SlidersHorizontal size={14} className="text-[#186737]" />
             Filters
-            {selectedBrands.length > 0 && (
-              <span className="bg-[#186737] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                {selectedBrands.length}
+            {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0 && (
+              <span className="bg-[#186737] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                {selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)}
               </span>
             )}
           </button>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-gray-400">Sort:</span>
+            <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
+              <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer min-w-35">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex gap-5">
-          {/* Sidebar */}
-          <div
-            className={`${
-              mobileFilterOpen ? "block" : "hidden"
-            } md:block w-full md:w-[220px] lg:w-[240px] flex-shrink-0`}
-          >
+          {/* Sidebar — desktop only */}
+          <div className="hidden md:block w-55 lg:w-60 shrink-0">
             <FilterSidebar
               priceRange={priceRange}
               onPriceChange={setPriceRange}
@@ -449,9 +493,9 @@ export default function SubCategoryPage() {
           {/* Main Content */}
           <div className="flex-1 min-w-0">
             {/* Search + Sort Bar */}
-            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="bg-white border border-gray-100 rounded-[7px] px-4 py-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               {/* Search */}
-              <div className="relative flex-1 max-w-xs">
+              <div className="relative hidden flex-1 max-w-xs">
                 <Search
                   size={13}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -461,7 +505,7 @@ export default function SubCategoryPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search in results..."
-                  className="w-full pl-8 pr-3 py-1.5 text-[12px] border border-gray-200 rounded-lg outline-none focus:border-[#186737] transition-colors"
+                  className="w-full pl-8 pr-3 py-1.5 text-[12px] border border-gray-200 rounded-[7px] outline-none focus:border-[#186737] transition-colors"
                 />
               </div>
 
@@ -471,36 +515,48 @@ export default function SubCategoryPage() {
                   <span className="font-semibold text-gray-700">308</span>{" "}
                   results
                 </span>
-                <div className="flex items-center gap-1.5">
+                <div className="hidden md:flex items-center gap-1.5">
                   <span className="text-[11px] text-gray-400">Sort:</span>
-                  <select
+                  <Select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="text-[12px] border border-gray-200 rounded-lg px-2 py-1 outline-none focus:border-[#186737] text-gray-700 bg-white cursor-pointer"
+                    onValueChange={(val) => setSortBy(val)}
                   >
-                    {SORT_OPTIONS.map((opt) => (
-                      <option key={opt}>{opt}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer min-w-35">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SORT_OPTIONS.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] text-gray-400">Show:</span>
-                  <select
-                    value={showCount}
-                    onChange={(e) => setShowCount(Number(e.target.value))}
-                    className="text-[12px] border border-gray-200 rounded-lg px-2 py-1 outline-none focus:border-[#186737] text-gray-700 bg-white cursor-pointer"
+                  <Select
+                    value={String(showCount)}
+                    onValueChange={(val) => setShowCount(Number(val))}
                   >
-                    {SHOW_OPTIONS.map((opt) => (
-                      <option key={opt}>{opt} Items</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SHOW_OPTIONS.map((opt) => (
+                        <SelectItem key={opt} value={String(opt)}>
+                          {opt} Items
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] text-gray-400">Grid Type:</span>
-                <div className="flex items-center gap-1.5">
-                  <Grid2x2 className="text-gray-600" size={17} />
-                  <Rows3 className="text-gray-600" size={17} />
-                </div>
+                  <div className="flex items-center gap-1.5">
+                    <Grid2x2 className="text-gray-600" size={17} />
+                    <Rows3 className="text-gray-600" size={17} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -515,39 +571,49 @@ export default function SubCategoryPage() {
                   >
                     {brand}
                     <button onClick={() => handleBrandToggle(brand)}>
-                      <X size={10} className="hover:text-red-500 transition-colors" />
+                      <X
+                        size={10}
+                        className="hover:text-red-500 transition-colors"
+                      />
                     </button>
                   </span>
                 ))}
               </div>
             )}
 
-          {/* Product Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
-
-            {FEATURED_DATA.flatMap((category) =>
-              category.featured_products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={{ ...product, images: [...product.images], alt_tags: [...product.alt_tags] }}
-                  onAddToCart={(p, qty) => console.log("Cart:", p.name, qty)}
-                  onWishlistToggle={(p, w) => console.log("Wishlist:", p.name, w)}
-                />
-              ))
-            )}
-          </div>
+            {/* Product Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
+              {FEATURED_DATA.flatMap((category) =>
+                category.featured_products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={{
+                      ...product,
+                      images: [...product.images],
+                      alt_tags: [...product.alt_tags],
+                    }}
+                    onAddToCart={(p, qty) => console.log("Cart:", p.name, qty)}
+                    onWishlistToggle={(p, w) =>
+                      console.log("Wishlist:", p.name, w)
+                    }
+                  />
+                )),
+              )}
+            </div>
 
             {/* Pagination stub */}
-            <Pagination  totalPages={24}
-  initialPage={1}
-  onPageChange={(page) => console.log("Page:", page)}
-  showFirstLast={true}
-  showPageInfo={true}/>
+            <Pagination
+              totalPages={24}
+              initialPage={1}
+              onPageChange={(page) => console.log("Page:", page)}
+              showFirstLast={true}
+              showPageInfo={true}
+            />
             {/* <div className="flex items-center justify-center gap-2 mt-8">
               {[1, 2, 3, "...", 7].map((page, i) => (
                 <button
                   key={i}
-                  className={`w-8 h-8 text-[12px] font-medium rounded-lg transition-colors ${
+                  className={`w-8 h-8 text-[12px] font-medium rounded-[7px] transition-colors ${
                     page === 1
                       ? "bg-[#186737] text-white"
                       : "bg-white border border-gray-200 text-gray-600 hover:border-[#186737] hover:text-[#186737]"
@@ -558,6 +624,82 @@ export default function SubCategoryPage() {
               ))}
             </div> */}
           </div>
+        </div>
+      </div>
+      {/* ── Mobile Filter Drawer ── */}
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-40 md:hidden bg-black/50 transition-opacity duration-300 ${
+          mobileFilterOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileFilterOpen(false)}
+      />
+
+      {/* Bottom Sheet */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+          mobileFilterOpen ? "translate-y-0" : "translate-y-full"
+        }`}
+        style={{ maxHeight: "88vh" }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal size={16} className="text-[#186737]" />
+            <span className="text-[15px] font-bold text-gray-900">Filters</span>
+            {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0 && (
+              <span className="bg-[#186737] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                {selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => setMobileFilterOpen(false)}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Scrollable Filter Body */}
+        <div className="overflow-y-auto flex-1 px-4 py-3">
+          <FilterSidebar
+            mobile
+            priceRange={priceRange}
+            onPriceChange={setPriceRange}
+            selectedBrands={selectedBrands}
+            onBrandToggle={handleBrandToggle}
+            onClearBrands={() => setSelectedBrands([])}
+            selectedAttrs={selectedAttrs}
+            onAttrToggle={handleAttrToggle}
+            onClearAttr={handleClearAttr}
+            onClearAll={handleClearAll}
+          />
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="shrink-0 px-4 py-4 border-t border-gray-100 bg-white flex gap-3">
+          {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="flex-1 py-3 rounded-[7px] border border-gray-200 text-sm font-semibold text-gray-600 hover:border-red-300 hover:text-red-500 transition-colors duration-200"
+            >
+              Clear All
+            </button>
+          )}
+          <button
+            onClick={() => setMobileFilterOpen(false)}
+            className="flex-1 py-3 rounded-[7px] bg-[#186737] hover:bg-[#145c30] text-white text-sm font-semibold transition-colors duration-200"
+          >
+            {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0
+              ? `Apply Filters (${selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)})`
+              : "Apply Filters"}
+          </button>
         </div>
       </div>
     </main>

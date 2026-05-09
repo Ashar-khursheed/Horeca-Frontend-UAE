@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState, memo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { memo, useEffect, useRef, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -242,7 +241,7 @@ export default function SeoContent({ id, relationalType }: SeoContentProps) {
             <img
               src={data.banner_image_file}
               alt={data.banner_image_alt_text}
-              className="w-full rounded-lg object-cover"
+              className="w-full rounded-[7px] object-cover"
               loading="lazy"
             />
           </Link>

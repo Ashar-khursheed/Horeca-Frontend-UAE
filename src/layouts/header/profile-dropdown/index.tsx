@@ -1,8 +1,16 @@
 import {
-  ChevronDown, Search, Heart, ShoppingCart,
-  MapPin, User, Menu, X, ChevronRight,
-  ShoppingBag, FileText, History, CreditCard,
-  Receipt, FolderCheck, ShieldCheck, HelpCircle, LogOut,
+    ChevronRight,
+    CreditCard,
+    FileText,
+    FolderCheck,
+    Heart,
+    HelpCircle,
+    History,
+    LogOut,
+    Receipt,
+    ShieldCheck,
+    ShoppingBag,
+    User
 } from "lucide-react";
 import { useState } from "react";
 // 
@@ -30,7 +38,7 @@ function ProfileDropdown({ show }: { show: boolean }) {
 
   return (
     <div
-      className="absolute  top-full right-0 bg-white rounded-2xl overflow-hidden z-50 mt-4 dropdown-enter"
+      className="absolute  top-full right-0 bg-white rounded-[7px] overflow-hidden z-50 mt-4 dropdown-enter"
       style={{
         width: 300,
         // ✅ mt-2 hataya, paddingTop se bridge banaya taake gap na ho

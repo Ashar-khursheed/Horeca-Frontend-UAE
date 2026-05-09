@@ -87,7 +87,7 @@
 //               pagination={{ clickable: true }}
 //               //   navigation
 //               loop
-//               className="hero-swiper w-full rounded-xl overflow-hidden"
+//               className="hero-swiper w-full rounded-[7px] overflow-hidden"
 //               style={{ aspectRatio: "875/380" }}
 //             >
 //               {HERO_SLIDES.map((banner, index) => (
@@ -199,7 +199,7 @@
 //               }}
 //               pagination={{ clickable: true }}
 //               loop
-//               className="hero-swiper w-full rounded-xl overflow-hidden"
+//               className="hero-swiper w-full rounded-[7px] overflow-hidden"
 //               style={{ aspectRatio: "875/380" }}
 //             >
 //               {SIDE_BANNERS.map((banner) => (
@@ -212,7 +212,7 @@
 //                         src={BannerImg}
 //                         loading="lazy"
 //                         alt={'Image'}
-//                         className="w-full h-full object-cover rounded-md"
+//                         className="w-full h-full object-cover rounded-[7px]"
 //                       />
 //                     </div>
 //                   {/* </Link> */}
@@ -249,12 +249,11 @@
 
 
 "use client";
+import { BlogsCard } from "@/components/blog-card";
 import SEOMainContent from "@/seo/seo-main-content";
-import HeroBanner from "./hero-banner";
 import FeaturedProducts from "./feature-product";
 import FeaturedBrands from "./features-brand";
-import { BlogsCard } from "@/components/blog-card";
-import NewsletterSection from "@/components/newsletter";
+import HeroBanner from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
 
 
@@ -270,7 +269,7 @@ export const Home = () => {
       <div className="w-full py-10">
         <div className="global-container">
         <div className="grid grid-cols-1">
-          <img src="https://www.thehorecastore.com/images/Banners/Food%20Truck/Hero%20Banner.webp" alt="" className="rounded-sm" />
+          <img src="https://www.thehorecastore.com/images/Banners/Food%20Truck/Hero%20Banner.webp" alt="" className="rounded-[7px]" />
         </div>
         </div>
       </div>

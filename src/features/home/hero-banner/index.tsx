@@ -85,7 +85,7 @@
 // //               pagination={{ clickable: true }}
 // //               //   navigation
 // //               loop
-// //               className="hero-swiper w-full rounded-xl overflow-hidden"
+// //               className="hero-swiper w-full rounded-[7px] overflow-hidden"
 // //               style={{ aspectRatio: "875/380" }}
 // //             >
 // //               {HERO_SLIDES.map((banner, index) => (
@@ -122,7 +122,7 @@
 // //                 className="no-underline block"
 // //               >
 // //                 <div className="flex items-end justify-between">
-// //                   <div className="bg-[#E2E8F033] 2xl:py-0 px-3 relative rounded-md ">
+// //                   <div className="bg-[#E2E8F033] 2xl:py-0 px-3 relative rounded-[7px] ">
 // //                     <div>
 // //                       <Link
 // //                         href="/starting-a-restaurant"
@@ -178,7 +178,7 @@
 // //                         src={BannerImg}
 // //                         loading="lazy"
 // //                         alt={'Image'}
-// //                         className="w-full h-full object-cover rounded-md"
+// //                         className="w-full h-full object-cover rounded-[7px]"
 // //                       />
 // //                     </div>
 
@@ -244,7 +244,7 @@
 // //   <div className="cta-card flex-1 lg:flex-none">
 // //     <Link href="/starting-a-restaurant" className="no-underline block">
 // //       <div className="flex items-end justify-between">
-// //         <div className="bg-[#E2E8F033] 2xl:py-0  relative rounded-md ">
+// //         <div className="bg-[#E2E8F033] 2xl:py-0  relative rounded-[7px] ">
 // //           <div>
 // //             <Link
 // //               href="/starting-a-restaurant"
@@ -299,7 +299,7 @@
 //   <div className="px-3">
 //     <Link href="/starting-a-restaurant" className="no-underline block ">
 //       <div className="flex items-end justify-between">
-//         <div className="  relative rounded-md ">
+//         <div className="  relative rounded-[7px] ">
 //           <div>
 //             {/* <Link
 //               href="/starting-a-restaurant"
@@ -351,7 +351,7 @@
 //   </div>
 // );
 // const BannerImage = () => (
-//   <div className="w-full rounded-md overflow-hidden">
+//   <div className="w-full rounded-[7px] overflow-hidden">
 //     <Image
 //       src={BannerImg}
 //       alt="True Refrigeration Banner"
@@ -382,7 +382,7 @@
 // //               }}
 // //               pagination={{ clickable: true }}
 // //               loop
-// //               className="hero-swiper w-full rounded-md overflow-hidden"
+// //               className="hero-swiper w-full rounded-[7px] overflow-hidden"
 // //               style={{ aspectRatio: "875/380" }}
 // //             >
 // //               {HERO_SLIDES.map((banner, index) => (
@@ -423,7 +423,7 @@
 // //                 }}
 // //                 // pagination={{ clickable: true }}
 // //                 loop
-// //                 className="w-full rounded-md overflow-hidden pb-0"
+// //                 className="w-full rounded-[7px] overflow-hidden pb-0"
 // //                 style={{ paddingBottom: "0px", margin:"0 10px" }}
 // //               >
 // //                 <SwiperSlide>
@@ -494,7 +494,7 @@
 //               }}
 //               pagination={{ clickable: true }}
 //               loop
-//               className="hero-swiper w-full rounded-md overflow-hidden"
+//               className="hero-swiper w-full rounded-[7px] overflow-hidden"
 //               style={{ aspectRatio: "875/380" }}
 //             >
 //               {HERO_SLIDES.map((banner, index) => (
@@ -535,7 +535,7 @@
 //                 }}
 //                 // pagination={{ clickable: true }}
 //                 loop
-//                 className="w-full rounded-md overflow-hidden pb-0"
+//                 className="w-full rounded-[7px] overflow-hidden pb-0"
 //                 style={{ paddingBottom: "0px", margin:"0 10px" }}
 //               >
 //                 <SwiperSlide>
@@ -695,7 +695,7 @@
 //               pagination={{ clickable: true }}
 //               //   navigation
 //               loop
-//               className="hero-swiper w-full rounded-xl overflow-hidden"
+//               className="hero-swiper w-full rounded-[7px] overflow-hidden"
 //               style={{ aspectRatio: "875/380" }}
 //             >
 //               {HERO_SLIDES.map((banner, index) => (
@@ -732,7 +732,7 @@
 //                 className="no-underline block"
 //               >
 //                 <div className="flex items-end justify-between">
-//                   <div className="bg-[#E2E8F033] 2xl:py-0 px-3 relative rounded-md ">
+//                   <div className="bg-[#E2E8F033] 2xl:py-0 px-3 relative rounded-[7px] ">
 //                     <div>
 //                       <Link
 //                         href="/starting-a-restaurant"
@@ -788,7 +788,7 @@
 //                         src={BannerImg}
 //                         loading="lazy"
 //                         alt={'Image'}
-//                         className="w-full h-full object-cover rounded-md"
+//                         className="w-full h-full object-cover rounded-[7px]"
 //                       />
 //                     </div>
 
@@ -804,14 +804,14 @@
 
 "use client";
 
-import { useState } from "react";
+import BannerImg from "@/assets/Desktop/True Refrigeration.webp";
+import chefImge from "@/assets/static/chefImg.svg";
+import { Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Phone } from "lucide-react";
-import chefImge from "@/assets/static/chefImg.svg";
-import BannerImg from "@/assets/Desktop/True Refrigeration.webp";
+import { useState } from "react";
+import { Autoplay, EffectFade, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
 
 const HERO_SLIDES = [
   {
@@ -852,7 +852,7 @@ const HERO_SLIDES = [
 const CTACard = () => (
   <div className="px-3">
       <div className="flex items-end justify-between">
-        <div className="  relative rounded-md ">
+        <div className="  relative rounded-[7px] ">
           <div>
             {/* <Link
               href="/starting-a-restaurant"
@@ -861,10 +861,10 @@ const CTACard = () => (
               <div className=" grid grid-cols-[70%_30%] h-full gap-3  relative  ">
               {/* <div className="flex items-center relative 2xl:py-9 2xl:px- xl:py-6 xl:px-3 md:py-2.5 md:px-3 py-6.5 px-3  "> */}
                 <div className="flex flex-col items-start justify-center">
-                  <h3 className="text-[#186737]  2xl:text-xl text-base">
+                  <h3 className="text-[#186737]  2xl:text-xl font-bold text-base">
                     Opening a Restaurant?
                   </h3>
-                  <p className="text-[#666666] 2xl:text-base text-[13px] my-3">
+                  <p className="text-[#666666] 2xl:text-base text-[13px] my-3 font-medium">
                     From kitchen equipment to financing, <span className="2xl:blocks ">we’ve got you covered.</span>
                   </p>
 
@@ -875,7 +875,7 @@ const CTACard = () => (
                     <Phone className="w-4 h-4 text-[#186737]" />
                     <a
                       href="tel:+18664467322"
-                      className="text-[#186737] 2xl:text-base text-[13px] underline"
+                      className="text-[#186737] 2xl:text-base text-[13px] underline font-bold"
                     >
                       +1 (866) 446-7322
                     </a>
@@ -903,7 +903,7 @@ const CTACard = () => (
   </div>
 );
 const BannerImage = () => (
-  <div className="w-full rounded-md overflow-hidden">
+  <div className="w-full rounded-[7px] overflow-hidden">
     <Image
       src={BannerImg}
       alt="True Refrigeration Banner"
@@ -934,7 +934,7 @@ export const HeroBanner = () => {
               }}
               pagination={{ clickable: true }}
               loop
-              className="hero-swiper w-full rounded-md overflow-hidden"
+              className="hero-swiper w-full rounded-[7px] overflow-hidden"
               style={{ aspectRatio: "875/380" }}
             >
               {HERO_SLIDES.map((banner, index) => (
@@ -975,7 +975,7 @@ export const HeroBanner = () => {
                 }}
                 // pagination={{ clickable: true }}
                 loop
-                className="w-full rounded-md overflow-hidden pb-0"
+                className="w-full rounded-[7px] overflow-hidden pb-0"
                 style={{ paddingBottom: "0px", margin:"0 10px" }}
               >
                 <SwiperSlide>

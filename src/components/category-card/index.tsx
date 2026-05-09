@@ -6,7 +6,7 @@ type Cat = (typeof CATEGORIESMAIN)[number];
 const CatGridItem = ({ cat }: { cat: Cat }) => (
   <Link
     href={`/categories/${cat.slug}`}
-    className="group flex flex-col items-center bg-transparent border border-slate-200 rounded-md overflow-hidden hover:border-[#186737] hover:shadow-md hover:-translate-y-1 transition-all duration-200"
+    className="group flex flex-col items-center bg-transparent border border-slate-200 rounded-[7px] overflow-hidden hover:border-[#186737] hover:shadow-md hover:-translate-y-1 transition-all duration-200"
   >
     <div className="w-full aspect-square bg-gray-50 flex items-center justify-center p-3">
       <img
@@ -36,7 +36,7 @@ export default function CategoryCard() {
                 href={`/categories/${cat.slug}`}
                 className="group flex flex-col items-center w-17"
               >
-                <div className="w-16 h-16 rounded-xl bg-[#f5f5f5] flex items-center justify-center p-2 mb-1.5">
+                <div className="w-16 h-16 rounded-[7px] bg-[#f5f5f5] flex items-center justify-center p-2 mb-1.5">
                   <img
                     src={cat.image}
                     alt={cat.name}

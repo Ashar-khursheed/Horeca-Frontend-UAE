@@ -151,7 +151,7 @@ function DropdownPanel({
                     onClick={onClose}
                     onMouseEnter={() => handleChildHover(child)}
                     className={`
-                      group relative block w-full px-4 py-3 rounded-lg
+                      group relative block w-full px-4 py-3 rounded-[7px]
                       transition-all duration-200 ease-in-out animate-fadeIn
                       ${
                         activeChild?.id === child.id
@@ -193,7 +193,7 @@ function DropdownPanel({
                       onClick={onClose}
                       className="
                         group flex flex-col items-center text-center
-                        p-4 rounded-xl bg-gray-50
+                        p-4 rounded-[7px] bg-gray-50
                         hover:bg-white hover:shadow-lg hover:-translate-y-1
                         transition-all duration-300 ease-out
                         cursor-pointer border border-transparent hover:border-green-100
@@ -202,7 +202,7 @@ function DropdownPanel({
                       style={{ animationDelay: `${index * 40}ms` }}
                     >
                       {/* Image */}
-                      <div className="relative w-full aspect-square mb-3 overflow-hidden rounded-lg bg-white">
+                      <div className="relative w-full aspect-square mb-3 overflow-hidden rounded-[7px] bg-white">
                         {grandChild.image ? (
                           <>
                             <img
@@ -349,7 +349,7 @@ const HeaderMenu = () => {
   return (
     <div
       ref={menuRef}
-      className="relative w-full bg-green-700 py-3 border-b border-green-800 hidden xl:block"
+      className="relative w-full bg-green-700 py-2.5 border-b border-green-800 hidden xl:block"
       onMouseLeave={handleCloseDropdown}
     >
       <div className="global-container">
@@ -415,7 +415,7 @@ const HeaderMenu = () => {
             </a> */}
 
             {/* Financing */}
-         <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1.5  font-extrabold text-white  tracking-wider">
+         <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
   <span className="relative z-10">Mega Sale</span>
 
   {/* animated border ring */}

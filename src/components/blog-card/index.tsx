@@ -2,15 +2,15 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BookOpen,
-  Calendar,
-  ChevronRight,
-  Clock,
-  Eye,
-  Heart,
-  Share2,
-  TrendingUp,
-  User
+    BookOpen,
+    Calendar,
+    ChevronRight,
+    Clock,
+    Eye,
+    Heart,
+    Share2,
+    TrendingUp,
+    User
 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -449,7 +449,7 @@ const BlogCard: React.FC<{ item: Blog; index: number }> = ({ item, index }) => {
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="mt-4 w-full py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all duration-300 flex items-center justify-center gap-2 group/btn shadow-md hover:shadow-lg"
+            className="mt-4 w-full py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-[7px] font-semibold hover:from-green-700 hover:to-green-800 transition-all duration-300 flex items-center justify-center gap-2 group/btn shadow-md hover:shadow-lg"
             // style={{ background: "linear-gradient(135deg, #059669, #047857)" }}
           >
             <span className="relative z-10">Read Article</span>
@@ -487,7 +487,7 @@ export const BlogsCard: React.FC<{ showAll?: boolean }> = ({
           {/* <motion.div
             animate={{ rotate: [0, 15, -10, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="p-3 rounded-2xl shadow-lg"
+            className="p-3 rounded-[7px] shadow-lg"
             style={{ background: "linear-gradient(135deg, #059669, #047857)" }}
           >
             <Sparkles className="w-6 h-6 text-white" />
@@ -507,7 +507,7 @@ export const BlogsCard: React.FC<{ showAll?: boolean }> = ({
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-2 px-6 py-3 rounded-md font-bold text-sm cursor-pointer border-2 border-green-700 text-green-700 hover:bg-green-800 hover:text-white transition-all duration-300"
+              className="flex items-center gap-2 px-6 py-3 rounded-[7px] font-bold text-sm cursor-pointer border-2 border-green-700 text-green-700 hover:bg-green-800 hover:text-white transition-all duration-300"
             >
               <BookOpen className="w-4 h-4" />
               View All Posts

@@ -1,24 +1,14 @@
 "use client";
 
-import Pagination from "@/components/pagination";
-import ProductCard from "@/components/product-card";
-import { FEATURED_DATA } from "@/data";
 import {
     ChevronDown,
-    ChevronRight,
     ChevronUp,
-    Grid2x2,
-    Home,
-    Rows3,
-    Search,
     Shield,
     SlidersHorizontal,
-    Star,
     Truck,
     X
 } from "lucide-react";
-import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 const BRANDS: Brand[] = [
   { name: "Atosa", count: 124 },
@@ -201,7 +191,7 @@ function CheckboxSection({
   const hasSelected = selected.length > 0;
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-2">
+    <div className="bg-white border border-gray-100 rounded-[7px] overflow-hidden mb-2">
       <button
         onClick={() => setOpen((p) => !p)}
         className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors"
@@ -291,6 +281,7 @@ export default function FilterSidebar({
   onAttrToggle,
   onClearAttr,
   onClearAll,
+  mobile = false,
 }: {
   priceRange: PriceRange;
   onPriceChange: (range: PriceRange) => void;
@@ -301,6 +292,7 @@ export default function FilterSidebar({
   onAttrToggle: (group: string, val: string) => void;
   onClearAttr: (group: string) => void;
   onClearAll: () => void;
+  mobile?: boolean;
 }) {
   const [priceOpen, setPriceOpen] = useState(true);
   const [showAllBrands, setShowAllBrands] = useState(false);
@@ -311,8 +303,9 @@ export default function FilterSidebar({
     Object.values(selectedAttrs).reduce((acc, v) => acc + v.length, 0);
 
   return (
-    <aside className="w-full bg-gray-50 p-3 rounded-md border border-[#186737] sticky top-4 self-start">
-      {/* Header */}
+    <aside className={mobile ? "w-full" : "w-full bg-gray-50 p-3 rounded-[7px] border border-[#186737] sticky top-4 self-start"}>
+      {/* Header — desktop only */}
+      {!mobile && (
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={15} className="text-[#186737]" />
@@ -333,9 +326,10 @@ export default function FilterSidebar({
           </button>
         )}
       </div>
+      )}
 
       {/* Price Filter */}
-      <div className="bg-white border border-gray-100 rounded-xl mb-2 overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-[7px] mb-2 overflow-hidden">
         <button
           onClick={() => setPriceOpen((p) => !p)}
           className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors"
@@ -365,7 +359,7 @@ export default function FilterSidebar({
               className="w-full accent-[#186737]"
             />
             <div className="flex gap-2">
-              <div className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 flex items-center gap-1">
+              <div className="flex-1 border border-gray-200 rounded-[7px] px-2 py-1.5 flex items-center gap-1">
                 <span className="text-[10px] text-gray-400">$</span>
                 <input
                   type="number"
@@ -377,7 +371,7 @@ export default function FilterSidebar({
                   placeholder="Min"
                 />
               </div>
-              <div className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 flex items-center gap-1">
+              <div className="flex-1 border border-gray-200 rounded-[7px] px-2 py-1.5 flex items-center gap-1">
                 <span className="text-[10px] text-gray-400">$</span>
                 <input
                   type="number"
@@ -395,7 +389,7 @@ export default function FilterSidebar({
       </div>
 
       {/* Brand Filter */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-2">
+      <div className="bg-white border border-gray-100 rounded-[7px] overflow-hidden mb-2">
         <button
           onClick={() => {}}
           className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -454,17 +448,19 @@ export default function FilterSidebar({
         />
       ))}
 
-      {/* Trust badges */}
-      <div className="mt-3 p-3 bg-green-50 border border-green-100 rounded-xl space-y-2">
-        <div className="flex items-center gap-2">
-          <Truck size={13} className="text-[#186737]" />
-          <span className="text-[11px] font-medium text-[#186737]">Fast & Reliable Shipping</span>
+      {/* Trust badges — desktop only */}
+      {!mobile && (
+        <div className="mt-3 p-3 bg-green-50 border border-green-100 rounded-[7px] space-y-2">
+          <div className="flex items-center gap-2">
+            <Truck size={13} className="text-[#186737]" />
+            <span className="text-[11px] font-medium text-[#186737]">Fast & Reliable Shipping</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Shield size={13} className="text-[#186737]" />
+            <span className="text-[11px] font-medium text-[#186737]">NSF & UL Certified Products</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Shield size={13} className="text-[#186737]" />
-          <span className="text-[11px] font-medium text-[#186737]">NSF & UL Certified Products</span>
-        </div>
-      </div>
+      )}
     </aside>
   );
 }

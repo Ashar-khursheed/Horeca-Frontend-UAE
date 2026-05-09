@@ -9,7 +9,7 @@ function Breadcrumb() {
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-100">
+    <nav className="xl:bg-white bg-gray-100 border-b border-gray-100">
       <div className="global-container mx-auto px-4 sm:px-6">
         <ol className="flex items-center flex-wrap gap-y-1 h-10 text-xs">
           {crumbs.map((crumb, i) => (

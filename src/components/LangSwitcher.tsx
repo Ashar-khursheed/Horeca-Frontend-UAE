@@ -34,8 +34,8 @@ export default function LangSwitcher() {
         <option value="en">🇺🇸 English</option>
         <option value="ar">🇸🇦 العربية</option>
       </select> */}
-      <Select value={locale} onValueChange={handleChange} disabled={isPending}>
-        <SelectTrigger className="w-[150px] py-0">
+      <Select value={locale} onValueChange={handleChange} disabled={isPending} >
+        <SelectTrigger className="w-[150px] h-[31px] py-0 ">
           <SelectValue placeholder="Choose a language" />
         </SelectTrigger>
         <SelectContent>
