@@ -1,3 +1,4 @@
+import React from "react";
 import type { Spec } from "./types";
 
 type SpecificationsSectionProps = {
@@ -23,33 +24,21 @@ export const SpecificationsSection = ({
           {rows.map((row, ri) => (
             <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-gray-100"}>
               {row.map((spec, ci) => (
-                <>
-                  <td
-                    key={`name-${ci}`}
-                    className="px-4 py-3 text-gray-800 font-semibold w-[16%] border border-gray-100 whitespace-nowrap"
-                  >
+                <React.Fragment key={ci}>
+                  <td className="px-4 py-3 text-gray-800 font-semibold w-[16%] border border-gray-100 whitespace-nowrap">
                     {spec.attribute_name}
                   </td>
-                  <td
-                    key={`val-${ci}`}
-                    className="px-4 py-3 text-gray-500 font-medium w-[17%] border border-gray-100"
-                  >
+                  <td className="px-4 py-3 text-gray-500 font-medium w-[17%] border border-gray-100">
                     {spec.attribute_value}
                   </td>
-                </>
+                </React.Fragment>
               ))}
               {row.length < 3 &&
                 Array.from({ length: 3 - row.length }).map((_, ei) => (
-                  <>
-                    <td
-                      key={`empty-name-${ei}`}
-                      className="border border-gray-100"
-                    />
-                    <td
-                      key={`empty-val-${ei}`}
-                      className="border border-gray-100"
-                    />
-                  </>
+                  <React.Fragment key={ei}>
+                    <td className="border border-gray-100" />
+                    <td className="border border-gray-100" />
+                  </React.Fragment>
                 ))}
             </tr>
           ))}
