@@ -4,6 +4,8 @@ import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+
+
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -21,6 +23,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
+      <link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"
+/>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
       <body>
         <NextIntlClientProvider messages={messages}>
           <GlobalLayout> {children}</GlobalLayout>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import LangSwitcher from "@/components/LangSwitcher";
 
 const NAV_LINKS = [
-  { label: "Track your order", href: "/search-order" },
+  { label: "Track your order", href: "/track-order" },
   { label: "Financing", href: "/financing" },
   { label: "Contact Us", href: "/pages/contact-us" },
   { label: "Terms & Conditions", href: "/pages/return-policy" },
