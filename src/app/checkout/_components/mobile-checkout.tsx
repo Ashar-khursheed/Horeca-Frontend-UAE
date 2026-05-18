@@ -73,7 +73,7 @@ export function MobileCheckout(props: MobileCheckoutProps) {
       </header>
 
       {/* ── Step Content ────────────────────────────────────── */}
-      <div className="flex-1 pb-28">
+      <div className="flex-1 pb-2">
         {mobileStep === 1 && (
           <StepAddress
             addresses={props.addresses}

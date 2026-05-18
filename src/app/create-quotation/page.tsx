@@ -599,7 +599,7 @@ export default function CreateQuotationPage() {
                                   </div>
                                 </div>
                               </td>
-                              <td className="py-4 pr-4 whitespace-nowrap">
+                              <td className="py-4 pr-4 pl-3.5 whitespace-nowrap">
                                 <span className="text-sm font-semibold text-gray-800">
                                   ${fmtPrice(p.price)}
                                 </span>
@@ -669,6 +669,9 @@ export default function CreateQuotationPage() {
                             </p>
                             <p className="text-xs text-gray-500">
                               Ships in {p.deliveryDays} · Shipping: ${fmtPrice(p.shippingCost)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Limit Price: <span className="font-medium text-gray-700"> ${fmtPrice(p.price)}</span>
                             </p>
                           </div>
                           <div className="mt-3 flex items-center justify-between flex-wrap gap-2">

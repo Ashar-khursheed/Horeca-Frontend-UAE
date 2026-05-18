@@ -1,10 +1,13 @@
 "use client";
 
+import ProductCard from "@/components/product-card";
+import { FEATURED_DATA } from "@/data";
 import {
   ArrowRight,
   Calendar,
   CheckCircle,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   ChevronUp,
   Heart,
@@ -24,7 +27,7 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CartItem = {
@@ -468,6 +471,20 @@ export default function CartPage() {
   const [promoError, setPromoError] = useState(false);
   const [shipmentOpen, setShipmentOpen] = useState(true);
 
+  // biome-ignore lint: cast needed — heterogeneous readonly tuples in FEATURED_DATA
+  const allFeaturedProducts: any[] = FEATURED_DATA.flatMap((cat) => (cat.featured_products as any))
+  const [featPage, setFeatPage] = useState(0)
+  const [featPerView, setFeatPerView] = useState(4)
+  const featTotal = Math.ceil(allFeaturedProducts.length / featPerView)
+
+  useEffect(() => {
+    const calc = () =>
+      setFeatPerView(window.innerWidth >= 1024 ? 4 : window.innerWidth >= 640 ? 3 : 2)
+    calc()
+    window.addEventListener("resize", calc)
+    return () => window.removeEventListener("resize", calc)
+  }, [])
+
   const handleQty = (id: number, qty: number) =>
     setCartItems((prev) => prev.map((c) => (c.id === id ? { ...c, qty } : c)));
 
@@ -638,16 +655,69 @@ export default function CartPage() {
                     </div>
 
                     <div className="p-5">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {savedItems.map((item) => (
-                          <SavedCard
-                            key={item.id}
-                            item={item}
-                            onAddToCart={handleAddSavedToCart}
-                            onRemove={handleRemoveSaved}
-                          />
-                        ))}
+                      <div className="relative">
+                        {/* Left arrow */}
+                        <button
+                          onClick={() => setFeatPage((p) => Math.max(0, p - 1))}
+                          disabled={featPage === 0}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronLeft size={14} />
+                        </button>
+
+                        {/* Slider track */}
+                        <div className="overflow-hidden mx-5">
+                          <div
+                            className="flex transition-transform duration-500 ease-in-out"
+                            style={{
+                              width: `${(allFeaturedProducts.length / featPerView) * 100}%`,
+                              transform: `translateX(-${(featPage * featPerView * 100) / allFeaturedProducts.length}%)`,
+                            }}
+                          >
+                            {allFeaturedProducts.map((product, idx) => (
+                              <div
+                                key={idx}
+                                style={{ width: `${100 / allFeaturedProducts.length}%` }}
+                                className="px-1.5"
+                              >
+                                <ProductCard
+                                  product={{
+                                    ...product,
+                                    images: [...product.images],
+                                    alt_tags: [...product.alt_tags],
+                                  }}
+                                  onAddToCart={(p, qty) => console.log("Cart:", p.name, qty)}
+                                  onWishlistToggle={(p, w) => console.log("Wishlist:", p.name, w)}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Right arrow */}
+                        <button
+                          onClick={() => setFeatPage((p) => Math.min(featTotal - 1, p + 1))}
+                          disabled={featPage >= featTotal - 1}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronRight size={14} />
+                        </button>
                       </div>
+
+                      {/* Dots */}
+                      {featTotal > 1 && (
+                        <div className="flex justify-center gap-1.5 mt-4">
+                          {Array.from({ length: featTotal }).map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setFeatPage(i)}
+                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                                i === featPage ? "w-5 bg-[#186737]" : "w-1.5 bg-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </section>
                 )}

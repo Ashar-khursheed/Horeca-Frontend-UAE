@@ -493,7 +493,8 @@ export default function SubCategoryPage() {
           {/* Main Content */}
           <div className="flex-1 min-w-0">
             {/* Search + Sort Bar */}
-            <div className="bg-white border border-gray-100 rounded-[7px] px-4 py-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="bg-white border border-gray-100 rounded-[7px] px-4 py-3 mb-4  gap-3">
+            {/* <div className="bg-white border border-gray-100 rounded-[7px] px-4 py-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"> */}
               {/* Search */}
               <div className="relative hidden flex-1 max-w-xs">
                 <Search
@@ -509,7 +510,7 @@ export default function SubCategoryPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-3 justify-between">
                 <span className="text-[12px] text-gray-400 hidden sm:block">
                   Showing{" "}
                   <span className="font-semibold text-gray-700">308</span>{" "}
@@ -551,7 +552,7 @@ export default function SubCategoryPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="md:flex hidden items-center gap-1.5">
                   <span className="text-[11px] text-gray-400">Grid Type:</span>
                   <div className="flex items-center gap-1.5">
                     <Grid2x2 className="text-gray-600" size={17} />

@@ -7,6 +7,7 @@ import {
     Heart,
     MapPin,
     Menu,
+    Phone,
     Search,
     ShoppingCart,
     User,
@@ -335,6 +336,22 @@ export default function NavigationStatic() {
                 </div>
               )}
             </div>
+
+            {/* ── Phone ── */}
+            <a
+              href="tel:+18005550192"
+              className="hidden xl:flex items-center gap-2 border border-gray-200 rounded-full px-3 h-10 hover:border-[#186737] transition-colors group flex-shrink-0"
+            >
+              <div className="w-6 h-6 rounded-full bg-[#186737]/10 flex items-center justify-center flex-shrink-0">
+                <Phone size={12} className="text-[#186737]" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] text-gray-400 leading-none">Call Us</span>
+                <span className="text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">
+                  +1 (800) 555-0192
+                </span>
+              </div>
+            </a>
 
             {/* ── Right Icons ── */}
             <div className="flex items-center gap-1 flex-shrink-0">

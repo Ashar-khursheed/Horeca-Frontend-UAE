@@ -121,7 +121,7 @@ export default function CategoriesPage() {
 
       {/* Category Grid */}
       <section className="global-container py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-5 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-5 md:gap-5 gap-2.5">
           {categories.map((cat) => (
             <CategoryCard key={cat.slug} category={cat} />
           ))}
@@ -130,17 +130,17 @@ export default function CategoriesPage() {
       <section className="md:py-7 py-3 bg-white">
         <div className="global-container">
           <div className="grid grid-cols-1 py-3 pb-7 text-center">
-            <h3 className=" md:text-[18px] text-[12px] text-[#4B5563] font-bold text-acenter  mt-2 sm:ellipsis-text">
+            <h3 className=" md:text-[18px] text-[14px] text-[#4B5563] font-bold text-acenter  mt-2 sm:ellipsis-text">
               Explore More. Find Exactly What You Need.
             </h3>
-            <p>
+            <p className="text-[12px] md:text-base ">
               Explore categories designed for chefs, hoteliers, and
               restaurateurs. Find what you need at unbeatable value with zero
               compromise.
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 mdLgrid-cols-3 gap-4">
             <div>
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"

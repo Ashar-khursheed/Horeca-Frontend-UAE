@@ -415,12 +415,14 @@ const HeaderMenu = () => {
             </a> */}
 
             {/* Financing */}
+        <Link href="/mega-sale" style={{ textDecoration: "none" }}>
          <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
   <span className="relative z-10">Mega Sale</span>
 
   {/* animated border ring */}
   <span className="confetti-ring"></span>
 </button>
+        </Link>
 
             {/* Mega Sale */}
             {/* <Link href="/sale" style={{ textDecoration: "none" }}>

@@ -7,25 +7,28 @@ import {
     HelpCircle,
     History,
     LogOut,
+    Mail,
+    Phone,
     Receipt,
     ShieldCheck,
     ShoppingBag,
     User
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 // 
 const menuItems = [
-  { icon: User,        label: "My Profile" },
-  { icon: ShoppingBag, label: "My Orders" },
-  { icon: FileText,    label: "My Quotes" },
-  { icon: History,     label: "Browsing History" },
-  { icon: Heart,       label: "Saved Items (or Wishlist)" },
-  { icon: Receipt,     label: "Net Payment Terms" },
-  { icon: CreditCard,  label: "Payments & Invoices" },
-  { icon: FolderCheck, label: "Documents & Compliance" },
-  { icon: ShieldCheck, label: "Account Security" },
-  { icon: HelpCircle,  label: "Help & Support" },
-  { icon: LogOut,      label: "Sign Out", danger: true },
+  { icon: User,        label: "My Profile",               href: "/dashboard/my-profile" },
+  { icon: ShoppingBag, label: "My Orders",                href: "/dashboard/orders" },
+  { icon: FileText,    label: "My Quotes",                href: "/dashboard/quotes" },
+  { icon: History,     label: "Browsing History",         href: "/dashboard/history" },
+  { icon: Heart,       label: "Saved Items",              href: "/wishlist" },
+  { icon: Receipt,     label: "Net Payment Terms",        href: "/dashboard/payment-terms" },
+  { icon: CreditCard,  label: "Payments & Invoices",      href: "/dashboard/invoices" },
+  { icon: FolderCheck, label: "Documents & Compliance",   href: "/dashboard/documents" },
+  { icon: ShieldCheck, label: "Account Security",         href: "/dashboard/security" },
+  { icon: HelpCircle,  label: "Help & Support",           href: "/pages/contact-us" },
+  { icon: LogOut,      label: "Sign Out", danger: true,   href: "/" },
 ];
 
 // ─── Profile Dropdown ────────────────────────────────────────────────────────
@@ -87,8 +90,9 @@ function ProfileDropdown({ show }: { show: boolean }) {
           const chevronColor = isDanger && isHovered ? "#ef4444" : isHovered ? "#186737" : "#d1d5db";
 
           return (
-            <div
+            <Link
               key={item.label}
+              href={item.href}
               className={`menu-item menu-row flex items-center justify-between px-4 py-[11px] cursor-pointer transition-all duration-150
                 normal-row hover:bg-gray-50
                 ${i < menuItems.length - 1 ? "border-b border-gray-50" : ""}
@@ -109,7 +113,7 @@ function ProfileDropdown({ show }: { show: boolean }) {
                 </span>
               </div>
               <ChevronRight size={15} className="chevron-icon flex-shrink-0" color={chevronColor} strokeWidth={2.5} />
-            </div>
+            </Link>
           );
         })}
       </div>
