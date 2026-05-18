@@ -6,7 +6,8 @@ import Pagination from "@/components/pagination";
 import { Search, X, ArrowLeft } from "lucide-react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-
+import Image from "next/image";
+import BannerMegaSale from "@/assets/banners/mega-sale/sale-horeca.48eebdaf2a1a79520430.png";
 // ─── Sale Categories ──────────────────────────────────────────────────────────
 const SALE_CATEGORIES = [
   {
@@ -729,7 +730,7 @@ export default function MegaSalePage() {
   return (
     <>
       {/* ── Banner ─────────────────────────────────────────────────────── */}
-      <div className="w-full">
+     {false &&  <div className="w-full">
         {/* Replace src with your actual sale banner image */}
         <div className="w-full hidden md:flex h-80 bg-linear-to-r from-[#0d3d22] via-[#186737] to-[#0d3d22] items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-10"
@@ -758,6 +759,10 @@ export default function MegaSalePage() {
             <p className="text-xs opacity-80 mt-1">Commercial Kitchen Equipment</p>
           </div>
         </div>
+      </div>}
+
+      <div>
+        <Image src={BannerMegaSale} alt="Horeca Sale Banner" className="w-full h-auto object-cover" />
       </div>
 
       {/* ── Promo strip ────────────────────────────────────────────────── */}

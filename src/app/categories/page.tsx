@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import BannerImg from "@/assets/banners/category/categoryBanner.png";
+import CategoryCard from "@/components/category-card";
+import { ChevronRight, LayoutGrid, Search, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { Search, X, ChevronRight, LayoutGrid } from "lucide-react";
-
+import { useMemo, useState } from "react";
 // ─── All Categories Data ──────────────────────────────────────────────────────
 const ALL_CATEGORIES = [
   // ── Main Parent Categories
@@ -563,7 +565,7 @@ export default function AllCategoriesPage() {
       </div>
 
       {/* ── Hero banner ────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-100">
+     {false  &&  <div className="bg-white border-b border-gray-100">
         <div className="global-container py-8 md:py-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -606,7 +608,11 @@ export default function AllCategoriesPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
+
+<div>
+<Image src={BannerImg} alt="All Categories Banner" className="w-full h-auto object-cover" />
+</div>
 
       {/* ── Group filter tabs ───────────────────────────────────────────────── */}
       <div className="bg-white sticky top-0 z-10 border-b border-gray-100 shadow-sm">
@@ -655,53 +661,14 @@ export default function AllCategoriesPage() {
               )}
             </p>
 
-            <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2.5 md:gap-4">
+            {/* <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2.5 md:gap-4"> */}
               {filtered.map((cat) => (
-                <CategoryItem key={cat.id} cat={cat} />
+                <CategoryCard key={cat.id} />
               ))}
-            </div>
+            {/* </div> */}
           </>
         )}
       </div>
     </div>
-  );
-}
-
-// ─── Category card ────────────────────────────────────────────────────────────
-function CategoryItem({
-  cat,
-}: {
-  cat: (typeof ALL_CATEGORIES)[number];
-}) {
-  return (
-    <Link
-      href={`/${cat.slug}`}
-      className="group flex flex-col items-center bg-white border border-gray-200 rounded-[7px] overflow-hidden hover:border-[#186737] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-    >
-      {/* Image */}
-      <div className="w-full aspect-square bg-gray-50 flex items-center justify-center p-2 sm:p-3">
-        <img
-          src={cat.image}
-          alt={cat.name}
-          loading="lazy"
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = FALLBACK;
-          }}
-        />
-      </div>
-
-      {/* Name */}
-      <div className="w-full px-1.5 sm:px-2 py-2 border-t border-gray-100">
-        <p className="text-[10px] sm:text-[11px] md:text-[12px] font-semibold text-gray-800 group-hover:text-[#186737] text-center leading-snug line-clamp-2 transition-colors">
-          {cat.name}
-        </p>
-        {cat.productCount > 0 && (
-          <p className="text-[9px] sm:text-[10px] text-gray-400 text-center mt-0.5 font-medium">
-            {cat.productCount}+ Products
-          </p>
-        )}
-      </div>
-    </Link>
   );
 }

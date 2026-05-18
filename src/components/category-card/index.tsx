@@ -16,7 +16,7 @@ const CatGridItem = ({ cat }: { cat: Cat }) => (
         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
       />
     </div>
-    <p className="lg:text-[13px] md:text-[10px] font-semibold text-black group-hover:text-[#186737] text-center leading-snug px-2 py-2.5 transition-colors duration-200 line-clamp-2 flex justify-center items-center h-full">
+    <p className="lg:text-[13px] w-full bg-white md:text-[10px] font-semibold text-black group-hover:text-[#186737] text-center leading-snug px-2 py-2.5 transition-colors duration-200 line-clamp-2 flex justify-center items-center h-full">
       {cat.name}
     </p>
   </Link>
@@ -44,7 +44,7 @@ export default function CategoryCard() {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <p className="text-[11px] font-medium text-slate-700 text-center leading-tight line-clamp-2 w-full">
+                <p className="text-[11px]  font-medium text-slate-700 text-center leading-tight line-clamp-2 w-full">
                   {cat.name}
                 </p>
               </Link>
