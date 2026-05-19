@@ -675,7 +675,7 @@ export const Footer = () => {
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <Phone className="w-4 h-4 text-black" />
                 </div>
-                <div>
+                <div className="text-center md:text-left">
                   <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">Call Us</p>
                   <p className="text-black font-semibold text-base">+1 (866) 446-7322</p>
                 </div>
@@ -687,7 +687,7 @@ export const Footer = () => {
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <Mail className="w-4 h-4 text-black" />
                 </div>
-                <div>
+                <div className="text-center md:text-left">
                   <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">Email Support</p>
                   <p className="text-black font-semibold text-base">support@horecastore.com</p>
                 </div>
@@ -906,7 +906,7 @@ export const Footer = () => {
       <div className="global-container py-5">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[12px] text-gray-400 text-center sm:text-left">
-            © {new Date().getFullYear()} HorecaStore. All Rights Reserved.
+            © 2026 HorecaStore. All Rights Reserved.
           </p>
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-400 mr-1">We Accept:</span>

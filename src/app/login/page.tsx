@@ -118,7 +118,7 @@ export default function LoginPage() {
       </nav> */}
 
       {/* ── Main ──────────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex items-center justify-center py-10 px-4 pt-0">
+      <main className="flex-1 flex items-center justify-center py-10 px-4 pt-">
         <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white">
 
           {/* ── LEFT – Brand Panel ─────────────────────────────────────────── */}

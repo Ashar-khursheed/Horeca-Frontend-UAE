@@ -351,7 +351,7 @@ export default function CheckoutPage() {
                 <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <ShoppingBag size={15} className="text-[#186737]" />
-                    <h2 className="font-semibold text-gray-800 text-sm">Order Summary</h2>
+                    <h2 className="font-semibold text-gray-800 sub-heading-font-size">Order Summary</h2>
                   </div>
                   <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full font-medium">{CART_ITEMS.length} items</span>
                 </div>
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
               <section className="bg-white rounded-[7px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] border border-gray-100">
                 <div className="flex items-center gap-2 mb-4">
                   <Truck size={15} className="text-[#186737]" />
-                  <h2 className="font-semibold text-gray-800 text-sm">Delivery Options</h2>
+                  <h2 className="font-semibold text-gray-800 sub-heading-font-size">Delivery Options</h2>
                 </div>
                 <div className="space-y-2.5">
                   {deliveryOpts.map((opt) => (
@@ -498,7 +498,7 @@ function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string })
   return (
     <div className="flex items-center gap-2">
       <div className="w-7 h-7 rounded-full bg-[#186737] flex items-center justify-center text-white shrink-0">{icon}</div>
-      <h2 className="font-semibold text-gray-800">{title}</h2>
+      <h2 className="font-semibold text-gray-800 sub-heading-font-size">{title}</h2>
     </div>
   )
 }

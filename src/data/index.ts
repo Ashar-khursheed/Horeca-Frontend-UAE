@@ -7479,3 +7479,292 @@ export const CATEGORIESNAVBAR =[
         "last_children": []
     }
 ]
+
+
+
+
+
+
+
+
+
+
+
+// ── FAQ Data ──────────────────────────────────────────────────────────────────
+export const ContactUsFAQ = [
+  {
+    type: "About HorecaStore",
+    questions: [
+      {
+        question: "What is HorecaStore?",
+        answer: `HorecaStore isn't just an online supplier — it's a platform built with heart, purpose, and the mission to support the heroes behind every restaurant, hotel, café, and commercial kitchen across the U.S. <br />
+                    We are dedicated to the Food Service industry, providing everything from commercial kitchen equipment and guest amenities to essential back-of-house supplies — all tailored to meet the real needs of hospitality professionals`,
+      },
+      {
+        question: "Is HorecaStore legit? Can I trust this site?",
+        answer: `Yes, 100%. HorecaStore is a fully registered, tax-compliant B2B platform operating across the UAE and USA. We're trusted by 5,000+ businesses, including IHG Hotels, The Cheesecake Factory, Salt Bae, and hundreds of beloved local restaurants. We believe trust is earned, not claimed. Your success is our business, and we're here to grow with you, not just sell to you.`,
+      },
+      {
+        question: "Why should I buy from HorecaStore instead of Amazon or local suppliers?",
+        answer: `Because we're not a general store, we're your store. Amazon is built for everything. HorecaStore is built for you, the HoReCa community. Unlike general marketplaces, we focus on bulk packaging, commercial-grade products, and business procurement. We offer tailored quotes, faster B2B support, and dedicated account managers — Most of all, we exist for the community — because when you grow, we grow.`,
+      },
+      {
+        question: "Why does HorecaStore exist?",
+        answer: `HorecaStore exists for one simple reason: to make life easier for the people who serve others. HorecaStore exists to <strong>Simplify procurement</strong> for restaurants, hotels, and cafés — <strong>Save you time</strong> with faster deliveries, bulk-ready products, and one-click reorders — <strong>Help you grow</strong> with better prices, transparent processes, and round-the-clock support — <strong>Give small businesses</strong> a voice, and big brands a smarter way to scale.`,
+      },
+      {
+        question: "How does HorecaStore source products?",
+        answer: `We work directly with manufacturers as well as local and global suppliers. Our product listings come with commercial warranties and strict quality checks, so you never need to second-guess what you're buying.`,
+      },
+      {
+        question: "Do you have physical stores I can visit?",
+        answer: `Yes! We're proudly based in Houston, Texas — and yes, you're welcome to visit us for project discussions or to explore fast-moving products. We display fast-moving and trending items. Not everything from our 100,000+ catalog is on display, but our team is always ready to assist with product selection, project discussions, and tailored solutions for your hospitality needs.`,
+      },
+      {
+        question: "If I already get supplier prices, why should I use HorecaStore?",
+        answer: `We aggregate supplier options, offer cashback, promo pricing, single checkout across brands, easier returns, and a 90-Day Price Guarantee. Plus, we handle all post-sale support and warranty claims on your behalf.`,
+      },
+      {
+        question: "If you add commission, won't your price be higher than the supplier?",
+        answer: `Not at all. Our buying power often means better prices than going direct, even after commission. Plus, you get one invoice, one delivery, tech-enabled ordering, after-sales support, and a dedicated B2B manager — saving you hours wasted on multiple suppliers, POs, deliveries, payments, and phone calls. We're not here to just sell; we're here to simplify your operations and strengthen your bottom line.`,
+      },
+      {
+        question: "We normally buy offline through purchase orders, how does that work here?",
+        answer: `That's perfectly okay! HorecaStore accepts offline POs. Simply email your PO to us or get in touch to set up a procurement account. We'll customize the process to match your internal system.`,
+      },
+      {
+        question: "You are an online website, how do you handle warranty claims?",
+        answer: `Great question. We coordinate warranty claims directly with the brand or supplier. We don't pass the burden to you. HorecaStore takes ownership from purchase to resolution.`,
+      },
+      {
+        question: "I have a corporate agreement with a vendor. Can I still buy from Horeca?",
+        answer: `Yes, absolutely. Even with a corporate vendor agreement, you can still order from HorecaStore. We often work with the same suppliers and can match or improve terms. Plus, with HorecaStore, you get all your purchases consolidated into one platform, one invoice across multiple brands and categories, 24/7 order support and tracking, a dedicated B2B Account Manager, and an easier warranty, returns, and reorder process.`,
+      },
+    ],
+  },
+  {
+    type: "Ordering",
+    questions: [
+      {
+        question: "Our company doesn't pay via card — how can we place an order?",
+        answer: "No problem. We accept bank transfers and can generate Proforma invoices for processing.",
+      },
+      {
+        question: "What is the 90-Day Price Guarantee?",
+        answer: "If you find the same item cheaper elsewhere, we'll refund the difference + 5%. Your trust means more than margin.",
+      },
+      {
+        question: "I'm just browsing now. Do I have to sign up to see prices or add to cart?",
+        answer: `Not at all. Feel free to explore as much as you like — sign-up is only required when you're ready to check out or request a quote.`,
+      },
+      {
+        question: "I didn't find the product I was looking for. Does that mean you don't have it?",
+        answer: `Not necessarily. Many products aren't listed yet or are supplier-specific. Share your requirement via chat, email, or give us a call — our sourcing team will try to find it for you.`,
+      },
+      {
+        question: "I see a product listed but I'm unsure about the quality. Can I trust it?",
+        answer: `Yes. All our products are vetted for commercial use and most come with warranties. We've handpicked suppliers and brands with a reputation for reliability, and we back it with our support.`,
+      },
+      {
+        question: "Can I place an order without owning a restaurant?",
+        answer: `Yes, we welcome home chefs, small caterers, and cloud kitchens. HorecaStore is built for businesses of all sizes.`,
+      },
+      {
+        question: "Do I have to create an account to buy?",
+        answer: `No, you can check out as a guest. But having an account lets you track orders, manage returns, and unlock exclusive offers.`,
+      },
+      {
+        question: "How do I place an order?",
+        answer: `Just add to cart, select your delivery address, and choose your preferred payment method. Bulk buyers can request custom quotes directly.`,
+      },
+      {
+        question: "Are there any special offers for first-time customers?",
+        answer: `Yes! First-time users enjoy welcome discounts, and free delivery options. Sign up to see what's waiting for you.`,
+      },
+      {
+        question: "Can I cancel or modify my order after placing it?",
+        answer: `Yes, before your order is confirmed by the fulfillment team. Once processing starts, cancellation isn't possible — but returns are.`,
+      },
+      {
+        question: "What if an item is out of stock after I order?",
+        answer: `If something goes out of stock after you place an order, we'll notify you immediately. You'll have the option to wait for restocking, choose a suitable alternative, or receive a full refund — whatever works best for you.`,
+      },
+      {
+        question: "Can I schedule my delivery?",
+        answer: `Absolutely. During checkout or via customer support, mention your preferred delivery window and we'll coordinate.`,
+      },
+      {
+        question: "Can I save my favorite products for later?",
+        answer: `Yes, use the Wishlist feature when signed in. Perfect for reordering or generating an instant quote.`,
+      },
+    ],
+  },
+  {
+    type: "Delivery",
+    questions: [
+      {
+        question: "Where do you deliver?",
+        answer: "We proudly deliver across the U.S., with a focus on supporting restaurants, hotels, and commercial kitchens nationwide.",
+      },
+      {
+        question: "Why are some delivery times longer than others?",
+        answer: "Delivery time depends on the product type and where it's coming from. Some items ship directly from our warehouses, while others are sourced from partner suppliers or custom-made just for you. We always display estimated shipping dates clearly, so you know what to expect.",
+      },
+      {
+        question: "How fast is delivery?",
+        answer: "Most in-stock items are shipped within 2–5 business days, depending on your location and the type of product. You'll see an estimated shipping date clearly displayed on each product page and again at checkout. Once your order is dispatched, you'll receive a tracking number to follow your shipment every step of the way.",
+      },
+      {
+        question: "Do you offer urgent same-day or next-day delivery?",
+        answer: "Yes, we offer same-day or next-day delivery for select products and locations — available at an additional cost. Since this service isn't available everywhere, we recommend reaching out to us via live chat or phone before placing your order.",
+      },
+      {
+        question: "Do you provide doorstep delivery?",
+        answer: "Yes, we do! We deliver straight to your doorstep nationwide, whether it's a hotel, restaurant, central kitchen, or warehouse.",
+      },
+      {
+        question: "Can I order now and deliver later?",
+        answer: "Yes, you can. Just mention your preferred delivery date at checkout or email us at hello@horecastore.ae — we'll schedule it accordingly.",
+      },
+      {
+        question: "How do I track my order?",
+        answer: "We email tracking updates automatically, and you can view status anytime under \"My Orders\".",
+      },
+      {
+        question: "How do I contact your driver?",
+        answer: "Call us at 800-HORECA (467-322) — we'll coordinate with our driver and connect you directly if needed to ensure smooth delivery.",
+      },
+      {
+        question: "Who should I reach out to if my delivery is delayed?",
+        answer: "If your delivery hasn't arrived on time, please contact our Customer Success Team at hello@horecastore.ae or reach us via live chat. We'll check the status right away and ensure you get timely updates.",
+      },
+      {
+        question: "What happens if the product arrives damaged or incorrect?",
+        answer: "We've got your back. If anything arrives damaged, defective, or not what you ordered, just let us know within 48 hours of delivery. We'll arrange a quick return or replacement — no long forms, no drama.",
+      },
+      {
+        question: "What if something is missing in delivery?",
+        answer: "We'll either reship it or refund you. Missing items are typically refunded within 7–10 days.",
+      },
+      {
+        question: "I'd like to speak to a manager. How can I raise a complaint?",
+        answer: "We're truly sorry to hear that your experience didn't meet expectations. You can raise a complaint by emailing hello@horecastore.ae with your order number and issue details. We'll escalate it immediately and ensure a senior person gets in touch to resolve things personally.",
+      },
+    ],
+  },
+  {
+    type: "Payments",
+    questions: [
+      {
+        question: "What payment methods do you accept?",
+        answer: "We offer multiple flexible payment options: Credit/Debit Cards, up to 60-month installment plans (financing available on orders up to $1 million). For approved corporate accounts: Purchase Orders, Bank Transfers, Cheque Payments, and Credit Terms (upon approval).",
+      },
+      {
+        question: "Can I pay in installments?",
+        answer: "Yes — we offer up to 60-month installment plans. Financing is available on orders up to $1 million. To apply, connect with us via live chat or speak with our Credit Desk by calling our sales team.",
+      },
+      {
+        question: "Can I change payment method after placing an order?",
+        answer: "Yes — if your order is still unpaid, you can change the payment method. However, once payment has been made via credit/debit card or bank transfer, the payment method cannot be modified for that order.",
+      },
+      {
+        question: "My payment failed, but money was deducted — what should I do?",
+        answer: "Banks usually reverse failed transactions automatically. If delayed, we'll help you escalate it.",
+      },
+      {
+        question: "Will I receive a tax invoice with my company name included?",
+        answer: "Yes, once the order is delivered, you'll receive a full tax-compliant invoice. You can also download it from your account dashboard.",
+      },
+      {
+        question: "We're not allowed to use credit cards. How can I still place an order?",
+        answer: "No problem at all! Once your order is placed, you'll receive an invoice with our bank details. Simply share the cheque copy or bank transfer confirmation with us at sales@thehorecastore.com and our team will process your order right away.",
+      },
+      {
+        question: "Are prices inclusive of tax?",
+        answer: "All prices on www.theHorecaStore.com are displayed exclusive of tax. Applicable sales tax will be calculated at checkout based on your shipping address, including ZIP code and state regulations.",
+      },
+      {
+        question: "Can I request old invoices or Proforma?",
+        answer: "Yes, you can access past invoices via your account or alternatively you can request invoices through customer success.",
+      },
+    ],
+  },
+  {
+    type: "Returns",
+    questions: [
+      {
+        question: "What's your return policy?",
+        answer: "Return periods may vary by product — typically ranging between 7, 14, 21, 30, 60, and up to 90 days. We accept returns for eligible items, provided they are unused, in original packaging, and not excluded (e.g. food & beverage, perishable items, or custom-made products).",
+      },
+      {
+        question: "Which items are non-returnable?",
+        answer: "The following items are generally non-returnable: Food & Beverage products, hygiene-sensitive items (e.g., toiletries, disposables), custom-made or made-to-order products, specially procured items not normally stocked, and used or damaged items not in original packaging.",
+      },
+      {
+        question: "How do I know which item is returnable and what the return period is?",
+        answer: "Every product on TheHorecaStore.com clearly displays its return eligibility and return period on the product page and again during checkout. We believe in full transparency. Still unsure? Feel free to reach out to sales@thehorecastore.com anytime.",
+      },
+      {
+        question: "How do I request a return?",
+        answer: "Log in to \"My Orders\", click the product, and submit a return request. We'll handle the rest.",
+      },
+      {
+        question: "Can I exchange a product?",
+        answer: "We currently don't support direct exchanges. You can return the product and reorder.",
+      },
+      {
+        question: "How long do refunds take?",
+        answer: "Usually within 7–10 business days after return is received and approved.",
+      },
+      {
+        question: "Can I get my refund to a different account?",
+        answer: "Refunds must go back to the original payment method for security reasons. No exceptions.",
+      },
+    ],
+  },
+  {
+    type: "Support",
+    questions: [
+      {
+        question: "Do you design restaurants and offer turnkey solutions?",
+        answer: "Yes, we do. HorecaStore offers complete turnkey solutions for restaurants, hotels, cafés, and cloud kitchens. From kitchen layout design and equipment selection to procurement, installation, and after-sales support, our project team handles everything. For project consultations, reach out to sales@thehorecastore.com or contact us via live chat.",
+      },
+      {
+        question: "Do you provide installation?",
+        answer: "While we currently don't offer free installation, our pricing is designed to give you the best value for money on commercial equipment. Our Customer Success Team is happy to assist you in coordinating it during or after your purchase.",
+      },
+      {
+        question: "Do products come with warranty?",
+        answer: "Yes. All equipment includes manufacturer warranty, and HorecaStore manages claims for you.",
+      },
+      {
+        question: "Can someone help me choose equipment for my kitchen?",
+        answer: "Absolutely! Our expert on-ground project team is here to support you every step of the way — whether you're setting up a new restaurant, hotel, or upgrading your existing kitchen. We'll help you choose the right equipment based on your menu, space, and budget.",
+      },
+      {
+        question: "I couldn't find what I'm looking for. Can you help?",
+        answer: "Yes! We have product specialists — just send us your requirement or RFQ at sales@thehorecastore.com.",
+      },
+      {
+        question: "How do I contact customer support?",
+        answer: "Live chat, phone (866-4HORECA), or email us at sales@thehorecastore.com anytime. We're responsive even after working hours.",
+      },
+      {
+        question: "I saw a product cheaper somewhere else. Do you match prices?",
+        answer: "Yes, our 90-Day Price Guarantee ensures we refund you the difference + 5% if you find it cheaper elsewhere.",
+      },
+      {
+        question: "Are there exclusive offers for Horeca clients?",
+        answer: "Yes — and they're made just for you. We offer special pricing, volume discounts, credit terms, and early access to new launches exclusively for hotels, restaurants, cafés, and catering businesses. Email us at sales@thehorecastore.com to get connected with your dedicated Virtual B2B account manager.",
+      },
+      {
+        question: "Do you have a mobile app?",
+        answer: "Not yet, but the website is fully optimized for mobile ordering and account management.",
+      },
+      {
+        question: "How do I stay updated on deals or product launches?",
+        answer: "Follow us on Instagram, LinkedIn, Facebook or subscribe to our email newsletter — because early access always comes with exclusive rewards. Join a trusted network of over 25,000 chefs, hoteliers, and F&B professionals who stay ahead with HorecaStore.",
+      },
+    ],
+  },
+]; 

@@ -25,11 +25,16 @@ export default async function RootLayout({
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"
+  type="text/css"
+  charSet="UTF-8"
+  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
 />
-
-<script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
-      <body>
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
+/>
+      <body suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <GlobalLayout> {children}</GlobalLayout>
         </NextIntlClientProvider>

@@ -118,7 +118,7 @@ export default function RegisterPage() {
       </nav> */}
 
       {/* Main */}
-      <main className="flex-1 flex items-center justify-center py-10 px-4 pt-0">
+      <main className="flex-1 flex items-center justify-center py-10 px-4 pt-">
         <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-100 p-8 sm:p-10">
 
           <h1 className="text-2xl font-black text-gray-900 mb-1">Create Account</h1>

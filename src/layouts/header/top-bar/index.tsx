@@ -1,55 +1,100 @@
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import LangSwitcher from "@/components/LangSwitcher";
+import { Modal } from "@/components/modal";
+import RestaurantForm from "@/components/restaurant-form";
 
 const NAV_LINKS = [
-  { label: "Track your order", href: "/track-order" },
-  { label: "Financing", href: "/financing" },
-  { label: "Contact Us", href: "/pages/contact-us" },
-  { label: "Terms & Conditions", href: "/pages/return-policy" },
+  { label: "Track your order", href: "/track-order", isModal: false },
+  { label: "Financing", href: "#", isModal: true },
+  { label: "Contact Us", href: "/pages/contact-us", isModal: false },
+  { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false },
 ];
 
 const TopBar = () => {
+  const [isModalOpen, setIsModalOpen] = useState({
+    modalOne: false,
+  });
+
+  const handleModalOpen = () => {
+    setIsModalOpen({ ...isModalOpen, modalOne: true });
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen({ ...isModalOpen, modalOne: false });
+  };
+
   return (
-    <div className="bg-gray-50  hidden xl:block">
-      <div className="global-container flex items-center justify-between py-1.5">
-        {/* Left: Tagline */}
-        <p className="text-[12px] text-gray-500 tracking-wide">
-          Discover Exceptional Products and Unmatched Service.
-        </p>
+    <div>
+      <div className="bg-gray-50  hidden xl:block">
+        <div className="global-container flex items-center justify-between py-1.5">
+          {/* Left: Tagline */}
+          <p className="text-[12px] text-gray-500 tracking-wide">
+            Discover Exceptional Products and Unmatched Service.
+          </p>
 
-        {/* Right: Nav Links */}
-        <ul className="flex items-center">
-          {NAV_LINKS.map((link, index) => (
-            <li key={link.href} className="flex items-center">
-              <Link
-                href={link.href}
-                className="
-                  text-[12px] text-gray-500 px-3 py-0.5
-                  relative
-                  hover:text-[#186737]
-                  transition-colors duration-200 ease-in-out
-                  after:absolute after:bottom-0 after:left-3 after:right-3
-                  after:h-[1px] after:bg-[#186737]
-                  after:scale-x-0 after:origin-left
-                  after:transition-transform after:duration-200
-                  hover:after:scale-x-100
-                "
-              >
-                {link.label}
-              </Link>
+          {/* Right: Nav Links */}
+          <ul className="flex items-center">
+            {NAV_LINKS.map((link, index) => (
+              <li key={link.href + link.label} className="flex items-center">
+                {link.isModal ? (
+                  <button
+                    onClick={handleModalOpen}
+                    className="
+                      text-[12px] text-gray-500 px-3 py-0.5
+                      relative
+                      hover:text-[#186737]
+                      transition-colors duration-200 ease-in-out
+                      after:absolute after:bottom-0 after:left-3 after:right-3
+                      after:h-px after:bg-[#186737]
+                      after:scale-x-0 after:origin-left
+                      after:transition-transform after:duration-200
+                      hover:after:scale-x-100
+                    "
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className="
+                      text-[12px] text-gray-500 px-3 py-0.5
+                      relative
+                      hover:text-[#186737]
+                      transition-colors duration-200 ease-in-out
+                      after:absolute after:bottom-0 after:left-3 after:right-3
+                      after:h-px after:bg-[#186737]
+                      after:scale-x-0 after:origin-left
+                      after:transition-transform after:duration-200
+                      hover:after:scale-x-100
+                    "
+                  >
+                    {link.label}
+                  </Link>
+                )}
 
-              {/* Divider — last item ke baad nahi */}
-              {index < NAV_LINKS.length - 1 && (
-                <span className="w-[1px] h-[14px] bg-gray-300 rounded-full" />
-              )}
+                {/* Divider — last item ke baad nahi */}
+                {index < NAV_LINKS.length - 1 && (
+                  <span className="w-px h-3.5 bg-gray-300 rounded-full" />
+                )}
+              </li>
+            ))}
+            <li>
+              <LangSwitcher />
             </li>
-          ))}
-          <li>
-            <LangSwitcher />
-          </li>
-        </ul>
+          </ul>
+        </div>
       </div>
+      <Modal
+        isOpen={isModalOpen?.modalOne}
+        onClose={handleModalClose}
+        title={"Get a Financing Quote"}
+        showFooter={false}
+        width="max-w-2xl"
+        footerBtnText="Save Address"
+      >
+        <RestaurantForm onClose={handleModalClose} type="Business" />
+      </Modal>
     </div>
   );
 };

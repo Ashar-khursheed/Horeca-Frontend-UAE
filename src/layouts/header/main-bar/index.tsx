@@ -162,7 +162,9 @@ export default function NavigationStatic() {
           <div className="flex items-center justify-between gap-3 lg:gap-5 h-[68px]">
             {/* ── Logo ── */}
             <div className="flex-shrink-0">
+              <Link href="/">
               <Image src={Logo} alt="HorecaStore" className="w-28" />
+              </Link>
             </div>
 
             {/* ── Delivery Location (xl only) ── */}
