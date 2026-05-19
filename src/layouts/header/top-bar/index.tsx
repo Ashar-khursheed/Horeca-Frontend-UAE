@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import LangSwitcher from "@/components/LangSwitcher";
-import { Modal } from "@/components/modal";
-import RestaurantForm from "@/components/restaurant-form";
+import FinancingModal from "@/components/financing-modal";
 
 const NAV_LINKS = [
   { label: "Track your order", href: "/track-order", isModal: false },
@@ -85,16 +84,7 @@ const TopBar = () => {
           </ul>
         </div>
       </div>
-      <Modal
-        isOpen={isModalOpen?.modalOne}
-        onClose={handleModalClose}
-        title={"Get a Financing Quote"}
-        showFooter={false}
-        width="max-w-2xl"
-        footerBtnText="Save Address"
-      >
-        <RestaurantForm onClose={handleModalClose} type="Business" />
-      </Modal>
+      <FinancingModal isOpen={isModalOpen.modalOne} onClose={handleModalClose} title="Get a Financing Quote" />
     </div>
   );
 };
