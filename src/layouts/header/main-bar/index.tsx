@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sheet";
 import { CATEGORIES, NAV_LINKS } from "@/data";
 import { clearProfile, CustomerProfile } from "@/store/slices/my-profile/profileSlice";
+import { LocationData } from "@/store/slices/location/locationSlice";
 import { apiUrls } from "@/apis/api-endpoint";
 import { AppDispatch, RootState } from "@/store/store";
 import { usePathname, useRouter } from "next/navigation";
@@ -115,10 +116,9 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
 // ══════════════════════════════════════════════════════════════════════════════
 // NavigationStatic
 // ══════════════════════════════════════════════════════════════════════════════
-export default function NavigationStatic({ initialProfile = null }: { initialProfile?: CustomerProfile | null }) {
+export default function NavigationStatic({ initialProfile = null, locationData = null }: { initialProfile?: CustomerProfile | null; locationData?: LocationData | null }) {
   const reduxCustomer = useSelector((s: RootState) => s.profile.customer);
   const profileLoading = useSelector((s: RootState) => s.profile.loading);
-  const location = useSelector((s: RootState) => s.location.data);
   const customer = reduxCustomer ?? initialProfile;
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -169,7 +169,7 @@ export default function NavigationStatic({ initialProfile = null }: { initialPro
               <div className="flex flex-col items-start overflow-hidden">
                 <span className="text-[10px] text-gray-400 leading-none">Deliver To</span>
                 <span className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-[110px]">
-                  {location ? `${location.city}, ${location.country}` : "Select Location"}
+                  {locationData ? `${locationData.city}, ${locationData.country}` : "Select Location"}
                 </span>
               </div>
               <ChevronDown size={13} className="text-gray-400 flex-shrink-0 group-hover:text-[#186737] transition-colors ml-auto" />
@@ -276,7 +276,7 @@ export default function NavigationStatic({ initialProfile = null }: { initialPro
               </div>
               <div className="flex flex-col items-start">
                 <span className="text-[10px] text-gray-400 leading-none">Call Us</span>
-                <span className="text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">+1 (800) 555-0192</span>
+                <span className="text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">+1 (866) 446-7322</span>
               </div>
             </a>
 
@@ -340,9 +340,13 @@ export default function NavigationStatic({ initialProfile = null }: { initialPro
             {/* ── Mobile Right (hamburger) ── */}
             <div className="flex xl:hidden items-center gap-1">
               {/* Mobile cart icon */}
-              <button className="relative w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
+              {/* <button className="relative w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
                 <ShoppingCart size={20} />
                 <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">99+</span>
+              </button> */}
+              <button className="relative w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
+                <Search size={20} />
+              
               </button>
 
               {/* Hamburger */}

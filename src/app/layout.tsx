@@ -1,4 +1,5 @@
 import GlobalLayout from "@/layouts/global-layout";
+import { LocationData } from "@/store/slices/location/locationSlice";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
@@ -19,6 +20,16 @@ export default async function RootLayout({
   const messages = await getMessages();
   const isRTL = locale === "ar";
 
+  let locationData: LocationData | null = null;
+  try {
+    const res = await fetch("https://pim.thehorecastore.co/api/frontend/location", {
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) locationData = await res.json();
+  } catch {
+    // non-critical
+  }
+
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <link
@@ -34,10 +45,10 @@ export default async function RootLayout({
         precedence="default"
         href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
       />
-      
+
       <body suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
-          <GlobalLayout>
+          <GlobalLayout locationData={locationData}>
             {children}
           </GlobalLayout>
         </NextIntlClientProvider>

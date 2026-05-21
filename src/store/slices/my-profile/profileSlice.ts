@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { makeApiRequest, removeAuthToken } from "@/apis/axios-instance";
+import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 
 export interface BusinessDetail {
@@ -44,20 +44,6 @@ const initialState: ProfileState = {
   loading: true,
   error: null,
 };
-
-export const logoutUser = createAsyncThunk(
-  "profile/logout",
-  async (_, { dispatch }) => {
-    try {
-      await makeApiRequest(apiUrls.LOGOUT, { method: "POST" });
-    } catch {
-      // proceed with local logout even if API fails
-    } finally {
-      removeAuthToken();
-      dispatch(clearProfile());
-    }
-  }
-);
 
 export const fetchProfile = createAsyncThunk(
   "profile/fetch",

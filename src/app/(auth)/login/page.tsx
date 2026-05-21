@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useFormik } from "formik";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Eye,
   EyeOff,
@@ -16,12 +16,9 @@ import {
 } from "lucide-react";
 import Loader from "@/components/Loader";
 import { loginSchema } from "@/validation/schema";
-import { makeApiRequest, setAuthToken } from "@/apis/axios-instance";
-import { apiUrls } from "@/apis/api-endpoint";
-import useSessionStorage from "@/hooks/useSessionStorage";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
-import { setProfile, CustomerProfile } from "@/store/slices/my-profile/profileSlice";
+import { loginUser } from "@/store/slices/auth/authSlice";
 
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
@@ -65,38 +62,12 @@ const TrustBadge = ({
 
 // ── Yup Validation Schema ─────────────────────────────────────────────────────
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-interface BusinessDetail {
-  id: number;
-  business_name: string;
-  approval_status: string;
-  is_tax_free: number;
-}
-
-interface Customer {
-  id: number;
-  name: string;
-  email: string;
-  type: string;
-  is_social_login: boolean;
-  country_code: string | null;
-  mobile_number: string | null;
-  business_detail: BusinessDetail | null;
-}
-
-interface LoginResponse {
-  success: boolean;
-  message: string;
-  token: string;
-  customer: Customer;
-}
-
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-  const { setItem } = useSessionStorage();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -114,18 +85,16 @@ export default function LoginPage() {
       setLoading(true);
       setApiError("");
       try {
-        const res = await makeApiRequest<LoginResponse>(apiUrls.LOGIN, {
-          method: "POST",
-          data: { email: values.email.trim(), password: values.password },
-        });
-        setAuthToken(res.token);
-        setItem("user", res.customer);
-        dispatch(setProfile(res.customer as CustomerProfile));
-        router.push("/");
+        await dispatch(
+          loginUser({ email: values.email.trim(), password: values.password })
+        ).unwrap();
+        const redirect = searchParams.get("redirect") ?? "/";
+        router.push(redirect);
       } catch (err: unknown) {
         const msg =
-          (err as { response?: { data?: { message?: string } } })?.response
-            ?.data?.message ?? "Invalid email or password.";
+          typeof err === "string"
+            ? err
+            : (err as { message?: string })?.message ?? "Invalid email or password.";
         setApiError(msg);
       } finally {
         setLoading(false);

@@ -1,7 +1,7 @@
 export const apiUrls = {
   // Authentication
   LOGIN: "/login",
-  REGISTER: "/auth/register",
+  REGISTER: "/customer/register",
   LOGOUT: "/logout",
   GETMYPROFILE: "/customer/get-profile",
 

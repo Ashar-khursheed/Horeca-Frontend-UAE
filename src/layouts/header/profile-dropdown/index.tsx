@@ -1,7 +1,7 @@
 "use client";
 
 import { AppDispatch, RootState } from "@/store/store";
-import { logoutUser } from "@/store/slices/my-profile/profileSlice";
+import { logoutUser } from "@/store/slices/auth/authSlice";
 import {
   ChevronRight,
   CreditCard,
@@ -17,7 +17,6 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -36,8 +35,8 @@ const menuItems = [
 
 function ProfileDropdown({ show }: { show: boolean }) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
   const customer = useSelector((s: RootState) => s.profile.customer);
  
   if (!show) return null;
@@ -117,11 +116,13 @@ function ProfileDropdown({ show }: { show: boolean }) {
         <button
           onMouseEnter={() => setHoveredItem("Sign Out")}
           onMouseLeave={() => setHoveredItem(null)}
+          disabled={loggingOut}
           onClick={async () => {
+            setLoggingOut(true);
             await dispatch(logoutUser());
-            router.push("/");
+            window.location.href = "/";
           }}
-          className="w-full flex items-center justify-between px-4 py-2.75 cursor-pointer transition-all duration-150 hover:bg-gray-50"
+          className="w-full flex items-center justify-between px-4 py-2.75 cursor-pointer transition-all duration-150 hover:bg-gray-50 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           <div className="flex items-center gap-3">
             <div
@@ -136,13 +137,18 @@ function ProfileDropdown({ show }: { show: boolean }) {
             >
               Sign Out
             </span>
+            {loggingOut && (
+              <span className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+            )}
           </div>
-          <ChevronRight
-            size={15}
-            className="chevron-icon shrink-0"
-            color={hoveredItem === "Sign Out" ? "#ef4444" : "#d1d5db"}
-            strokeWidth={2.5}
-          />
+          {!loggingOut && (
+            <ChevronRight
+              size={15}
+              className="chevron-icon shrink-0"
+              color={hoveredItem === "Sign Out" ? "#ef4444" : "#d1d5db"}
+              strokeWidth={2.5}
+            />
+          )}
         </button>
       </div>
 

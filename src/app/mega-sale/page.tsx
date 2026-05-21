@@ -8,6 +8,7 @@ import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
 import BannerMegaSale from "@/assets/banners/mega-sale/sale-horeca.48eebdaf2a1a79520430.png";
+import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
 // ─── Sale Categories ──────────────────────────────────────────────────────────
 const SALE_CATEGORIES = [
   {
@@ -947,7 +948,7 @@ export default function MegaSalePage() {
 
         {/* Products grid */}
         {paginated.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-5">
+          <div className={generateDynamicCSSProductCard}>
             {paginated.map((product) => (
               <ProductCard
                 key={product.id + product.sku}

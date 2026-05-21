@@ -1,29 +1,19 @@
-
-
-
+import BottomNav from "@/components/bottom-nav";
+import { LocationData } from "@/store/slices/location/locationSlice";
 import { HeaderProps } from "@/utils/types";
 import NavigationStatic from "./main-bar";
 import DropdownPanel from "./navigation";
 import TopBar from "./top-bar";
-import BottomNav from "@/components/bottom-nav";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+interface Props extends HeaderProps {
+  locationData?: LocationData | null;
+}
 
-// ── Component ──────────────────────────────────────────────────────────────
- let locationData = null;
-  try {
-    const res = await fetch("https://pim.thehorecastore.co/api/frontend/location", {
-      cache: "no-store",
-    });
-    if (res.ok) locationData = await res.json();
-  } catch {
-    // non-critical, proceed without location
-  }
-const Header: React.FC<HeaderProps> = ({ initialProfile = null }) => {
+const Header: React.FC<Props> = ({ initialProfile = null, locationData }) => {
   return (
     <header className="w-full stickys top-0 z-50 ">
       <TopBar />
-      <NavigationStatic initialProfile={initialProfile} />
+      <NavigationStatic initialProfile={initialProfile} locationData={locationData} />
       <DropdownPanel />
       <BottomNav />
     </header>
