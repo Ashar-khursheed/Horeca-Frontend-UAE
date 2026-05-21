@@ -156,7 +156,7 @@ export const HeroBanner = ({
                         src={banner.image}
                         alt={banner.title ?? "Banner"}
                         fill
-                        className="object-cover"
+                        className="object-coverasss"
                         priority={index === 0}
                         sizes="(max-width: 1024px) 100vw, 70vw"
                       />
@@ -193,7 +193,7 @@ export const HeroBanner = ({
                               src={isValid ? item.image : NoImage}
                               alt={item.title ?? "Banner"}
                               fill
-                              className="object-cover"
+                              className="object-coverassss"
                               sizes="100vw"
                             />
                           </div>
@@ -204,7 +204,7 @@ export const HeroBanner = ({
                             src={isValid ? item.image : NoImage}
                             alt={item.title ?? "Banner"}
                             fill
-                            className="object-cover"
+                            className="object-covera"
                             sizes="100vw"
                           />
                         </div>
@@ -240,7 +240,7 @@ export const HeroBanner = ({
                                 src={isValid ? item.image : NoImage}
                                 alt={item.title ?? "Banner"}
                                 fill
-                                className="object-cover"
+                                className="object-covera"
                                 sizes="50vw"
                               />
                               {isValid && <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />}
@@ -252,7 +252,7 @@ export const HeroBanner = ({
                               src={isValid ? item.image : NoImage}
                               alt={item.title ?? "Banner"}
                               fill
-                              className="object-cover"
+                              className="object-covera"
                               sizes="50vw"
                             />
                           </div>
@@ -292,7 +292,7 @@ export const HeroBanner = ({
                                 src={isValid ? item.image : NoImage}
                                 alt={item.title ?? "Banner"}
                                 fill
-                                className="object-cover"
+                                className="object-covera"
                                 sizes="30vw"
                               />
                               {isValid && <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />}
@@ -304,7 +304,7 @@ export const HeroBanner = ({
                               src={isValid ? item.image : NoImage}
                               alt={item.title ?? "Banner"}
                               fill
-                              className="object-cover"
+                              className="object-covera"
                               sizes="30vw"
                             />
                           </div>

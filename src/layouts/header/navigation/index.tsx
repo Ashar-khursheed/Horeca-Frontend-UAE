@@ -151,18 +151,18 @@ function DropdownPanel({
                     onClick={onClose}
                     onMouseEnter={() => handleChildHover(child)}
                     className={`
-                      group relative block w-full px-4 py-3 rounded-[7px]
+                      group relative block w-full px-4 py-2 not-first: rounded-[7px]
                       transition-all duration-200 ease-in-out animate-fadeIn
                       ${
                         activeChild?.id === child.id
-                          ? "bg-green-50 text-green-700 font-normal shadow-sm"
-                          : "bg-gray-50 text-gray-700 hover:bg-green-50 hover:text-green-600"
+                          ? "bg-green-50 text-green-700  text-[12px] font-normal shadow-sm"
+                          : "bg-gray-50 text-black hover:bg-green-50  text-[12px] hover:text-green-600"
                       }
                     `}
-                    style={{ animationDelay: `${index * 30}ms` }}
+                    style={{ animationDelay: `${index * 30}ms`,  }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm leading-tight">{child.name}</span>
+                      <span className="text-[12px] 2xl:text-[14px] leading-tight">{child.name}</span>
                       <ChevronRight
                         size={16}
                         className={`transition-all duration-200 flex-shrink-0 ${
@@ -185,7 +185,7 @@ function DropdownPanel({
             {/* ── RIGHT PANEL ── */}
             <div className="col-span-9 h-[450px] overflow-y-auto pr-2 custom-scrollbar">
               {grandChildren.length > 0 ? (
-                <div className="grid 2xl:grid-cols-6 grid-cols-5 gap-4 pb-2">
+                <div className="grid 2xl:grid-cols-8 grid-cols-7 gap-4 pb-2">
                   {grandChildren.map((grandChild, index) => (
                     <Link
                       key={grandChild.id}

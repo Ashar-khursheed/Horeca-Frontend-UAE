@@ -158,7 +158,7 @@ export default function LoginPage() {
             </div>
 
             {/* Feature list */}
-            <div className="relative z-10 space-y-3">
+            {/* <div className="relative z-10 space-y-3">
               {[
                 "Track & manage all your orders",
                 "Save items to wishlist",
@@ -185,10 +185,10 @@ export default function LoginPage() {
                   <span className="text-white/80 text-sm">{text}</span>
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {/* Trust badges row */}
-            <div className="relative z-10 flex items-center gap-6 pt-6 border-t border-white/10">
+            {/* <div className="relative z-10 flex items-center gap-6 pt-6 border-t border-white/10">
               {["VISA", "MC", "SSL", "PCI"].map((b) => (
                 <span
                   key={b}
@@ -197,7 +197,7 @@ export default function LoginPage() {
                   {b}
                 </span>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* ── RIGHT – Form Panel ─────────────────────────────────────────── */}
@@ -386,11 +386,11 @@ export default function LoginPage() {
             </p>
 
             {/* Trust badges */}
-            <div className="flex items-center justify-center gap-6 mt-7 pt-6 border-t border-gray-100">
+            {/* <div className="flex items-center justify-center gap-6 mt-7 pt-6 border-t border-gray-100">
               <TrustBadge icon={ShieldCheck} label="Secure Login" />
               <TrustBadge icon={Truck} label="Fast Delivery" />
               <TrustBadge icon={RotateCcw} label="Easy Returns" />
-            </div>
+            </div> */}
           </div>
         </div>
       </main>

@@ -15,6 +15,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 const NAV = [
@@ -28,16 +30,15 @@ const NAV = [
   { label: "Support Center",    href: "/dashboard/support",      icon: Headphones },
 ];
 
-const USER = {
-  name: "Arshad Khan",
-  initials: "AK",
-  business: "Arshad Inc.",
-  email: "webdeveloper08@horecastore.ae",
-};
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const customer = useSelector((s: RootState) => s.profile.customer);
+
+  const name     = customer?.name ?? "Guest";
+  const email    = customer?.email ?? "";
+  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const business = customer?.business_detail?.business_name ?? null;
 
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
@@ -64,11 +65,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-[#186737] flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">{USER.initials}</span>
+            <span className="text-white font-bold text-sm">{initials}</span>
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900 truncate">{USER.name}</p>
-            <p className="text-[11px] text-gray-400 truncate">{USER.email}</p>
+            <p className="text-sm font-bold text-gray-900 truncate">{name}</p>
+            {business && (
+              <p className="text-[11px] text-[#186737] font-medium truncate">{business}</p>
+            )}
+            <p className="text-[11px] text-gray-400 truncate">{email}</p>
           </div>
         </div>
       </div>

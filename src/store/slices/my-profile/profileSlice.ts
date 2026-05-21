@@ -45,6 +45,28 @@ const initialState: ProfileState = {
   error: null,
 };
 
+export const updateProfile = createAsyncThunk(
+  "profile/update",
+  async (
+    payload: { name: string; country_code: string; mobile_number: string; type: string; business_name?: string },
+    { dispatch, rejectWithValue }
+  ) => {
+    try {
+      const res = await makeApiRequest<{ success: boolean; message: string; customer: CustomerProfile }>(
+        apiUrls.UPDATE_PROFILE,
+        { method: "POST", data: payload }
+      );
+      dispatch(setProfile(res.customer));
+      return res.message;
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ?? "Failed to update profile.";
+      return rejectWithValue(msg);
+    }
+  }
+);
+
 export const fetchProfile = createAsyncThunk(
   "profile/fetch",
   async (_, { rejectWithValue }) => {
@@ -91,6 +113,18 @@ const profileSlice = createSlice({
         state.customer = action.payload;
       })
       .addCase(fetchProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

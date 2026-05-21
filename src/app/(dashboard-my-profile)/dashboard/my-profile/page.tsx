@@ -24,7 +24,14 @@ import {
   Shield,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useFormik } from "formik";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { changePassword } from "@/store/slices/auth/authSlice";
+import { updateProfile } from "@/store/slices/my-profile/profileSlice";
+import { changePasswordSchema, updateProfileSchema } from "@/validation/schema";
+import { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Tab = "personal" | "business" | "security" | "notifications" | "addresses";
@@ -52,44 +59,70 @@ const Field = ({
 );
 
 // ── Personal Info Tab ─────────────────────────────────────────────────────────
-const PersonalTab = () => {
-  const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState({
-    firstName: "Arshad",
-    lastName: "Khan",
-    email: "webdeveloper08@horecastore.ae",
-    phone: "+1 (888) 888-8877",
-    country: "United States",
-    city: "Houston",
-    state: "Texas",
-    zip: "77074",
-  });
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((p) => ({ ...p, [k]: e.target.value }));
+const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error">("idle");
+  const [apiMessage, setApiMessage] = useState("");
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
+  const initials = customer?.name?.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const formik = useFormik({
+    initialValues: {
+      name:          customer?.name                                ?? "",
+      email:         customer?.email                              ?? "",
+      country_code:  customer?.country_code                       ?? "",
+      mobile_number: customer?.mobile_number                      ?? "",
+      type:          customer?.type                               ?? "Private",
+      business_name: customer?.business_detail?.business_name     ?? "",
+    },
+    validationSchema: updateProfileSchema,
+    validateOnBlur: true,
+    validateOnChange: true,
+    enableReinitialize: true,
+    onSubmit: async (values) => {
+      setApiStatus("idle");
+      setApiMessage("");
+      try {
+        const msg = await dispatch(
+          updateProfile({
+            name:          values.name,
+            country_code:  values.country_code,
+            mobile_number: values.mobile_number,
+            type:          values.type,
+            ...(values.type === "Business" && { business_name: values.business_name }),
+          })
+        ).unwrap();
+        setApiStatus("success");
+        setApiMessage(msg ?? "Profile updated successfully.");
+        setTimeout(() => setApiStatus("idle"), 3000);
+      } catch (err: unknown) {
+        setApiStatus("error");
+        setApiMessage(
+          typeof err === "string" ? err
+          : (err as { message?: string })?.message ?? "Failed to update profile."
+        );
+      }
+    },
+  });
+
+  const hasErr = (f: keyof typeof formik.values) =>
+    !!(formik.touched[f] && formik.errors[f]);
 
   return (
     <div className="space-y-5">
-      {/* Avatar section */}
+      {/* Avatar */}
       <div className="flex items-center gap-5 p-5 bg-white rounded-[7px] border border-gray-100 shadow-sm">
-        <div className="relative">
-          <div className="w-20 h-20 rounded-[7px] bg-[#186737] flex items-center justify-center shadow-md">
-            <span className="text-white font-black text-2xl">AK</span>
-          </div>
-          <button className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center shadow-sm hover:border-[#186737] transition-colors">
-            <Camera size={12} className="text-gray-600" />
-          </button>
+        <div className="w-20 h-20 rounded-[7px] bg-[#186737] flex items-center justify-center shadow-md shrink-0">
+          <span className="text-white font-black text-2xl">{initials}</span>
         </div>
         <div>
-          <h3 className="font-bold text-gray-900">Arshad Khan</h3>
-          <p className="text-xs text-gray-500 mt-0.5">webdeveloper08@horecastore.ae</p>
-          <button className="mt-2 text-xs font-semibold text-[#186737] hover:underline">
-            Upload photo
-          </button>
+          <h3 className="font-bold text-gray-900">{customer?.name ?? "—"}</h3>
+          <p className="text-xs text-gray-500 mt-0.5">{customer?.email ?? "—"}</p>
+          <span className={`mt-1.5 inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+            customer?.type === "Business" ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+          }`}>
+            {customer?.type ?? "Private"}
+          </span>
         </div>
       </div>
 
@@ -101,54 +134,213 @@ const PersonalTab = () => {
             Personal Information
           </h3>
         </div>
+
+        <form onSubmit={formik.handleSubmit} noValidate>
+          <div className="p-5 space-y-4">
+            {/* API banners */}
+            {apiStatus === "success" && (
+              <div className="flex items-start gap-3 p-3.5 rounded-[7px] bg-emerald-50 border border-emerald-200">
+                <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-emerald-700">{apiMessage}</p>
+              </div>
+            )}
+            {apiStatus === "error" && (
+              <div className="flex items-start gap-3 p-3.5 rounded-[7px] bg-red-50 border border-red-200">
+                <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-4.75a.75.75 0 001.5 0v-4.5a.75.75 0 00-1.5 0v4.5zm.75-7a.75.75 0 110 1.5.75.75 0 010-1.5z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm font-medium text-red-700">{apiMessage}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <Field label="Full Name" icon={User}>
+                  <input
+                    name="name"
+                    value={formik.values.name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    placeholder="Your full name"
+                    className={`${inputCls} ${hasErr("name") ? "border-red-400 focus:ring-red-100" : ""}`}
+                  />
+                  {hasErr("name") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.name}</p>}
+                </Field>
+              </div>
+
+              <Field label="Email Address" icon={Mail}>
+                <input
+                  type="email"
+                  value={formik.values.email}
+                  readOnly
+                  className={`${inputCls} bg-gray-50 text-gray-400 cursor-not-allowed`}
+                />
+              </Field>
+
+              <Field label="Account Type"  icon={Shield}>
+                <Select
+                  value={formik.values.type}
+                  onValueChange={(val) => formik.setFieldValue("type", val)}
+                  disabled
+                  
+                  
+                >
+                  <SelectTrigger className={`${inputCls} cursor-not-allowed bg-gray-50 text-gray-400 opacity-100`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="text-black">
+                    <SelectItem value="Business" >Business</SelectItem>
+                    <SelectItem value="Private">Private</SelectItem>
+                  </SelectContent>
+                </Select>
+                {hasErr("type") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.type}</p>}
+              </Field>
+
+              {formik.values.type === "Business" && (
+                <div className="sm:col-span-2">
+                  <Field label="Business Name" icon={Building2}>
+                    <input
+                      name="business_name"
+                      value={formik.values.business_name}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="Your business name"
+                      className={`${inputCls} ${hasErr("business_name") ? "border-red-400 focus:ring-red-100" : ""}`}
+                    />
+                    {hasErr("business_name") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.business_name}</p>}
+                  </Field>
+                </div>
+              )}
+
+              <Field label="Country Code" icon={Phone}>
+                <input
+                  name="country_code"
+                  value={formik.values.country_code}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder={formik.values.country_code ? undefined : "+971"}
+                  disabled
+                  className={`${inputCls} cursor-not-allowed ${hasErr("country_code") ? "border-red-400 focus:ring-red-100" : ""}`}
+                />
+                {hasErr("country_code") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.country_code}</p>}
+              </Field>
+
+              <Field label="Mobile Number" icon={Phone}>
+                <input
+                  name="mobile_number"
+                  value={formik.values.mobile_number}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="501234567"
+                  className={`${inputCls} ${hasErr("mobile_number") ? "border-red-400 focus:ring-red-100" : ""}`}
+                />
+                {hasErr("mobile_number") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.mobile_number}</p>}
+              </Field>
+            </div>
+          </div>
+
+          <div className="px-5 pb-5 flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={formik.isSubmitting}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 bg-[#186737] hover:bg-[#145c30] text-white disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {formik.isSubmitting ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : "Save Changes"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { formik.resetForm(); setApiStatus("idle"); }}
+              className="px-5 py-2.5 rounded-[7px] text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── Business Tab ──────────────────────────────────────────────────────────────
+const BusinessTab = () => {
+  const customer = useSelector((s: RootState) => s.profile.customer);
+  const bd = customer?.business_detail;
+  const [saved, setSaved] = useState(false);
+  const [form, setForm] = useState({
+    business_name: bd?.business_name ?? "",
+    trn_number:    (bd?.trn_number === "null" ? "" : bd?.trn_number) ?? "",
+  });
+
+  const set = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((p) => ({ ...p, [k]: e.target.value }));
+
+  useEffect(() => {
+    if (bd) {
+      setForm({
+        business_name: bd.business_name ?? "",
+        trn_number:    (bd.trn_number === "null" ? "" : bd.trn_number) ?? "",
+      });
+    }
+  }, [bd]);
+
+  const statusColor =
+    bd?.approval_status === "approved"
+      ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+      : bd?.approval_status === "rejected"
+      ? "bg-red-50 text-red-600 border-red-200"
+      : "bg-amber-50 text-amber-600 border-amber-200";
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-gray-100">
+          <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+            <Building2 size={14} className="text-[#186737]" />
+            Business Information
+          </h3>
+        </div>
         <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="First Name" icon={User}>
-            <input className={inputCls} value={form.firstName} onChange={set("firstName")} />
+          <Field label="Business Name" icon={Building2}>
+            <input
+              className={inputCls}
+              value={form.business_name}
+              onChange={set("business_name")}
+              placeholder="Your business name"
+            />
           </Field>
-          <Field label="Last Name" icon={User}>
-            <input className={inputCls} value={form.lastName} onChange={set("lastName")} />
+          <Field label="TRN Number" icon={Hash}>
+            <input
+              className={inputCls}
+              value={form.trn_number}
+              onChange={set("trn_number")}
+              placeholder="Tax registration number"
+            />
           </Field>
-          <Field label="Email Address" icon={Mail}>
-            <input type="email" className={inputCls} value={form.email} onChange={set("email")} />
-          </Field>
-          <Field label="Phone Number" icon={Phone}>
-            <input className={inputCls} value={form.phone} onChange={set("phone")} />
-          </Field>
-          <Field label="Country" icon={Globe}>
-            <Select value={form.country} onValueChange={(val) => setForm((p) => ({ ...p, country: val }))}>
-              <SelectTrigger className={`${inputCls} cursor-pointer`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="United States">United States</SelectItem>
-                <SelectItem value="United Arab Emirates">United Arab Emirates</SelectItem>
-                <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                <SelectItem value="Canada">Canada</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="City" icon={MapPin}>
-            <input className={inputCls} value={form.city} onChange={set("city")} />
-          </Field>
-          <Field label="State / Province" icon={MapPin}>
-            <input className={inputCls} value={form.state} onChange={set("state")} />
-          </Field>
-          <Field label="ZIP / Postal Code" icon={Hash}>
-            <input className={inputCls} value={form.zip} onChange={set("zip")} />
+          <Field label="Approval Status">
+            <div className={`h-10 px-3 rounded-[7px] border text-sm font-semibold flex items-center capitalize ${statusColor}`}>
+              {bd?.approval_status ?? "—"}
+            </div>
           </Field>
         </div>
         <div className="px-5 pb-5 flex items-center gap-3">
           <button
-            onClick={handleSave}
+            onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2500); }}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 ${
-              saved
-                ? "bg-emerald-600 text-white"
-                : "bg-[#186737] hover:bg-[#145c30] text-white"
+              saved ? "bg-emerald-600 text-white" : "bg-[#186737] hover:bg-[#145c30] text-white"
             }`}
           >
             {saved ? <><CheckCircle size={15} /> Saved!</> : "Save Changes"}
           </button>
-          <button className="px-5 py-2.5 rounded-[7px] text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+          <button
+            onClick={() => setForm({ business_name: bd?.business_name ?? "", trn_number: (bd?.trn_number === "null" ? "" : bd?.trn_number) ?? "" })}
+            className="px-5 py-2.5 rounded-[7px] text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          >
             Cancel
           </button>
         </div>
@@ -157,107 +349,57 @@ const PersonalTab = () => {
   );
 };
 
-// ── Business Tab ──────────────────────────────────────────────────────────────
-const BusinessTab = () => {
-  const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState({
-    businessName: "Arshad Inc.",
-    industry: "Restaurant & Hospitality",
-    taxId: "XX-XXXXXXX",
-    website: "",
-    address: "Houston, Texas, United States",
-    accountType: "Business",
-  });
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((p) => ({ ...p, [k]: e.target.value }));
-
-  return (
-    <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-gray-100">
-        <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-          <Building2 size={14} className="text-[#186737]" />
-          Business Information
-        </h3>
-      </div>
-      <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Business Name" icon={Building2}>
-          <input className={inputCls} value={form.businessName} onChange={set("businessName")} />
-        </Field>
-        <Field label="Industry" icon={Globe}>
-          <Select value={form.industry} onValueChange={(val) => setForm((p) => ({ ...p, industry: val }))}>
-            <SelectTrigger className={`${inputCls} cursor-pointer`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Restaurant & Hospitality">Restaurant & Hospitality</SelectItem>
-              <SelectItem value="Food Service">Food Service</SelectItem>
-              <SelectItem value="Retail">Retail</SelectItem>
-              <SelectItem value="Healthcare">Healthcare</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Tax ID / EIN">
-          <input className={inputCls} value={form.taxId} onChange={set("taxId")} placeholder="XX-XXXXXXX" />
-        </Field>
-        <Field label="Website" icon={Globe}>
-          <input className={inputCls} value={form.website} onChange={set("website")} placeholder="https://yoursite.com" />
-        </Field>
-        <div className="sm:col-span-2">
-          <Field label="Business Address" icon={MapPin}>
-            <input className={inputCls} value={form.address} onChange={set("address")} />
-          </Field>
-        </div>
-        <Field label="Account Type">
-          <div className="grid grid-cols-2 gap-2">
-            {["Business", "Personal"].map((type) => (
-              <button
-                key={type}
-                onClick={() => setForm((p) => ({ ...p, accountType: type }))}
-                className={`h-10 rounded-[7px] border text-sm font-semibold transition-all duration-150 ${
-                  form.accountType === type
-                    ? "border-[#186737] bg-[#f0f9f4] text-[#186737]"
-                    : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </Field>
-      </div>
-      <div className="px-5 pb-5 flex items-center gap-3">
-        <button
-          onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2500); }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 ${
-            saved ? "bg-emerald-600 text-white" : "bg-[#186737] hover:bg-[#145c30] text-white"
-          }`}
-        >
-          {saved ? <><CheckCircle size={15} /> Saved!</> : "Save Changes"}
-        </button>
-        <button className="px-5 py-2.5 rounded-[7px] text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-};
-
 // ── Security Tab ──────────────────────────────────────────────────────────────
 const SecurityTab = () => {
-  const [show, setShow] = useState({ current: false, new: false, confirm: false });
-  const [saved, setSaved] = useState(false);
-  const [pwd, setPwd] = useState({ current: "", new: "", confirm: "" });
+  const dispatch = useDispatch<AppDispatch>();
+  const [show, setShow] = useState({
+    old_password: false,
+    new_password: false,
+    new_password_confirmation: false,
+  });
+  const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error">("idle");
+  const [apiMessage, setApiMessage] = useState("");
 
-  const strength =
-    pwd.new.length === 0 ? 0
-    : pwd.new.length < 6 ? 1
-    : pwd.new.length < 10 ? 2
-    : /[A-Z]/.test(pwd.new) && /[0-9]/.test(pwd.new) && /[^A-Za-z0-9]/.test(pwd.new) ? 4
+  const strengthOf = (pw: string) =>
+    pw.length === 0 ? 0
+    : pw.length < 6 ? 1
+    : pw.length < 10 ? 2
+    : /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw) ? 4
     : 3;
 
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"];
-  const strengthColor = ["", "bg-red-400", "bg-amber-400", "bg-blue-400", "bg-emerald-500"];
+  const strengthBarColor = ["", "bg-red-400", "bg-amber-400", "bg-blue-400", "bg-emerald-500"];
+  const strengthTextColor = ["", "text-red-500", "text-amber-500", "text-blue-500", "text-emerald-600"];
+
+  const formik = useFormik({
+    initialValues: {
+      old_password: "",
+      new_password: "",
+      new_password_confirmation: "",
+    },
+    validationSchema: changePasswordSchema,
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: async (values, { resetForm }) => {
+      setApiStatus("idle");
+      setApiMessage("");
+      try {
+        const msg = await dispatch(changePassword(values)).unwrap();
+        setApiStatus("success");
+        setApiMessage(msg ?? "Password updated successfully.");
+        resetForm();
+      } catch (err: unknown) {
+        setApiStatus("error");
+        setApiMessage(
+          typeof err === "string" ? err
+          : (err as { message?: string })?.message ?? "Failed to change password."
+        );
+      }
+    },
+  });
+
+  const hasErr = (f: keyof typeof formik.values) =>
+    !!(formik.touched[f] && formik.errors[f]);
 
   const EyeBtn = ({ field }: { field: keyof typeof show }) => (
     <button
@@ -269,6 +411,8 @@ const SecurityTab = () => {
     </button>
   );
 
+  const strength = strengthOf(formik.values.new_password);
+
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
@@ -278,52 +422,108 @@ const SecurityTab = () => {
             Change Password
           </h3>
         </div>
-        <div className="p-5 space-y-4 max-w-md">
-          {(["current", "new", "confirm"] as const).map((field) => (
-            <Field
-              key={field}
-              label={field === "current" ? "Current Password" : field === "new" ? "New Password" : "Confirm New Password"}
-              icon={Lock}
-            >
+
+        <form onSubmit={formik.handleSubmit} noValidate>
+          <div className="p-5 space-y-4 max-w-md">
+            {/* API Banner */}
+            {apiStatus === "success" && (
+              <div className="flex items-start gap-3 p-3.5 rounded-[7px] bg-emerald-50 border border-emerald-200">
+                <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-emerald-700">{apiMessage}</p>
+              </div>
+            )}
+            {apiStatus === "error" && (
+              <div className="flex items-start gap-3 p-3.5 rounded-[7px] bg-red-50 border border-red-200">
+                <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-4.75a.75.75 0 001.5 0v-4.5a.75.75 0 00-1.5 0v4.5zm.75-7a.75.75 0 110 1.5.75.75 0 010-1.5z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm font-medium text-red-700">{apiMessage}</p>
+              </div>
+            )}
+
+            {/* Current Password */}
+            <Field label="Current Password" icon={Lock}>
               <div className="relative">
                 <input
-                  type={show[field] ? "text" : "password"}
-                  className={`${inputCls} pr-10`}
-                  value={pwd[field]}
-                  onChange={(e) => setPwd((p) => ({ ...p, [field]: e.target.value }))}
+                  type={show.old_password ? "text" : "password"}
+                  name="old_password"
+                  value={formik.values.old_password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   placeholder="••••••••"
+                  className={`${inputCls} pr-10 ${hasErr("old_password") ? "border-red-400 focus:ring-red-100" : ""}`}
                 />
-                <EyeBtn field={field} />
+                <EyeBtn field="old_password" />
               </div>
-              {field === "new" && pwd.new.length > 0 && (
+              {hasErr("old_password") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.old_password}</p>}
+            </Field>
+
+            {/* New Password */}
+            <Field label="New Password" icon={Lock}>
+              <div className="relative">
+                <input
+                  type={show.new_password ? "text" : "password"}
+                  name="new_password"
+                  value={formik.values.new_password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="••••••••"
+                  className={`${inputCls} pr-10 ${hasErr("new_password") ? "border-red-400 focus:ring-red-100" : ""}`}
+                />
+                <EyeBtn field="new_password" />
+              </div>
+              {hasErr("new_password") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.new_password}</p>}
+              {!hasErr("new_password") && formik.values.new_password.length > 0 && (
                 <div className="mt-1.5">
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map((s) => (
-                      <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= strength ? strengthColor[strength] : "bg-gray-200"}`} />
+                      <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= strength ? strengthBarColor[strength] : "bg-gray-200"}`} />
                     ))}
                   </div>
-                  <p className={`text-[11px] font-semibold mt-1 ${strengthColor[strength].replace("bg-", "text-")}`}>
+                  <p className={`text-[11px] font-semibold mt-1 ${strengthTextColor[strength]}`}>
                     {strengthLabel[strength]}
                   </p>
                 </div>
               )}
             </Field>
-          ))}
-        </div>
-        <div className="px-5 pb-5">
-          <button
-            onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2500); }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 ${
-              saved ? "bg-emerald-600 text-white" : "bg-[#186737] hover:bg-[#145c30] text-white"
-            }`}
-          >
-            {saved ? <><CheckCircle size={15} /> Updated!</> : "Update Password"}
-          </button>
-        </div>
+
+            {/* Confirm New Password */}
+            <Field label="Confirm New Password" icon={Lock}>
+              <div className="relative">
+                <input
+                  type={show.new_password_confirmation ? "text" : "password"}
+                  name="new_password_confirmation"
+                  value={formik.values.new_password_confirmation}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="••••••••"
+                  className={`${inputCls} pr-10 ${hasErr("new_password_confirmation") ? "border-red-400 focus:ring-red-100" : ""}`}
+                />
+                <EyeBtn field="new_password_confirmation" />
+              </div>
+              {hasErr("new_password_confirmation") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.new_password_confirmation}</p>}
+            </Field>
+          </div>
+
+          <div className="px-5 pb-5">
+            <button
+              type="submit"
+              disabled={formik.isSubmitting}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 bg-[#186737] hover:bg-[#145c30] text-white disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {formik.isSubmitting ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Updating...
+                </>
+              ) : "Update Password"}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* 2FA */}
-      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5 hidden">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-[7px] bg-[#f0f9f4] flex items-center justify-center shrink-0">
@@ -617,7 +817,7 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 export default function MyProfilePage() {
   const [tab, setTab] = useState<Tab>("personal");
-
+  const customer = useSelector((s: RootState) => s.profile.customer);
   return (
     <div className="p-4 sm:p-6 max-w-[900px]">
       {/* Header */}
@@ -647,7 +847,7 @@ export default function MyProfilePage() {
       </div>
 
       {/* Tab content */}
-      {tab === "personal"      && <PersonalTab />}
+      {tab === "personal"      && <PersonalTab customer={customer} />}
       {tab === "business"      && <BusinessTab />}
       {tab === "security"      && <SecurityTab />}
       {tab === "notifications" && <NotificationsTab />}

@@ -4,10 +4,12 @@ import Logo from "@/assets/logo.png";
 import {
   ChevronDown,
   ChevronRight,
+  Clock,
   Heart,
   LogOut,
   MapPin,
   Menu,
+  MessageSquare,
   Phone,
   Search,
   ShoppingCart,
@@ -125,10 +127,23 @@ export default function NavigationStatic({ initialProfile = null, locationData =
   const pathname = usePathname();
 
   const [showProfile, setShowProfile] = useState(false);
+  const [showContact, setShowContact] = useState(false);
+  const contactRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setShowProfile(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (contactRef.current && !contactRef.current.contains(e.target as Node)) {
+        setShowContact(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [quantities, setQuantities] = useState([1, 1, 1, 1]);
@@ -269,16 +284,75 @@ export default function NavigationStatic({ initialProfile = null, locationData =
               )}
             </div>
 
-            {/* ── Phone (xl only) ── */}
-            <a href="tel:+18005550192" className="hidden xl:flex items-center gap-2 border border-gray-200 rounded-full px-3 h-10 hover:border-[#186737] transition-colors group flex-shrink-0">
-              <div className="w-6 h-6 rounded-full bg-[#186737]/10 flex items-center justify-center flex-shrink-0">
-                <Phone size={12} className="text-[#186737]" />
-              </div>
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] text-gray-400 leading-none">Call Us</span>
-                <span className="text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">+1 (866) 446-7322</span>
-              </div>
-            </a>
+            {/* ── Phone / Contact Dropdown (xl only) ── */}
+            <div className="relative hidden xl:block shrink-0" ref={contactRef}>
+              <button
+                onClick={() => setShowContact((v) => !v)}
+                className={`flex items-center gap-2 border rounded-full px-3 h-10 transition-colors group ${showContact ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
+              >
+                <div className="w-6 h-6 rounded-full bg-[#186737]/10 flex items-center justify-center shrink-0">
+                  <Phone size={12} className="text-[#186737]" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-[10px] text-gray-400 leading-none">Call Us</span>
+                  <span className="text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">+1 (866) 446-7322</span>
+                </div>
+                <ChevronDown size={12} className={`text-gray-400 transition-transform duration-200 ${showContact ? "rotate-180 text-[#186737]" : ""}`} />
+              </button>
+
+              {showContact && (
+                <div className="absolute top-full right-0 mt-3 w-70 bg-white rounded-xl z-50 overflow-hidden"
+                  style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.13), 0 4px 20px rgba(24,103,55,0.08)" }}
+                >
+
+                  {/* Top green bar */}
+                  <div className="h-1 bg-linear-to-r from-[#186737] to-[#22a350]" />
+
+                  {/* Specialist info */}
+                  <div className="p-4 pb-0">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-200 to-gray-300 shrink-0 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+                        <User size={22} className="text-gray-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 text-[15px] leading-tight">Need Help?</p>
+                        <p className="text-[12px] text-gray-500 leading-snug mt-0.5">
+                         Opening a Restaurant?
+                        </p>
+                        <button className="text-[11px] text-[#186737] hover:underline mt-1 text-left">
+                      From kitchen equipment to financing, we’ve got you covered.
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex  border-gray-100s  w-[80%] mx-auto ">
+                    <a
+                      href="tel:+18664467322"
+                      className="flex-1 flex flex-col items-center gap-1.5 py-3 hover:bg-[#f8fdf9] transition-colors group border-gray-100"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-[#186737]/10 flex items-center justify-center group-hover:bg-[#186737] transition-colors">
+                        <Phone size={15} className="text-[#186737] group-hover:text-white transition-colors" />
+                      </div>
+                      <span className="text-[11px] font-semibold text-gray-600 group-hover:text-[#186737] transition-colors">Call</span>
+                    </a>
+                    <button className="flex-1 flex flex-col items-center gap-1.5 py-3 hover:bg-[#f8fdf9] transition-colors group  border-gray-100">
+                      <div className="w-9 h-9 rounded-full bg-[#186737]/10 flex items-center justify-center group-hover:bg-[#186737] transition-colors">
+                        <MessageSquare size={15} className="text-[#186737] group-hover:text-white transition-colors" />
+                      </div>
+                      <span className="text-[11px] font-semibold text-gray-600 group-hover:text-[#186737] transition-colors">Request a Quote</span>
+                    </button>
+                    {/* <button className="flex-1 flex flex-col items-center gap-1.5 py-3.5 hover:bg-[#f8fdf9] transition-colors group">
+                      <div className="w-9 h-9 rounded-full bg-[#186737]/10 flex items-center justify-center group-hover:bg-[#186737] transition-colors">
+                        <Clock size={15} className="text-[#186737] group-hover:text-white transition-colors" />
+                      </div>
+                      <span className="text-[11px] font-semibold text-gray-600 group-hover:text-[#186737] transition-colors">Hours</span>
+                    </button> */}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* ── Right Icons (desktop) ── */}
             <div className="hidden xl:flex items-center gap-1 flex-shrink-0">

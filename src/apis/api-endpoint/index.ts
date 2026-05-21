@@ -4,6 +4,8 @@ export const apiUrls = {
   REGISTER: "/customer/register",
   LOGOUT: "/logout",
   GETMYPROFILE: "/customer/get-profile",
+  CHANGE_PASSWORD: "/customer/change-password",
+  UPDATE_PROFILE: "/customer/update-profile",
 
   // General
   COUNTRIES: "/countries",
