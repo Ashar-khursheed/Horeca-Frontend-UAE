@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
 const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (!token) return null;
     return token.trim().replace(/^["']|["']$/g, "");
   } catch {
@@ -24,12 +24,15 @@ const getAuthToken = (): string | null => {
 export const setAuthToken = (token: string): void => {
   if (typeof window === "undefined") return;
   const clean = token.trim().replace(/^["']|["']$/g, "");
-  localStorage.setItem("token", clean);
+  sessionStorage.setItem("token", clean);
+  document.cookie = `token=${clean}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`;
 };
 
 export const removeAuthToken = (): void => {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("token");
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("user");
+  document.cookie = "token=; path=/; max-age=0";
 };
 
 // ─── Request Interceptor ──────────────────────────────────────────────────────
@@ -50,10 +53,11 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    const isAuthEndpoint = error.config?.url?.includes("/auth/");
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       removeAuthToken();
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        // window.location.href = "/login";
       }
     }
     return Promise.reject(error);

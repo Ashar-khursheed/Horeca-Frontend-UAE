@@ -98,7 +98,7 @@ export default function RegisterPage() {
     }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screens py-8 bg-gray-50 flex flex-col">
 
       {/* Breadcrumb */}
       {/* <nav className="bg-white border-b border-gray-100">

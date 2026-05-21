@@ -84,8 +84,8 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <main className="flex-1 flex items-center justify-center py-10 px-4">
+    <div className="min-h-screens py-20 bg-gray-50 flex flex-col">
+      <main className="flex-1 flex items-center justify-center py-10s px-4">
         <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white">
 
           {/* ── LEFT – Brand Panel ─────────────────────────────────────────── */}

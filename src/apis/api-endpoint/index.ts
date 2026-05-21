@@ -1,9 +1,11 @@
 export const apiUrls = {
   // Authentication
-  LOGIN: "/auth/login",
+  LOGIN: "/login",
   REGISTER: "/auth/register",
-  LOGOUT: "/auth/logout",
+  LOGOUT: "/logout",
+  GETMYPROFILE: "/customer/get-profile",
 
   // General
   COUNTRIES: "/countries",
+  SLIDER: (id: number) => `/sliders/${id}`,
 };

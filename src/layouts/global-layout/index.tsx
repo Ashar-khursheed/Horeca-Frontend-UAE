@@ -1,16 +1,16 @@
 "use client";
 
+import LocationInitializer from "@/components/LocationInitializer";
+import ProfileInitializer from "@/components/ProfileInitializer";
+import store from "@/store/store";
 import React from "react";
 import { Provider } from "react-redux";
-import store from "@/store/store";
-import Header from "../header";
 import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
 import "swiper/css/effect-fade";
-// import "slick-carousel/slick/slick.css";
-// import "slick-carousel/slick/slick-theme.css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 import Footer from "../footer";
+import Header from "../header";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -18,13 +18,13 @@ interface GlobalLayoutProps {
 
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
-    <>
-      {/* <Provider store={store}> */}
+    <Provider store={store}>
+      <ProfileInitializer />
+      <LocationInitializer />
       <Header />
-        {children}
-        <Footer/>
-      {/* </Provider> */}
-    </>
+      {children}
+      <Footer />
+    </Provider>
   );
 };
 

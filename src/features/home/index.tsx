@@ -253,16 +253,16 @@ import { BlogsCard } from "@/components/blog-card";
 import SEOMainContent from "@/seo/seo-main-content";
 import FeaturedProducts from "./feature-product";
 import FeaturedBrands from "./features-brand";
-import HeroBanner from "./hero-banner";
+import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
 
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export const Home = () => {
+export const Home = ({ sliderItems = [], sliderItemsTwo = [] }: { sliderItems?: SliderItem[], sliderItemsTwo?: SliderItem[] }) => {
 
   return (
     <>
-     <HeroBanner/>
+     <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
       <SEOMainContent/>
       <ShopByCategories/>
       <FeaturedProducts/>

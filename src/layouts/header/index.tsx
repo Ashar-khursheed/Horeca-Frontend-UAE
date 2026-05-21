@@ -1,6 +1,5 @@
 
 
-"use client";
 
 import { HeaderProps } from "@/utils/types";
 import NavigationStatic from "./main-bar";
@@ -11,18 +10,20 @@ import BottomNav from "@/components/bottom-nav";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 // ── Component ──────────────────────────────────────────────────────────────
-
-const Header: React.FC<HeaderProps> = ({
-  locale = "en",
-  userName,
-  wishlistCount = 0,
-  cartCount = 0,
-  deliverTo,
-}) => {
+ let locationData = null;
+  try {
+    const res = await fetch("https://pim.thehorecastore.co/api/frontend/location", {
+      cache: "no-store",
+    });
+    if (res.ok) locationData = await res.json();
+  } catch {
+    // non-critical, proceed without location
+  }
+const Header: React.FC<HeaderProps> = ({ initialProfile = null }) => {
   return (
     <header className="w-full stickys top-0 z-50 ">
       <TopBar />
-      <NavigationStatic />
+      <NavigationStatic initialProfile={initialProfile} />
       <DropdownPanel />
       <BottomNav />
     </header>

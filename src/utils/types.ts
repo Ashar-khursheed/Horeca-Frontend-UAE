@@ -1,3 +1,5 @@
+import { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
+
 interface HeaderProps {
   locale?: string;
   userName?: string;
@@ -7,6 +9,7 @@ interface HeaderProps {
     name: string;
     address: string;
   };
+  initialProfile?: CustomerProfile | null;
 }
 
 export type {

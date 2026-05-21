@@ -4,8 +4,6 @@ import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-
-
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -24,19 +22,24 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <link
-  rel="stylesheet"
-  type="text/css"
-  charSet="UTF-8"
-  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
-/>
-<link
-  rel="stylesheet"
-  type="text/css"
-  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
-/>
+        rel="stylesheet"
+        type="text/css"
+        charSet="UTF-8"
+        precedence="default"
+        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
+      />
+      <link
+        rel="stylesheet"
+        type="text/css"
+        precedence="default"
+        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
+      />
+      
       <body suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
-          <GlobalLayout> {children}</GlobalLayout>
+          <GlobalLayout>
+            {children}
+          </GlobalLayout>
         </NextIntlClientProvider>
       </body>
     </html>

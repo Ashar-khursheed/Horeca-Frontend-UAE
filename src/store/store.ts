@@ -1,14 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { combineReducers } from "redux";
-
-const rootReducer = combineReducers({
-
-});
+import profileReducer from "./slices/my-profile/profileSlice";
+import locationReducer from "./slices/location/locationSlice";
 
 const store = configureStore({
-  reducer: rootReducer,
+  reducer: {
+    profile: profileReducer,
+    location: locationReducer,
+  },
 });
 
-export type RootState = ReturnType<typeof rootReducer>;
+export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export default store;
