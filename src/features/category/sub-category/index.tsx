@@ -383,7 +383,7 @@ export default function SubCategoryPage() {
     <main className="min-h-screen bg-gray-5p0">
       <Breadcrumb />
 
-      <div className="global-container mx-auto px-4 sm:px-6 py-5">
+      <div className="global-container ">
         {/* Page Header */}
         <div className="mb-5">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
@@ -516,7 +516,8 @@ export default function SubCategoryPage() {
                   <span className="font-semibold text-gray-700">308</span>{" "}
                   results
                 </span>
-                <div className="hidden md:flex items-center gap-1.5">
+               <div className="flex items-center gap-4">
+                 <div className="hidden md:flex items-center gap-1.5">
                   <span className="text-[11px] text-gray-400">Sort:</span>
                   <Select
                     value={sortBy}
@@ -559,6 +560,7 @@ export default function SubCategoryPage() {
                     <Rows3 className="text-gray-600" size={17} />
                   </div>
                 </div>
+               </div>
               </div>
             </div>
 

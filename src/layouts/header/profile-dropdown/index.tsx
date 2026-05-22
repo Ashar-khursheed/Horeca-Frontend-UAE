@@ -14,6 +14,7 @@ import {
   Receipt,
   ShieldCheck,
   ShoppingBag,
+  Settings,
   User,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,6 +22,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 const menuItems = [
+  { icon: Settings,        label: "My Dashboard",             href: "/dashboard" },
   { icon: User,        label: "My Profile",             href: "/dashboard/my-profile" },
   { icon: ShoppingBag, label: "My Orders",              href: "/dashboard/orders" },
   { icon: FileText,    label: "My Quotes",              href: "/dashboard/quotes" },

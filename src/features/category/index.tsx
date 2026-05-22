@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import { categories, FEATURED_DATA, ItemsAccordion } from "@/data";
 import SeoContent from "@/seo/seo-content";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoveRight } from "lucide-react";
 import Link from "next/link";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -37,7 +37,7 @@ function CategoryCard({ category }: { category: Category }) {
   const remaining = category.subCategories.length - visibleSubs.length;
 
   return (
-    <div className="group relative bg-white border border-gray-100 rounded-[7px] md:p-6 p-4 hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
+    <div className="group relative bg-white border border-gray-100 rounded-[7px] md:p-6 p-3 hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
       {/* Icon */}
       <div className="w-full md:h-[250px] h-[100px] bg-orange-50a rounded-[7px] flex items-center justify-center text-2xl">
         {category.image ? (
@@ -84,9 +84,9 @@ function CategoryCard({ category }: { category: Category }) {
         {remaining > 0
           ? `View all ${category.subCategories.length}`
           : "View category"}
-        <span className="text-base leading-none group-hover:translate-x-0.5 transition-transform">
-          →
-        </span>
+        {/* <span className="text-base leading-none group-hover:translate-x-0.5 transition-transform"> */}
+        <MoveRight size={14}  />
+        {/* </span> */}
       </Link>
     </div>
   );
@@ -121,26 +121,26 @@ export default function CategoriesPage() {
 
       {/* Category Grid */}
       <section className="global-container py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-5 md:gap-5 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-5 md:gap-5 gap-1">
           {categories.map((cat) => (
             <CategoryCard key={cat.slug} category={cat} />
           ))}
         </div>
       </section>
-      <section className="md:py-7 py-3 bg-white">
+      <section className="md:py-7 py-3 pb-5 bg-white">
         <div className="global-container">
-          <div className="grid grid-cols-1 py-3 pb-7 text-center">
-            <h3 className=" md:text-[18px] text-[14px] text-[#4B5563] font-bold text-acenter  mt-2 sm:ellipsis-text">
+          <div className="grid grid-cols-1   text-center">
+            <h3 className=" heading-font-size text-[#000] font-bold text-acenter  sm:ellipsis-text">
               Explore More. Find Exactly What You Need.
             </h3>
-            <p className="text-[12px] md:text-base ">
+            <p className="text-[11px] md:text-base pb-4 pt-2  font-extralight text-[#4B5563]  ">
               Explore categories designed for chefs, hoteliers, and
               restaurateurs. Find what you need at unbeatable value with zero
               compromise.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 mdLgrid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <img
                 src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Banner%201.webp"
@@ -190,7 +190,7 @@ export default function CategoriesPage() {
         <div className="global-container">
           {/* Header row with title + nav buttons */}
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-[16px] md:text-[22px] font-bold text-gray-900">
+            <h1 className="heading-font-size font-bold text-gray-900">
               Our Customers&apos; Top Choices
             </h1>
             <div className="flex items-center gap-2">
@@ -247,17 +247,17 @@ export default function CategoriesPage() {
         </div>
       </section>
       <BrandsSection />
-      <section className="bg-whiste py-10">
+      <section className="bg-whiste py-10 md:pb-10 pb-0">
         <div className="global-container ">
           <div className="grid grid-cols-1">
-            <h2 className="flex items-center justify-center text-center flex-col text-3xl font-bold ">
+            <h2 className="flex items-center justify-center text-center flex-col heading-font-size font-bold ">
               Frequently Asked Questions
             </h2>
             <p className="hidden sm:block text-[17px] text-[#4B5563] font-inter px-16 mt-2 text-center">
               Everything you need to know before you buy.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 grid-cols-1 gap-10 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 grid-cols-1 md:gap-10 max-w-6xl mx-auto">
             {/* Left Column */}
             <Accordion
               type="single"
@@ -285,7 +285,7 @@ export default function CategoriesPage() {
           </div>
         </div>
       </section>
-      <div className="bg-white py-10 pb-0">
+      <div className="bg-white md:py-10 py-3 pb-0">
         <SeoContent />
       </div>
     </main>

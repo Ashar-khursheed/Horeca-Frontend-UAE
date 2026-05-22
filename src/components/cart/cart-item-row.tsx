@@ -1,0 +1,150 @@
+"use client";
+
+import { Calendar, Heart, Minus, Plus, Trash2, Truck } from "lucide-react";
+import Link from "next/link";
+import { CartItem, fmtPrice } from "./cart-types";
+
+export default function CartItemRow({
+  item,
+  onQty,
+  onRemove,
+  onWishlist,
+}: {
+  item: CartItem;
+  onQty: (id: number, qty: number) => void;
+  onRemove: (id: number) => void;
+  onWishlist: (id: number) => void;
+}) {
+  const hasSale = item.originalPrice > item.price;
+  const discountPct = hasSale
+    ? ((item.originalPrice - item.price) / item.originalPrice) * 100
+    : 0;
+
+  return (
+    <div className="flex gap-3 sm:gap-4 group">
+      {/* Image */}
+      <Link
+        href="/"
+        className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-[7px] bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center"
+      >
+        {hasSale && (
+          <span className="absolute top-1 left-1 bg-[#FCE8EA] text-red-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full z-10">
+            -{Math.round(discountPct)}%
+          </span>
+        )}
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src =
+              "https://placehold.co/96x96/f3f4f6/9ca3af?text=No+Img";
+          }}
+        />
+      </Link>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <Link href="/">
+              <h3 className="text-sm font-semibold text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
+                {item.name}
+              </h3>
+            </Link>
+            <p className="text-xs text-[#186737] font-semibold mt-1">{item.brand}</p>
+            <p className="text-xs text-gray-400 mt-0.5">Model: {item.modelNo}</p>
+          </div>
+
+          {/* Price – desktop */}
+          <div className="hidden sm:block text-right shrink-0 ml-4">
+            <p className="text-base font-bold text-gray-900">
+              ${fmtPrice(item.price * item.qty)}
+            </p>
+            {hasSale && (
+              <p className="text-xs text-gray-400 line-through">
+                ${fmtPrice(item.originalPrice * item.qty)}
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-0.5">
+              ${fmtPrice(item.price)} /{item.unit}
+            </p>
+          </div>
+        </div>
+
+        {/* Shipping */}
+        <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Truck size={12} className="text-[#186737]" />
+            <span className="font-semibold text-gray-700">
+              Shipping: ${fmtPrice(item.shippingCost)}
+            </span>
+          </div>
+          <span className="text-gray-300">·</span>
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Calendar size={11} className="text-[#186737]" />
+            <span>Ship by {item.shipBy}</span>
+          </div>
+        </div>
+
+        {/* Mobile price */}
+        <div className="sm:hidden mt-2">
+          <p className="text-sm font-bold text-gray-900">
+            ${fmtPrice(item.price * item.qty)}
+          </p>
+          {hasSale && (
+            <p className="text-xs text-gray-400 line-through">
+              ${fmtPrice(item.originalPrice * item.qty)}
+            </p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="mt-3 flex items-center gap-3 flex-wrap">
+          {/* Qty */}
+          <div className="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white">
+            <button
+              onClick={() => onQty(item.id, Math.max(1, item.qty - 1))}
+              disabled={item.qty <= 1}
+              className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <Minus size={13} className="text-gray-600" strokeWidth={2} />
+            </button>
+            <span className="w-8 text-center text-sm font-bold text-[#186737]">
+              {item.qty}
+            </span>
+            <button
+              onClick={() => onQty(item.id, Math.min(99, item.qty + 1))}
+              disabled={item.qty >= 99}
+              className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <Plus size={13} className="text-gray-600" strokeWidth={2} />
+            </button>
+          </div>
+
+          {/* Wishlist */}
+          <button
+            onClick={() => onWishlist(item.id)}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 ${
+              item.inWishlist
+                ? "border-[#186737] text-[#186737] bg-[#f0f9f4]"
+                : "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737] hover:bg-[#f0f9f4]"
+            }`}
+          >
+            <Heart size={13} className={item.inWishlist ? "fill-[#186737]" : ""} />
+            {item.inWishlist ? "Wishlisted" : "Save for Later"}
+          </button>
+
+          {/* Remove */}
+          <button
+            onClick={() => onRemove(item.id)}
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 font-semibold px-2.5 py-1.5 rounded-[7px] hover:bg-red-50 border border-transparent hover:border-red-100 transition-all duration-200"
+          >
+            <Trash2 size={13} />
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

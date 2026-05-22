@@ -390,7 +390,7 @@ img {
     @apply text-base;
   }
   .heading-font-size {
-  font-size: 1.1rem;
+  font-size: 16px;
 }
 .sub-heading-font-size {
   font-size: 1rem;
@@ -406,7 +406,7 @@ img {
     @apply text-sm;
   }
   .heading-font-size {
-  font-size: 1.1rem;
+  font-size: 16px;
 }
 .sub-heading-font-size {
   font-size: 1rem;

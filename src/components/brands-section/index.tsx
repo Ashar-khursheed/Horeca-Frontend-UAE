@@ -30,10 +30,10 @@ export default function BrandsSection() {
 
         {/* ── Header ── */}
         <div className="text-center mb-8">
-          <h2 className="text-xl md:text-3xl font-bold text-gray-900">
+          <h2 className="eading-font-size font-bold text-gray-900">
             Shop Direct from Official Brand Stores
           </h2>
-          <p className="text-gray-500 text-sm md:text-base mt-2 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-gray-500 text-[12px] md:text-base mt-2 max-w-3xl mx-auto leading-relaxed">
             No Middlemen. No Compromises. Just 100% Authentic Products. Trusted
             by Leading Hotels, Restaurants, and Cafes. Buy Straight from the
             Source and Explore Official Brand Stores Featuring Authorized
@@ -45,10 +45,8 @@ export default function BrandsSection() {
         {/* ── Brand Grid Table ── */}
         <div className="border border-gray-200 rounded-[7px] overflow-hidden">
           <div
-            className="grid"
-            style={{
-              gridTemplateColumns: "repeat(4, 1fr)",
-            }}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0"
+            
           >
             {BRANDS.map((brand, index) => {
               const isLastRow =
@@ -61,7 +59,7 @@ export default function BrandsSection() {
                   href={`/brands/${brand.slug}`}
                   className={[
                     "flex items-center justify-center",
-                    "px-2 py-8 md:py-5 ",
+                    "px-2 py-3 md:py-5 ",
                     "bg-white hover:bg-gray-50 transition-colors duration-200",
                     "group",
                     /* Right border — except last column */

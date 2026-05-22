@@ -1,5 +1,13 @@
 "use client";
 
+import { useAppSelector } from "@/store/hooks";
+import {
+  MobileUserInfoSkeleton,
+  MobileStatsSkeleton,
+  WelcomeBannerSkeleton,
+  StatCardSkeleton,
+  RecentQuotesSkeleton,
+} from "@/components/dashboard/skeletons";
 import {
   AlertCircle,
   ArrowRight,
@@ -15,6 +23,7 @@ import {
   Headphones,
   Heart,
   LogOut,
+  Mail,
   Package,
   Settings,
   ShoppingBag,
@@ -82,12 +91,14 @@ const MOBILE_NAV_ITEMS = [
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const pathname = usePathname();
-
+  const customer = useAppSelector((s) => s.profile.customer);
+  const loading  = useAppSelector((s) => s.profile.loading);
   const isMenuItemActive = (href: string) => {
     if (href === "/dashboard" || href === "/wishlist") return pathname === href;
     if (pathname.startsWith(href + "/")) return true;
     return pathname === href;
   };
+  const initials = customer?.name?.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <>
@@ -98,41 +109,48 @@ export default function DashboardPage() {
         <div className="bg-gradient-to-br from-[#186737] via-green-600 to-green-700 px-6 pt-6 pb-8 rounded-b-[2rem] shadow-xl">
 
           {/* Avatar + user info */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border-[3px] border-white/40 flex items-center justify-center overflow-hidden shadow-lg">
-                <User className="w-10 h-10 text-white" />
+          {loading ? (
+            <MobileUserInfoSkeleton />
+          ) : (
+            <div className="flex items-center gap-4 mb-6">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border-[3px] border-white/40 flex items-center justify-center overflow-hidden shadow-lg">
+                  <User className="w-10 h-10 text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full" />
+                </div>
               </div>
-              {/* Online indicator */}
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full" />
+              <div className="flex-1 min-w-0">
+                <h2 className="text-white text-xl font-bold leading-tight">{customer?.name || "Guest"}</h2>
+                <p className="text-white/90 text-sm mt-1 truncate">{customer?.email || ""}</p>
+                <p className="text-white/80 text-xs mt-0.5">{customer?.country_code} {customer?.mobile_number || ""}</p>
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-white text-xl font-bold leading-tight">{USER.fullName}</h2>
-              <p className="text-white/90 text-sm mt-1 truncate">{USER.email}</p>
-              <p className="text-white/80 text-xs mt-0.5">{USER.phone}</p>
-            </div>
-          </div>
+          )}
 
           {/* Stats cards */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
-              <Package className="w-5 h-5 text-white mx-auto mb-1" />
-              <p className="text-white text-lg font-bold">41</p>
-              <p className="text-white/80 text-xs">Orders</p>
+          {loading ? (
+            <MobileStatsSkeleton />
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
+                <Package className="w-5 h-5 text-white mx-auto mb-1" />
+                <p className="text-white text-lg font-bold">41</p>
+                <p className="text-white/80 text-xs">Orders</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
+                <Heart className="w-5 h-5 text-white mx-auto mb-1" />
+                <p className="text-white text-lg font-bold">1</p>
+                <p className="text-white/80 text-xs">Wishlist</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
+                <DollarSign className="w-5 h-5 text-white mx-auto mb-1" />
+                <p className="text-white text-lg font-bold">$0.00</p>
+                <p className="text-white/80 text-[10px] leading-tight">Net Terms Credit</p>
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
-              <Heart className="w-5 h-5 text-white mx-auto mb-1" />
-              <p className="text-white text-lg font-bold">1</p>
-              <p className="text-white/80 text-xs">Wishlist</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
-              <DollarSign className="w-5 h-5 text-white mx-auto mb-1" />
-              <p className="text-white text-lg font-bold">$0.00</p>
-              <p className="text-white/80 text-[10px] leading-tight">Net Terms Credit</p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* ── Content cards (overlap header) ───────────────────────────── */}
@@ -144,7 +162,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { Icon: ShoppingBag, label: "Orders",  href: "/dashboard/orders",  bg: "bg-blue-100",   color: "text-blue-600" },
-                { Icon: Tag,         label: "Coupons", href: "/dashboard/coupons", bg: "bg-orange-100", color: "text-orange-600" },
+                // { Icon: Tag,         label: "Coupons", href: "/dashboard/coupons", bg: "bg-orange-100", color: "text-orange-600" },
                 { Icon: Heart,       label: "Wishlist",href: "/wishlist",           bg: "bg-red-100",    color: "text-red-600" },
               ].map(({ Icon, label, href, bg, color }) => (
                 <Link
@@ -211,71 +229,78 @@ export default function DashboardPage() {
         <div className="p-4 sm:p-6 space-y-6 max-w-[1400px]">
 
           {/* ── Welcome Banner ────────────────────────────────────────────── */}
-          <div className="relative overflow-hidden rounded-[7px] bg-gradient-to-br from-[#186737] via-[#1e7d42] to-[#22a34e] text-white shadow-lg">
-            <div className="absolute -top-12 -right-12 w-52 h-52 rounded-full bg-white/5" />
-            <div className="absolute -bottom-8 -right-4 w-36 h-36 rounded-full bg-white/5" />
-            <div className="absolute top-6 right-24 w-16 h-16 rounded-full bg-white/5" />
+          {loading ? (
+            <WelcomeBannerSkeleton />
+          ) : (
+            <div className="relative overflow-hidden rounded-[7px] bg-linear-to-br from-[#186737] via-[#1e7d42] to-[#22a34e] text-white shadow-lg">
+              <div className="absolute -top-12 -right-12 w-52 h-52 rounded-full bg-white/5" />
+              <div className="absolute -bottom-8 -right-4 w-36 h-36 rounded-full bg-white/5" />
+              <div className="absolute top-6 right-24 w-16 h-16 rounded-full bg-white/5" />
 
-            <div className="relative p-6 sm:p-8">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-[7px] bg-white/20 border border-white/30 flex items-center justify-center shrink-0 backdrop-blur-sm">
-                    <span className="text-white font-black text-xl">{USER.initials}</span>
+              <div className="relative p-6 sm:p-8">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[7px] bg-white/20 border border-white/30 flex items-center justify-center shrink-0 backdrop-blur-sm">
+                      <span className="text-white font-black text-xl">{initials}</span>
+                    </div>
+                    <div>
+                      <h1 className="text-xl sm:text-2xl font-bold text-white">
+                        Welcome back, {customer?.name}! 👋
+                      </h1>
+                      <p className="text-white/70 text-sm mt-0.5">Business Name: {customer?.business_detail?.business_name}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white">
-                      Welcome back, {USER.name}! 👋
-                    </h1>
-                    <p className="text-white/70 text-sm mt-0.5">Business Name: {USER.business}</p>
+
+                  <div className="flex items-center gap-2 bg-white/15 border border-white/20 rounded-[7px] px-4 py-2.5 backdrop-blur-sm">
+                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                      {/* <span className="text-white text-[10px] font-bold">@</span> */}
+                      <Mail />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/60 font-medium">Email</p>
+                      <p className="text-xs text-white font-normal ">{customer?.email}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white/15 border border-white/20 rounded-[7px] px-4 py-2.5 backdrop-blur-sm">
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-white text-[10px] font-bold">@</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-white/60 font-medium">Email</p>
-                    <p className="text-xs text-white font-semibold truncate max-w-[160px]">{USER.email}</p>
-                  </div>
+                <div className="mt-5 pt-4 border-t border-white/15 flex items-center gap-5 flex-wrap text-xs text-white/75">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                    Account Type: <strong className="text-white ml-1">{customer?.type}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                    Member Since: <strong className="text-white ml-1">{customer?.updated_at}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                    Phone No.: <strong className="text-white ml-1">{customer?.country_code} {customer?.mobile_number}</strong>
+                  </span>
                 </div>
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-white/15 flex items-center gap-5 flex-wrap text-xs text-white/75">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
-                  Account Type: <strong className="text-white ml-1">{USER.accountType}</strong>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
-                  Member Since: <strong className="text-white ml-1">{USER.memberSince}</strong>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
-                  Phone No.: <strong className="text-white ml-1">{USER.phone}</strong>
-                </span>
               </div>
             </div>
-          </div>
+          )}
 
           {/* ── Stats Row ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {STATS.map(({ label, value, sub, icon: Icon, color }) => (
-              <div
-                key={label}
-                className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow duration-200"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-[7px] ${color} flex items-center justify-center`}>
-                    <Icon size={18} />
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+              : STATS.map(({ label, value, sub, icon: Icon, color }) => (
+                  <div
+                    key={label}
+                    className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow duration-200"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`w-10 h-10 rounded-[7px] ${color} flex items-center justify-center`}>
+                        <Icon size={18} />
+                      </div>
+                      <TrendingUp size={14} className="text-emerald-500 mt-1" />
+                    </div>
+                    <p className="text-2xl font-black text-gray-900 leading-tight">{value}</p>
+                    <p className="text-xs font-semibold text-gray-600 mt-0.5">{label}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">{sub}</p>
                   </div>
-                  <TrendingUp size={14} className="text-emerald-500 mt-1" />
-                </div>
-                <p className="text-2xl font-black text-gray-900 leading-tight">{value}</p>
-                <p className="text-xs font-semibold text-gray-600 mt-0.5">{label}</p>
-                <p className="text-[11px] text-gray-400 mt-1">{sub}</p>
-              </div>
-            ))}
+                ))}
           </div>
 
           {/* ── Quick Actions + Recent Quotes ─────────────────────────────── */}
@@ -340,30 +365,34 @@ export default function DashboardPage() {
                     View all
                   </Link>
                 </div>
-                <div className="divide-y divide-gray-50">
-                  {RECENT_QUOTES.map((q) => (
-                    <div key={q.id} className="px-5 py-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-gray-900">{q.id}</span>
-                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                          q.status === "Accepted" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                        }`}>
-                          {q.status}
-                        </span>
+                {loading ? (
+                  <RecentQuotesSkeleton />
+                ) : (
+                  <div className="divide-y divide-gray-50">
+                    {RECENT_QUOTES.map((q) => (
+                      <div key={q.id} className="px-5 py-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-gray-900">{q.id}</span>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                            q.status === "Accepted" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                          }`}>
+                            {q.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">{q.items} item{q.items !== 1 ? "s" : ""} · {q.date}</p>
+                        <p className="text-sm font-bold text-gray-900 mt-1">{q.total}</p>
+                        <div className="flex items-center gap-3 mt-2.5">
+                          <button className="flex items-center gap-1 text-[11px] text-[#186737] font-semibold hover:underline">
+                            <Eye size={11} /> View
+                          </button>
+                          <button className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-700 font-semibold hover:underline">
+                            <Download size={11} /> Download
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">{q.items} item{q.items !== 1 ? "s" : ""} · {q.date}</p>
-                      <p className="text-sm font-bold text-gray-900 mt-1">{q.total}</p>
-                      <div className="flex items-center gap-3 mt-2.5">
-                        <button className="flex items-center gap-1 text-[11px] text-[#186737] font-semibold hover:underline">
-                          <Eye size={11} /> View
-                        </button>
-                        <button className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-700 font-semibold hover:underline">
-                          <Download size={11} /> Download
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-[7px] p-5 text-white">

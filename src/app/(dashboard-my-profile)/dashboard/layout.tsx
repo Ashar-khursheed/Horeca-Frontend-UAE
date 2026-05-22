@@ -15,8 +15,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useAppSelector } from "@/store/hooks";
+import { SidebarUserSkeleton } from "@/components/dashboard/skeletons";
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 const NAV = [
@@ -26,18 +26,19 @@ const NAV = [
   { label: "Payments & Invoices", href: "/dashboard/payments",  icon: CreditCard },
   { label: "My Wishlist",       href: "/wishlist",               icon: Heart },
   { label: "Account Settings",  href: "/dashboard/my-profile",   icon: Settings },
-  { label: "Saved Docs",        href: "/dashboard/documents",    icon: FolderOpen },
+  // { label: "Saved Docs",        href: "/dashboard/documents",    icon: FolderOpen },
   { label: "Support Center",    href: "/dashboard/support",      icon: Headphones },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const customer = useSelector((s: RootState) => s.profile.customer);
+  const customer = useAppSelector((s) => s.profile.customer);
+  const loading  = useAppSelector((s) => s.profile.loading);
 
   const name     = customer?.name ?? "Guest";
   const email    = customer?.email ?? "";
-  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
   const business = customer?.business_detail?.business_name ?? null;
 
   const isActive = (href: string) =>
@@ -63,18 +64,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* User card */}
       <div className="px-4 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#186737] flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">{initials}</span>
+        {loading ? (
+          <SidebarUserSkeleton />
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#186737] flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-sm">{initials}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-gray-900 truncate">{name}</p>
+              {business && (
+                <p className="text-[11px] text-[#186737] font-medium truncate">{business}</p>
+              )}
+              <p className="text-[11px] text-gray-400 truncate">{email}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900 truncate">{name}</p>
-            {business && (
-              <p className="text-[11px] text-[#186737] font-medium truncate">{business}</p>
-            )}
-            <p className="text-[11px] text-gray-400 truncate">{email}</p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Nav */}
