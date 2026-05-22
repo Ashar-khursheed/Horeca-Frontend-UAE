@@ -3,6 +3,7 @@ import { LocationData } from "@/store/slices/location/locationSlice";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 const inter = Inter({
@@ -47,6 +48,13 @@ export default async function RootLayout({
       />
 
       <body suppressHydrationWarning>
+        <NextTopLoader
+          color="#186737"
+          height={4}
+          speed={200}
+          easing="ease"
+          showSpinner={false}
+        />
         <NextIntlClientProvider messages={messages}>
           <GlobalLayout locationData={locationData}>
             {children}

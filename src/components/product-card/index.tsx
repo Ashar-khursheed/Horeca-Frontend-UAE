@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import TickerBadge from "../ticker-badge";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface ApiProduct {
@@ -135,8 +136,8 @@ export const AddToCartButton = ({
       success
         ? "bg-emerald-600 text-white"
         : variant === "quote"
-          ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
-          : "bg-[#186737] hover:bg-[#145c30] text-white",
+        ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
+        : "bg-[#186737] hover:bg-[#145c30] text-white",
     ].join(" ")}
   >
     {success ? (
@@ -165,20 +166,19 @@ export const ProductCard = ({
 
   // ── Price logic (sale_price=0 means no sale) ─────────────────────────
   const hasSale =
-    product.sale_price > 0 && product.sale_price !== product.original_price;
+    product.sale_price > 0 &&
+    product.sale_price !== product.original_price;
 
   const activePrice = hasSale ? product.sale_price : product.original_price;
 
   const discountPct = hasSale
-    ? ((product.original_price - product.sale_price) / product.original_price) *
-      100
+    ? ((product.original_price - product.sale_price) / product.original_price) * 100
     : 0;
 
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
 
   // ── Hover image slider ───────────────────────────────────────────────
-  const images =
-    product.images?.length > 0 ? product.images : ["/placeholder.png"];
+  const images = product.images?.length > 0 ? product.images : ["/placeholder.png"];
   const hasMultipleImages = images.length > 1;
   const [imgIndex, setImgIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -202,7 +202,7 @@ export const ProductCard = ({
     () => () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     },
-    [],
+    []
   );
 
   // ── Handlers ────────────────────────────────────────────────────────
@@ -253,6 +253,7 @@ export const ProductCard = ({
     >
       {/* ── IMAGE AREA ───────────────────────────────────────────────── */}
       <div className="relative bg-white">
+
         {/* Discount badge */}
         {hasSale && discountPct > 0 && (
           <div className="absolute top-3 left-3 z-10">
@@ -270,9 +271,7 @@ export const ProductCard = ({
           <Heart
             size={17}
             strokeWidth={2}
-            className={
-              wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"
-            }
+            className={wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
           />
         </button>
 
@@ -317,18 +316,19 @@ export const ProductCard = ({
 
       {/* ── CONTENT AREA ─────────────────────────────────────────────── */}
       <div className="px-3 pb-3 pt-2 md:px-4 md:pb-4 md:pt-2 flex flex-col flex-1 border-t border-gray-100">
+
         {/* Product name */}
         <Link href={productLink}>
-          <p className="md:font-semibold font-semibold text-[13.5px] lg:text-[14.5px] text-gray-900 line-clamp-2 hover:text-[#186737] transition-colors leading-snug">
+          <p
+            className="md:font-semibold font-semibold text-[13.5px] lg:text-[14.5px] text-gray-900 line-clamp-2 hover:text-[#186737] transition-colors leading-snug"
+           
+          >
             {product.name}
           </p>
         </Link>
 
         {/* SKU */}
-        <p
-          className="mt-1.5 text-xs text-[#6B7280] font-medium"
-          title={product.sku}
-        >
+        <p className="mt-1.5 text-xs text-[#6B7280] font-medium" title={product.sku}>
           Model No: {product.sku}
         </p>
 
@@ -346,9 +346,7 @@ export const ProductCard = ({
             )}
           </div>
         ) : (
-          <span className="text-[13px] text-slate-900 italic py-1.5 mb-5 hidden">
-            {" "}
-          </span>
+          <TickerBadge />
         )}
 
         {/* Shipping row */}
@@ -356,10 +354,10 @@ export const ProductCard = ({
           <Truck size={13} className="text-[#186737] flex-shrink-0" />
           Shipping charges apply
         </p>
-        {/* <p className="mt- text-[12.5px] font-semibold text-[#4B5563] md:hidden flex items-center gap-1">
+        <p className="mt- text-[12.5px] font-semibold text-[#4B5563] md:hidden flex items-center gap-1">
           <Truck size={13} className="text-[#186737] flex-shrink-0" />
-          Shipping Fee
-        </p> */}
+         Shipping Fee
+        </p>
 
         {/* Ships in X Days */}
         <p className="mt-1 text-[12.5px] text-[#4B5563]">
@@ -373,7 +371,7 @@ export const ProductCard = ({
         </p>
 
         {/* ── PRICE — mt-auto pushes to bottom ─────────────────────── */}
-        <div className="mt-auto md:pt-3 p-0">
+        <div className="mt-auto pt-3">
           {isQuote ? (
             <div style={{ minHeight: "62px" }}>
               <h2 className="text-[#186737] text-[15px] font-normal">
@@ -385,7 +383,6 @@ export const ProductCard = ({
             </div>
           ) : (
             <div >
-            {/* <div style={{ minHeight: "40px" }}> */}
               {/* Main price line: -11%  $19,990.26  /Each */}
               <div className="flex items-baseline gap-2 flex-wrap leading-none">
                 {hasSale && (
@@ -398,8 +395,10 @@ export const ProductCard = ({
                     className={`font-bold leading-none ${
                       hasSale ? "text-[#186737]" : "text-gray-900"
                     }`}
+                    
                   >
-                    ${priceInt}
+                    $
+                    {priceInt}
                   </b>
                   <span
                     className={`text-[14px] font-bold leading-none ${
@@ -419,8 +418,7 @@ export const ProductCard = ({
               {/* WAS price */}
               {hasSale ? (
                 <p className="text-[#6B7280] font-semibold text-[13px] line-through mt-1">
-                  WAS {product.currency || "$"}{" "}
-                  {fmtPrice(product.original_price)}
+                  WAS {product.currency || "$"} {fmtPrice(product.original_price)}
                 </p>
               ) : null}
             </div>
@@ -450,5 +448,7 @@ export const ProductCard = ({
     </div>
   );
 };
+
+
 
 export default ProductCard;

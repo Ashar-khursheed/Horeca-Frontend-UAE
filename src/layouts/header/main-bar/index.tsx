@@ -402,13 +402,13 @@ export default function NavigationStatic({ initialProfile = null, locationData =
               </Link>
 
               {/* Cart */}
-              <button className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] transition-colors text-white rounded-[7px] pl-3 pr-4 h-10">
+              <Link href="/cart"><button className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] transition-colors text-white rounded-[7px] pl-3 pr-4 h-10">
                 <div className="relative">
                   <ShoppingCart size={18} />
                   <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-white text-[#186737] text-[10px] font-black rounded-full flex items-center justify-center px-1 leading-none border border-[#186737]">99+</span>
                 </div>
                 <span className="text-xs font-semibold">Cart</span>
-              </button>
+              </button></Link>
             </div>
 
             {/* ── Mobile Right (hamburger) ── */}

@@ -1,13 +1,13 @@
 "use client";
 
-import { useAppSelector } from "@/store/hooks";
 import {
-  MobileUserInfoSkeleton,
   MobileStatsSkeleton,
-  WelcomeBannerSkeleton,
-  StatCardSkeleton,
+  MobileUserInfoSkeleton,
   RecentQuotesSkeleton,
-} from "@/components/dashboard/skeletons";
+  StatCardSkeleton,
+  WelcomeBannerSkeleton,
+} from "@/components/loading-sketlon/dashboard/skeletons";
+import { useAppSelector } from "@/store/hooks";
 import {
   AlertCircle,
   ArrowRight,
@@ -28,10 +28,9 @@ import {
   Settings,
   ShoppingBag,
   Star,
-  Tag,
   TrendingUp,
   Truck,
-  User,
+  User
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

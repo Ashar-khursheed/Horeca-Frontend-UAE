@@ -17,7 +17,7 @@ export const FeaturedBrands = () => {
     <section className="w-full bg-white py-5">
       <div className="global-container">
         {/* ── HEADER ─────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-2 mb-3 md:px-4 sm:px-0 flex-wrap">
+        <div className="flex items-center justify-between gap-2 mb-3  flex-wrap">
           <h2 className="heading-font-size font-bold text-slate-900 shrink-0">
           Top Stories: Brand Directory
           </h2>

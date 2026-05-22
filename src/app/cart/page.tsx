@@ -169,7 +169,7 @@ export default function CartPage() {
     return (
       <>
         <CartBreadcrumb />
-        <main className="min-h-screen bg-gray-50/60">
+        <main className="min-h-screens bg-gray-50/60">
           <div className="global-container py-6 sm:py-8">
             <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm py-24 text-center px-6">
               <div className="w-20 h-20 rounded-full bg-[#f0f9f4] flex items-center justify-center mx-auto mb-5">
