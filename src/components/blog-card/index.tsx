@@ -321,7 +321,7 @@ export const BlogsCard: React.FC<{ showAll?: boolean }> = ({ showAll = false }) 
   const blogs = showAll ? DUMMY_BLOGS : DUMMY_BLOGS.slice(0, 6);
 
   return (
-    <section className="my-16 px-4 sm:px-6 lg:px-8 global-container">
+    <section className="md:my-16 py-6 md:py-0 px-4 sm:px-6 lg:px-8 global-container">
       {/* Header */}
       <div className="flex items-center justify-between mb-10 flex-wrap gap-4">
         <div>

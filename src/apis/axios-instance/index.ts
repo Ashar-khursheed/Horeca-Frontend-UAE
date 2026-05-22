@@ -32,7 +32,7 @@ export const removeAuthToken = (): void => {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem("token");
   sessionStorage.removeItem("user");
-  document.cookie = "token=; path=/; max-age=0";
+  document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
 };
 
 // ─── Request Interceptor ──────────────────────────────────────────────────────

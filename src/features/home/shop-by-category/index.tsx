@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function ShopByCategories() {
   return (
-    <section className="w-full bg-white py-6 ">
+    <section className="w-full bg-white py-6 md:pb-6 pb-1  ">
       <div className="global-container mx-auto">
 
         {/* Header */}

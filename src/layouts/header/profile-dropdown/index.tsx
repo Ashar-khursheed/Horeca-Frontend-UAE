@@ -121,6 +121,7 @@ function ProfileDropdown({ show }: { show: boolean }) {
             setLoggingOut(true);
             await dispatch(logoutUser());
             window.location.href = "/";
+            document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
           }}
           className="w-full flex items-center justify-between px-4 py-2.75 cursor-pointer transition-all duration-150 hover:bg-gray-50 disabled:opacity-70 disabled:cursor-not-allowed"
         >

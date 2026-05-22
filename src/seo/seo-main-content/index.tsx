@@ -2,7 +2,7 @@
 const SEOMainContent = () => {
   return (
     <>
-      <div className="py-10 pb-0 md:py-12 md:pb-0 bg-white">
+      <div className="py-6 pb-0 md:py-12 md:pb-0 bg-white">
         <div className=" global-container mx-auto rounded-[7px] text-center bg-[#f8f8f7] py-5 px-4">
           {/* Main Heading */}
           <h1 className="heading-font-size font-extrabold text-[#186737] mb-3 leading-tight">

@@ -266,7 +266,7 @@ export const Home = ({ sliderItems = [], sliderItemsTwo = [] }: { sliderItems?: 
       <SEOMainContent/>
       <ShopByCategories/>
       <FeaturedProducts/>
-      <div className="w-full py-10">
+      <div className="w-full md:py-10 py-4">
         <div className="global-container">
         <div className="grid grid-cols-1">
           <img src="https://www.thehorecastore.com/images/Banners/Food%20Truck/Hero%20Banner.webp" alt="" className="rounded-[7px]" />

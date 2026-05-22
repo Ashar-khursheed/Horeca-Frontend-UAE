@@ -19,7 +19,7 @@ export const FeaturedProducts = () => {
     <section className="w-full bg-white py-5 ">
       <div className="global-container">
         {/* ── HEADER ─────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-2 mb-3 px-4 sm:px-0 flex-wrap">
+        <div className="flex items-center justify-between gap-2 mb-3 md:px-4 sm:px-0 flex-wrap">
           <h2 className="heading-font-size font-bold text-slate-900 shrink-0">
             Featured Products
           </h2>
@@ -29,7 +29,7 @@ export const FeaturedProducts = () => {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={[
-                  "whitespace-nowrap px-3.5 py-1.5 text-[15px] font-medium rounded-full flex-shrink-0 transition-all duration-200",
+                  "whitespace-nowrap px-3.5 py-1.5 md:text-[15px] text-[12px] font-medium rounded-full flex-shrink-0 transition-all duration-200",
                   activeTab === tab
                     ? "bg-[#186737] text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200",
@@ -55,7 +55,7 @@ export const FeaturedProducts = () => {
         ────────────────────────────────────────────────────────────────*/}
 
         {/* MOBILE — horizontal scroll */}
-        <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar px-4 pb-2">
+        <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
           {products.map((product) => (
             <div key={product.id} className="flex-shrink-0 w-[175px]">
               <ProductCard

@@ -656,18 +656,25 @@ export const Footer = () => {
     <footer className="bg-white border-t border-gray-100">
 
       {/* ── Top CTA Banner ── */}
-      <div className="bg-[#f3f4f8]">
+      <div className="bg-[#f3f4f8] ">
         <div className="global-container py-8 sm:py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between md:gap-6">
             <div className="text-center sm:text-left">
-              <p className="text-[#7e859b] text-sm font-medium tracking-wide uppercase mb-1">
+              <p className="text-[#7e859b] text-sm font-medium tracking-wide uppercase mb-1 md:flex hidden">
                 Need Help Getting Started?
               </p>
-              <h2 className="text-black text-xl sm:text-2xl font-bold">
+              <p className="text-[#7e859b] text-[12px] font-medium tracking-wide uppercase mb-1 md:hidden block">
+            Our team is here to guide you with the best solutions for your restaurant.
+
+              </p>
+              <h2 className="text-black text-xl sm:text-2xl font-bold md:hidden block">
+                Need Expert Assistance? 
+              </h2>
+              <h2 className="text-black text-xl sm:text-2xl font-bold md:block hidden">
                 We're Always Here To Help
               </h2>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            <div className="md:flex hidden flex-col sm:flex-row items-center gap-4 sm:gap-6">
               <a
                 href="tel:+18664467322"
                 className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-black px-5 py-3 rounded-[7px] transition-all duration-200"
@@ -692,6 +699,11 @@ export const Footer = () => {
                   <p className="text-black font-semibold text-base">support@horecastore.com</p>
                 </div>
               </a>
+            </div>
+
+            <div className="block md:hidden ">
+              {/* Mobile CTA Buttons */}
+           <a href="tel:+18664467322" className="bg-[#186737] relative top-2.5 p-2.5 text-white 2xl:px-4 px-2.5 2xl:py-3 py-1.5 rounded  2xl:text-[14px] text-[12px] ">Talk to Our Expert Now</a>
             </div>
           </div>
         </div>

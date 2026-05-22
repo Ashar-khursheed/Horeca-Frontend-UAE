@@ -174,7 +174,7 @@ export const HeroBanner = ({
             <div className="block sm:hidden">
               <Swiper
                 modules={[Autoplay]}
-                autoplay={{ delay: 8000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+                autoplay={{ delay: 9000, disableOnInteraction: false, pauseOnMouseEnter: true }}
                 loop
                 className="w-full h-full rounded-[7px] overflow-hidden"
               >
@@ -189,22 +189,22 @@ export const HeroBanner = ({
                       {item.link ? (
                         <Link href={item.link} className="block w-full h-full outline-none">
                           <div className="relative w-full h-full">
-                            <Image
-                              src={isValid ? item.image : NoImage}
+                            <img
+                              src={isValid ? item.image : NoImage.src}
                               alt={item.title ?? "Banner"}
-                              fill
-                              className="object-coverassss"
+                              // fill
+                              className="object-covers h-[200px]"
                               sizes="100vw"
                             />
                           </div>
                         </Link>
                       ) : (
                         <div className="relative w-full h-full">
-                          <Image
-                            src={isValid ? item.image : NoImage}
+                          <img
+                            src={isValid ? item.image : NoImage.src}
                             alt={item.title ?? "Banner"}
-                            fill
-                            className="object-covera"
+                            // fill
+                            className="object-covers h-[200px]"
                             sizes="100vw"
                           />
                         </div>
@@ -237,7 +237,7 @@ export const HeroBanner = ({
                           <Link href={item.link} className="block w-full h-full outline-none">
                             <div className="relative w-full h-full">
                               <Image
-                                src={isValid ? item.image : NoImage}
+                                src={isValid ? item.image : NoImage.src}
                                 alt={item.title ?? "Banner"}
                                 fill
                                 className="object-covera"
@@ -249,7 +249,7 @@ export const HeroBanner = ({
                         ) : (
                           <div className="relative w-full h-full">
                             <Image
-                              src={isValid ? item.image : NoImage}
+                              src={isValid ? item.image : NoImage.src}
                               alt={item.title ?? "Banner"}
                               fill
                               className="object-covera"
@@ -289,7 +289,7 @@ export const HeroBanner = ({
                           <Link href={item.link} className="block w-full h-full outline-none">
                             <div className="relative w-full h-full">
                               <Image
-                                src={isValid ? item.image : NoImage}
+                                src={isValid ? item.image : NoImage.src}
                                 alt={item.title ?? "Banner"}
                                 fill
                                 className="object-covera"
@@ -301,7 +301,7 @@ export const HeroBanner = ({
                         ) : (
                           <div className="relative w-full h-full">
                             <Image
-                              src={isValid ? item.image : NoImage}
+                              src={isValid ? item.image : NoImage.src}
                               alt={item.title ?? "Banner"}
                               fill
                               className="object-covera"
