@@ -1,5 +1,6 @@
 "use client";
 
+import AutoLogout from "@/components/auto-logout";
 import ProfileInitializer from "@/components/ProfileInitializer";
 import { LocationData } from "@/store/slices/location/locationSlice";
 import store, { AppDispatch,  RootState } from "@/store/store";
@@ -21,6 +22,7 @@ interface GlobalLayoutProps {
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, locationData }) => {
   return (
     <Provider store={store}>
+      <AutoLogout />
       <ProfileInitializer />
       <Header locationData={locationData} />
       {children}

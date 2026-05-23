@@ -2,23 +2,42 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PROTECTED_ROUTES = ["/dashboard", "/checkout", "/create-quotation"];
 const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
+const AUTH_MAX_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function clearAuthCookies(response: NextResponse): NextResponse {
+  response.cookies.set("token", "", { maxAge: 0, path: "/" });
+  response.cookies.set("login_time", "", { maxAge: 0, path: "/" });
+  return response;
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("token")?.value?.trim();
+  const loginTimeStr = request.cookies.get("login_time")?.value;
+
+  // Token is valid only if login_time exists and is within 24 hours
+  const loginTime = loginTimeStr ? parseInt(loginTimeStr, 10) : null;
+  const isTokenValid =
+    !!token && !!loginTime && Date.now() - loginTime < AUTH_MAX_MS;
 
   const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
   const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
-  if (isProtected && !token) {
+  // Protected route: no valid token → redirect to login and clear stale cookies
+  if (isProtected && !isTokenValid) {
     const url = new URL("/login", request.url);
-    // const url = new URL("/login", request.url);
     url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
+    return clearAuthCookies(NextResponse.redirect(url));
   }
 
-  if (isAuthRoute && token) {
+  // Auth route: valid token exists → redirect to home
+  if (isAuthRoute && isTokenValid) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // Stale/orphan token with no login_time → clear it so future requests are clean
+  if (token && !isTokenValid) {
+    return clearAuthCookies(NextResponse.next());
   }
 
   return NextResponse.next();

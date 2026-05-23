@@ -21,19 +21,29 @@ const getAuthToken = (): string | null => {
   }
 };
 
+const AUTH_MAX_AGE = 60 * 60 * 24; // 24 hours in seconds
+const AUTH_MAX_MS = AUTH_MAX_AGE * 1000;
+
 export const setAuthToken = (token: string): void => {
   if (typeof window === "undefined") return;
   const clean = token.trim().replace(/^["']|["']$/g, "");
+  const loginTime = Date.now().toString();
   sessionStorage.setItem("token", clean);
-  document.cookie = `token=${clean}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`;
+  localStorage.setItem("login_time", loginTime);
+  document.cookie = `token=${clean}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
+  document.cookie = `login_time=${loginTime}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
 };
 
 export const removeAuthToken = (): void => {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem("token");
   sessionStorage.removeItem("user");
+  localStorage.removeItem("login_time");
   document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
+  document.cookie = "login_time=; path=/; max-age=0; SameSite=Lax";
 };
+
+export { AUTH_MAX_MS };
 
 // ─── Request Interceptor ──────────────────────────────────────────────────────
 
@@ -57,7 +67,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthEndpoint) {
       removeAuthToken();
       if (typeof window !== "undefined") {
-        // window.location.href = "/login";
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);
