@@ -1,18 +1,16 @@
 "use client";
 
-import AutoLogout from "@/components/auto-logout";
-import ProfileInitializer from "@/components/ProfileInitializer";
+import AppInitializer from "@/components/app-initializer";
 import { LocationData } from "@/store/slices/location/locationSlice";
-import store, { AppDispatch,  RootState } from "@/store/store";
-import React, { useEffect } from "react";
-import { Provider, useDispatch, useSelector } from "react-redux";
+import store from "@/store/store";
+import React from "react";
+import { Provider } from "react-redux";
 import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Footer from "../footer";
 import Header from "../header";
-import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -22,8 +20,7 @@ interface GlobalLayoutProps {
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, locationData }) => {
   return (
     <Provider store={store}>
-      <AutoLogout />
-      <ProfileInitializer />
+      <AppInitializer />
       <Header locationData={locationData} />
       {children}
       <Footer />
