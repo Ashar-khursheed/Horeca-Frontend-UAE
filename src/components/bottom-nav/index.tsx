@@ -165,7 +165,7 @@ const NAV_ITEMS = [
   { label: "Language",   href: "/search",  icon: Globe                    },
   { label: "Cart",     href: "/cart",    icon: ShoppingCart, isCart: true },
   { label: "Wishlist", href: "/wishlist",icon: Heart                     },
-  { label: "Account",  href: "/account", icon: User                      },
+  { label: "Account",  href: "/dashboard", icon: User                      },
 ];
 
 interface BottomNavProps {

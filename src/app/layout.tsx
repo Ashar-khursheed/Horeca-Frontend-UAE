@@ -3,6 +3,7 @@ import { LocationData } from "@/store/slices/location/locationSlice";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
+import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
@@ -21,15 +22,11 @@ export default async function RootLayout({
   const messages = await getMessages();
   const isRTL = locale === "ar";
 
-  let locationData: LocationData | null = null;
-  try {
-    const res = await fetch("https://pim.thehorecastore.co/api/frontend/location", {
-      next: { revalidate: 3600 },
-    });
-    if (res.ok) locationData = await res.json();
-  } catch {
-    // non-critical
-  }
+  const locationData = await makeApiCallSSR<LocationData>(
+    "https://pim.thehorecastore.co/api/frontend/location",
+    {},
+    { revalidate: 3600 },
+  );
 
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>

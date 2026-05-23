@@ -1,0 +1,52 @@
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "https://test-us.thehorecastore.co/api/frontend";
+
+type Params  = Record<string, string | number | boolean | undefined | null>;
+type Options = { revalidate?: number | false; tags?: string[] };
+
+/**
+ * SSR-safe fetch wrapper for Next.js Server Components / page.tsx files.
+ *
+ * Usage:
+ *   const json = await makeApiCallSSR("/products", { page: "1", per_page: "20" });
+ *   const json = await makeApiCallSSR("/products", params, { revalidate: 300 });
+ *   const json = await makeApiCallSSR<MyType>("/products");
+ *
+ * - Prepends API_BASE automatically (pass a full URL to skip).
+ * - Filters out undefined / null / empty-string params.
+ * - Returns parsed JSON on success, null on any error.
+ */
+export async function makeApiCallSSR<T = unknown>(
+  path: string,
+  params?: Params,
+  options?: Options,
+): Promise<T | null> {
+  try {
+    const qs = new URLSearchParams();
+
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== null && v !== "") {
+          qs.set(k, String(v));
+        }
+      }
+    }
+
+    const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
+    const url  = qs.toString() ? `${base}?${qs.toString()}` : base;
+
+    const res = await fetch(url, {
+      next: {
+        revalidate: options?.revalidate ?? 60,
+        ...(options?.tags?.length ? { tags: options.tags } : {}),
+      },
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
