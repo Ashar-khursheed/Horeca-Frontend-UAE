@@ -22,7 +22,7 @@ interface GlobalLayoutProps {
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, locationData, initialProfile }) => {
   return (
     <Provider store={store}>
-      <AppInitializer initialProfile={initialProfile} />
+      <AppInitializer initialProfile={initialProfile} locationData={locationData} />
       <Header locationData={locationData} />
       {children}
       <Footer />

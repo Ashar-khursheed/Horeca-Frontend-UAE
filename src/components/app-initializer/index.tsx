@@ -1,6 +1,7 @@
 "use client";
 
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
+import { setLocation } from "@/store/slices/location/locationSlice";
 import type { LocationData } from "@/store/slices/location/locationSlice";
 import { setLoading, setProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
@@ -13,9 +14,10 @@ const AUTH_MAX_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface Props {
   initialProfile?: CustomerProfile | null;
+  locationData?: LocationData | null;
 }
 
-export default function AppInitializer({ initialProfile }: Props) {
+export default function AppInitializer({ initialProfile, locationData }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const locationFromRedux = useSelector((s: RootState) => s.location.data);
 
@@ -43,6 +45,14 @@ export default function AppInitializer({ initialProfile }: Props) {
     const timer = setTimeout(performLogout, AUTH_MAX_MS - elapsed);
     return () => clearTimeout(timer);
   }, [dispatch]);
+
+  // Location: hydrate Redux from SSR data and cache in sessionStorage
+  useEffect(() => {
+    if (locationData) {
+      dispatch(setLocation(locationData));
+      sessionStorage.setItem("location", JSON.stringify(locationData));
+    }
+  }, [dispatch, locationData]);
 
   // Profile: hydrate Redux from SSR data — no client fetch, no loader
   useEffect(() => {

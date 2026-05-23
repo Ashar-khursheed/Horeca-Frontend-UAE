@@ -61,7 +61,7 @@ export default function RegisterPage() {
 
   const locationFromRedux = useSelector((s: RootState) => s.location.data);
   const country = useSelector((s: RootState) => s.country);
-
+console.log("Location from Redux:", locationFromRedux,country);
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);

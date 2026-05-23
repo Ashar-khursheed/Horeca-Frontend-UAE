@@ -330,7 +330,7 @@ export default function CartPage() {
                       {Array.from({ length: savedTotalPages }).map((_, pageIdx) => (
                         <div
                           key={pageIdx}
-                          className="grid gap-4 shrink-0"
+                          className="grid md:gap-4 gap-1 shrink-0"
                           style={{
                             width: `${100 / savedTotalPages}%`,
                             gridTemplateColumns: `repeat(${perView}, minmax(0, 1fr))`,

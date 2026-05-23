@@ -683,7 +683,7 @@ function BottomBar({ step, setStep, total, subtotal, itemCount, payment }: Botto
         </div>
       )}
       {step === 3 && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 hidden">
           <div className="flex-1">
             <p className="text-xs text-gray-400 line-through">${usd(subtotal)}</p>
             <p className="text-base font-bold text-gray-800">${usd(total)}</p>

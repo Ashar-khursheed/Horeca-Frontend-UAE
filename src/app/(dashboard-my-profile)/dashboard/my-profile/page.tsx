@@ -185,7 +185,7 @@ const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) => {
                 <Select
                   value={formik.values.type}
                   onValueChange={(val) => formik.setFieldValue("type", val)}
-                  disabled
+                  // disabled
                   
                   
                 >

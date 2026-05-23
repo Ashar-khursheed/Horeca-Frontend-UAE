@@ -45,6 +45,8 @@ export default async function RootLayout({
 
   const initialProfile = profileRes?.customer ?? null;
 
+ 
+
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <link

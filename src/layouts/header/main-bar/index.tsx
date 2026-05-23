@@ -146,7 +146,18 @@ export default function NavigationStatic({ initialProfile = null, locationData =
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [quantities, setQuantities] = useState([1, 1, 1, 1]);
+
+  const goToSearch = (q?: string) => {
+    const term = (q ?? searchQuery).trim();
+    setSearchFocused(false);
+    if (term) {
+      router.push(`/search?q=${encodeURIComponent(term)}`);
+    } else {
+      router.push("/search");
+    }
+  };
 
   const updateQty = (index: number, delta: number) =>
     setQuantities((prev) =>
@@ -196,12 +207,18 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                 <Search size={16} className="text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && goToSearch()}
                   placeholder="Search 100,000+ products trusted by hotels & restaurants..."
                   className="flex-1 bg-white text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                 />
-                <button className="bg-[#186737] text-white rounded-full w-7 h-7 flex items-center justify-center flex-shrink-0 hover:bg-[#145c2e] transition-colors">
+                <button
+                  onClick={() => goToSearch()}
+                  className="bg-[#186737] text-white rounded-full w-7 h-7 flex items-center justify-center flex-shrink-0 hover:bg-[#145c2e] transition-colors"
+                >
                   <Search size={13} />
                 </button>
               </div>
@@ -227,7 +244,10 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                             'True TBR36-PTSZ1-L-S-G-G-1 36" Pass-Through Back Bar Refrigerator',
                           ].map((s, i) => (
                             <li key={i}>
-                              <button className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm transition-all group">
+                              <button
+                                onMouseDown={() => goToSearch(s)}
+                                className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm transition-all group"
+                              >
                                 <Search size={12} className="text-gray-300 flex-shrink-0 group-hover:text-[#186737] transition-colors" />
                                 <span className="text-[13px] text-gray-500 line-clamp-1 group-hover:text-[#186737] transition-colors">{s}</span>
                               </button>
@@ -246,7 +266,10 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                       </div>
                       <div className="mx-5 border-t border-gray-200" />
                       <div className="px-5 py-4 mt-auto">
-                        <button className="w-full h-9 rounded-xl bg-[#186737] text-white text-[13px] font-semibold hover:bg-[#145c2e] transition-colors flex items-center justify-center gap-2">
+                        <button
+                          onMouseDown={() => goToSearch()}
+                          className="w-full h-9 rounded-xl bg-[#186737] text-white text-[13px] font-semibold hover:bg-[#145c2e] transition-colors flex items-center justify-center gap-2"
+                        >
                           <Search size={13} /> View all results
                         </button>
                       </div>
@@ -418,9 +441,11 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                 <ShoppingCart size={20} />
                 <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">99+</span>
               </button> */}
-              <button className="relative w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
+              <button
+                onClick={() => router.push("/search")}
+                className="relative w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
+              >
                 <Search size={20} />
-              
               </button>
 
               {/* Hamburger */}
