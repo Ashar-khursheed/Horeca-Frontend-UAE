@@ -2,7 +2,8 @@
 
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import type { LocationData } from "@/store/slices/location/locationSlice";
-import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
+import { setLoading, setProfile } from "@/store/slices/my-profile/profileSlice";
+import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useEffect } from "react";
@@ -10,7 +11,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 const AUTH_MAX_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-export default function AppInitializer() {
+interface Props {
+  initialProfile?: CustomerProfile | null;
+}
+
+export default function AppInitializer({ initialProfile }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const locationFromRedux = useSelector((s: RootState) => s.location.data);
 
@@ -39,15 +44,14 @@ export default function AppInitializer() {
     return () => clearTimeout(timer);
   }, [dispatch]);
 
-  // Profile: fetch if token exists in sessionStorage
+  // Profile: hydrate Redux from SSR data — no client fetch, no loader
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    if (token) {
-      dispatch(fetchProfile());
+    if (initialProfile) {
+      dispatch(setProfile(initialProfile));
     } else {
       dispatch(setLoading(false));
     }
-  }, [dispatch]);
+  }, [dispatch, initialProfile]);
 
   // Country: sessionStorage first, fallback to Redux location
   useEffect(() => {

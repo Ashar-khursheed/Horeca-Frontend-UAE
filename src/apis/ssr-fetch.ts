@@ -3,7 +3,7 @@ const API_BASE =
   "https://test-us.thehorecastore.co/api/frontend";
 
 type Params  = Record<string, string | number | boolean | undefined | null>;
-type Options = { revalidate?: number | false; tags?: string[] };
+type Options = { revalidate?: number | false; tags?: string[]; headers?: Record<string, string> };
 
 /**
  * SSR-safe fetch wrapper for Next.js Server Components / page.tsx files.
@@ -41,6 +41,7 @@ export async function makeApiCallSSR<T = unknown>(
         revalidate: options?.revalidate ?? 60,
         ...(options?.tags?.length ? { tags: options.tags } : {}),
       },
+      ...(options?.headers ? { headers: options.headers } : {}),
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

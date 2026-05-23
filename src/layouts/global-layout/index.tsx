@@ -2,6 +2,7 @@
 
 import AppInitializer from "@/components/app-initializer";
 import { LocationData } from "@/store/slices/location/locationSlice";
+import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import store from "@/store/store";
 import React from "react";
 import { Provider } from "react-redux";
@@ -15,12 +16,13 @@ import Header from "../header";
 interface GlobalLayoutProps {
   children: React.ReactNode;
   locationData?: LocationData | null;
+  initialProfile?: CustomerProfile | null;
 }
 
-const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, locationData }) => {
+const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, locationData, initialProfile }) => {
   return (
     <Provider store={store}>
-      <AppInitializer />
+      <AppInitializer initialProfile={initialProfile} />
       <Header locationData={locationData} />
       {children}
       <Footer />

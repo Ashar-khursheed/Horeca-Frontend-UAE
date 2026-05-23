@@ -117,15 +117,12 @@ const profileSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(updateProfile.pending, (state) => {
-        state.loading = true;
         state.error = null;
       })
       .addCase(updateProfile.fulfilled, (state) => {
-        state.loading = false;
         state.error = null;
       })
       .addCase(updateProfile.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload as string;
       });
   },
