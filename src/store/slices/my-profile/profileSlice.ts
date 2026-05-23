@@ -48,7 +48,7 @@ const initialState: ProfileState = {
 export const updateProfile = createAsyncThunk(
   "profile/update",
   async (
-    payload: { name: string; country_code: string; mobile_number: string; type: string; business_name?: string },
+    payload: FormData | { name: string; country_code: string; mobile_number: string; type: string; business_name?: string },
     { dispatch, rejectWithValue }
   ) => {
     try {
