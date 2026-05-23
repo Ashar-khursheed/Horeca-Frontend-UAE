@@ -101,7 +101,7 @@ export default function SearchFeature() {
     selectedBrands.length +
     Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0);
 
-  const products = FEATURED_DATA.flatMap((d) => d.featured_products) as ApiProduct[];
+  const products = FEATURED_DATA.flatMap((d) => d.featured_products as unknown as ApiProduct[]);
 
   return (
     <>
