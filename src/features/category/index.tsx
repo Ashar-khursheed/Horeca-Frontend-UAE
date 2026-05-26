@@ -8,95 +8,120 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { categories, FEATURED_DATA, ItemsAccordion } from "@/data";
+import { FEATURED_DATA, ItemsAccordion } from "@/data";
 import SeoContent from "@/seo/seo-content";
-import { ChevronLeft, ChevronRight, MoveRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, MoveRight } from "lucide-react";
 import Link from "next/link";
+import { useLocale } from "next-intl";
+import { useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { ApiCategory, ApiCategoryName } from "@/utils/types";
+
+export type { ApiCategory, ApiCategoryName };
+
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface SubCategory {
-  name: string;
-  slug: string;
-}
 
-interface Category {
-  name: string;
-  slug: string;
-  icon: string;
-  image?: string;
-  subCategories: SubCategory[];
-}
 
-// ─── Mock Data (apne API/data se replace karein) ───────────────────────────
 
+
+const getName = (name: ApiCategoryName | string, locale: string): string => {
+  if (typeof name === "string") return name;
+  return locale === "ar" ? (name.ar || name.en) : (name.en || name.ar);
+};
 
 // ─── Category Card Component ──────────────────────────────────────────────────
-function CategoryCard({ category }: { category: Category }) {
-  const visibleSubs = category.subCategories.slice(0, 5);
-  const remaining = category.subCategories.length - visibleSubs.length;
+function CategoryCard({ category, locale,categorySlug }: { category: ApiCategory; locale: string; categorySlug: string }) {
+  const [showAll, setShowAll] = useState(false);
+  const LIMIT = 5;
+  const hasMore = category.children.length > LIMIT;
+  const visibleSubs = showAll ? category.children : category.children.slice(0, LIMIT);
+  const displayName = getName(category.name, locale);
 
   return (
     <div className="group relative bg-white border border-gray-100 rounded-[7px] md:p-6 p-3 hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
-      {/* Icon */}
+      {/* Image */}
       <div className="w-full md:h-[250px] h-[100px] bg-orange-50a rounded-[7px] flex items-center justify-center text-2xl">
-        {category.image ? (
+        {category.image_url ? (
           <img
-            src={category.image}
-            alt={category.name}
+            src={category.image_url}
+            alt={displayName}
             className="w-full h-[250px] md:h-full object-contain"
           />
         ) : (
-          category.icon
+          <span className="text-4xl">📦</span>
         )}
       </div>
 
       {/* Name + Badge */}
       <div>
-        <h2 className="text-[12px] md:text-xl font-bold uppercase tracking-wide text-gray-900 leading-tight mb-2">
-          {category.name}
+        <h2 className="text-[12px] md:text-lg font-bold uppercase tracking-wide text-gray-900 leading-tight mb-2">
+        <Link href={`/${categorySlug}/${category.slug}`} className="hover:text-[#186737] transition-colors">  {displayName}
+        </Link>
         </h2>
         <span className="inline-block md:text-xs text-[10px] font-bold  tracking-wider uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-[7px]">
-          {category.subCategories.length} Categories
+          {category.children.length} Categories
         </span>
       </div>
 
       {/* Subcategory list */}
       <ul className="space-y-1.5 border-t border-gray-100 pt-4">
         {visibleSubs.map((sub) => (
-          <li key={sub.slug}>
+          <li key={sub.id}>
             <Link
-              href={`/${category.slug}/${sub.slug}`}
+              href={`/${categorySlug}/${sub.slug}?parent=${category.slug}`}
               className="flex items-center gap-2 md:text-sm text-[10px] text-gray-500 hover:text-[#1e5230] transition-colors group/sub"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover/sub:bg-[#1e5230] flex-shrink-0 transition-colors" />
-              {sub.name}
+              {getName(sub.name, locale)}
             </Link>
           </li>
         ))}
       </ul>
 
-      {/* View all link */}
-      <Link
-        href={`/${category.slug}`}
-        className="mt-auto flex items-center gap-1.5 md:text-sm text-[10px] font-bold  tracking-widest uppercase text-primary transition-colors"
-      >
-        {remaining > 0
-          ? `View all ${category.subCategories.length}`
-          : "View category"}
-        {/* <span className="text-base leading-none group-hover:translate-x-0.5 transition-transform"> */}
-        <MoveRight size={14}  />
-        {/* </span> */}
-      </Link>
+      {/* Expand / collapse button */}
+      {hasMore && (
+        <button
+          onClick={() => setShowAll((prev) => !prev)}
+          className="mt-auto flex items-center gap-1.5 md:text-sm text-[10px] font-bold tracking-widest uppercase text-primary transition-colors"
+        >
+          {showAll ? (
+            <>Show less <ChevronUp size={14} /></>
+          ) : (
+            <>View all {category.children.length} <MoveRight size={14} /></>
+          )}
+        </button>
+      )}
     </div>
   );
 }
 
+const slugToTitle = (slug: string) =>
+  slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function CategoriesPage() {
+export default function CategoriesPage({
+  categories,
+  categorySlug,
+}: {
+  categories: ApiCategory[];
+  categorySlug: string;
+}) {
+  const locale = useLocale();
+
+  const uniqueCategories = categories.filter(
+    (cat, i, arr) => arr.findIndex((c) => c.id === cat.id) === i,
+  );
+
+  const crumbs = [
+    { label: "Home", href: "/" },
+    { label: "Categories", href: "/categories" },
+    { label: slugToTitle(categorySlug), href: null },
+  ];
+
   return (
   <>
-    <Breadcrumb/>
+    <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
       {/* Hero Header */}
       <section className="bg-white border-b border-gray-100 ">
@@ -123,7 +148,7 @@ export default function CategoriesPage() {
       <section className="global-container py-4">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-5 md:gap-5 gap-1">
           {categories.map((cat) => (
-            <CategoryCard key={cat.slug} category={cat} />
+            <CategoryCard key={cat?.id} category={cat} locale={locale} categorySlug={categorySlug} />
           ))}
         </div>
       </section>

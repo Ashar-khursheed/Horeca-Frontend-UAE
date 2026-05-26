@@ -1,6 +1,7 @@
 import GlobalLayout from "@/layouts/global-layout";
 import { LocationData } from "@/store/slices/location/locationSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
+import type { ApiCategory } from "@/utils/types";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
@@ -28,7 +29,7 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value?.trim();
 
-  const [locationData, profileRes] = await Promise.all([
+  const [locationData, profileRes, navData] = await Promise.all([
     makeApiCallSSR<LocationData>(
       "https://pim.thehorecastore.co/api/frontend/location",
       {},
@@ -41,12 +42,17 @@ export default async function RootLayout({
           { revalidate: 0, headers: { Authorization: `Bearer ${token}` } },
         )
       : null,
+    makeApiCallSSR<{ data: ApiCategory[] }>(
+      apiUrls.NavigationAPI,
+      {},
+      { revalidate: 3600 },
+    ),
   ]);
 
   const initialProfile = profileRes?.customer ?? null;
+  const navItemData = navData?.data ?? [];
 
  
-
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <link
@@ -72,7 +78,7 @@ export default async function RootLayout({
           showSpinner={false}
         />
         <NextIntlClientProvider messages={messages}>
-          <GlobalLayout locationData={locationData} initialProfile={initialProfile}>
+          <GlobalLayout locationData={locationData} initialProfile={initialProfile} navItemData={navItemData} >
             {children}
           </GlobalLayout>
         </NextIntlClientProvider>

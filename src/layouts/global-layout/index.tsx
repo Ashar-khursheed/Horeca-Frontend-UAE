@@ -12,20 +12,22 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Footer from "../footer";
 import Header from "../header";
+import type { ApiCategory } from "@/utils/types";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
   locationData?: LocationData | null;
   initialProfile?: CustomerProfile | null;
+  navItemData?: ApiCategory[];
 }
 
-const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, locationData, initialProfile }) => {
+const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, locationData, initialProfile, navItemData }) => {
   return (
     <Provider store={store}>
       <AppInitializer initialProfile={initialProfile} locationData={locationData} />
-      <Header locationData={locationData} />
+      <Header locationData={locationData} navItemData={navItemData} />
       {children}
-      <Footer />
+      <Footer navItemData={navItemData ?? []} />
     </Provider>
   );
 };

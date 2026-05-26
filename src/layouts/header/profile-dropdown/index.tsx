@@ -32,14 +32,14 @@ const menuItems = [
   { icon: CreditCard,  label: "Payments & Invoices",    href: "/dashboard/invoices" },
   { icon: FolderCheck, label: "Documents & Compliance", href: "/dashboard/documents" },
   { icon: ShieldCheck, label: "Account Security",       href: "/dashboard/security" },
-  { icon: HelpCircle,  label: "Help & Support",         href: "/pages/contact-us" },
+  { icon: HelpCircle,  label: "Help & Support",         href: "/dashboard/support" },
 ];
 
 function ProfileDropdown({ show }: { show: boolean }) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [loggingOut, setLoggingOut] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const customer = useSelector((s: RootState) => s.profile.customer);
+  const loggingOut = useSelector((s: RootState) => s.auth.loading);
  
   if (!show) return null;
 
@@ -120,10 +120,8 @@ function ProfileDropdown({ show }: { show: boolean }) {
           onMouseLeave={() => setHoveredItem(null)}
           disabled={loggingOut}
           onClick={async () => {
-            setLoggingOut(true);
             await dispatch(logoutUser());
             window.location.href = "/";
-            document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
           }}
           className="w-full flex items-center justify-between px-4 py-2.75 cursor-pointer transition-all duration-150 hover:bg-gray-50 disabled:opacity-70 disabled:cursor-not-allowed"
         >

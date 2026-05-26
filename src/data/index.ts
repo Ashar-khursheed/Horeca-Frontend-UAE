@@ -1426,6 +1426,7 @@ export const NAV_LINKS = [
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
   { label: "Track Your Order", href: "/contact" },
+  { label: "Mega Sale", href: "/mega-sale" },
 ];
 
 export 

@@ -1,13 +1,10 @@
-
 import CategoryCard from "@/components/category-card";
-import { CATEGORIESMAIN } from "@/data";
-import { generateDynamicCSSCategoryCard } from "@/utils/dynamic-css";
+import type { ApiCategory } from "@/utils/types";
 import Link from "next/link";
 
-
-export default function ShopByCategories() {
+export default function ShopByCategories({ categories = [] }: { categories?: ApiCategory[] }) {
   return (
-    <section className="w-full bg-white py-6 md:pb-6 pb-1  ">
+    <section className="w-full bg-white py-6 md:pb-6 pb-1">
       <div className="global-container mx-auto">
 
         {/* Header */}
@@ -23,7 +20,7 @@ export default function ShopByCategories() {
           </Link>
         </div>
 
-        <CategoryCard />
+        <CategoryCard categories={categories} />
 
       </div>
     </section>

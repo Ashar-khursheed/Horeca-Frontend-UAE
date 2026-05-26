@@ -1,6 +1,6 @@
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://test-us.thehorecastore.co/api/frontend";
+  "https://test-us.thehorecastore.co/api";
 
 type Params  = Record<string, string | number | boolean | undefined | null>;
 type Options = { revalidate?: number | false; tags?: string[]; headers?: Record<string, string> };

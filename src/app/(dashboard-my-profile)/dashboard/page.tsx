@@ -7,7 +7,8 @@ import {
   StatCardSkeleton,
   WelcomeBannerSkeleton,
 } from "@/components/loading-sketlon/dashboard/skeletons";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { logoutUser } from "@/store/slices/auth/authSlice";
 import {
   AlertCircle,
   ArrowRight,
@@ -36,16 +37,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // ── Shared mock ───────────────────────────────────────────────────────────────
-const USER = {
-  name: "Arshad",
-  fullName: "Arshad Khan",
-  initials: "AK",
-  business: "Arshad Inc.",
-  email: "webdeveloper08@horecastore.ae",
-  phone: "+1 (888) 888-8877",
-  accountType: "Business",
-  memberSince: "9/23/2025",
-};
 
 // ── Desktop data ──────────────────────────────────────────────────────────────
 const STATS = [
@@ -90,8 +81,10 @@ const MOBILE_NAV_ITEMS = [
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const pathname = usePathname();
-  const customer = useAppSelector((s) => s.profile.customer);
-  const loading  = useAppSelector((s) => s.profile.loading);
+  const dispatch    = useAppDispatch();
+  const customer    = useAppSelector((s) => s.profile.customer);
+  const loading     = useAppSelector((s) => s.profile.loading);
+  const loggingOut  = useAppSelector((s) => s.auth.loading);
   const isMenuItemActive = (href: string) => {
     if (href === "/dashboard" || href === "/wishlist") return pathname === href;
     if (pathname.startsWith(href + "/")) return true;
@@ -211,8 +204,18 @@ export default function DashboardPage() {
           </div>
 
           {/* Sign Out */}
-          <button className="w-full flex items-center justify-center gap-3 p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-[7px] transition-all duration-200 active:scale-95 shadow-sm">
-            <LogOut className="w-5 h-5" />
+          <button
+            disabled={loggingOut}
+            onClick={async () => {
+              await dispatch(logoutUser());
+              window.location.href = "/";
+            }}
+            className="w-full flex items-center justify-center gap-3 p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-[7px] transition-all duration-200 active:scale-95 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loggingOut
+              ? <span className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+              : <LogOut className="w-5 h-5" />
+            }
             <span className="text-sm font-semibold">Sign Out</span>
           </button>
 

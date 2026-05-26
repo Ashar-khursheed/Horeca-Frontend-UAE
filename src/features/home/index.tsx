@@ -255,16 +255,17 @@ import FeaturedProducts from "./feature-product";
 import FeaturedBrands from "./features-brand";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
+import type { ApiCategory } from "@/utils/types";
 
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export const Home = ({ sliderItems = [], sliderItemsTwo = [] }: { sliderItems?: SliderItem[], sliderItemsTwo?: SliderItem[] }) => {
+export const Home = ({ sliderItems = [], sliderItemsTwo = [], featuredCategories = [] }: { sliderItems?: SliderItem[], sliderItemsTwo?: SliderItem[], featuredCategories?: ApiCategory[] }) => {
 
   return (
     <>
      <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
       <SEOMainContent/>
-      <ShopByCategories/>
+      <ShopByCategories categories={featuredCategories} />
       <FeaturedProducts/>
       <div className="w-full md:py-10 py-4">
         <div className="global-container">

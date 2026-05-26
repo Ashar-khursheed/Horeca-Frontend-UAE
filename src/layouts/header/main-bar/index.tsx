@@ -14,6 +14,7 @@ import {
   Search,
   ShoppingCart,
   User,
+  User2,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { CATEGORIES, NAV_LINKS } from "@/data";
 import { clearProfile, CustomerProfile } from "@/store/slices/my-profile/profileSlice";
+import { logoutUser } from "@/store/slices/auth/authSlice";
 import { LocationData } from "@/store/slices/location/locationSlice";
 import { apiUrls } from "@/apis/api-endpoint";
 import { AppDispatch, RootState } from "@/store/store";
@@ -123,6 +125,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
   const profileLoading = useSelector((s: RootState) => s.profile.loading);
   const customer = reduxCustomer ?? initialProfile;
   const dispatch = useDispatch<AppDispatch>();
+  const loggingOut = useSelector((s: RootState) => s.auth.loading);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -409,9 +412,9 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#186737]/10 transition-colors">
                     <User size={16} className="text-gray-500 group-hover:text-[#186737] transition-colors" />
                   </div>
-                  <div className="flex flex-col items-start">
-                    <Link href="/login" className="text-[10px] text-gray-400 leading-none hover:text-[#186737] transition-colors">Sign in</Link>
-                    <Link href="/register" className="text-xs font-semibold text-gray-800 leading-tight hover:text-[#186737] transition-colors">Register</Link>
+                  <div className="flex flex-col gap-1 items-start">
+                    <Link href="/login" className="text-[13px] text-black leading-none hover:text-[#186737] transition-colors">Sign in</Link>
+                    {/* <Link href="/register" className="text-[13px] font-semibold text-gray-800 leading-tight hover:text-[#186737] transition-colors">Register</Link> */}
                   </div>
                 </button>
               )}
@@ -437,13 +440,18 @@ export default function NavigationStatic({ initialProfile = null, locationData =
             {/* ── Mobile Right (hamburger) ── */}
             <div className="flex xl:hidden items-center gap-1">
               {/* Mobile cart icon */}
-              {/* <button className="relative w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
+            <Link href={"/cart"}>
+              <button className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
                 <ShoppingCart size={20} />
-                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">99+</span>
-              </button> */}
+                {/* <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">99+</span> */}
+              </button></Link>
+              <Link href={"/wishlist"}><button className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
+                <Heart size={20} />
+                {/* <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">99+</span> */}
+              </button></Link>
               <button
                 onClick={() => router.push("/search")}
-                className="relative w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
+                className="relative w-9 h-9 flex lg:hidden items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
               >
                 <Search size={20} />
               </button>
@@ -489,7 +497,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                             <div>
                               <p className="text-[13px] font-semibold text-gray-800">{customer.name}</p>
                               <Link
-                                href="/dashboard/my-profile"
+                                href="/dashboard"
                                 onClick={() => setSheetOpen(false)}
                                 className="text-[11px] text-[#186737] font-medium"
                               >
@@ -498,9 +506,17 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                             </div>
                           </div>
                           <button
-                            className="flex items-center gap-1.5 text-[12px] text-red-500 font-medium border border-red-100 rounded-full px-3 py-1.5 hover:bg-red-50 transition-colors"
+                            disabled={loggingOut}
+                            onClick={async () => {
+                              await dispatch(logoutUser());
+                              window.location.href = "/";
+                            }}
+                            className="flex items-center gap-1.5 text-[12px] text-red-500 font-medium border border-red-100 rounded-full px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           >
-                            <LogOut size={13} />
+                            {loggingOut
+                              ? <span className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                              : <LogOut size={13} />
+                            }
                             Logout
                           </button>
                         </div>
@@ -530,7 +546,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                         key={link.href}
                         href={link.href}
                         onClick={() => setSheetOpen(false)}
-                        className="flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors ${link.label==="Mega Sale" ?"text-red-500" : "text-gray-900"}` }
                       >
                         {link.label}
                       </Link>

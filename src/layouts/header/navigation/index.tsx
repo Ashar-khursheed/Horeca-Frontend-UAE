@@ -1,24 +1,32 @@
 "use client";
 
 import { CATEGORIESNAVBAR } from "@/data";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 // ── Dummy Data ─────────────────────────────────────────────────────────────────
+interface CategoryName { en?: string; ar?: string; }
+
 interface Category {
   id: number;
-  name: string;
+  name: CategoryName | string;
   slug: string;
   parent_id: number;
   productCount: number;
-  image: string;
+  image_url: string;
   order: number;
   children: Category[];
   last_children: Category[];
 }
+
+const getName = (name: CategoryName | string, locale: string): string => {
+  if (typeof name === "string") return name;
+  return locale === "ar" ? (name?.ar ?? name?.en ?? "") : (name?.en ?? name?.ar ?? "");
+};
 
 
 // ── getCategoryPath helper ─────────────────────────────────────────────────────
@@ -34,6 +42,7 @@ const getCategoryPath = (cat: Category): string => {
 // ══════════════════════════════════════════════════════════════════════════════
 interface DropdownPanelProps {
   category: Category;
+  locale: string;
   setChildCategory?:      (c: Category[]) => void;
   setGrandChildCategory?: (c: Category[]) => void;
   onClose: () => void;
@@ -43,6 +52,7 @@ interface DropdownPanelProps {
 
 function DropdownPanel({
   category,
+  locale,
   setChildCategory,
   setGrandChildCategory,
   onClose,
@@ -67,6 +77,8 @@ function DropdownPanel({
 
   if (!category?.children?.length) return null;
 
+  const isRtl = locale === "ar";
+  const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
   const grandChildren = activeChild?.children ?? [];
 
   return (
@@ -162,20 +174,23 @@ function DropdownPanel({
                     style={{ animationDelay: `${index * 30}ms`,  }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[12px] 2xl:text-[14px] leading-tight">{child.name}</span>
-                      <ChevronRight
+                      <span className="text-[12px] 2xl:text-[14px] leading-tight">{getName(child.name, locale)}</span>
+
+                      <ArrowIcon
                         size={16}
                         className={`transition-all duration-200 flex-shrink-0 ${
                           activeChild?.id === child.id
                             ? "opacity-100 translate-x-0"
-                            : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
+                            : isRtl
+                              ? "opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
+                              : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
                         }`}
                       />
                     </div>
 
                     {/* Active indicator bar */}
                     {activeChild?.id === child.id && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-600 rounded-r-full animate-scaleY" />
+                      <div className={`absolute top-0 bottom-0 w-1 bg-green-600 animate-scaleY ${isRtl ? "right-0 rounded-l-full" : "left-0 rounded-r-full"}`} />
                     )}
                   </Link>
                 ))}
@@ -203,11 +218,11 @@ function DropdownPanel({
                     >
                       {/* Image */}
                       <div className="relative w-full aspect-square mb-3 overflow-hidden rounded-[7px] bg-white">
-                        {grandChild.image ? (
+                        {grandChild.image_url ? (
                           <>
                             <img
-                              src={grandChild.image}
-                              alt={grandChild.name}
+                              src={grandChild.image_url}
+                              alt={getName(grandChild.name, locale)}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out"
                               loading="lazy"
                               onError={(e) => {
@@ -223,7 +238,7 @@ function DropdownPanel({
 
                       {/* Label */}
                       <span className="text-xs font-medium text-gray-700 group-hover:text-green-700 leading-tight break-words line-clamp-2 transition-colors duration-200">
-                        {grandChild.name}
+                        {getName(grandChild.name, locale)}
                       </span>
                     </Link>
                   ))}
@@ -249,7 +264,8 @@ function DropdownPanel({
 // ══════════════════════════════════════════════════════════════════════════════
 // HeaderMenu
 // ══════════════════════════════════════════════════════════════════════════════
-const HeaderMenu = () => {
+const HeaderMenu = ({navItemData}: {navItemData: unknown[]}) => {
+  const locale = useLocale();
   const [activeCategory, setActiveCategory]         = useState<Category | null>(null);
   const [isDropdownOpen, setIsDropdownOpen]         = useState(false);
   const [childCategory, setChildCategory]           = useState<Category[]>([]);
@@ -307,16 +323,19 @@ const HeaderMenu = () => {
     (category: Category) => {
       clearTimeout(closeTimeoutRef.current!);
 
+      const children = category.children ?? (category as any).sub_categories ?? (category as any).subcategories ?? [];
+      console.log("[Nav] hover:", category.slug, "| children count:", children.length, "| raw:", category);
+
       /* No children or brands → schedule close */
-      if (!category.children?.length || category.slug === "shop-by-brands") {
+      if (!children.length || category.slug === "shop-by-brands") {
         handleCloseDropdown();
         return;
       }
 
       /* Instant open + set state — exactly like React JS version */
-      setActiveCategory(category);
-      setChildCategory(category.children ?? []);
-      setGrandChildCategory(category.children?.[0]?.children ?? []);
+      setActiveCategory({ ...category, children });
+      setChildCategory(children);
+      setGrandChildCategory(children[0]?.children ?? []);
       setIsDropdownOpen(true);
     },
     [handleCloseDropdown],
@@ -350,6 +369,7 @@ const HeaderMenu = () => {
     <div
       ref={menuRef}
       className="relative w-full bg-green-700 py-2.5 border-b border-green-800 hidden xl:block"
+      onMouseEnter={cancelClose}
       onMouseLeave={handleCloseDropdown}
     >
       <div className="global-container">
@@ -370,7 +390,7 @@ const HeaderMenu = () => {
               ref={scrollRef}
               className="flex space-x-4 items-center overflow-x-aueto scrollbar-hide scroll-smooth"
             >
-              {CATEGORIESNAVBAR.map((category) => (
+              {navItemData.map((category:any) => (
                 <Link
                   key={category.id}
                   href={getCategoryPath(category)}
@@ -384,7 +404,7 @@ const HeaderMenu = () => {
                     hover:font-bold
                   `}
                 >
-                  {category.name}
+                  {getName(category.name, locale)}
                   {category.slug !== "shop-by-brands" && (
                     <ChevronDown size={15} className="text-white opacity-80" />
                   )}
@@ -447,6 +467,7 @@ const HeaderMenu = () => {
           <DropdownPanel
             key={activeCategory.id}
             category={activeCategory}
+            locale={locale}
             setChildCategory={setChildCategory}
             setGrandChildCategory={setGrandChildCategory}
             onClose={closeNow}

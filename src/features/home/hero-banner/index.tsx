@@ -138,7 +138,7 @@ export const HeroBanner = ({
       <section className="global-container mt-3 sm:mt-6">
         <div className="flex flex-col lg:grid lg:grid-cols-[70%_30%] gap-3 lg:gap-4">
           {/* ── Hero Swiper (all screens) ── */}
-          <div className="w-full rounded-[7px] overflow-hidden" style={{ aspectRatio: "875/380" }}>
+          <div className="w-full rounded-[7px] overflow-hidden h-full" style={{ aspectRatio: "875/380" }}>
             <Swiper
               modules={[Autoplay, Pagination, Navigation, EffectFade]}
               effect="fade"

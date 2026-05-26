@@ -1,13 +1,14 @@
 export const apiUrls = {
   // Authentication
-  LOGIN: "/login",
-  REGISTER: "/customer/register",
-  LOGOUT: "/logout",
-  GETMYPROFILE: "/customer/get-profile",
-  CHANGE_PASSWORD: "/customer/change-password",
-  UPDATE_PROFILE: "/customer/update-profile",
+  LOGIN: "frontend/login",
+  REGISTER: "frontend/customer/register",
+  LOGOUT: "frontend/logout",
+  GETMYPROFILE: "frontend/customer/get-profile",
+  CHANGE_PASSWORD: "frontend/customer/change-password",
+  UPDATE_PROFILE: "frontend/customer/update-profile",
+  NavigationAPI:"frontend-categories",
 
   // General
-  COUNTRIES: "/countries",
-  SLIDER: (id: number) => `/sliders/${id}`,
+  COUNTRIES: "frontend/countries",
+  SLIDER: (id: number) => `frontend/sliders/${id}`,
 };

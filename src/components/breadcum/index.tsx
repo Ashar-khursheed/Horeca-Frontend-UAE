@@ -1,12 +1,12 @@
 import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
 
-function Breadcrumb() {
-  const crumbs = [
-    { label: "Home", href: "/" },
-    { label: "Categories", href: "/categories" },
-    { label: "Restaurant Equipment", href: null  },
-  ];
+export interface Crumb {
+  label: string;
+  href: string | null;
+}
+
+function Breadcrumb({ crumbs = [] }: { crumbs?: Crumb[] }) {
 
   return (
     <nav className="xl:bg-white bg-gray-100 border-b border-gray-100">
