@@ -19,13 +19,16 @@ interface Props extends HeaderProps {
 
 interface ApiCategory {
   id: number;
-  parent_id: number;
+  parent_id: number | null;
   image_url: string;
   order: number;
-  products_count: number;
+  products_count?: number;
+  is_featured?: boolean;
+  status?: string;
   name: ApiCategoryName | string;
   slug: string;
   children: ApiCategory[];
+  parent_recursive?: ApiCategory | null;
 }
  interface ApiCategoryName { en: string; ar: string; }
 

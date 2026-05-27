@@ -191,28 +191,7 @@ const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
 
         {/* Description */}
         <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4 flex-grow">
-      {
-  stripHtml(
-    (() => {
-      try {
-        const parsed = JSON.parse(item.description);
-        return parsed?.[0]?.value || "";
-      } catch (e) {
-        return (
-          item.description
-            ?.replace(/^\[\{"value":"?/, "")
-            ?.replace(/"}\]$/, "")
-            ?.replace(/\\"/g, '"')
-            // words ke beech proper spacing
-            ?.replace(/([a-z])([A-Z])/g, "$1 $2")
-            ?.replace(/(\d)\./g, "$1. ")
-            ?.replace(/([a-zA-Z])(\d)/g, "$1 $2")
-            ?.replace(/(\d)([a-zA-Z])/g, "$1 $2")
-        );
-      }
-    })()
-  )
-}
+          {stripHtml(parseDescription(item.description))}
         </p>
 
         {/* Divider */}
