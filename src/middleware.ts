@@ -48,9 +48,9 @@ export const config = {
     "/dashboard/:path*",
     "/checkout",
     "/create-quotation",
-    "/login",
-    "/register",
-    "/forgot-password",
+    // "/login",
+    // "/register",
+    // "/forgot-password",
   ],
   // matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
 };

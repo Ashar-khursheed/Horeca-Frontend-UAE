@@ -39,14 +39,14 @@ function CategoryCard({ category, locale,categorySlug }: { category: ApiCategory
   const displayName = getName(category.name, locale);
 
   return (
-    <div className="group relative bg-white border border-gray-100 rounded-[7px] md:p-6 p-3 hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
+    <div className="group relative bg-white border border-gray-100 rounded-[7px] md:p-6 p-3 hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col md:gap-4 gap-2">
       {/* Image */}
       <div className="w-full md:h-[250px] h-[100px] bg-orange-50a rounded-[7px] flex items-center justify-center text-2xl">
         {category.image_url ? (
           <img
             src={category.image_url}
             alt={displayName}
-            className="w-full h-[250px] md:h-full object-contain"
+            className="w-full md:h-[250px] h-[106px] md:h-full object-contain"
           />
         ) : (
           <span className="text-4xl">📦</span>
