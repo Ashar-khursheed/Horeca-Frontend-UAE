@@ -9,10 +9,13 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import TickerBadge from "../ticker-badge";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
+type LS = { en?: string; ar?: string } | string;
+
 export interface ApiProduct {
   id: number;
   name: string;
@@ -41,11 +44,52 @@ export interface ApiProduct {
   isRequired: boolean;
 }
 
+interface RawApiProduct {
+  id: number;
+  name: LS;
+  url: string;
+  sku?: string;
+  category_url?: string;
+  parent_category_url?: string;
+  price: number;
+  sale_price: number;
+  original_price?: number;
+  avg_rating: number | null;
+  total_reviews: number;
+  delivery_days?: string;
+  currency?: LS | { name?: string; symbol?: string };
+  images: string[] | { en?: string[]; ar?: string[] };
+  alt_tags?: string[];
+  in_wishlist?: boolean;
+  min_quantity?: number;
+  is_fixed?: number | boolean;
+  quote_available?: number | boolean | null;
+  selling_type?: { attribute_value: LS; attribute_value_unit: LS };
+  suppliers?: { delivery_days?: string; free_shipping?: boolean | number }[];
+  isRequired?: boolean;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const resolveStr = (v: LS | { name?: string; symbol?: string } | undefined, locale = "en"): string => {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  const o = v as Record<string, string | undefined>;
+  if (locale === "ar") return o.ar ?? o.en ?? o.name ?? o.symbol ?? "";
+  return o.en ?? o.ar ?? o.name ?? o.symbol ?? "";
+};
+
+type CurrencyField = string | { name?: string; symbol?: string; display_title?: string } | undefined;
+const resolveCurrencySymbol = (c: CurrencyField): string => {
+  if (!c) return "AED";
+  if (typeof c === "string") return c;
+  return c.symbol ?? c.name ?? "AED";
+};
+
 interface ProductCardProps {
-  product: ApiProduct;
+  product: ApiProduct | RawApiProduct;
   newUrl?: string;
-  onAddToCart?: (product: ApiProduct, quantity: number) => void;
-  onWishlistToggle?: (product: ApiProduct, inWishlist: boolean) => void;
+  onAddToCart?: (product: ApiProduct | RawApiProduct, quantity: number) => void;
+  onWishlistToggle?: (product: ApiProduct | RawApiProduct, inWishlist: boolean) => void;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -156,29 +200,42 @@ export const ProductCard = ({
   onAddToCart,
   onWishlistToggle,
 }: ProductCardProps) => {
+  const locale = useLocale();
+  // ── Normalise fields that may arrive in either flat or localised form ──
+  const name = resolveStr(product.name, locale);
+  const rawImages = product.images;
+  const images_ = Array.isArray(rawImages)
+    ? (rawImages as string[])
+    : (locale === "ar"
+        ? ((rawImages as { ar?: string[]; en?: string[] })?.ar ?? (rawImages as { en?: string[] })?.en ?? [])
+        : ((rawImages as { en?: string[] })?.en ?? (rawImages as { ar?: string[] })?.ar ?? []));
+  const deliveryDays = product.delivery_days ?? ("suppliers" in product ? (product as RawApiProduct).suppliers?.[0]?.delivery_days : undefined) ?? "";
+  const currencyStr = resolveCurrencySymbol(product.currency as CurrencyField);
+  const sellUnitStr = resolveStr(product.selling_type?.attribute_value_unit, locale);
+  const originalPrice = product.original_price ?? product.price ?? 0;
   const minQty = product.min_quantity || 1;
-  const isFixed = product.is_fixed === 1;
-  const isQuote = product.quote_available === 1;
+  const isFixed = !!product.is_fixed;
+  const isQuote = !!product.quote_available;
 
   const [count, setCount] = useState(minQty);
-  const [wishlisted, setWishlisted] = useState(product.in_wishlist);
+  const [wishlisted, setWishlisted] = useState(product.in_wishlist ?? false);
   const [addedSuccess, setAddedSuccess] = useState(false);
 
   // ── Price logic (sale_price=0 means no sale) ─────────────────────────
   const hasSale =
     product.sale_price > 0 &&
-    product.sale_price !== product.original_price;
+    product.sale_price !== originalPrice;
 
-  const activePrice = hasSale ? product.sale_price : product.original_price;
+  const activePrice = hasSale ? product.sale_price : originalPrice;
 
   const discountPct = hasSale
-    ? ((product.original_price - product.sale_price) / product.original_price) * 100
+    ? ((originalPrice - product.sale_price) / originalPrice) * 100
     : 0;
 
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
 
   // ── Hover image slider ───────────────────────────────────────────────
-  const images = product.images?.length > 0 ? product.images : ["/placeholder.png"];
+  const images = images_.length > 0 ? images_ : ["/placeholder.png"];
   const hasMultipleImages = images.length > 1;
   const [imgIndex, setImgIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -242,7 +299,9 @@ export const ProductCard = ({
     if (onWishlistToggle) onWishlistToggle(product, next);
   };
 
-  const productLink = `/${product.parent_category_url ?? newUrl}/${product.url}`;
+  const productLink = product.url?.startsWith("/")
+    ? product.url
+    : `/${product.parent_category_url ?? newUrl}/${product.url}`;
   const displayImages = images.slice(0, 5);
 
   return (
@@ -282,7 +341,7 @@ export const ProductCard = ({
               <img
                 key={i}
                 src={img}
-                alt={product.alt_tags?.[i] || product.name}
+                alt={product.alt_tags?.[i] || name}
                 loading={i === 0 ? "eager" : "lazy"}
                 className="absolute inset-0 w-full h-full object-contain p-2 transition-opacity duration-500"
                 style={{ opacity: imgIndex === i ? 1 : 0 }}
@@ -323,14 +382,16 @@ export const ProductCard = ({
             className="md:font-semibold font-semibold text-[13.5px] lg:text-[14.5px] text-gray-900 line-clamp-2 hover:text-[#186737] transition-colors leading-snug"
            
           >
-            {product.name}
+            {name}
           </p>
         </Link>
 
         {/* SKU */}
-        <p className="mt-1.5 text-xs text-[#6B7280] font-medium" title={product.sku}>
-          Model No: {product.sku}
-        </p>
+        {product.sku && (
+          <p className="mt-1.5 text-xs text-[#6B7280] font-medium" title={product.sku}>
+            Model No: {product.sku}
+          </p>
+        )}
 
         {/* Rating — only show if rating exists */}
         {product.avg_rating ? (
@@ -361,9 +422,9 @@ export const ProductCard = ({
 
         {/* Ships in X Days */}
         <p className="mt-1 text-[12.5px] text-[#4B5563]">
-          {product.delivery_days ? (
+          {deliveryDays ? (
             <span className="font-bold text-gray-900">
-              Mostly Ships in {product.delivery_days}
+              Mostly Ships in {deliveryDays}
             </span>
           ) : (
             <span className="font-semibold">Now Shipping Faster</span>
@@ -397,7 +458,7 @@ export const ProductCard = ({
                     }`}
                     
                   >
-                    $
+                 {currencyStr || "AED"}
                     {priceInt}
                   </b>
                   <span
@@ -408,9 +469,9 @@ export const ProductCard = ({
                     .{priceDec}
                   </span>
                 </div>
-                {product.selling_type?.attribute_value_unit && (
+                {sellUnitStr && (
                   <span className="text-[13px] text-[#6B7280] font-medium">
-                    /{product.selling_type.attribute_value_unit}
+                    /{sellUnitStr}
                   </span>
                 )}
               </div>
@@ -418,7 +479,7 @@ export const ProductCard = ({
               {/* WAS price */}
               {hasSale ? (
                 <p className="text-[#6B7280] font-semibold text-[13px] line-through mt-1">
-                  WAS {product.currency || "$"} {fmtPrice(product.original_price)}
+                  WAS {currencyStr} {fmtPrice(originalPrice)}
                 </p>
               ) : null}
             </div>

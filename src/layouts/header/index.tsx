@@ -1,6 +1,5 @@
 import BottomNav from "@/components/bottom-nav";
-import { LocationData } from "@/store/slices/location/locationSlice";
-import { HeaderProps, Props } from "@/utils/types";
+import { Props } from "@/utils/types";
 import NavigationStatic from "./main-bar";
 import DropdownPanel from "./navigation";
 import TopBar from "./top-bar";
@@ -10,7 +9,7 @@ const Header = ({ initialProfile = null, locationData, navItemData = [] }: Props
   return (
     <header className="w-full stickys top-0 z-50 ">
       <TopBar />
-      <NavigationStatic initialProfile={initialProfile} locationData={locationData} />
+      <NavigationStatic initialProfile={initialProfile} locationData={locationData} navItemData={navItemData as any} />
       <DropdownPanel navItemData={navItemData} />
       <BottomNav />
     </header>

@@ -15,109 +15,33 @@ import Link from "next/link";
 import React, { useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Blog {
+interface ApiBlog {
   id: number;
-  slug: string;
-  name: string;
-  author: string;
-  written_by: string;
+  title: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  description: any;
+  thumbnail: string;
+  thumbnail_alt: string;
   mobile_banner: string;
-  mobile_banner_alt: string;
-  description: { value: string }[];
-  created_at: string;
-  total_views: number;
-  total_likes: number;
-  total_shares: number;
-  is_featured: boolean;
-  tags: string[];
-  category: string;
+  desktop_banner: string;
+  blog_date: string;
+  author_name: string;
+  author_description: string;
+  author_designation: string;
+  author_image: string;
+  views_count: number;
+  likes_count: number;
+  shares_count: number;
+  is_featured: boolean | number;
+  url: string;
+  category: { id: number; name: string; slug: string };
 }
-
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-const DUMMY_BLOGS: Blog[] = [
-  {
-    id: 1,
-    slug: "top-10-fashion-trends-2025",
-    name: "Top 10 Fashion Trends Dominating 2025",
-    author: "Aisha Khan",
-    written_by: "Aisha Khan",
-    mobile_banner: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=600&q=80",
-    mobile_banner_alt: "Fashion Trends 2025",
-    description: [{ value: "Discover the most captivating fashion trends that are reshaping wardrobes around the world this year. From quiet luxury to bold maximalism, we cover it all." }],
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    total_views: 4821, total_likes: 312, total_shares: 89,
-    is_featured: true, tags: ["Fashion", "Trends", "Style"], category: "Fashion",
-  },
-  {
-    id: 2,
-    slug: "how-to-style-linen-in-summer",
-    name: "How to Style Linen for a Perfect Summer Look",
-    author: "Sara Mirza",
-    written_by: "Sara Mirza",
-    mobile_banner: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80",
-    mobile_banner_alt: "Linen Summer Style",
-    description: [{ value: "Linen is the ultimate summer fabric. Learn how to pair it with the right accessories and footwear for an effortlessly chic warm-weather wardrobe." }],
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    total_views: 3105, total_likes: 198, total_shares: 54,
-    is_featured: false, tags: ["Summer", "Linen", "Styling"], category: "Style Guide",
-  },
-  {
-    id: 3,
-    slug: "sustainable-fashion-guide",
-    name: "The Complete Guide to Sustainable Fashion Shopping",
-    author: "Zara Ahmed",
-    written_by: "Zara Ahmed",
-    mobile_banner: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&q=80",
-    mobile_banner_alt: "Sustainable Fashion",
-    description: [{ value: "Make conscious choices without compromising on style. Our guide walks you through ethical brands, eco-friendly fabrics, and smart shopping habits." }],
-    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-    total_views: 6234, total_likes: 445, total_shares: 137,
-    is_featured: true, tags: ["Sustainable", "Eco", "Conscious"], category: "Lifestyle",
-  },
-  {
-    id: 4,
-    slug: "capsule-wardrobe-essentials",
-    name: "Building the Perfect Capsule Wardrobe: 20 Essentials",
-    author: "Nida Hussain",
-    written_by: "Nida Hussain",
-    mobile_banner: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80",
-    mobile_banner_alt: "Capsule Wardrobe",
-    description: [{ value: "A capsule wardrobe isn't about having fewer clothes — it's about having the right ones. We break down 20 timeless pieces every modern closet needs." }],
-    created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
-    total_views: 8910, total_likes: 621, total_shares: 203,
-    is_featured: false, tags: ["Capsule", "Minimalism", "Wardrobe"], category: "Style Guide",
-  },
-  {
-    id: 5,
-    slug: "accessorize-like-a-pro",
-    name: "Accessorize Like a Pro: The Art of Finishing an Outfit",
-    author: "Hina Baig",
-    written_by: "Hina Baig",
-    mobile_banner: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=600&q=80",
-    mobile_banner_alt: "Accessories Guide",
-    description: [{ value: "The right accessories can transform any outfit from ordinary to extraordinary. Learn the golden rules of accessorizing from our style experts." }],
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    total_views: 2750, total_likes: 187, total_shares: 61,
-    is_featured: false, tags: ["Accessories", "Styling", "Tips"], category: "Fashion",
-  },
-  {
-    id: 6,
-    slug: "color-theory-for-fashion",
-    name: "Color Theory for Fashion: Dress to Impress Every Time",
-    author: "Aisha Khan",
-    written_by: "Aisha Khan",
-    mobile_banner: "https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=600&q=80",
-    mobile_banner_alt: "Color Theory Fashion",
-    description: [{ value: "Understanding color combinations can be the game changer your wardrobe needs. Dive into color theory and how to apply it to everyday dressing." }],
-    created_at: new Date(Date.now() - 21 * 86400000).toISOString(),
-    total_views: 5430, total_likes: 378, total_shares: 112,
-    is_featured: true, tags: ["Color", "Theory", "Style"], category: "Style Guide",
-  },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatDate = (dateString: string): string => {
+  if (!dateString) return "";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
   const diffInDays = Math.floor((Date.now() - date.getTime()) / 86400000);
   if (diffInDays === 0) return "Today";
   if (diffInDays === 1) return "Yesterday";
@@ -126,77 +50,95 @@ const formatDate = (dateString: string): string => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const estimateReadTime = (description: { value: string }[]): number => {
-  if (!description?.length) return 3;
-  const words = description.map((d) => d.value).join(" ").replace(/<[^>]*>/g, "").split(/\s+/).length;
-  return Math.ceil(words / 200);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const parseDescription = (raw: any): string => {
+  if (!raw) return "";
+  // already an array of {value} objects
+  if (Array.isArray(raw)) {
+    return raw.map((d: { value: string }) => d.value ?? "").join(" ");
+  }
+  if (typeof raw !== "string") return String(raw);
+  // JSON string like '[{"value":"..."}]'
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map((d: { value: string }) => d.value ?? "").join(" ");
+    }
+    if (typeof parsed === "string") return parsed;
+  } catch {
+    // plain string — use as-is
+  }
+  return raw;
+};
+
+const stripHtml = (html: string) =>
+  html?.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim() ?? "";
+
+const estimateReadTime = (raw: string): number => {
+  if (!raw) return 3;
+  const words = stripHtml(parseDescription(raw)).split(/\s+/).filter(Boolean).length;
+  return Math.ceil(words / 200) || 1;
 };
 
 const formatCount = (n: number): string =>
-  n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Fashion: "from-rose-500 to-pink-600",
-  "Style Guide": "from-violet-500 to-purple-600",
-  Lifestyle: "from-emerald-500 to-teal-600",
-};
+  n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n ?? 0);
 
 // ─── Single Blog Card ─────────────────────────────────────────────────────────
-const BlogCard: React.FC<{ item: Blog }> = ({ item }) => {
+const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(item.total_likes);
-  const [shareCount, setShareCount] = useState(item.total_shares);
-  const [viewCount, setViewCount] = useState(item.total_views);
+  const [likeCount, setLikeCount] = useState(item.likes_count ?? 0);
+  const [shareCount, setShareCount] = useState(item.shares_count ?? 0);
+  const [viewCount, setViewCount] = useState(item.views_count ?? 0);
   const [shared, setShared] = useState(false);
 
+  const imageUrl = item.thumbnail || item.mobile_banner;
+  const imageAlt = item.thumbnail_alt || item.title;
+  const blogHref = item.url?.startsWith("/") ? item.url : `/${item.url}`;
+
   const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setLiked((prev) => { setLikeCount((c) => (prev ? c - 1 : c + 1)); return !prev; });
   };
 
   const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setShareCount((c) => c + 1);
     setShared(true);
     setTimeout(() => setShared(false), 2000);
   };
 
-  const handleView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setViewCount((c) => c + 1);
-  };
-
   return (
-    <div
-      className="group relative bg-white rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-2"
-      style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05)" }}
-    >
+    <Link href={blogHref} className="group relative bg-white rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-2" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05)" }}>
       {/* Hover glow border */}
-      <div
+      {/* <div
         className="absolute inset-0 rounded-3xl pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         style={{
           background: "linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.04) 100%)",
           border: "1.5px solid rgba(16,185,129,0.35)",
         }}
-      />
+      /> */}
 
       {/* ── Image ── */}
       <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: "16/10" }}>
-        <img
-          src={item.mobile_banner}
-          alt={item.mobile_banner_alt || item.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          loading="lazy"
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={imageAlt}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200" />
+        )}
 
-        {/* Dark gradient on hover */}
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)" }}
         />
 
-        {/* Trending Badge */}
-        {item.is_featured && (
+        {!!item.is_featured && (
           <div
             className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-bold shadow-lg"
             style={{ background: "linear-gradient(135deg, #f43f5e, #ec4899)" }}
@@ -206,16 +148,12 @@ const BlogCard: React.FC<{ item: Blog }> = ({ item }) => {
           </div>
         )}
 
-        {/* Category Badge */}
-        <div
-          className={`absolute top-3 right-3 z-10 px-2.5 py-1 rounded-full text-white text-xs font-semibold bg-linear-to-r ${
-            CATEGORY_COLORS[item.category] ?? "from-gray-600 to-gray-700"
-          }`}
-        >
-          {item.category}
-        </div>
+        {item.category?.name && (
+          <div className="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-full text-white text-xs font-semibold bg-emerald-600">
+            {item.category.name}
+          </div>
+        )}
 
-        {/* Read-time pill */}
         <div
           className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-gray-800 backdrop-blur-md"
           style={{ background: "rgba(255,255,255,0.88)" }}
@@ -233,35 +171,48 @@ const BlogCard: React.FC<{ item: Blog }> = ({ item }) => {
             <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
               <User className="w-3 h-3 text-emerald-600" />
             </div>
-            <span className="font-semibold text-gray-700">{item.written_by}</span>
+            <span className="font-semibold text-gray-700">{item.author_name}</span>
           </div>
-          <span className="w-1 h-1 rounded-full bg-gray-300" />
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Calendar className="w-3 h-3 text-emerald-500" />
-            {formatDate(item.created_at)}
-          </div>
-        </div>
-
-        {/* Tags */}
-        <div className="flex gap-1.5 flex-wrap mb-3">
-          {item.tags.slice(0, 2).map((tag) => (
-            <span
-              key={tag}
-              className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-50 border border-emerald-100"
-            >
-              {tag}
-            </span>
-          ))}
+          {item.blog_date && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-gray-300" />
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Calendar className="w-3 h-3 text-emerald-500" />
+                {formatDate(item.blog_date)}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Title */}
-        <h3 className="text-gray-900 text-[17px] font-extrabold line-clamp-2 mb-2.5 leading-snug tracking-tight group-hover:text-emerald-700 transition-colors duration-300 cursor-pointer">
-          {item.name}
+        <h3 className="text-gray-900 text-[17px] font-extrabold line-clamp-2 mb-2.5 leading-snug tracking-tight group-hover:text-emerald-700 transition-colors duration-300">
+          {item.title}
         </h3>
 
         {/* Description */}
         <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4 flex-grow">
-          {item.description[0]?.value?.replace(/<[^>]*>/g, "").trim()}
+      {
+  stripHtml(
+    (() => {
+      try {
+        const parsed = JSON.parse(item.description);
+        return parsed?.[0]?.value || "";
+      } catch (e) {
+        return (
+          item.description
+            ?.replace(/^\[\{"value":"?/, "")
+            ?.replace(/"}\]$/, "")
+            ?.replace(/\\"/g, '"')
+            // words ke beech proper spacing
+            ?.replace(/([a-z])([A-Z])/g, "$1 $2")
+            ?.replace(/(\d)\./g, "$1. ")
+            ?.replace(/([a-zA-Z])(\d)/g, "$1 $2")
+            ?.replace(/(\d)([a-zA-Z])/g, "$1 $2")
+        );
+      }
+    })()
+  )
+}
         </p>
 
         {/* Divider */}
@@ -273,13 +224,10 @@ const BlogCard: React.FC<{ item: Blog }> = ({ item }) => {
         {/* Stats & Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleView}
-              className="flex items-center gap-1.5 text-gray-400 hover:text-emerald-600 transition-colors text-xs font-semibold active:scale-90"
-            >
+            <div className="flex items-center gap-1.5 text-gray-400 text-xs font-semibold">
               <Eye className="w-4 h-4" />
               {formatCount(viewCount)}
-            </button>
+            </div>
 
             <button
               onClick={handleShare}
@@ -304,21 +252,18 @@ const BlogCard: React.FC<{ item: Blog }> = ({ item }) => {
         </div>
 
         {/* Read More CTA */}
-        <Link
-          href={`/blog/${item.slug}`}
-          className="group/btn mt-4 w-full py-2.5 bg-linear-to-r from-green-600 to-green-700 text-white rounded-[7px] font-semibold hover:from-green-700 hover:to-green-800 transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98]"
-        >
+        <div className="group/btn mt-4 w-full py-2.5 bg-linear-to-r from-green-600 to-green-700 text-white rounded-[7px] font-semibold flex items-center justify-center gap-2 shadow-md">
           <span>Read Article</span>
-          <ChevronRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-        </Link>
+          <ChevronRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
-export const BlogsCard: React.FC<{ showAll?: boolean }> = ({ showAll = false }) => {
-  const blogs = showAll ? DUMMY_BLOGS : DUMMY_BLOGS.slice(0, 6);
+export const BlogsCard: React.FC<{ showAll?: boolean; blogs?: ApiBlog[] }> = ({ showAll = false, blogs = [] }) => {
+  if (!blogs.length) return null;
 
   return (
     <section className="md:my-16 py-6 md:py-0 px-4 sm:px-6 lg:px-8 global-container">
@@ -329,7 +274,7 @@ export const BlogsCard: React.FC<{ showAll?: boolean }> = ({ showAll = false }) 
             Latest Blogs &amp; Insights
           </h2>
           <p className="text-gray-400 text-sm mt-1 font-medium">
-            Style tips, trends &amp; fashion stories curated for you
+            Tips, trends &amp; stories curated for you
           </p>
         </div>
 

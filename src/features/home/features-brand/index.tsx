@@ -1,17 +1,27 @@
 "use client";
 
 import ProductCard from "@/components/product-card";
-import { FEATURED_DATA_TWO } from "@/data";
 import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
+import { useLocale } from "next-intl";
 import { useState } from "react";
+import { FeaturedCategory, LocalizedString } from "@/utils/types";
+
+function str(v: LocalizedString | string | undefined, locale = "en"): string {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  return locale === "ar" ? (v.ar ?? v.en ?? "") : (v.en ?? v.ar ?? "");
+}
+
 
 // ─── FeaturedProducts Component ───────────────────────────────────────────────
-export const FeaturedBrands = () => {
-  const tabs = FEATURED_DATA_TWO.map((g) => g.brand_name);
-  const [activeTab, setActiveTab] = useState(tabs[0]);
+export const FeaturedBrands = ({ products = [] }: { products?: FeaturedCategory[] }) => {
+  const locale = useLocale();
+  const [activeIdx, setActiveIdx] = useState(0);
 
-  const activeGroup = FEATURED_DATA_TWO.find((g) => g.brand_name === activeTab);
-  const products = activeGroup?.products?.slice(0, 10) ?? [];
+  const activeGroup = products[activeIdx];
+  const featuredProducts = (activeGroup?.products ?? []).slice(0, 10);
+
+  if (!products.length) return null;
 
   return (
     <section className="w-full bg-white py-5">
@@ -22,18 +32,18 @@ export const FeaturedBrands = () => {
           Top Stories: Brand Directory
           </h2>
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar ">
-            {tabs.map((tab) => (
+            {products.map((g, i) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+                key={i}
+                onClick={() => setActiveIdx(i)}
                 className={[
-                  "whitespace-nowrap px-3.5 py-1.5 md:text-[15px] text-[12px] font-medium rounded-full flex-shrink-0 transition-all duration-200",
-                  activeTab === tab
+                  "whitespace-nowrap px-3.5 py-1.5 md:text-[15px] text-[12px] font-medium rounded-full shrink-0 transition-all duration-200",
+                  activeIdx === i
                     ? "bg-[#186737] text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200",
                 ].join(" ")}
               >
-                {tab}
+                {str(g.name, locale)}
               </button>
             ))}
           </div>
@@ -54,28 +64,21 @@ export const FeaturedBrands = () => {
 
         {/* MOBILE — horizontal scroll */}
         <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
-          {products.map((product) => (
-              <div key={product.id} className="flex-shrink-0 w-[175px]">
-                <ProductCard
-                  product={{ ...product, images: [...product.images], alt_tags: [] }}
-                  onAddToCart={(p, qty) => console.log("Cart:", p.name, qty)}
-                  onWishlistToggle={(p, w) => console.log("Wishlist:", p.name, w)}
-                />
-              </div>
-            ))}
+          {featuredProducts.map((product) => (
+                     <div key={product.id} className="shrink-0 w-[175px]">
+                       <ProductCard product={product} />
+                     </div>
+                   ))}
         </div>
 
         {/* TABLET + DESKTOP — grid */}
           {/* <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-5 2xl:grid-cols-6  3xl:grid-cols-6 gap-3"> */}
           <div className={generateDynamicCSSProductCard}>
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={{ ...product, images: [...product.images], alt_tags: [] }}
-              onAddToCart={(p, qty) => console.log("Cart:", p.name, qty)}
-              onWishlistToggle={(p, w) => console.log("Wishlist:", p.name, w)}
-            />
-          ))}
+         {featuredProducts.map((product) => (
+                    <div key={product.id} className="shrink-0">
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
         </div>
       </div>
 

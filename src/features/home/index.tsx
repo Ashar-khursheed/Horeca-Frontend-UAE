@@ -255,18 +255,18 @@ import FeaturedProducts from "./feature-product";
 import FeaturedBrands from "./features-brand";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
-import type { ApiCategory } from "@/utils/types";
+import type { ApiCategory, FeaturedCategory } from "@/utils/types";
 
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export const Home = ({ sliderItems = [], sliderItemsTwo = [], featuredCategories = [] }: { sliderItems?: SliderItem[], sliderItemsTwo?: SliderItem[], featuredCategories?: ApiCategory[] }) => {
+export const Home = ({ sliderItems = [], sliderItemsTwo = [], featuredCategories = [], featuredProducts = [], featuredBrandProducts = [], blogs = [] }: { sliderItems?: SliderItem[], sliderItemsTwo?: SliderItem[], featuredCategories?: ApiCategory[], featuredProducts?: FeaturedCategory[], featuredBrandProducts?: FeaturedCategory[], blogs?: any[] }) => {
 
   return (
     <>
      <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
       <SEOMainContent/>
       <ShopByCategories categories={featuredCategories} />
-      <FeaturedProducts/>
+      <FeaturedProducts products={featuredProducts} />
       <div className="w-full md:py-10 py-4">
         <div className="global-container">
         <div className="grid grid-cols-1">
@@ -274,8 +274,8 @@ export const Home = ({ sliderItems = [], sliderItemsTwo = [], featuredCategories
         </div>
         </div>
       </div>
-      <FeaturedBrands/>
-      <BlogsCard showAll={false} />
+      <FeaturedBrands products={featuredBrandProducts} />
+      <BlogsCard showAll={false} blogs={blogs} />
       {/* <NewsletterSection/> */}
     </>
   );

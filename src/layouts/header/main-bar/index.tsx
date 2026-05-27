@@ -29,7 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { CATEGORIES, NAV_LINKS } from "@/data";
+import { NAV_LINKS } from "@/data";
 import { clearProfile, CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
 import { LocationData } from "@/store/slices/location/locationSlice";
@@ -37,15 +37,22 @@ import { apiUrls } from "@/apis/api-endpoint";
 import { AppDispatch, RootState } from "@/store/store";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
+import FinancingModal from "@/components/financing-modal";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
+interface CategoryName { en?: string; ar?: string; }
 interface Category {
   id: number;
-  name: string;
+  name: CategoryName | string;
   slug: string;
-  image?: string;
+  image_url?: string;
   children?: Category[];
 }
+
+const getName = (name: CategoryName | string): string => {
+  if (typeof name === "string") return name;
+  return name?.en ?? name?.ar ?? "";
+};
 
 // ══════════════════════════════════════════════════════════════════════════════
 // MobileNavItem — recursive accordion row
@@ -78,7 +85,7 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
         onClick={onClose}
         className={`flex items-center ${rowPadLeft} py-[13px] border-b border-gray-100 transition-colors hover:bg-gray-50 active:bg-gray-100`}
       >
-        <span className={`${labelSize} ${labelColor}`}>{item.name}</span>
+        <span className={`${labelSize} ${labelColor}`}>{getName(item.name)}</span>
       </Link>
     );
   }
@@ -89,7 +96,7 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
         onClick={() => setOpen((v) => !v)}
         className={`w-full flex items-center justify-between ${rowPadLeft} py-[13px] border-b border-gray-100 transition-colors hover:bg-gray-50 active:bg-gray-100`}
       >
-        <span className={`${labelSize} ${labelColor} text-left`}>{item.name}</span>
+        <span className={`${labelSize} ${labelColor} text-left`}>{getName(item.name)}</span>
         {open ? (
           <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />
         ) : (
@@ -108,7 +115,7 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
             className={`flex items-center ${depth === 0 ? "pl-7 pr-5" : "pl-10 pr-5"} py-[11px] border-b border-gray-100 hover:bg-gray-100`}
           >
             <span className="text-[12.5px] font-semibold text-[#186737]">
-              View all {item.name}
+              View all {getName(item.name)}
             </span>
           </Link>
         </div>
@@ -120,7 +127,7 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
 // ══════════════════════════════════════════════════════════════════════════════
 // NavigationStatic
 // ══════════════════════════════════════════════════════════════════════════════
-export default function NavigationStatic({ initialProfile = null, locationData = null }: { initialProfile?: CustomerProfile | null; locationData?: LocationData | null }) {
+export default function NavigationStatic({ initialProfile = null, locationData = null, navItemData = [] }: { initialProfile?: CustomerProfile | null; locationData?: LocationData | null; navItemData?: Category[] }) {
   const reduxCustomer = useSelector((s: RootState) => s.profile.customer);
   const profileLoading = useSelector((s: RootState) => s.profile.loading);
   const customer = reduxCustomer ?? initialProfile;
@@ -151,7 +158,10 @@ export default function NavigationStatic({ initialProfile = null, locationData =
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [quantities, setQuantities] = useState([1, 1, 1, 1]);
-
+  const [isModalOpen, setIsModalOpen] = useState({
+      modalOne: false,
+    });
+  
   const goToSearch = (q?: string) => {
     const term = (q ?? searchQuery).trim();
     setSearchFocused(false);
@@ -177,11 +187,21 @@ export default function NavigationStatic({ initialProfile = null, locationData =
     hideTimeoutRef.current = setTimeout(() => setShowProfile(false), 120);
   };
 
+ 
+    const handleModalOpen = () => {
+      setIsModalOpen({ ...isModalOpen, modalOne: true });
+    };
+  
+    const handleModalClose = () => {
+      setIsModalOpen({ ...isModalOpen, modalOne: false });
+    };
+
 
   return (
-    <div className="w-full font-sans">
+   <>
+     <div className="w-full font-sans">
       {/* ── Main Nav ──────────────────────────────────────────────────────── */}
-      <div className="bg-white nav-shadows sticky top-0 z-40">
+      <div className="md:bg-white bg-gray-50 nav-shadows sticky top-0 z-40">
         <div className="global-container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between gap-3 lg:gap-5 h-[68px]">
 
@@ -542,6 +562,24 @@ export default function NavigationStatic({ initialProfile = null, locationData =
 
                     {/* Nav links */}
                     {NAV_LINKS.map((link) => (
+                      <> {link.isModal ? (
+                                        <button
+                                          onClick={handleModalOpen}
+                                        className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors ${link.label==="Mega Sale" ?"text-red-500" : "text-gray-900"}` }
+                                        >
+                                          {link.label}
+                                        </button>
+                                      ) : (
+                                        <Link
+                                          href={link.href}
+                                        className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors ${link.label==="Mega Sale" ?"text-red-500" : "text-gray-900"}` }
+                                        >
+                                          {link.label}
+                                        </Link>
+                                      )}
+                      </>
+                    ))}
+                    {/* {NAV_LINKS.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
@@ -550,7 +588,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                       >
                         {link.label}
                       </Link>
-                    ))}
+                    ))} */}
 
                     {/* Categories label */}
                     <div className="px-5 pt-4 pb-2">
@@ -558,7 +596,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                     </div>
 
                     {/* Category accordion */}
-                    {CATEGORIES.map((cat) => (
+                    {navItemData.map((cat) => (
                       <MobileNavItem key={cat.id} item={cat} depth={0} onClose={() => setSheetOpen(false)} />
                     ))}
 
@@ -572,5 +610,8 @@ export default function NavigationStatic({ initialProfile = null, locationData =
         </div>
       </div>
     </div>
+          <FinancingModal isOpen={isModalOpen.modalOne} onClose={handleModalClose} title="Get a Financing Quote" />
+   </>
+
   );
 }

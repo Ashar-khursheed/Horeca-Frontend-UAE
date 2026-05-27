@@ -1422,12 +1422,22 @@ export const CATEGORIES = [
 ];
 
 export const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-  { label: "Track Your Order", href: "/contact" },
-  { label: "Mega Sale", href: "/mega-sale" },
+//   { label: "Home", href: "/",isModal: false },
+//   { label: "About", href: "/about", isModal: false },
+  { label: "Contact", href: "/contact", isModal: false },
+  { label: "Track Your Order", href: "/track-order", isModal: false },
+//   { label: "Financing", href: "#", isModal: true },
+  { label: "Mega Sale", href: "/mega-sale", isModal: false },
 ];
+
+
+// const NAV_LINKS = [
+//   { label: "Track your order", href: "/track-order", isModal: false },
+//   { label: "Financing", href: "#", isModal: true },
+//   { label: "Contact Us", href: "/pages/contact-us", isModal: false },
+//   { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false },
+// ];
+
 
 export 
 const CATEGORIESMAIN = [

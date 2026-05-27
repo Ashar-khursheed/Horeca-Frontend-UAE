@@ -196,7 +196,9 @@ export default function SubCategoryPage({
 
         {/* Subcategory Slider */}
         {subCategories.length > 0 && <><div className="mb-6 bg-white border border-gray-100 rounded-[7px] p-4 md:p-5 relative">
-          {subCategories?.length > 10 && <><button
+          {subCategories?.length > 3 && <>
+         <div>
+           <button
             onClick={() => swiperRef.current?.slidePrev()}
             className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
           >
@@ -207,7 +209,23 @@ export default function SubCategoryPage({
             className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
           >
             <ChevronRight size={14} />
-          </button></>}
+          </button>
+         </div>
+          </>}
+          {subCategories?.length > 10 && <>
+          <button
+            onClick={() => swiperRef.current?.slidePrev()}
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <button
+            onClick={() => swiperRef.current?.slideNext()}
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+          >
+            <ChevronRight size={14} />
+          </button>
+          </>}
           <Swiper
             modules={[Navigation]}
             onSwiper={(swiper) => { swiperRef.current = swiper; }}
