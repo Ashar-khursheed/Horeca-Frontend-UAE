@@ -68,6 +68,129 @@ interface LocalizedString { en?: string; ar?: string; }
  }
 
 
+interface CategoryPageImageDetail {
+  image_url: string;
+  alt: string;
+  url: string;
+}
+
+interface CategoryPageSeoTranslation {
+  title_tag: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image_url: string | null;
+  header_description: string | null;
+  banner_image_url: string | null;
+  banner_image_alt_text: string | null;
+  short_title_variant: string | null;
+  paragraph_1: string | null;
+  paragraph_2: string | null;
+  paragraph_3: string | null;
+  paragraph_4: string | null;
+  popular_tag_details: { popularTags: string; popularSlug: string }[] | null;
+}
+
+interface InnerCategoryPageSeo {
+  id: number;
+  url: string;
+  indexing: boolean;
+  title_tag: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image_url: string | null;
+  banner_image_url: string | null;
+  banner_image_alt_text: string | null;
+  header_description: string | null;
+  short_title_variant: string | null;
+  paragraph_1: string | null;
+  paragraph_2: string | null;
+  paragraph_3: string | null;
+  paragraph_4: string | null;
+  popular_tag_details: { popularTags: string; popularSlug: string }[] | null;
+}
+
+interface RangeFilterItem {
+  attribute_id: number;
+  attribute_name: string;
+  unit_symbol: string;
+  ranges: { min: number; max: number }[];
+}
+
+interface FixedFilterItem {
+  attribute_id: number;
+  attribute_name: string;
+  values: string[];
+}
+
+interface InnerCategoryPageResponse {
+  success: boolean;
+  filters: {
+    priceRange: { min_price: string; max_price: string };
+    brands: { id: number; name: string; thumbnail: string | null }[];
+    ratings: number[];
+  } | null;
+  rangeFilters?: Record<string, RangeFilterItem> | null;
+  fixedFilters?: Record<string, FixedFilterItem> | null;
+  seo: InnerCategoryPageSeo | null;
+  faqs: { question: string; answer: string }[];
+  categories: {
+    id: number;
+    name: { en: string; ar: string } | string;
+    icon_image: string;
+    url: string;
+  }[];
+}
+
+interface ProductsListingResponse {
+  success: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  products?: any[];
+  total?: number;
+  total_pages?: number;
+  current_page?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+interface LocaleField { en?: string | null; ar?: string | null; }
+
+interface ApiCategoryPage {
+  seo: {
+    id: number;
+    url: string;
+    indexing: boolean;
+    banner_slug?: string | null;
+    banner_image_url?: LocaleField | null;
+    banner_image_alt_text?: LocaleField | null;
+    paragraph_1?: LocaleField | null;
+    paragraph_2?: LocaleField | null;
+    paragraph_3?: LocaleField | null;
+    paragraph_4?: LocaleField | null;
+    popular_tag_details?: {
+      en?: { popularTags: string; popularSlug: string }[] | null;
+      ar?: { popularTags: string; popularSlug: string }[] | null;
+    } | null;
+    current_translation: CategoryPageSeoTranslation;
+  } | null;
+  category_page: {
+    id: number;
+    category_id: number;
+    title: string | null;
+    description: string | null;
+    banner_image_detail: CategoryPageImageDetail | null;
+    secondary_banner_image_detail: CategoryPageImageDetail | null;
+    explore_section_title: string | null;
+    explore_section_description: string | null;
+    explore_section_image_details: CategoryPageImageDetail[];
+    brand_section_title: string | null;
+    brand_section_description: string | null;
+    faqs: { question: string; answer: string }[];  } | null;
+}
+
 export type {
     HeaderProps,
     Props,
@@ -76,5 +199,13 @@ export type {
     LocalizedString,
     ApiProductRaw,
     FeaturedCategory,
+    ApiCategoryPage,
+    CategoryPageSeoTranslation,
+    CategoryPageImageDetail,
+    InnerCategoryPageResponse,
+    InnerCategoryPageSeo,
+    RangeFilterItem,
+    FixedFilterItem,
+    ProductsListingResponse,
 };
 

@@ -8,8 +8,8 @@ export const revalidate = 3600;
 
 export default async function Page() {
   const [slider1, slider2, categoryRes, featuredCategoriesRes, featuredProductsRes,featuredBrandProductsRes,blogsRes] = await Promise.all([
-    makeApiCallSSR<{ items: SliderItem[] }>("/sliders/1", {}, { revalidate: 3600 }),
-    makeApiCallSSR<{ items: SliderItem[] }>("/sliders/2", {}, { revalidate: 3600 }),
+    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: 3600 }),
+    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: 3600 }),
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: false, is_featured: true },
@@ -33,7 +33,7 @@ export default async function Page() {
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.BLOGS,
       { per_page: 10, lang: "en", page: 1 },
-      { revalidate: 3600 },
+      // { revalidate: 3600 },
     ),
   ]);
 

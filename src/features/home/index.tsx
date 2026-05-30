@@ -264,7 +264,14 @@ export const Home = ({ sliderItems = [], sliderItemsTwo = [], featuredCategories
   return (
     <>
      <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
-      <SEOMainContent/>
+      <SEOMainContent
+        categorySlug="horeca-store"
+        APIDATA={{
+          title: "Your One-Stop Shop for Professional Kitchen & Hospitality Equipment",
+          description:
+            "HorecaStore is the UAE's leading B2B marketplace for hotels, restaurants, and cafes. Browse thousands of NSF & UL certified products — from commercial cooking equipment and refrigeration to smallwares and supplies. Get competitive pricing, fast delivery, and dedicated support for all your hospitality needs.",
+        }}
+      />
       <ShopByCategories categories={featuredCategories} />
       <FeaturedProducts products={featuredProducts} />
       <div className="w-full md:py-10 py-4">

@@ -2,7 +2,6 @@
 
 import FilterSidebar from "@/components/filters";
 import Pagination from "@/components/pagination";
-import ProductCard from "@/components/product-card";
 import {
   Select,
   SelectContent,
@@ -10,61 +9,82 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FEATURED_DATA } from "@/data";
 import {
   ChevronLeft,
   ChevronRight,
-  Grid2x2,
-  Home,
-  Rows3,
   Search,
   SlidersHorizontal,
-  Star,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 import Breadcrumb from "@/components/breadcum";
 import { useLocale } from "next-intl";
-import { ApiCategory, ApiCategoryName } from "@/utils/types";
+import { ApiCategory, ApiCategoryName, InnerCategoryPageResponse, ProductsListingResponse } from "@/utils/types";
+import { ProductCardSkeleton } from "@/components/loading-sketlon";
+import ProductCard from "@/components/product-card";
+
+// ─── URL codec helpers ─────────────────────────────────────────────────────────
+function encodeRF(rf: Record<number, { min: number; max: number }[]>): string {
+  return Object.entries(rf)
+    .filter(([, ranges]) => ranges.length > 0)
+    .map(([id, ranges]) => `${id}:${ranges.map((r) => `${r.min}_${r.max}`).join(",")}`)
+    .join("|");
+}
+
+function decodeRF(str: string): Record<number, { min: number; max: number }[]> {
+  const out: Record<number, { min: number; max: number }[]> = {};
+  str.split("|").forEach((part) => {
+    const [id, rangesStr] = part.split(":");
+    if (!id || !rangesStr) return;
+    out[Number(id)] = rangesStr.split(",").map((r) => {
+      const [min, max] = r.split("_").map(Number);
+      return { min, max };
+    });
+  });
+  return out;
+}
+
+function encodeFF(ff: Record<number, string[]>): string {
+  return Object.entries(ff)
+    .filter(([, vals]) => vals.length > 0)
+    .map(([id, vals]) => `${id}:${vals.map((v) => v.replace(/ /g, "+")).join(",")}`)
+    .join("|");
+}
+
+function decodeFF(str: string): Record<number, string[]> {
+  const out: Record<number, string[]> = {};
+  str.split("|").forEach((part) => {
+    const colonIdx = part.indexOf(":");
+    if (colonIdx < 0) return;
+    const id = part.slice(0, colonIdx);
+    const valsStr = part.slice(colonIdx + 1);
+    out[Number(id)] = valsStr.split(",").map((v) => v.replace(/\+/g, " "));
+  });
+  return out;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 const slugToTitle = (slug: string) =>
-  slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 
 const getName = (name: ApiCategoryName | string, locale: string): string => {
   if (typeof name === "string") return name;
-  return locale === "ar" ? (name.ar || name.en) : (name.en || name.ar);
+  return locale === "ar" ? name.ar || name.en : name.en || name.ar;
 };
-
-interface Brand {
-  name: string;
-  count: number;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  modelNo: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  shipping: string;
-  badge?: "New" | "Sale" | "Best Seller";
-  inStock: boolean;
-}
 
 interface PriceRange {
   min: number;
   max: number;
 }
-
 
 const SORT_OPTIONS = [
   "Default Sorting",
@@ -76,40 +96,6 @@ const SORT_OPTIONS = [
 
 const SHOW_OPTIONS = [20, 50, 100];
 
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          size={11}
-          className={
-            star <= Math.round(rating)
-              ? "fill-amber-400 text-amber-400"
-              : "fill-gray-200 text-gray-200"
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function BadgePill({ badge }: { badge: Product["badge"] }) {
-  if (!badge) return null;
-  const styles: Record<string, string> = {
-    "Best Seller": "bg-amber-50 text-amber-700 border border-amber-200",
-    Sale: "bg-red-50 text-red-600 border border-red-200",
-    New: "bg-green-50 text-[#186737] border border-green-200",
-  };
-  return (
-    <span
-      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${styles[badge]}`}
-    >
-      {badge}
-    </span>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SubCategoryPage({
@@ -117,13 +103,33 @@ export default function SubCategoryPage({
   categorySlug,
   subCategorySlug,
   parentSlug,
+  subCategoryPage,
+  productsData,
+  currentPage = 1,
 }: {
   subCategories: ApiCategory[];
   categorySlug: string;
   subCategorySlug: string;
   parentSlug?: string;
+  productsData?: ProductsListingResponse | null;
+  subCategoryPage?: InnerCategoryPageResponse | null;
+  currentPage?: number;
 }) {
   const locale = useLocale();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const filterAPIData = subCategoryPage?.filters;
+  const rangeFiltersData = subCategoryPage?.rangeFilters;
+  const fixedFiltersData = subCategoryPage?.fixedFilters;
+  const products = productsData?.products ?? [];
+  const totalProducts = productsData?.total ?? products.length;
+  const totalPages = (productsData?.total_pages ?? Math.ceil(totalProducts / 20)) || 1;
+
+  // Children of the currently active subcategory shown in the swiper
+  const activeSubCategory = subCategories.find((cat) => cat.slug === subCategorySlug);
+  const childCategories = activeSubCategory?.children ?? [];
 
   const crumbs = [
     { label: "Home", href: "/" },
@@ -135,47 +141,129 @@ export default function SubCategoryPage({
     { label: slugToTitle(subCategorySlug), href: null },
   ];
 
-  const [priceRange, setPriceRange] = useState<PriceRange>({
-    min: 10,
-    max: 78000,
+  const apiPriceMin = Math.floor(Number(filterAPIData?.priceRange?.min_price ?? 10));
+  const apiPriceMax = Math.ceil(Number(filterAPIData?.priceRange?.max_price ?? 78000));
+
+  // ── Read initial state from URL params ──────────────────────────────────────
+  // useSearchParams already decodes the value, so no extra decoding needed
+  const initBrands = (searchParams.get("brands")?.split(",").filter(Boolean) ?? []).map((entry) => {
+    const colonIdx = entry.indexOf(":");
+    return { id: Number(entry.slice(0, colonIdx)), name: entry.slice(colonIdx + 1) };
   });
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string[]>>(
-    {},
-  );
-  const [sortBy, setSortBy] = useState("Default Sorting");
-  const [showCount, setShowCount] = useState(50);
+  const initMin = searchParams.get("min") ? Number(searchParams.get("min")) : apiPriceMin;
+  const initMax = searchParams.get("max") ? Number(searchParams.get("max")) : apiPriceMax;
+  const initRF = searchParams.get("rf") ? decodeRF(searchParams.get("rf")!) : {};
+  const initFF = searchParams.get("ff") ? decodeFF(searchParams.get("ff")!) : {};
+
+  const [priceRange, setPriceRange] = useState<PriceRange>({ min: initMin, max: initMax });
+  const [selectedBrands, setSelectedBrands] = useState<{ id: number; name: string }[]>(initBrands);
+  const [selectedRangeFilters, setSelectedRangeFilters] = useState<Record<number, { min: number; max: number }[]>>(initRF);
+  const [selectedFixedFilters, setSelectedFixedFilters] = useState<Record<number, string[]>>(initFF);
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") ?? "Default Sorting");
+  const [showCount, setShowCount] = useState(Number(searchParams.get("show") ?? 20));
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const swiperRef = useRef<SwiperType | null>(null);
 
-  const handleBrandToggle = useCallback((brand: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand],
-    );
-  }, []);
+  // ── Sync filters → URL ───────────────────────────────────────────────────────
+  // Build URL purely from state — no searchParams base so there's no stale closure risk.
+  // parentSlug is preserved from the prop (stable across re-renders).
+  const pushURL = useCallback(
+    (overrides: {
+      brands?: { id: number; name: string }[];
+      min?: number;
+      max?: number;
+      sort?: string;
+      show?: number;
+      page?: number;
+      rf?: Record<number, { min: number; max: number }[]>;
+      ff?: Record<number, string[]>;
+    }) => {
+      const brands = overrides.brands ?? selectedBrands;
+      const min    = overrides.min    ?? priceRange.min;
+      const max    = overrides.max    ?? priceRange.max;
+      const sort   = overrides.sort   ?? sortBy;
+      const show   = overrides.show   ?? showCount;
+      const page   = overrides.page   ?? 1;
+      const rf     = overrides.rf     ?? selectedRangeFilters;
+      const ff     = overrides.ff     ?? selectedFixedFilters;
 
-  const handleAttrToggle = useCallback((group: string, val: string) => {
-    setSelectedAttrs((prev) => {
-      const current = prev[group] ?? [];
-      return {
-        ...prev,
-        [group]: current.includes(val)
-          ? current.filter((v) => v !== val)
-          : [...current, val],
-      };
-    });
-  }, []);
+      const parts: string[] = [];
+      if (parentSlug)    parts.push(`parent=${parentSlug}`);
+      if (brands.length) parts.push("brands=" + brands.map((b) => `${b.id}:${b.name.replace(/ /g, "+")}`).join(","));
+      if (min !== apiPriceMin) parts.push(`min=${min}`);
+      if (max !== apiPriceMax) parts.push(`max=${max}`);
+      if (sort !== "Default Sorting") parts.push(`sort=${encodeURIComponent(sort).replace(/%20/g, "+")}`);
+      if (show !== 20)   parts.push(`show=${show}`);
+      if (page > 1)      parts.push(`page=${page}`);
+      const rfStr = encodeRF(rf);
+      if (rfStr) parts.push(`rf=${rfStr}`);
+      const ffStr = encodeFF(ff);
+      if (ffStr) parts.push(`ff=${ffStr}`);
 
-  const handleClearAttr = useCallback((group: string) => {
-    setSelectedAttrs((prev) => ({ ...prev, [group]: [] }));
-  }, []);
+      const qs = parts.join("&");
+      startTransition(() => {
+        router.replace(qs ? `?${qs}` : location.pathname, { scroll: false });
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedBrands, priceRange, sortBy, showCount, apiPriceMin, apiPriceMax, parentSlug, selectedRangeFilters, selectedFixedFilters],
+  );
+
+  const handleBrandToggle = useCallback((brand: { id: number; name: string }) => {
+    const next = selectedBrands.some((b) => b.id === brand.id)
+      ? selectedBrands.filter((b) => b.id !== brand.id)
+      : [...selectedBrands, brand];
+    setSelectedBrands(next);
+    pushURL({ brands: next, page: 1 });
+  }, [selectedBrands, pushURL]);
+
+  const handlePriceChange = useCallback((range: PriceRange) => {
+    setPriceRange(range);
+    pushURL({ min: range.min, max: range.max, page: 1 });
+  }, [pushURL]);
+
+  const handleRangeFilterToggle = useCallback((attrId: number, range: { min: number; max: number }) => {
+    const current = selectedRangeFilters[attrId] ?? [];
+    const exists = current.some((r) => r.min === range.min && r.max === range.max);
+    const next = {
+      ...selectedRangeFilters,
+      [attrId]: exists ? current.filter((r) => !(r.min === range.min && r.max === range.max)) : [...current, range],
+    };
+    setSelectedRangeFilters(next);
+    pushURL({ rf: next, page: 1 });
+  }, [selectedRangeFilters, pushURL]);
+
+  const handleClearRangeFilter = useCallback((attrId: number) => {
+    const next = { ...selectedRangeFilters, [attrId]: [] };
+    setSelectedRangeFilters(next);
+    pushURL({ rf: next, page: 1 });
+  }, [selectedRangeFilters, pushURL]);
+
+  const handleFixedFilterToggle = useCallback((attrId: number, val: string) => {
+    const current = selectedFixedFilters[attrId] ?? [];
+    const next = {
+      ...selectedFixedFilters,
+      [attrId]: current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
+    };
+    setSelectedFixedFilters(next);
+    pushURL({ ff: next, page: 1 });
+  }, [selectedFixedFilters, pushURL]);
+
+  const handleClearFixedFilter = useCallback((attrId: number) => {
+    const next = { ...selectedFixedFilters, [attrId]: [] };
+    setSelectedFixedFilters(next);
+    pushURL({ ff: next, page: 1 });
+  }, [selectedFixedFilters, pushURL]);
 
   const handleClearAll = useCallback(() => {
     setSelectedBrands([]);
-    setSelectedAttrs({});
-    setPriceRange({ min: 10, max: 78000 });
-  }, []);
+    setSelectedRangeFilters({});
+    setSelectedFixedFilters({});
+    setPriceRange({ min: apiPriceMin, max: apiPriceMax });
+    pushURL({ brands: [], min: apiPriceMin, max: apiPriceMax, page: 1, rf: {}, ff: {} });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiPriceMin, apiPriceMax, pushURL]);
 
   return (
     <main className="min-h-screen bg-gray-5p0">
@@ -185,7 +273,7 @@ export default function SubCategoryPage({
         {/* Page Header */}
         <div className="py-5">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-         {slugToTitle(subCategorySlug)}
+            {slugToTitle(subCategorySlug)}
           </h1>
           <p className="text-[13px] text-gray-500 max-w-2xl">
             Power up your kitchen with reliable cooking equipment for
@@ -194,73 +282,60 @@ export default function SubCategoryPage({
           </p>
         </div>
 
-        {/* Subcategory Slider */}
-        {subCategories.length > 0 && <><div className="mb-6 bg-white border border-gray-100 rounded-[7px] p-4 md:p-5 relative">
-          {subCategories?.length > 3 && <>
-         <div>
-           <button
-            onClick={() => swiperRef.current?.slidePrev()}
-            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
-          >
-            <ChevronLeft size={14} />
-          </button>
-          <button
-            onClick={() => swiperRef.current?.slideNext()}
-            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
-          >
-            <ChevronRight size={14} />
-          </button>
-         </div>
-          </>}
-          {subCategories?.length > 10 && <>
-          <button
-            onClick={() => swiperRef.current?.slidePrev()}
-            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
-          >
-            <ChevronLeft size={14} />
-          </button>
-          <button
-            onClick={() => swiperRef.current?.slideNext()}
-            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
-          >
-            <ChevronRight size={14} />
-          </button>
-          </>}
-          <Swiper
-            modules={[Navigation]}
-            onSwiper={(swiper) => { swiperRef.current = swiper; }}
-            spaceBetween={8}
-            breakpoints={{
-              0:    { slidesPerView: 3 },
-              480:  { slidesPerView: 4 },
-              640:  { slidesPerView: 5 },
-              768:  { slidesPerView: 6 },
-              1024: { slidesPerView: 6 },
-              1280: { slidesPerView: 9 },
-              1536: { slidesPerView: 11 },
-            }}
-            className="px-6"
-          >
-            {subCategories.map((sub) => (
-              <SwiperSlide key={sub.id}>
-                <Link
-                  href={`/${categorySlug}/${sub.slug}?parent=${subCategorySlug}`}
-                  className="group flex flex-col items-center gap-1.5 rounded-[7px] border border-transparent hover:border-green-100 hover:bg-green-50 transition-all duration-200 p-1"
+        {/* Subcategory Slider — children of the active subcategory */}
+        {childCategories.length > 0 && (
+          <div className="mb-6 bg-white border border-gray-100 rounded-[7px] p-4 md:p-5 relative">
+            {childCategories.length > 3 && (
+              <>
+                <button
+                  onClick={() => swiperRef.current?.slidePrev()}
+                  className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
                 >
-                  <img
-                    src={sub.image_url}
-                    alt={getName(sub.name, locale)}
-                    className="w-full aspect-square object-contain group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <span className="text-[9px] md:text-[13px] font-light text-gray-500 group-hover:text-[#186737] text-center leading-tight transition-colors duration-200 line-clamp-2">
-                    {getName(sub.name, locale)}
-                  </span>
-                </Link>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div></>}
-        
+                  <ChevronLeft size={14} />
+                </button>
+                <button
+                  onClick={() => swiperRef.current?.slideNext()}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </>
+            )}
+            <Swiper
+              modules={[Navigation]}
+              onSwiper={(swiper) => { swiperRef.current = swiper; }}
+              spaceBetween={8}
+              breakpoints={{
+                0:    { slidesPerView: 3 },
+                480:  { slidesPerView: 4 },
+                640:  { slidesPerView: 5 },
+                768:  { slidesPerView: 6 },
+                1024: { slidesPerView: 6 },
+                1280: { slidesPerView: 9 },
+                1536: { slidesPerView: 11 },
+              }}
+              className="px-6"
+            >
+              {childCategories.map((child) => (
+                <SwiperSlide key={child.id}>
+                  <Link
+                    href={`/${categorySlug}/${child.slug}?parent=${subCategorySlug}`}
+                    className="group flex flex-col items-center gap-1.5 rounded-[7px] border border-transparent hover:border-green-100 hover:bg-green-50 transition-all duration-200 p-1"
+                  >
+                    <img
+                      src={child.image_url}
+                      alt={getName(child.name, locale)}
+                      className="w-full aspect-square object-contain group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <span className="text-[9px] md:text-[13px] font-light text-gray-500 group-hover:text-[#186737] text-center leading-tight transition-colors duration-200 line-clamp-2">
+                      {getName(child.name, locale)}
+                    </span>
+                  </Link>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        )}
 
         {/* Mobile Filter + Sort Bar */}
         <div className="md:hidden mb-3 flex items-center justify-between bg-white border border-gray-100 rounded-[7px] px-3 py-2.5">
@@ -270,21 +345,28 @@ export default function SubCategoryPage({
           >
             <SlidersHorizontal size={14} className="text-[#186737]" />
             Filters
-            {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0 && (
+            {selectedBrands.length +
+              Object.values(selectedRangeFilters).reduce((a, v) => a + v.length, 0) +
+              Object.values(selectedFixedFilters).reduce((a, v) => a + v.length, 0) >
+              0 && (
               <span className="bg-[#186737] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                {selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)}
+                {selectedBrands.length +
+                  Object.values(selectedRangeFilters).reduce((a, v) => a + v.length, 0) +
+                  Object.values(selectedFixedFilters).reduce((a, v) => a + v.length, 0)}
               </span>
             )}
           </button>
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] text-gray-400">Sort:</span>
-            <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
+            <Select value={sortBy} onValueChange={(val) => { setSortBy(val); pushURL({ sort: val }); }}>
               <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer min-w-35">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {SORT_OPTIONS.map((opt) => (
-                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -296,14 +378,22 @@ export default function SubCategoryPage({
           <div className="hidden md:block w-55 lg:w-60 shrink-0">
             <FilterSidebar
               priceRange={priceRange}
-              onPriceChange={setPriceRange}
+              onPriceChange={handlePriceChange}
               selectedBrands={selectedBrands}
               onBrandToggle={handleBrandToggle}
-              onClearBrands={() => setSelectedBrands([])}
-              selectedAttrs={selectedAttrs}
-              onAttrToggle={handleAttrToggle}
-              onClearAttr={handleClearAttr}
+              onClearBrands={() => { setSelectedBrands([]); pushURL({ brands: [], page: 1 }); }}
               onClearAll={handleClearAll}
+              brands={filterAPIData?.brands}
+              priceMin={apiPriceMin}
+              priceMax={apiPriceMax}
+              rangeFilters={rangeFiltersData}
+              fixedFilters={fixedFiltersData}
+              selectedRangeFilters={selectedRangeFilters}
+              onRangeFilterToggle={handleRangeFilterToggle}
+              onClearRangeFilter={handleClearRangeFilter}
+              selectedFixedFilters={selectedFixedFilters}
+              onFixedFilterToggle={handleFixedFilterToggle}
+              onClearFixedFilter={handleClearFixedFilter}
             />
           </div>
 
@@ -311,7 +401,7 @@ export default function SubCategoryPage({
           <div className="flex-1 min-w-0">
             {/* Search + Sort Bar */}
             <div className="bg-white border border-gray-100 rounded-[7px] px-4 py-3 mb-4  gap-3">
-            {/* <div className="bg-white border border-gray-100 rounded-[7px] px-4 py-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"> */}
+              {/* <div className="bg-white border border-gray-100 rounded-[7px] px-4 py-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"> */}
               {/* Search */}
               <div className="relative hidden flex-1 max-w-xs">
                 <Search
@@ -330,54 +420,56 @@ export default function SubCategoryPage({
               <div className="flex items-center gap-3 justify-between">
                 <span className="text-[12px] text-gray-400 hidden sm:block">
                   Showing{" "}
-                  <span className="font-semibold text-gray-700">308</span>{" "}
+                  <span className="font-semibold text-gray-700">{totalProducts}</span>{" "}
                   results
                 </span>
-               <div className="flex items-center gap-4">
-                 <div className="hidden md:flex items-center gap-1.5">
-                  <span className="text-[11px] text-gray-400">Sort:</span>
-                  <Select
-                    value={sortBy}
-                    onValueChange={(val) => setSortBy(val)}
-                  >
-                    <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer min-w-35">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SORT_OPTIONS.map((opt) => (
-                        <SelectItem key={opt} value={opt}>
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-gray-400">Show:</span>
-                  <Select
-                    value={String(showCount)}
-                    onValueChange={(val) => setShowCount(Number(val))}
-                  >
-                    <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SHOW_OPTIONS.map((opt) => (
-                        <SelectItem key={opt} value={String(opt)}>
-                          {opt} Items
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="md:flex hidden items-center gap-1.5">
-                  <span className="text-[11px] text-gray-400">Grid Type:</span>
-                  <div className="flex items-center gap-1.5">
-                    <Grid2x2 className="text-gray-600" size={17} />
-                    <Rows3 className="text-gray-600" size={17} />
+                <div className="flex items-center gap-4">
+                  <div className="hidden md:flex items-center gap-1.5">
+                    <span className="text-[11px] text-gray-400">Sort:</span>
+                    <Select
+                      value={sortBy}
+                      onValueChange={(val) => { setSortBy(val); pushURL({ sort: val }); }}
+                    >
+                      <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer min-w-35">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SORT_OPTIONS.map((opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-gray-400">Show:</span>
+                    <Select
+                      value={String(showCount)}
+                      onValueChange={(val) => { setShowCount(Number(val)); pushURL({ show: Number(val) }); }}
+                    >
+                      <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SHOW_OPTIONS.map((opt) => (
+                          <SelectItem key={opt} value={String(opt)}>
+                            {opt} Items
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* <div className="md:flex hidden items-center gap-1.5">
+                    <span className="text-[11px] text-gray-400">
+                      Grid Type:
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Grid2x2 className="text-gray-600" size={17} />
+                      <Rows3 className="text-gray-600" size={17} />
+                    </div>
+                  </div> */}
                 </div>
-               </div>
               </div>
             </div>
 
@@ -386,10 +478,10 @@ export default function SubCategoryPage({
               <div className="flex flex-wrap gap-2 mb-3">
                 {selectedBrands.map((brand) => (
                   <span
-                    key={brand}
+                    key={brand.id}
                     className="flex items-center gap-1 text-[11px] font-medium bg-green-50 text-[#186737] border border-green-200 px-2.5 py-1 rounded-full"
                   >
-                    {brand}
+                    {brand.name}
                     <button onClick={() => handleBrandToggle(brand)}>
                       <X
                         size={10}
@@ -403,32 +495,22 @@ export default function SubCategoryPage({
 
             {/* Product Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
-              {FEATURED_DATA.flatMap((category) =>
-                category.featured_products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={{
-                      ...product,
-                      images: [...product.images],
-                      alt_tags: [...product.alt_tags],
-                    }}
-                    onAddToCart={(p, qty) => console.log("Cart:", p.name, qty)}
-                    onWishlistToggle={(p, w) =>
-                      console.log("Wishlist:", p.name, w)
-                    }
-                  />
-                )),
-              )}
+              {isPending
+                ? Array.from({ length: showCount }).map((_, i) => <ProductCardSkeleton key={i} />)
+                : products.map((product: any) => <ProductCard key={product.id} product={product} />)
+              }
             </div>
 
-            {/* Pagination stub */}
-            <Pagination
-              totalPages={24}
-              initialPage={1}
-              onPageChange={(page) => console.log("Page:", page)}
-              showFirstLast={true}
-              showPageInfo={true}
-            />
+            {totalPages > 1 && (
+              <Pagination
+                key={currentPage}
+                totalPages={totalPages}
+                initialPage={currentPage}
+                onPageChange={(page) => { pushURL({ page }); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                showFirstLast={true}
+                showPageInfo={true}
+              />
+            )}
             {/* <div className="flex items-center justify-center gap-2 mt-8">
               {[1, 2, 3, "...", 7].map((page, i) => (
                 <button
@@ -472,9 +554,14 @@ export default function SubCategoryPage({
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={16} className="text-[#186737]" />
             <span className="text-[15px] font-bold text-gray-900">Filters</span>
-            {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0 && (
+            {selectedBrands.length +
+              Object.values(selectedRangeFilters).reduce((a, v) => a + v.length, 0) +
+              Object.values(selectedFixedFilters).reduce((a, v) => a + v.length, 0) >
+              0 && (
               <span className="bg-[#186737] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                {selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)}
+                {selectedBrands.length +
+                  Object.values(selectedRangeFilters).reduce((a, v) => a + v.length, 0) +
+                  Object.values(selectedFixedFilters).reduce((a, v) => a + v.length, 0)}
               </span>
             )}
           </div>
@@ -491,20 +578,31 @@ export default function SubCategoryPage({
           <FilterSidebar
             mobile
             priceRange={priceRange}
-            onPriceChange={setPriceRange}
+            onPriceChange={handlePriceChange}
             selectedBrands={selectedBrands}
             onBrandToggle={handleBrandToggle}
-            onClearBrands={() => setSelectedBrands([])}
-            selectedAttrs={selectedAttrs}
-            onAttrToggle={handleAttrToggle}
-            onClearAttr={handleClearAttr}
+            onClearBrands={() => { setSelectedBrands([]); pushURL({ brands: [], page: 1 }); }}
             onClearAll={handleClearAll}
+            brands={filterAPIData?.brands}
+            priceMin={apiPriceMin}
+            priceMax={apiPriceMax}
+            rangeFilters={rangeFiltersData}
+            fixedFilters={fixedFiltersData}
+            selectedRangeFilters={selectedRangeFilters}
+            onRangeFilterToggle={handleRangeFilterToggle}
+            onClearRangeFilter={handleClearRangeFilter}
+            selectedFixedFilters={selectedFixedFilters}
+            onFixedFilterToggle={handleFixedFilterToggle}
+            onClearFixedFilter={handleClearFixedFilter}
           />
         </div>
 
         {/* Footer Buttons */}
         <div className="shrink-0 px-4 py-4 border-t border-gray-100 bg-white flex gap-3">
-          {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0 && (
+          {selectedBrands.length +
+            Object.values(selectedRangeFilters).reduce((a, v) => a + v.length, 0) +
+            Object.values(selectedFixedFilters).reduce((a, v) => a + v.length, 0) >
+            0 && (
             <button
               onClick={handleClearAll}
               className="flex-1 py-3 rounded-[7px] border border-gray-200 text-sm font-semibold text-gray-600 hover:border-red-300 hover:text-red-500 transition-colors duration-200"
@@ -516,9 +614,12 @@ export default function SubCategoryPage({
             onClick={() => setMobileFilterOpen(false)}
             className="flex-1 py-3 rounded-[7px] bg-[#186737] hover:bg-[#145c30] text-white text-sm font-semibold transition-colors duration-200"
           >
-            {(selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)) > 0
-              ? `Apply Filters (${selectedBrands.length + Object.values(selectedAttrs).reduce((a, v) => a + v.length, 0)})`
-              : "Apply Filters"}
+            {(() => {
+              const n = selectedBrands.length +
+                Object.values(selectedRangeFilters).reduce((a, v) => a + v.length, 0) +
+                Object.values(selectedFixedFilters).reduce((a, v) => a + v.length, 0);
+              return n > 0 ? `Apply Filters (${n})` : "Apply Filters";
+            })()}
           </button>
         </div>
       </div>

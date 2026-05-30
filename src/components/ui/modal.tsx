@@ -55,7 +55,7 @@ export const Modal = ({
 
   return ReactDOM.createPortal(
     <div 
-      className={`fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ${
+      className={`fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ${
         zIndex === true ? 'z-[9999]' : 'z-50'
       } ${isAnimating ? 'animate-fadeIn' : 'opacity-0'}`}
     >

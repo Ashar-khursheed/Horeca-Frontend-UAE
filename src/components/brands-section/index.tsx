@@ -1,36 +1,24 @@
 import Link from "next/link";
 
-const BRANDS = [
-  { name: "Arctic Air",          slug: "arctic-air",          logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Atosa",               slug: "atosa",              logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "American Dish Service",slug: "american-dish-service",logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "BakeMax",             slug: "bakemax",             logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Beverage-Air",        slug: "beverage-air",        logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "CAC",                 slug: "cac",                 logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "CMA Dishmachines",    slug: "cma",                 logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "ChiliCore",           slug: "chilicore",           logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Cadco",               slug: "cadco",               logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Midea",               slug: "midea",               logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Serv-Ware",           slug: "serv-ware",           logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Forbes Industries",   slug: "forbes-industries",   logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Hamilton Beach",      slug: "hamilton-beach",      logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Hoshizaki",           slug: "hoshizaki",           logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Nuova Simonelli",     slug: "nuova-simonelli",     logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Omega Juicers",       slug: "omega-juicers",       logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Robot Coupe",         slug: "robot-coupe",         logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Taylor",              slug: "taylor",              logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "Thunder Group",       slug: "thunder-group",       logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-  { name: "True Refrigeration",  slug: "true-refrigeration",  logo: "https://d1p9kdrbe10xzz.cloudfront.net/production/brands/VRBvluGcbxdgn5eqpMZQVCVNjbTwTasd8xk40Vjt.webp" },
-];
+export interface ApiBrand {
+  id: number;
+  name: string;
+  slug: string;
+  thumbnail?: string | null;
+  logo?: string | null;
+}
 
-export default function BrandsSection() {
+export default function BrandsSection({ brands }: { brands?: ApiBrand[] | null }) {
+  const list = brands ?? [];
+  if (!list.length) return null;
+
   return (
     <section className="bg-white py-10 md:py-14">
       <div className="global-container">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="text-center mb-8">
-          <h2 className="eading-font-size font-bold text-gray-900">
+          <h2 className="heading-font-size font-bold text-gray-900">
             Shop Direct from Official Brand Stores
           </h2>
           <p className="text-gray-500 text-[12px] md:text-base mt-2 max-w-3xl mx-auto leading-relaxed">
@@ -42,68 +30,49 @@ export default function BrandsSection() {
           </p>
         </div>
 
-        {/* ── Brand Grid Table ── */}
+        {/* Brand Grid — outer border + overflow-hidden clips extra cell borders */}
         <div className="border border-gray-200 rounded-[7px] overflow-hidden">
-          <div
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0"
-            
-          >
-            {BRANDS.map((brand, index) => {
-              const isLastRow =
-                index >= BRANDS.length - (BRANDS.length % 4 || 4);
-              const isLastCol = (index + 1) % 4 === 0;
-
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-8">
+            {list.map((brand) => {
+              const logo = brand.logo 
               return (
                 <Link
-                  key={brand.slug}
+                  key={brand.id ?? brand.slug}
                   href={`/brands/${brand.slug}`}
-                  className={[
-                    "flex items-center justify-center",
-                    "px-2 py-3 md:py-5 ",
-                    "bg-white hover:bg-gray-50 transition-colors duration-200",
-                    "group",
-                    /* Right border — except last column */
-                    !isLastCol ? "border-r border-gray-200" : "",
-                    /* Bottom border — except last row */
-                    !isLastRow ? "border-b border-gray-200" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
+                  className="flex items-center justify-center px-2 py-3 md:py-5 bg-white hover:bg-gray-50 transition-colors duration-200 group border-r border-b border-gray-200"
                 >
-                  <img
-                    src={brand.logo}
-                    alt={brand.name}
-                    className="
-                      max-h-[52px] md:max-h-[64px] w-auto max-w-[140px] md:max-w-[180px]
-                      object-contain
-                      filter grayscale opacity-70
-                      group-hover:grayscale-0 group-hover:opacity-100
-                      transition-all duration-300
-                    "
-                    onError={(e) => {
-                      /* Fallback: show brand name if image fails */
-                      const target = e.currentTarget;
-                      target.style.display = "none";
-                      const parent = target.parentElement;
-                      if (parent && !parent.querySelector("span")) {
-                        const span = document.createElement("span");
-                        span.textContent = brand.name;
-                        span.className =
-                          "text-sm font-semibold text-gray-500 text-center";
-                        parent.appendChild(span);
-                      }
-                    }}
-                  />
+                  {logo ? (
+                    <img
+                      src={logo}
+                      alt={brand.name}
+                      className="max-h-13 md:max-h-16 w-auto max-w-35 md:max-w-45 object-contain filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent && !parent.querySelector("span")) {
+                          const span = document.createElement("span");
+                          span.textContent = brand.name;
+                          span.className = "text-sm font-semibold text-gray-500 text-center";
+                          parent.appendChild(span);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold text-gray-500 text-center">
+                      {brand.name}
+                    </span>
+                  )}
                 </Link>
               );
             })}
           </div>
         </div>
 
-        {/* ── View all brands CTA ── */}
+        {/* View all CTA */}
         <div className="text-center mt-8">
           <Link
-            href="/all-brands"
+            href="/brands"
             className="inline-flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] text-white text-sm font-semibold px-8 py-3 rounded-full transition-colors duration-200"
           >
             View All Brands

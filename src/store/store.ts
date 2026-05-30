@@ -3,6 +3,7 @@ import profileReducer from "./slices/my-profile/profileSlice";
 import locationReducer from "./slices/location/locationSlice";
 import countryReducer from "./slices/country/countrySlice";
 import authReducer from "./slices/auth/authSlice";
+import blogInteractionReducer from "./slices/blog/blogInteractionSlice";
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     profile: profileReducer,
     location: locationReducer,
     country: countryReducer,
+    blogInteraction: blogInteractionReducer,
   },
 });
 

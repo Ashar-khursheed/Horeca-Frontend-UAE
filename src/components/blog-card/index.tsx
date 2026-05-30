@@ -1,21 +1,24 @@
 "use client";
 
 import {
-    BookOpen,
-    Calendar,
-    ChevronRight,
-    Clock,
-    Eye,
-    Heart,
-    Share2,
-    TrendingUp,
-    User
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  Clock,
+  Eye,
+  Heart,
+  Share2,
+  TrendingUp,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
+import { ShareModal } from "@/components/share-modal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface ApiBlog {
+export interface ApiBlog {
   id: number;
   title: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,36 +50,75 @@ const formatDate = (dateString: string): string => {
   if (diffInDays === 1) return "Yesterday";
   if (diffInDays < 7) return `${diffInDays} days ago`;
   if (diffInDays < 30) return `${Math.floor(diffInDays / 7)}w ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const parseDescription = (raw: any): string => {
   if (!raw) return "";
-  // already an array of {value} objects
-  if (Array.isArray(raw)) {
-    return raw.map((d: { value: string }) => d.value ?? "").join(" ");
-  }
-  if (typeof raw !== "string") return String(raw);
-  // JSON string like '[{"value":"..."}]'
+
   try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed.map((d: { value: string }) => d.value ?? "").join(" ");
+    // Agar string hai
+    if (typeof raw === "string") {
+      const parsed = JSON.parse(raw);
+
+      // [{"value":"text"}]
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => item?.value || "")
+          .join(" ")
+          .replace(/\\u2014/g, "—")
+          .replace(/\\"/g, '"')
+          .replace(/\s+/g, " ")
+          .trim();
+      }
     }
-    if (typeof parsed === "string") return parsed;
+
+    // Agar already array hai
+    if (Array.isArray(raw)) {
+      return raw
+        .map((item) => item?.value || "")
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    return String(raw);
   } catch {
-    // plain string — use as-is
+    return String(raw)
+      .replace(/^\[\{"value":"?/g, "")
+      .replace(/"}\]$/g, "")
+      .replace(/\\"/g, '"')
+      .replace(/\s+/g, " ")
+      .trim();
   }
-  return raw;
 };
 
+const decodeHtmlEntities = (text: string) => {
+  if (typeof window === "undefined") return text;
+
+  const txt = document.createElement("textarea");
+  txt.innerHTML = text;
+  return txt.value;
+};
 const stripHtml = (html: string) =>
-  html?.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim() ?? "";
+  html
+    ?.replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim() ?? "";
 
 const estimateReadTime = (raw: string): number => {
   if (!raw) return 3;
-  const words = stripHtml(parseDescription(raw)).split(/\s+/).filter(Boolean).length;
+  const words = stripHtml(parseDescription(raw))
+    .split(/\s+/)
+    .filter(Boolean).length;
   return Math.ceil(words / 200) || 1;
 };
 
@@ -84,33 +126,76 @@ const formatCount = (n: number): string =>
   n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n ?? 0);
 
 // ─── Single Blog Card ─────────────────────────────────────────────────────────
-const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
+export const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(item.likes_count ?? 0);
   const [shareCount, setShareCount] = useState(item.shares_count ?? 0);
   const [viewCount, setViewCount] = useState(item.views_count ?? 0);
   const [shared, setShared] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
 
   const imageUrl = item.thumbnail || item.mobile_banner;
   const imageAlt = item.thumbnail_alt || item.title;
-  const blogHref = item.url?.startsWith("/") ? item.url : `/${item.url}`;
+  const blogHref = `/blog/${item.url?.replace(/^\//, "") ?? ""}`;
 
-  const handleLike = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLiked((prev) => { setLikeCount((c) => (prev ? c - 1 : c + 1)); return !prev; });
+  const refreshCounts = async () => {
+    try {
+      const res = await makeApiRequest<{
+        likes_count: number;
+        views_count: number;
+        shares_count: number;
+      }>(apiUrls.BLOG_SINGLE(item.id));
+      setLikeCount(res.likes_count ?? likeCount);
+      setShareCount(res.shares_count ?? shareCount);
+      setViewCount(res.views_count ?? viewCount);
+    } catch {
+      // keep optimistic values if API fails
+    }
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShareCount((c) => c + 1);
+    if (likeLoading) return;
+    const nextLiked = !liked;
+    setLiked(nextLiked);
+    setLikeCount((c) => (nextLiked ? c + 1 : c - 1));
+    setLikeLoading(true);
+    await makeApiRequest(apiUrls.BLOG_LIKE(item.id), { method: "POST" });
+    setLikeLoading(false);
+    refreshCounts();
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShareModalOpen(true);
+    if (shared) return;
     setShared(true);
+    setShareCount((c) => c + 1);
+    setShareLoading(true);
+    await makeApiRequest(apiUrls.BLOG_SHARE(item.id), { method: "POST" });
+    setShareLoading(false);
+    refreshCounts();
     setTimeout(() => setShared(false), 2000);
   };
 
+  const handleView = () => {
+    makeApiRequest(apiUrls.BLOG_VIEW(item.id), { method: "POST" }).catch(() => {});
+  };
+
   return (
-    <Link href={blogHref} className="group relative bg-white rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-2" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05)" }}>
+    <>
+    <Link
+      href={blogHref}
+      onClick={handleView}
+      className="group relative bg-white rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-2"
+      style={{
+        boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05)",
+      }}
+    >
       {/* Hover glow border */}
       {/* <div
         className="absolute inset-0 rounded-3xl pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -121,7 +206,10 @@ const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
       /> */}
 
       {/* ── Image ── */}
-      <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: "16/10" }}>
+      <div
+        className="relative overflow-hidden bg-gray-100"
+        style={{ aspectRatio: "16/10" }}
+      >
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -135,7 +223,10 @@ const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
 
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)" }}
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)",
+          }}
         />
 
         {!!item.is_featured && (
@@ -171,7 +262,9 @@ const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
             <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
               <User className="w-3 h-3 text-emerald-600" />
             </div>
-            <span className="font-semibold text-gray-700">{item.author_name}</span>
+            <span className="font-semibold text-gray-700">
+              {item.author_name}
+            </span>
           </div>
           {item.blog_date && (
             <>
@@ -190,14 +283,21 @@ const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
         </h3>
 
         {/* Description */}
+        {/* <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4 flex-grow">
+       {decodeHtmlEntities(stripHtml(parseDescription(item.description)))}
+        </p> */}
+
         <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4 flex-grow">
-          {stripHtml(parseDescription(item.description))}
+          {decodeHtmlEntities(stripHtml(parseDescription(item.description)))}
         </p>
 
         {/* Divider */}
         <div
           className="h-px mb-4"
-          style={{ background: "linear-gradient(to right, transparent, #e5e7eb, transparent)" }}
+          style={{
+            background:
+              "linear-gradient(to right, transparent, #e5e7eb, transparent)",
+          }}
         />
 
         {/* Stats & Actions */}
@@ -210,22 +310,36 @@ const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
 
             <button
               onClick={handleShare}
+              disabled={shareLoading || shared}
               className={`flex items-center gap-1.5 text-xs font-semibold transition-colors active:scale-90 ${
                 shared ? "text-blue-500" : "text-gray-400 hover:text-blue-500"
               }`}
             >
-              <Share2 className="w-4 h-4" />
+              {shareLoading ? (
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
               {formatCount(shareCount)}
             </button>
           </div>
 
           <button
             onClick={handleLike}
+            disabled={likeLoading}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 active:scale-110 ${
-              liked ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50"
+              liked
+                ? "bg-red-50 text-red-500"
+                : "bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50"
             }`}
           >
-            <Heart className={`w-4 h-4 transition-all ${liked ? "fill-red-500 text-red-500" : ""}`} />
+            {likeLoading ? (
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Heart
+                className={`w-4 h-4 transition-all ${liked ? "fill-red-500 text-red-500" : ""}`}
+              />
+            )}
             {formatCount(likeCount)}
           </button>
         </div>
@@ -237,11 +351,23 @@ const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
         </div>
       </div>
     </Link>
+
+    <ShareModal
+      isOpen={shareModalOpen}
+      onClose={() => setShareModalOpen(false)}
+      url={`https://www.horecastore.ae${blogHref}`}
+      title={item.title}
+    />
+    </>
   );
 };
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
-export const BlogsCard: React.FC<{ showAll?: boolean; blogs?: ApiBlog[] }> = ({ showAll = false, blogs = [] }) => {
+export const BlogsCard: React.FC<{ showAll?: boolean; blogs?: ApiBlog[] }> = ({
+  showAll = false,
+  blogs = [],
+}) => {
+
   if (!blogs.length) return null;
 
   return (
