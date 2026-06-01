@@ -51,7 +51,6 @@ export default async function RootLayout({
 
   const initialProfile = profileRes?.customer ?? null;
   const navItemData = navData?.data ?? [];
-
  
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>

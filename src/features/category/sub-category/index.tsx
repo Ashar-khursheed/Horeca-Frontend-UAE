@@ -29,19 +29,26 @@ import { ProductCardSkeleton } from "@/components/loading-sketlon";
 import ProductCard from "@/components/product-card";
 
 // ─── URL codec helpers ─────────────────────────────────────────────────────────
-function encodeRF(rf: Record<number, { min: number; max: number }[]>): string {
+// RF format: "attrId-unitId:min_max,min_max|attrId2-unitId2:min_max"
+function encodeRF(rf: Record<number, { min: number; max: number }[]>, unitMap: Record<number, number> = {}): string {
   return Object.entries(rf)
     .filter(([, ranges]) => ranges.length > 0)
-    .map(([id, ranges]) => `${id}:${ranges.map((r) => `${r.min}_${r.max}`).join(",")}`)
+    .map(([id, ranges]) => {
+      const uid = unitMap[Number(id)];
+      const key = uid ? `${id}-${uid}` : id;
+      return `${key}:${ranges.map((r) => `${r.min}_${r.max}`).join(",")}`;
+    })
     .join("|");
 }
 
 function decodeRF(str: string): Record<number, { min: number; max: number }[]> {
   const out: Record<number, { min: number; max: number }[]> = {};
   str.split("|").forEach((part) => {
-    const [id, rangesStr] = part.split(":");
-    if (!id || !rangesStr) return;
-    out[Number(id)] = rangesStr.split(",").map((r) => {
+    const ci = part.indexOf(":");
+    if (ci < 0) return;
+    const attrId = Number(part.slice(0, ci).split("-")[0]); // strip unitId
+    if (isNaN(attrId)) return;
+    out[attrId] = part.slice(ci + 1).split(",").map((r) => {
       const [min, max] = r.split("_").map(Number);
       return { min, max };
     });
@@ -123,6 +130,13 @@ export default function SubCategoryPage({
   const filterAPIData = subCategoryPage?.filters;
   const rangeFiltersData = subCategoryPage?.rangeFilters;
   const fixedFiltersData = subCategoryPage?.fixedFilters;
+
+  // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
+  const unitMap: Record<number, number> = Object.fromEntries(
+    Object.values(rangeFiltersData ?? {})
+      .filter((f) => f.unit_id != null)
+      .map((f) => [f.attribute_id, f.unit_id as number])
+  );
   const products = productsData?.products ?? [];
   const totalProducts = productsData?.total ?? products.length;
   const totalPages = (productsData?.total_pages ?? Math.ceil(totalProducts / 20)) || 1;
@@ -196,7 +210,7 @@ export default function SubCategoryPage({
       if (sort !== "Default Sorting") parts.push(`sort=${encodeURIComponent(sort).replace(/%20/g, "+")}`);
       if (show !== 20)   parts.push(`show=${show}`);
       if (page > 1)      parts.push(`page=${page}`);
-      const rfStr = encodeRF(rf);
+      const rfStr = encodeRF(rf, unitMap);
       if (rfStr) parts.push(`rf=${rfStr}`);
       const ffStr = encodeFF(ff);
       if (ffStr) parts.push(`ff=${ffStr}`);

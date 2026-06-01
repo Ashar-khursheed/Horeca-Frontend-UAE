@@ -29,6 +29,7 @@ export const apiUrls = {
   BLOG_VIEW: (id: number) => `frontend/blogs/${id}/view`,
   INNER_CATEGORY_PAGES_WITH_FILTER: "frontend/products/filters/get-filters",
   PRODUCTS_LISTING: "frontend/products/filters/get-products",
+  PRODUCT_DETAIL: (slug: string) => `frontend/products/${slug}`,
   BRANDS: "frontend/brands",
 
   // General

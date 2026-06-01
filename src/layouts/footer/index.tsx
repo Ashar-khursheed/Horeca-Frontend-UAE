@@ -208,7 +208,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                 {cat.children?.map((child) => (
                   <li key={child.id}>
                     <Link
-                      href={`/${child.slug}`}
+                      href={`/${cat.slug}/${child.slug}`}
                       className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors leading-relaxed"
                     >
                       {getName(child.name, locale)}

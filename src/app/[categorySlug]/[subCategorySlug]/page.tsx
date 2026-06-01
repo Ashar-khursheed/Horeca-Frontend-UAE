@@ -76,10 +76,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SubCategorySlugPage({ params, searchParams }: PageProps) {
   const { categorySlug, subCategorySlug } = await params
-  const { parent, page: pageParam, sort: sortParam, show: showParam, brands: brandsParam, rf: rfParam, ff: ffParam } = await searchParams
+  const { parent, page: pageParam, sort: sortParam, show: showParam, brands: brandsParam, min: minParam, max: maxParam, rf: rfParam, ff: ffParam } = await searchParams
   const currentPage = Math.max(1, Number(pageParam ?? 1))
   const length      = [20, 50, 100].includes(Number(showParam)) ? Number(showParam) : 20
-  const { sort_by, sort_dir } = SORT_MAP[sortParam ?? ""] ?? { sort_by: "id", sort_dir: "desc" }
+  const { sort_by, sort_dir } = SORT_MAP[sortParam ?? ""] ?? { sort_by: "price", sort_dir: "asc" }
 
   // Parse brand IDs from URL: "64:BrandName,65:BrandName2"
   const brandIds = brandsParam
@@ -89,16 +89,22 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
       }).filter((id) => !isNaN(id) && id > 0)
     : [];
 
-  // Parse range filters: "attrId:min_max,min_max|attrId2:min_max"
-  const applied_range_filters: { attribute_id: number; ranges: { min: number; max: number } }[] = [];
+  // Parse range filters: "attrId-unitId:min_max,min_max|attrId2-unitId2:min_max"
+  const applied_range_filters: { attribute_id: number; unit_id?: number; ranges: { min: number; max: number } }[] = [];
   if (rfParam) {
     rfParam.split("|").forEach((part) => {
       const ci = part.indexOf(":");
       if (ci < 0) return;
-      const attrId = Number(part.slice(0, ci));
+      const keyParts = part.slice(0, ci).split("-");
+      const attrId = Number(keyParts[0]);
+      const unit_id = keyParts[1] ? Number(keyParts[1]) : undefined;
       part.slice(ci + 1).split(",").forEach((r) => {
         const [min, max] = r.split("_").map(Number);
-        if (!isNaN(min) && !isNaN(max)) applied_range_filters.push({ attribute_id: attrId, ranges: { min, max } });
+        if (!isNaN(min) && !isNaN(max)) {
+          const item: { attribute_id: number; unit_id?: number; ranges: { min: number; max: number } } = { attribute_id: attrId, ranges: { min, max } };
+          if (unit_id) item.unit_id = unit_id;
+          applied_range_filters.push(item);
+        }
       });
     });
   }
@@ -117,13 +123,24 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     });
   }
 
+  console.log("[RAW PARAMS]", { minParam, maxParam, rfParam, ffParam, brandsParam });
+
+  const priceFilter = minParam && maxParam
+    ? { priceRange: { min_price: minParam, max_price: maxParam } }
+    : {};
+
+  const appliedFilters = {
+    ...(brandIds.length ? { brand_ids: brandIds } : {}),
+    ...priceFilter,
+  };
+
   const productsBody = {
     category_url: subCategorySlug,
     page: currentPage,
     length,
     sort_by,
     sort_dir,
-    applied_filters: brandIds.length ? { brand_ids: brandIds } : {},
+    applied_filters: appliedFilters,
     applied_range_filters,
     applied_fixed_filters,
     locale: "en",

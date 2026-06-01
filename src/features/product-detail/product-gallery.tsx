@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Heart, Share2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Heart, Share2 } from "lucide-react";
 import { useRef, useState } from "react";
 
 type ProductGalleryProps = {
@@ -8,9 +8,14 @@ type ProductGalleryProps = {
   productName: string;
 };
 
+const VISIBLE = 6;
+const MOBILE_VISIBLE = 5;
+
 export const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
   const [activeImg, setActiveImg] = useState(0);
   const [wishlisted, setWishlisted] = useState(false);
+  const [thumbOffset, setThumbOffset] = useState(0);
+  const [mobileOffset, setMobileOffset] = useState(0);
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
@@ -19,10 +24,21 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
   const ZOOM_FACTOR = 2.5;
   const LENS_PCT = 100 / ZOOM_FACTOR;
 
-  const prevImg = () =>
-    setActiveImg((p) => (p === 0 ? images.length - 1 : p - 1));
-  const nextImg = () =>
-    setActiveImg((p) => (p === images.length - 1 ? 0 : p + 1));
+  const prevImg = () => setActiveImg((p) => (p === 0 ? images.length - 1 : p - 1));
+  const nextImg = () => setActiveImg((p) => (p === images.length - 1 ? 0 : p + 1));
+
+  const canScrollUp = thumbOffset > 0;
+  const canScrollDown = thumbOffset + VISIBLE < images.length;
+  const scrollUp = () => setThumbOffset((o) => Math.max(0, o - 1));
+  const scrollDown = () => setThumbOffset((o) => Math.min(images.length - VISIBLE, o + 1));
+
+  const canScrollLeft = mobileOffset > 0;
+  const canScrollRight = mobileOffset + MOBILE_VISIBLE < images.length;
+  const scrollLeft = () => setMobileOffset((o) => Math.max(0, o - 1));
+  const scrollRight = () => setMobileOffset((o) => Math.min(images.length - MOBILE_VISIBLE, o + 1));
+
+  const visibleThumbs = images.slice(thumbOffset, thumbOffset + VISIBLE);
+  const mobileThumbs = images.slice(mobileOffset, mobileOffset + MOBILE_VISIBLE);
 
   const handleMouseEnter = () => {
     if (window.innerWidth < 1280) return;
@@ -45,26 +61,50 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
     <>
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
         <div className="flex flex-col xl:flex-row gap-3">
-          {/* Thumbnail Strip — horizontal on mobile/tablet, vertical on xl+ */}
+
+          {/* Desktop Thumbnail Strip (vertical, xl+) */}
           {images.length > 1 && (
-            <div className="flex flex-row xl:flex-col gap-2 xl:shrink-0 justify-center overflow-x-auto xl:overflow-x-visible order-2 xl:order-1 pb-1 xl:pb-0">
-              {images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveImg(i)}
-                  className={`w-14 h-14 xl:w-16 xl:h-16 rounded-[7px] border-2 overflow-hidden shrink-0 transition-all duration-200 ${
-                    activeImg === i
-                      ? "border-[#186737] shadow-md"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-contain p-1"
-                  />
-                </button>
-              ))}
+            <div className="hidden xl:flex flex-col gap-2 shrink-0 order-1 items-center">
+              <button
+                onClick={scrollUp}
+                disabled={!canScrollUp}
+                className={`w-16 h-6 flex items-center justify-center rounded-[6px] border transition-all ${
+                  canScrollUp
+                    ? "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737]"
+                    : "border-gray-100 text-gray-300 cursor-not-allowed"
+                }`}
+              >
+                <ChevronUp size={16} strokeWidth={2} />
+              </button>
+
+              {visibleThumbs.map((img, i) => {
+                const realIndex = thumbOffset + i;
+                return (
+                  <button
+                    key={realIndex}
+                    onClick={() => setActiveImg(realIndex)}
+                    className={`w-16 h-16 rounded-[7px] border-2 overflow-hidden shrink-0 transition-all duration-200 ${
+                      activeImg === realIndex
+                        ? "border-[#186737] shadow-md"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-contain p-1" />
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={scrollDown}
+                disabled={!canScrollDown}
+                className={`w-16 h-6 flex items-center justify-center rounded-[6px] border transition-all ${
+                  canScrollDown
+                    ? "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737]"
+                    : "border-gray-100 text-gray-300 cursor-not-allowed"
+                }`}
+              >
+                <ChevronDown size={16} strokeWidth={2} />
+              </button>
             </div>
           )}
 
@@ -107,9 +147,7 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
               <Heart
                 size={17}
                 strokeWidth={2}
-                className={
-                  wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"
-                }
+                className={wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
               />
             </button>
 
@@ -144,10 +182,62 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
               </>
             )}
           </div>
+
+          {/* Mobile Thumbnail Strip (horizontal, < xl) with left/right arrows */}
+          {images.length > 1 && (
+            <div className="flex xl:hidden items-center gap-2 order-2 justify-center">
+              {/* Left Arrow */}
+              <button
+                onClick={scrollLeft}
+                disabled={!canScrollLeft}
+                className={`w-7 h-7 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                  canScrollLeft
+                    ? "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737]"
+                    : "border-gray-100 text-gray-200 cursor-not-allowed"
+                }`}
+              >
+                <ChevronLeft size={14} strokeWidth={2} />
+              </button>
+
+              {/* 5 Thumbnails */}
+              <div className="flex gap-1.5">
+                {mobileThumbs.map((img, i) => {
+                  const realIndex = mobileOffset + i;
+                  return (
+                    <button
+                      key={realIndex}
+                      onClick={() => setActiveImg(realIndex)}
+                      className={`w-14 h-14 rounded-[7px] border-2 overflow-hidden shrink-0 transition-all duration-200 ${
+                        activeImg === realIndex
+                          ? "border-[#186737] shadow-md"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-contain p-1" />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right Arrow */}
+              <button
+                onClick={scrollRight}
+                disabled={!canScrollRight}
+                className={`w-7 h-7 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                  canScrollRight
+                    ? "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737]"
+                    : "border-gray-100 text-gray-200 cursor-not-allowed"
+                }`}
+              >
+                <ChevronRight size={14} strokeWidth={2} />
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
 
-      {/* Zoom Panel — fixed, positioned to the right of gallery */}
+      {/* Zoom Panel */}
       {showZoom && zoomRect && (
         <div
           className="fixed z-999 rounded-[7px] overflow-hidden pointer-events-none"

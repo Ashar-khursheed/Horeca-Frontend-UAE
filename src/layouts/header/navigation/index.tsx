@@ -9,7 +9,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 // ── Dummy Data ─────────────────────────────────────────────────────────────────
-interface CategoryName { en?: string; ar?: string; }
+interface CategoryName {
+  en?: string;
+  ar?: string;
+}
 
 interface Category {
   id: number;
@@ -25,9 +28,10 @@ interface Category {
 
 const getName = (name: CategoryName | string, locale: string): string => {
   if (typeof name === "string") return name;
-  return locale === "ar" ? (name?.ar ?? name?.en ?? "") : (name?.en ?? name?.ar ?? "");
+  return locale === "ar"
+    ? (name?.ar ?? name?.en ?? "")
+    : (name?.en ?? name?.ar ?? "");
 };
-
 
 // ── getCategoryPath helper ─────────────────────────────────────────────────────
 const getCategoryPath = (cat: Category): string => {
@@ -36,14 +40,13 @@ const getCategoryPath = (cat: Category): string => {
   return `/${cat.slug}`;
 };
 
-
 // ══════════════════════════════════════════════════════════════════════════════
 // DropdownPanel
 // ══════════════════════════════════════════════════════════════════════════════
 interface DropdownPanelProps {
   category: Category;
   locale: string;
-  setChildCategory?:      (c: Category[]) => void;
+  setChildCategory?: (c: Category[]) => void;
   setGrandChildCategory?: (c: Category[]) => void;
   onClose: () => void;
   onPanelMouseEnter: () => void;
@@ -152,7 +155,6 @@ function DropdownPanel({
       >
         <div className="global-container px-6 py-6">
           <div className="grid grid-cols-12 gap-6">
-
             {/* ── LEFT SIDEBAR ── */}
             <div className="col-span-3 h-[450px] overflow-y-auto pr-2 custom-scrollbar">
               <div className="space-y-1">
@@ -171,10 +173,12 @@ function DropdownPanel({
                           : "bg-gray-50 text-black hover:bg-green-50  text-[12px] hover:text-green-600"
                       }
                     `}
-                    style={{ animationDelay: `${index * 30}ms`,  }}
+                    style={{ animationDelay: `${index * 30}ms` }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[12px] 2xl:text-[14px] leading-tight">{getName(child.name, locale)}</span>
+                      <span className="text-[12px] 2xl:text-[14px] leading-tight">
+                        {getName(child.name, locale)}
+                      </span>
 
                       <ArrowIcon
                         size={16}
@@ -190,7 +194,9 @@ function DropdownPanel({
 
                     {/* Active indicator bar */}
                     {activeChild?.id === child.id && (
-                      <div className={`absolute top-0 bottom-0 w-1 bg-green-600 animate-scaleY ${isRtl ? "right-0 rounded-l-full" : "left-0 rounded-r-full"}`} />
+                      <div
+                        className={`absolute top-0 bottom-0 w-1 bg-green-600 animate-scaleY ${isRtl ? "right-0 rounded-l-full" : "left-0 rounded-r-full"}`}
+                      />
                     )}
                   </Link>
                 ))}
@@ -204,7 +210,7 @@ function DropdownPanel({
                   {grandChildren.map((grandChild, index) => (
                     <Link
                       key={grandChild.id}
-                      href={`/${category.slug}/${activeChild?.slug}/${grandChild.slug}`}
+                      href={`/${category.slug}/${grandChild.slug}?parent=${activeChild?.slug}`}
                       onClick={onClose}
                       className="
                         group flex flex-col items-center text-center
@@ -226,13 +232,16 @@ function DropdownPanel({
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out"
                               loading="lazy"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
                               }}
                             />
                             <div className="absolute inset-0 bg-green-600/0 group-hover:bg-green-600/5 transition-colors duration-300" />
                           </>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-3xl">🍽️</div>
+                          <div className="w-full h-full flex items-center justify-center text-3xl">
+                            🍽️
+                          </div>
                         )}
                       </div>
 
@@ -252,7 +261,6 @@ function DropdownPanel({
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </div>
@@ -260,22 +268,21 @@ function DropdownPanel({
   );
 }
 
-
 // ══════════════════════════════════════════════════════════════════════════════
 // HeaderMenu
 // ══════════════════════════════════════════════════════════════════════════════
-const HeaderMenu = ({navItemData}: {navItemData: unknown[]}) => {
+const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
   const locale = useLocale();
-  const [activeCategory, setActiveCategory]         = useState<Category | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen]         = useState(false);
-  const [childCategory, setChildCategory]           = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [childCategory, setChildCategory] = useState<Category[]>([]);
   const [grandChildCategory, setGrandChildCategory] = useState<Category[]>([]);
 
   /* Scroll arrows */
-  const scrollRef          = useRef<HTMLDivElement>(null);
-  const menuRef            = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [showRightArrow, setShowRightArrow] = useState(false);
-  const [showLeftArrow,  setShowLeftArrow]  = useState(false);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
 
   /* Shared close timer — same as React JS closeTimeoutRef */
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -301,8 +308,10 @@ const HeaderMenu = ({navItemData}: {navItemData: unknown[]}) => {
     };
   }, []);
 
-  const doScrollRight = () => scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" });
-  const doScrollLeft  = () => scrollRef.current?.scrollBy({ left: -200, behavior: "smooth" });
+  const doScrollRight = () =>
+    scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" });
+  const doScrollLeft = () =>
+    scrollRef.current?.scrollBy({ left: -200, behavior: "smooth" });
 
   /* ── handleCloseDropdown — 150ms delay (same as React JS) ── */
   const handleCloseDropdown = useCallback(() => {
@@ -323,8 +332,19 @@ const HeaderMenu = ({navItemData}: {navItemData: unknown[]}) => {
     (category: Category) => {
       clearTimeout(closeTimeoutRef.current!);
 
-      const children = category.children ?? (category as any).sub_categories ?? (category as any).subcategories ?? [];
-      console.log("[Nav] hover:", category.slug, "| children count:", children.length, "| raw:", category);
+      const children =
+        category.children ??
+        (category as any).sub_categories ??
+        (category as any).subcategories ??
+        [];
+      console.log(
+        "[Nav] hover:",
+        category.slug,
+        "| children count:",
+        children.length,
+        "| raw:",
+        category,
+      );
 
       /* No children or brands → schedule close */
       if (!children.length || category.slug === "shop-by-brands") {
@@ -374,23 +394,15 @@ const HeaderMenu = ({navItemData}: {navItemData: unknown[]}) => {
     >
       <div className="global-container">
         <div className="grid grid-cols-[75%_25%]">
-
           {/* ── LEFT: scrollable category links ── */}
           <div className="relative flex items-center">
-            {/* {showLeftArrow && (
-              <button
-                onClick={doScrollLeft}
-                className="absolute left-0 bg-gradient-to-r from-green-700/100 to-transparent h-full pr-4 pl-1 flex items-center z-10"
-              >
-                <MoveLeft size={14} className="text-white" />
-              </button>
-            )} */}
+           
 
             <div
               ref={scrollRef}
               className="flex space-x-4 items-center overflow-x-aueto scrollbar-hide scroll-smooth"
             >
-              {navItemData.map((category:any) => (
+              {navItemData.map((category: any) => (
                 <Link
                   key={category.id}
                   href={getCategoryPath(category)}
@@ -411,56 +423,28 @@ const HeaderMenu = ({navItemData}: {navItemData: unknown[]}) => {
                 </Link>
               ))}
             </div>
-
-            {/* {showRightArrow && (
-              <button
-                onClick={doScrollRight}
-                className="absolute right-0 bg-gradient-to-l from-green-700/100 to-transparent h-full pl-4 pr-1 flex items-center z-10"
-              >
-                <MoveRight size={14} className="text-white" />
-              </button>
-            )} */}
           </div>
 
           {/* ── RIGHT: phone · financing · sale ── */}
-         <div> <div className="flex gap-3 items-center justify-end text-white font-normal ">
-            {/* Phone */}
-            {/* <a
-              href="tel:+18664467322"
-              className="hover:font-semibold transition-colors duration-200 2xl:text-[15px] md:text-[13px] text-xs flex gap-1 items-center test-phone"
-              style={{ textDecoration: "none" }}
-            >
-              <Phone className="w-4 h-4" />
-           +1 (866) 446-7322
-            </a> */}
+          <div>
+            {" "}
+            <div className="flex gap-3 items-center justify-end text-white font-normal ">
+            
 
-            {/* Financing */}
-        <Link href="/mega-sale" style={{ textDecoration: "none" }}>
-         <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
-  <span className="relative z-10">Mega Sale</span>
+              {/* Financing */}
+              <Link href="/mega-sale" style={{ textDecoration: "none" }}>
+                <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
+                  <span className="relative z-10">Mega Sale</span>
 
-  {/* animated border ring */}
-  <span className="confetti-ring"></span>
-</button>
-        </Link>
-
-            {/* Mega Sale */}
-            {/* <Link href="/sale" style={{ textDecoration: "none" }}>
-              <button className="mega-sale-pill px-5 py-2 font-extrabold text-white tracking-wider">
-                <span className="sale-label relative z-10">Mega Sale</span>
-                <span className="confetti-ring" />
-              </button>
-            </Link> */}
-          </div></div>
-
+                  {/* animated border ring */}
+                  <span className="confetti-ring"></span>
+                </button>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/*
-        ── DropdownPanel
-        key={activeCategory.id}  ← ensures React fully remounts panel
-        on category switch so useEffect resets activeChild every time.
-      */}
       {activeCategory &&
         activeCategory.slug !== "shop-by-brands" &&
         isDropdownOpen && (

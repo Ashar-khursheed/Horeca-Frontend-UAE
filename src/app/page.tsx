@@ -33,7 +33,7 @@ export default async function Page() {
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.BLOGS,
       { per_page: 10, lang: "en", page: 1 },
-      // { revalidate: 3600 },
+      { revalidate: 3600 },
     ),
   ]);
 

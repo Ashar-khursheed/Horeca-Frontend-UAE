@@ -185,7 +185,7 @@ const ProductRow = ({ products }: { products: Product[] }) => {
 
 const AlternateAiProducts = () => {
   return (
-    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:flex hidden">
       {/* AI-Recommended Alternatives */}
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">

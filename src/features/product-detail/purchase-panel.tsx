@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Accessory, AccessoryItem } from "./types";
+import { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -64,7 +66,7 @@ export const PurchasePanel = ({
     useState<AccessoryItem | null>(null);
   const [qty, setQty] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
-
+ const state = useSelector((s: RootState) => s.location.data);
   const hasSale = activeOriginal > activePrice;
   const discountPct = hasSale
     ? ((activeOriginal - activePrice) / activeOriginal) * 100
@@ -79,7 +81,7 @@ export const PurchasePanel = ({
   return (
     <div className="space-y-3">
       {/* Price Card */}
-      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5 md:block hidden">
         {/* Price */}
         <div className="flex items-baseline gap-1.5 flex-wrap">
           {hasSale && (
@@ -118,7 +120,8 @@ export const PurchasePanel = ({
           <Package size={16} className="text-[#186737] shrink-0 mt-0.5" />
           <div>
             <p className="text-xs text-gray-500">Delivering to</p>
-            <p className="text-sm font-semibold text-gray-800">{shipTo}</p>
+            <p className="text-sm font-semibold text-gray-800">   {state ? `${state.city}, ${state.country}` : "Select Location"}</p>
+            {/* <p className="text-sm font-semibold text-gray-800">{shipTo}</p> */}
           </div>
         </div>
 
@@ -221,36 +224,38 @@ export const PurchasePanel = ({
               covered.
             </p>
             <a
-              href={`tel:${phone}`}
+              href={`tel:+18664467322`}
               className="flex items-center gap-1.5 mt-2 text-[#186737] font-bold text-sm hover:underline"
             >
               <Phone size={13} />
-              {phone}
++1 (866) 446-7322
             </a>
           </div>
         </div>
       </div>
 
       {/* Brand */}
-      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <img
-            src={brandLogo}
-            alt={brand}
-            className="w-8 h-8 object-contain rounded"
-          />
-          <div>
-            <p className="text-xs text-gray-400">Sold by</p>
-            <p className="text-sm font-bold text-gray-800">{brand}</p>
+      {brandLogo && brand && (
+        <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={brandLogo}
+              alt={brand}
+              className="w-8 h-8 object-contain rounded"
+            />
+            <div>
+              <p className="text-xs text-gray-400">Sold by</p>
+              <p className="text-sm font-bold text-gray-800">{brand}</p>
+            </div>
           </div>
+          <a
+            href={`/${brandUrl}`}
+            className="text-xs text-[#186737] font-semibold hover:underline flex items-center gap-1"
+          >
+            Visit Store <ChevronRight size={12} />
+          </a>
         </div>
-        <a
-          href={`/${brandUrl}`}
-          className="text-xs text-[#186737] font-semibold hover:underline flex items-center gap-1"
-        >
-          Visit Store <ChevronRight size={12} />
-        </a>
-      </div>
+      )}
     </div>
   );
 };

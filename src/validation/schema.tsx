@@ -78,6 +78,23 @@ export const updateProfileSchema = Yup.object({
   }),
 });
 
+export const guestCheckoutSchema = Yup.object({
+  name: Yup.string()
+    .trim()
+    .required("Name is required.")
+    .test("no-blank", "Name cannot be blank.", (v) => !!v && v.trim().length > 0)
+    .min(2, "Minimum 2 characters.")
+    .max(60, "Maximum 60 characters."),
+  email: Yup.string()
+    .trim()
+    .required("Email is required.")
+    .email("Enter a valid email address."),
+  phone: Yup.string()
+    .required("Phone number is required.")
+    .matches(/^[0-9]{7,15}$/, "Enter a valid phone number (7–15 digits, numbers only)."),
+  consent: Yup.boolean().oneOf([true], "You must accept the terms to continue."),
+});
+
 export const changePasswordSchema = Yup.object({
   old_password: Yup.string()
     .required("Current password is required.")

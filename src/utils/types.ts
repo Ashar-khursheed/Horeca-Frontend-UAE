@@ -116,6 +116,7 @@ interface InnerCategoryPageSeo {
 interface RangeFilterItem {
   attribute_id: number;
   attribute_name: string;
+  unit_id?: number;
   unit_symbol: string;
   ranges: { min: number; max: number }[];
 }

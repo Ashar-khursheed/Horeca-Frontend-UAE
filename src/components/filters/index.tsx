@@ -3,11 +3,13 @@
 import { ChevronDown, ChevronUp, Shield, SlidersHorizontal, Truck, X } from "lucide-react";
 import { useState } from "react";
 import type { RangeFilterItem, FixedFilterItem } from "@/utils/types";
+import { Slider } from "@/components/ui/slider";
 
 interface PriceRange {
   min: number;
   max: number;
 }
+
 
 function AccordionSection({
   label,
@@ -127,46 +129,31 @@ export default function FilterSidebar({
       )}
 
       {/* Price Filter */}
-      <AccordionSection label="Price" defaultOpen>
-        <div className="space-y-3 pt-1">
-          <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium">
-            <span>$ {priceRange.min.toLocaleString()} (Min)</span>
-            <span>$ {priceRange.max.toLocaleString()} (Max)</span>
-          </div>
-          <input
-            type="range"
+      <AccordionSection
+        label="Price"
+        defaultOpen
+        hasActive={priceRange.min !== priceMin || priceRange.max !== priceMax}
+        onClear={() => onPriceChange({ min: priceMin, max: priceMax })}
+      >
+        <div className="space-y-3 pt-2">
+          {/* Current range display */}
+          <p className="text-center text-[12px] font-semibold text-gray-700">
+            $ {priceRange.min.toLocaleString()} &ndash; $ {priceRange.max.toLocaleString()}
+          </p>
+
+          {/* Shadcn dual range slider */}
+          <Slider
             min={priceMin}
             max={priceMax}
             step={1}
-            value={priceRange.max}
-            onChange={(e) => onPriceChange({ ...priceRange, max: Number(e.target.value) })}
-            className="w-full accent-[#186737]"
+            value={[priceRange.min, priceRange.max]}
+            onValueChange={([min, max]) => onPriceChange({ min, max })}
           />
-          <div className="flex gap-2">
-            <div className="flex-1 border border-gray-200 rounded-[7px] px-2 py-1.5 flex items-center gap-1">
-              <span className="text-[10px] text-gray-400">$</span>
-              <input
-                type="number"
-                value={priceRange.min}
-                min={priceMin}
-                max={priceRange.max}
-                onChange={(e) => onPriceChange({ ...priceRange, min: Number(e.target.value) })}
-                className="w-full text-[12px] text-gray-700 outline-none bg-transparent"
-                placeholder="Min"
-              />
-            </div>
-            <div className="flex-1 border border-gray-200 rounded-[7px] px-2 py-1.5 flex items-center gap-1">
-              <span className="text-[10px] text-gray-400">$</span>
-              <input
-                type="number"
-                value={priceRange.max}
-                min={priceRange.min}
-                max={priceMax}
-                onChange={(e) => onPriceChange({ ...priceRange, max: Number(e.target.value) })}
-                className="w-full text-[12px] text-gray-700 outline-none bg-transparent"
-                placeholder="Max"
-              />
-            </div>
+
+          {/* Min / Max labels */}
+          <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
+            <span>$ {priceMin.toLocaleString()} (Min)</span>
+            <span>$ {priceMax.toLocaleString()} (Max)</span>
           </div>
         </div>
       </AccordionSection>

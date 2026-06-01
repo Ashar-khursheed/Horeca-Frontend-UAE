@@ -156,7 +156,7 @@ export const HeroBanner = ({
                         src={banner.image}
                         alt={banner.title ?? "Banner"}
                         fill
-                        className="object-coverasss"
+                        className="object-cover"
                         priority={index === 0}
                         sizes="(max-width: 1024px) 100vw, 70vw"
                       />

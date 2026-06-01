@@ -312,7 +312,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                             <div className="w-[62px] h-[62px] rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex-shrink-0 border border-gray-100" />
                             <div className="flex-1 min-w-0 flex flex-col justify-between">
                               <p className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors">{name}</p>
-                              <div className="flex items-center gap-2 mt-2">
+                              <div className="flex items-center lg:flex-col xl:flex-row  gap-2 mt-2">
                                 <div className="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white">
                                   <button className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 text-sm font-bold transition-colors" onClick={() => updateQty(i, -1)}>−</button>
                                   <span className="w-6 text-center text-xs font-semibold text-gray-800 select-none">{quantities[i]}</span>
@@ -373,7 +373,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex  border-gray-100s  w-[80%] mx-auto ">
+                  <div className="flex  border-gray-100s  w-[80%] mx-auto "    onClick={handleModalOpen}>
                     <a
                       href="tel:+18664467322"
                       className="flex-1 flex flex-col items-center gap-1.5 py-3 hover:bg-[#f8fdf9] transition-colors group border-gray-100"
