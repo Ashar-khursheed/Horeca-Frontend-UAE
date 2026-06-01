@@ -373,7 +373,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex  border-gray-100s  w-[80%] mx-auto "    onClick={handleModalOpen}>
+                  <div className="flex  border-gray-100s  w-[80%] mx-auto "   >
                     <a
                       href="tel:+18664467322"
                       className="flex-1 flex flex-col items-center gap-1.5 py-3 hover:bg-[#f8fdf9] transition-colors group border-gray-100"
@@ -383,7 +383,7 @@ export default function NavigationStatic({ initialProfile = null, locationData =
                       </div>
                       <span className="text-[11px] font-semibold text-gray-600 group-hover:text-[#186737] transition-colors">Call</span>
                     </a>
-                    <button className="flex-1 flex flex-col items-center gap-1.5 py-3 hover:bg-[#f8fdf9] transition-colors group  border-gray-100">
+                    <button className="flex-1 flex flex-col items-center gap-1.5 py-3 hover:bg-[#f8fdf9] transition-colors group  border-gray-100"  onClick={handleModalOpen}>
                       <div className="w-9 h-9 rounded-full bg-[#186737]/10 flex items-center justify-center group-hover:bg-[#186737] transition-colors">
                         <MessageSquare size={15} className="text-[#186737] group-hover:text-white transition-colors" />
                       </div>
