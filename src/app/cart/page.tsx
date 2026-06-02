@@ -95,21 +95,23 @@ const INITIAL_SAVED: SavedItem[] = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtPrice = (n: number) =>
-  Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  Number(n).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CartPage() {
-  const [cartItems, setCartItems]       = useState<CartItem[]>(INITIAL_CART);
-  const [savedItems, setSavedItems]     = useState<SavedItem[]>(INITIAL_SAVED);
+  const [cartItems, setCartItems] = useState<CartItem[]>(INITIAL_CART);
+  const [savedItems, setSavedItems] = useState<SavedItem[]>(INITIAL_SAVED);
   const [shipmentOpen, setShipmentOpen] = useState(true);
 
   // ── Saved slider ─────────────────────────────────────────────────────────
-  const [savedPage, setSavedPage]       = useState(0);
-  const [perView, setPerView]           = useState(3);
+  const [savedPage, setSavedPage] = useState(0);
+  const [perView, setPerView] = useState(3);
 
   useEffect(() => {
-    const calc = () =>
-      setPerView(window.innerWidth >= 1024 ? 4 : 2);
+    const calc = () => setPerView(window.innerWidth >= 1024 ? 4 : 2);
     calc();
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
@@ -122,10 +124,13 @@ export default function CartPage() {
   }, [savedItems.length, perView, savedPage]);
 
   const savedTotalPages = Math.ceil(savedItems.length / perView);
-  const savedVisible    = savedItems.slice(savedPage * perView, savedPage * perView + perView);
+  const savedVisible = savedItems.slice(
+    savedPage * perView,
+    savedPage * perView + perView,
+  );
 
   const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
-  const subtotal   = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
+  const subtotal = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleQty = (id: number, qty: number) =>
@@ -135,7 +140,9 @@ export default function CartPage() {
     setCartItems((p) => p.filter((c) => c.id !== id));
 
   const handleWishlist = (id: number) =>
-    setCartItems((p) => p.map((c) => (c.id === id ? { ...c, inWishlist: !c.inWishlist } : c)));
+    setCartItems((p) =>
+      p.map((c) => (c.id === id ? { ...c, inWishlist: !c.inWishlist } : c)),
+    );
 
   const handleRemoveSaved = (id: number) =>
     setSavedItems((p) => p.filter((s) => s.id !== id));
@@ -173,11 +180,18 @@ export default function CartPage() {
           <div className="global-container py-6 sm:py-8">
             <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm py-24 text-center px-6">
               <div className="w-20 h-20 rounded-full bg-[#f0f9f4] flex items-center justify-center mx-auto mb-5">
-                <ShoppingCart size={34} className="text-[#186737]" strokeWidth={1.5} />
+                <ShoppingCart
+                  size={34}
+                  className="text-[#186737]"
+                  strokeWidth={1.5}
+                />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Your cart is empty
+              </h2>
               <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed mb-8">
-                Add items to your cart to see them here. Browse our wide range of commercial kitchen equipment.
+                Add items to your cart to see them here. Browse our wide range
+                of commercial kitchen equipment.
               </p>
               <Link
                 href="/"
@@ -197,7 +211,6 @@ export default function CartPage() {
       <CartBreadcrumb />
       <main className="min-h-screen bg-gray-50/60">
         <div className="global-container py-6 sm:py-8">
-
           {/* Page header */}
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
             <div className="flex items-center gap-3">
@@ -225,10 +238,8 @@ export default function CartPage() {
 
           {/* ── Main grid ──────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_308px] xl:grid-cols-[1fr_328px] gap-6 items-start">
-
             {/* LEFT */}
             <div className="space-y-5">
-
               {/* ── Cart Items ─────────────────────────────────────────── */}
               {cartItems.length > 0 && (
                 <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
@@ -239,14 +250,19 @@ export default function CartPage() {
                         Shipment <span className="text-[#186737]">1</span>
                       </h2>
                       <span className="text-xs text-gray-400 font-medium">
-                        ({cartItems.length} item{cartItems.length !== 1 ? "s" : ""})
+                        ({cartItems.length} item
+                        {cartItems.length !== 1 ? "s" : ""})
                       </span>
                     </div>
                     <button
                       onClick={() => setShipmentOpen((o) => !o)}
                       className="text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {shipmentOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      {shipmentOpen ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
                     </button>
                   </div>
 
@@ -269,7 +285,9 @@ export default function CartPage() {
                     <p className="text-xs text-gray-500 flex items-center gap-1.5">
                       <Truck size={13} className="text-[#186737]" />
                       Estimated delivery:{" "}
-                      <span className="font-semibold text-gray-700">Wed, May 13 – Fri, May 15</span>
+                      <span className="font-semibold text-gray-700">
+                        Wed, May 13 – Fri, May 15
+                      </span>
                     </p>
                     <p className="text-sm font-bold text-gray-900">
                       Subtotal: ${fmtPrice(subtotal)}
@@ -278,10 +296,13 @@ export default function CartPage() {
                 </section>
               )}
 
+              <div className="md:hidden block">
+                <CartSummary cartItems={cartItems} />
+              </div>
+
               {/* ── Saved for Later ────────────────────────────────────── */}
               {savedItems.length > 0 && (
                 <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-
                   {/* Header */}
                   <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -289,7 +310,8 @@ export default function CartPage() {
                       <h2 className="font-bold text-gray-900 text-sm">
                         Saved for Later{" "}
                         <span className="text-gray-400 font-normal text-xs">
-                          ({savedItems.length} item{savedItems.length !== 1 ? "s" : ""})
+                          ({savedItems.length} item
+                          {savedItems.length !== 1 ? "s" : ""})
                         </span>
                       </h2>
                     </div>
@@ -298,7 +320,9 @@ export default function CartPage() {
                     {savedTotalPages > 1 && (
                       <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => setSavedPage((p) => Math.max(0, p - 1))}
+                          onClick={() =>
+                            setSavedPage((p) => Math.max(0, p - 1))
+                          }
                           disabled={savedPage === 0}
                           className="w-7 h-7 rounded-[6px] border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
@@ -308,7 +332,11 @@ export default function CartPage() {
                           {savedPage + 1} / {savedTotalPages}
                         </span>
                         <button
-                          onClick={() => setSavedPage((p) => Math.min(savedTotalPages - 1, p + 1))}
+                          onClick={() =>
+                            setSavedPage((p) =>
+                              Math.min(savedTotalPages - 1, p + 1),
+                            )
+                          }
                           disabled={savedPage >= savedTotalPages - 1}
                           className="w-7 h-7 rounded-[6px] border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
@@ -327,27 +355,32 @@ export default function CartPage() {
                         width: `${savedTotalPages * 100}%`,
                       }}
                     >
-                      {Array.from({ length: savedTotalPages }).map((_, pageIdx) => (
-                        <div
-                          key={pageIdx}
-                          className="grid md:gap-4 gap-1 shrink-0"
-                          style={{
-                            width: `${100 / savedTotalPages}%`,
-                            gridTemplateColumns: `repeat(${perView}, minmax(0, 1fr))`,
-                          }}
-                        >
-                          {savedItems
-                            .slice(pageIdx * perView, pageIdx * perView + perView)
-                            .map((item) => (
-                              <SavedProductCard
-                                key={item.id}
-                                item={item}
-                                onAddToCart={handleAddSavedToCart}
-                                onRemove={handleRemoveSaved}
-                              />
-                            ))}
-                        </div>
-                      ))}
+                      {Array.from({ length: savedTotalPages }).map(
+                        (_, pageIdx) => (
+                          <div
+                            key={pageIdx}
+                            className="grid md:gap-4 gap-1 shrink-0"
+                            style={{
+                              width: `${100 / savedTotalPages}%`,
+                              gridTemplateColumns: `repeat(${perView}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {savedItems
+                              .slice(
+                                pageIdx * perView,
+                                pageIdx * perView + perView,
+                              )
+                              .map((item) => (
+                                <SavedProductCard
+                                  key={item.id}
+                                  item={item}
+                                  onAddToCart={handleAddSavedToCart}
+                                  onRemove={handleRemoveSaved}
+                                />
+                              ))}
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
 
@@ -359,7 +392,9 @@ export default function CartPage() {
                           key={i}
                           onClick={() => setSavedPage(i)}
                           className={`h-1.5 rounded-full transition-all duration-300 ${
-                            i === savedPage ? "w-5 bg-[#186737]" : "w-1.5 bg-gray-200 hover:bg-gray-300"
+                            i === savedPage
+                              ? "w-5 bg-[#186737]"
+                              : "w-1.5 bg-gray-200 hover:bg-gray-300"
                           }`}
                         />
                       ))}
@@ -370,7 +405,9 @@ export default function CartPage() {
             </div>
 
             {/* RIGHT */}
-            <CartSummary cartItems={cartItems} />
+            <div className="md:block hidden">
+              <CartSummary cartItems={cartItems} />
+            </div>
           </div>
         </div>
       </main>

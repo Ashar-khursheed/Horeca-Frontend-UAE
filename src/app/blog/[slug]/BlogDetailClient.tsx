@@ -111,7 +111,7 @@ const estimateReadTime = (blocks: { value: string }[]): number => {
 
 // Inject IDs into headings so scroll-to works
 const injectHeadingIds = (html: string): string => {
-  return html.replace(/<(h[23])([^>]*)>(.*?)<\/h[23]>/gi, (_, tag, attrs, inner) => {
+  let result = html.replace(/<(h[23])([^>]*)>(.*?)<\/h[23]>/gi, (_, tag, attrs, inner) => {
     const rawText = inner.replace(/<[^>]+>/g, "").trim();
     const id = rawText
       .toLowerCase()
@@ -120,6 +120,9 @@ const injectHeadingIds = (html: string): string => {
       .slice(0, 60);
     return `<${tag}${attrs} id="${id}">${inner}</${tag}>`;
   });
+  // strip blank &nbsp; paragraphs
+  result = result.replace(/<p[^>]*>(\s|&nbsp;)*<\/p>/gi, "");
+  return result;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -130,6 +133,7 @@ export default function BlogDetailClient({
   blog: ApiBlogDetail;
   initialComments: BlogComment[];
 }) {
+  console.log("BlogDetailClient render", blog);
   const router = useRouter();
   const [readingProgress, setReadingProgress] = useState(0);
   const [activeSection, setActiveSection] = useState("");
@@ -465,20 +469,36 @@ export default function BlogDetailClient({
           font-size: 0.9375rem;
         }
         .blog-content strong { color: #111827; font-weight: 700; }
+        .blog-content figure.table {
+          margin: 1.25rem 0;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          display: block;
+          border-radius: 0.5rem;
+          border: 1px solid #e5e7eb;
+        }
+        .blog-content figure { margin: 1.25rem 0; }
         .blog-content table {
           width: 100%;
+          min-width: 480px;
           border-collapse: collapse;
-          margin: 1.5rem 0;
-          font-size: 0.875rem;
+          font-size: 0.8125rem;
         }
         .blog-content td,
         .blog-content th {
           border: 1px solid #e5e7eb;
-          padding: 0.625rem 0.875rem;
+          padding: 0.5rem 0.75rem;
           vertical-align: top;
+          line-height: 1.5;
         }
-        .blog-content tr:first-child td { background: #f9fafb; font-weight: 600; }
-        .blog-content figure { margin: 1.5rem 0; overflow-x: auto; }
+        .blog-content tr:first-child td,
+        .blog-content th {
+          background: #f3f4f6;
+          font-weight: 600;
+          color: #111827;
+        }
+        .blog-content tr:nth-child(even) td { background: #f9fafb; }
+        .blog-content figure.table table { border: none; }
         .blog-content > div:first-child h2,
         .blog-content > div:first-child h3 { margin-top: 0.5rem; }
       `}</style>

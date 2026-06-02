@@ -167,8 +167,8 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <main className="global-container py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-6 items-start">
+        <main className="global-container py-8 px-0">
+          <div className="grid grid-cols-1 2xl:grid-cols-[75%_25%] xl:grid-cols-[75%_25%] lg:grid-cols-1 gap-6 items-start">
 
             {/* LEFT */}
             <div className="space-y-5">
@@ -383,16 +383,16 @@ export default function CheckoutPage() {
                 <div className="mb-4">
                   <SectionTitle icon={<Tag size={14} />} title="Coupon Code" />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="e.g. HORECA10" disabled={couponApplied}
                     className="flex-1 border border-gray-200 rounded-[7px] px-4 py-3 text-sm focus:outline-none focus:border-[#186737] focus:ring-2 focus:ring-green-100 disabled:bg-gray-50 disabled:text-gray-400 transition-shadow"
                   />
                   {couponApplied ? (
                     <button type="button" onClick={() => { setCouponApplied(false); setCoupon('') }}
-                      className="px-5 py-3 rounded-[7px] border-2 border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors">Remove</button>
+                      className="px-5 w-full py-3 rounded-[7px] border-2 border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors">Remove</button>
                   ) : (
                     <button type="button" onClick={() => { if (coupon === 'HORECA10') setCouponApplied(true) }}
-                      className="px-5 py-3 rounded-[7px] bg-[#186737] text-white text-sm font-semibold transition-colors">Apply</button>
+                      className="px-5 py-3 w-full rounded-[7px] bg-[#186737] text-white text-sm font-semibold transition-colors">Apply</button>
                   )}
                 </div>
                 {couponApplied && (

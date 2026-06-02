@@ -32,7 +32,7 @@ export async function generateStaticParams() {
   const first = await makeApiCallSSR<BlogListResponse>(
     apiUrls.BLOGS,
     { per_page: 100, lang: "en", page: 1 },
-    { revalidate: false }
+    { revalidate: false },
   );
 
   if (!first) return [];
@@ -46,9 +46,9 @@ export async function generateStaticParams() {
       makeApiCallSSR<BlogListResponse>(
         apiUrls.BLOGS,
         { per_page: 100, lang: "en", page },
-        { revalidate: false }
-      )
-    )
+        { revalidate: false },
+      ),
+    ),
   );
 
   const allBlogs = [first, ...rest].flatMap((res) => res?.data ?? []);
@@ -61,13 +61,15 @@ export async function generateStaticParams() {
 }
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
   const blog = await makeApiCallSSR<ApiBlogDetail>(
     apiUrls.BLOG_SINGLE(slug),
     {},
-    { revalidate: 3600 }
+    { revalidate: 3600 },
   );
 
   if (!blog) return { title: "Blog Not Found" };
@@ -107,8 +109,16 @@ export default async function BlogDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
   const [blog, commentsRes] = await Promise.all([
-    makeApiCallSSR<ApiBlogDetail>(apiUrls.BLOG_SINGLE(slug), {}, { revalidate: 3600 }),
-    makeApiCallSSR<CommentsResponse>(apiUrls.BLOG_COMMENTS(slug), {}, { revalidate: 60 }),
+    makeApiCallSSR<ApiBlogDetail>(
+      apiUrls.BLOG_SINGLE(slug),
+      {},
+      { revalidate: 3600 },
+    ),
+    makeApiCallSSR<CommentsResponse>(
+      apiUrls.BLOG_COMMENTS(slug),
+      {},
+      { revalidate: 60 },
+    ),
   ]);
 
   const initialComments = commentsRes?.data?.comments ?? [];
@@ -116,7 +126,9 @@ export default async function BlogDetailPage({ params }: PageProps) {
   if (!blog) {
     return (
       <div className="global-container py-24 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Blog not found</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          Blog not found
+        </h1>
         <p className="text-gray-500 mb-6">
           No article found for <strong>{slug}</strong>.
         </p>

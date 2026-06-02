@@ -106,7 +106,7 @@ export default function LoginPage() {
   const passHasError = !!(formik.touched.password && formik.errors.password);
 
   return (
-    <div className="min-h-screens py-12 bg-gray-50 flex flex-col">
+    <div className="min-h-screens md:py-12 py-0 md:bg-gray-50 bg-white flex flex-col">
 
       {/* ── Main ──────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex items-center justify-center py-10 px-4 pt-">
