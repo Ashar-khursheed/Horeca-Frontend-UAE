@@ -28,9 +28,9 @@ const menuItems = [
   { icon: FileText,    label: "My Quotes",              href: "/dashboard/quotes" },
   { icon: History,     label: "Browsing History",       href: "/dashboard/history" },
   { icon: Heart,       label: "Saved Items",            href: "/wishlist" },
-  { icon: Receipt,     label: "Net Payment Terms",      href: "/dashboard/payment-terms" },
-  { icon: CreditCard,  label: "Payments & Invoices",    href: "/dashboard/invoices" },
-  { icon: FolderCheck, label: "Documents & Compliance", href: "/dashboard/documents" },
+  // { icon: Receipt,     label: "Net Payment Terms",      href: "/dashboard/payment-terms" },
+  // { icon: CreditCard,  label: "Payments & Invoices",    href: "/dashboard/invoices" },
+  // { icon: FolderCheck, label: "Documents & Compliance", href: "/dashboard/documents" },
   // { icon: ShieldCheck, label: "Account Security",       href: "/dashboard/security" },
   { icon: HelpCircle,  label: "Help & Support",         href: "/dashboard/support" },
 ];

@@ -249,7 +249,8 @@ export default function DashboardPage() {
                       <h1 className="text-xl sm:text-2xl font-bold text-white">
                         Welcome back, {customer?.name}! 👋
                       </h1>
-                      <p className="text-white/70 text-sm mt-0.5">Business Name: {customer?.business_detail?.business_name}</p>
+                      {customer?.business_detail?.business_name &&                       <p className="text-white/70 text-sm mt-0.5">Business Name: {customer?.business_detail?.business_name}</p>}
+
                     </div>
                   </div>
 

@@ -15,6 +15,7 @@ import {
   Truck,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect } from 'react'
 import { Switch } from '@/components/ui/switch'
 import type { MobileCheckoutProps } from './types'
 
@@ -39,6 +40,11 @@ export function MobileCheckout(props: MobileCheckoutProps) {
     props.addresses.find((a) => a.id === props.selectedAddress) ?? props.addresses[0]
 
   const stepTitle = ['', 'Shipping Address', 'Order Summary', 'Payments'][mobileStep]
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [mobileStep])
+
 
   return (
     <div className="lg:hidden bg-[#f5f7f5] min-h-screen flex flex-col">
@@ -394,7 +400,7 @@ function StepSummary(p: StepSummaryProps) {
       <div className="mx-3 mt-2 bg-white rounded-xl border border-gray-100 p-4">
         <div className="space-y-3 text-sm">
           <div className="flex justify-between text-gray-500">
-            <span>MRP ({p.cartItems.length} items)</span>
+            <span>Total Items ({p.cartItems.length} items)</span>
             <span>${usd(p.subtotal)}</span>
           </div>
           <div className="flex justify-between text-gray-500">
@@ -559,7 +565,7 @@ function StepPayment(p: StepPaymentProps) {
             <span className="text-xl">📋</span>
             <div className="flex-1 text-left">
               <span className="text-sm font-semibold text-gray-800">Check Payment</span>
-              <p className="text-xs text-[#186737] font-medium">5% discount applied</p>
+              <p className="text-xs text-[#186737] font-medium">3% discount applied</p>
             </div>
             <ChevronRight
               size={16}
@@ -569,7 +575,7 @@ function StepPayment(p: StepPaymentProps) {
           {p.payment === 'check' && (
             <div className="px-4 pb-5">
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm mb-4">
-                <p className="font-semibold text-amber-800 mb-1">5% Discount Applied 🎉</p>
+                <p className="font-semibold text-amber-800 mb-1">3% Discount Applied 🎉</p>
                 <p className="text-amber-700 text-xs leading-relaxed">
                   Upload a photo of your check after placing the order. No physical mailing required.
                 </p>
@@ -586,7 +592,7 @@ function StepPayment(p: StepPaymentProps) {
         </div>
 
         {/* Other methods */}
-        {[
+        {/* {[
           { id: 'upi', icon: '📱', label: 'UPI', desc: 'Pay by any UPI app' },
           { id: 'netbanking', icon: '🏦', label: 'Net Banking', desc: 'All major banks supported' },
         ].map((pm) => (
@@ -612,7 +618,7 @@ function StepPayment(p: StepPaymentProps) {
               </div>
             )}
           </div>
-        ))}
+        ))} */}
       </div>
 
       {/* Trust badges */}

@@ -347,7 +347,7 @@ export default function CartPage() {
                   </div>
 
                   {/* Slider track */}
-                  <div className="p-4 overflow-hidden">
+                  <div className="md:p-4 p-0 overflow-hidden">
                     <div
                       className="flex gap-4 transition-transform duration-500 ease-in-out"
                       style={{
@@ -359,7 +359,7 @@ export default function CartPage() {
                         (_, pageIdx) => (
                           <div
                             key={pageIdx}
-                            className="grid md:gap-4 gap-1 shrink-0"
+                            className="grid md:gap-4 gap-3 shrink-0"
                             style={{
                               width: `${100 / savedTotalPages}%`,
                               gridTemplateColumns: `repeat(${perView}, minmax(0, 1fr))`,

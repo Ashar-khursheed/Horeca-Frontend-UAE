@@ -342,7 +342,9 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                 <div>
                   <p className="text-[11px] text-gray-400 font-medium">Address</p>
                   <p className="text-[13px] text-gray-700 leading-relaxed">
-                    123 Commerce Blvd,<br />New York, NY 10001
+                 Horecastore Showroom
+
+<span className="block">8800 Bissonnet Street, Ste A, Houston, Texas 77074</span>
                   </p>
                 </div>
               </li>
@@ -402,15 +404,15 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
           <p className="text-[12px] text-gray-400 text-center sm:text-left">
             © 2026 HorecaStore. All Rights Reserved.
           </p>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-400 mr-1">We Accept:</span>
             {["VISA", "MC", "AMEX", "PayPal", "CASH"].map((method) => (
               <div key={method} className="h-7 px-2 border border-gray-200 rounded-[7px] flex items-center justify-center bg-gray-50">
                 <span className="text-[10px] font-bold text-gray-500">{method}</span>
               </div>
             ))}
-          </div>
-          <div className="flex items-center gap-4">
+          </div> */}
+          {/* <div className="flex items-center gap-4">
             {[
               { label: "Privacy", href: "/privacy" },
               { label: "Terms", href: "/terms" },
@@ -420,7 +422,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                 {link.label}
               </Link>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
 

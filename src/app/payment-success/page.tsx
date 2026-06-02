@@ -182,14 +182,14 @@ export default function PaymentSuccessPage() {
                   <Mail size={15} className="text-[#186737] mt-1 shrink-0" />
                   <p className="text-sm text-gray-600 font-medium leading-relaxed">
                     Confirmation will be sent to your email at{" "}
-                    <span className="text-[#186737] font-bold break-all">{USER.email}</span>
+                    <span className="text-[#186737] font-bold break-alls">{USER.email}</span>
                   </p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Phone size={15} className="text-[#186737] mt-1 shrink-0" />
                   <p className="text-sm text-gray-600 font-medium leading-relaxed">
                     Our representative will call you at{" "}
-                    <span className="text-[#186737] font-bold">{USER.phone}</span>
+                    <span className="text-[#186737] font-bold whitespace-nowrap">{USER.phone}</span>
                     . Kindly ensure the number is correct to avoid delivery delays.
                   </p>
                 </div>
@@ -303,7 +303,7 @@ export default function PaymentSuccessPage() {
               <div className="h-px bg-gray-100 my-5" />
 
               {/* CTA buttons */}
-              <div className="flex   gap-3 w-xl">
+              <div className="flex gap-3 w-full justify-between ">
               <div>
                   <Link
                   href="/dashboard/orders"

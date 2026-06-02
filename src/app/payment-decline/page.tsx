@@ -115,7 +115,7 @@ export default function PaymentDeclinePage() {
               <div className="h-1.5 w-full bg-gradient-to-r from-red-500 to-red-400" />
               <div className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-12 h-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center shrink-0 mt-0.5 hidden">
                     <XCircle className="w-6 h-6 text-red-500" />
                   </div>
                   <div className="flex-1">

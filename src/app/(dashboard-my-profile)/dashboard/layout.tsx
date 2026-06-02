@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       className={`${
         mobile
           ? "flex flex-col h-full"
-          : "hidden lg:flex flex-col h-screen "
+          : "hidden lg:flex flex-col h-screens "
       } w-64 bg-white border-r border-gray-100 shadow-sm`}
     >
       {/* Logo */}
@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3">
+      <nav className="flex-1 overflow-y-auto px-3 py-3 h-screen">
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">
           Main Menu
         </p>

@@ -322,7 +322,7 @@ export default function CheckoutPage() {
                 )}
                 {payment === 'check' && (
                   <div className="bg-amber-50 border border-amber-200 rounded-[7px] p-4 text-sm">
-                    <p className="font-semibold text-amber-800 mb-1">5% Discount Applied 🎉</p>
+                    <p className="font-semibold text-amber-800 mb-1">3% Discount Applied 🎉</p>
                     <p className="text-amber-700 text-xs leading-relaxed">
                       Upload a photo of your check after placing the order. No physical mailing required.
                     </p>

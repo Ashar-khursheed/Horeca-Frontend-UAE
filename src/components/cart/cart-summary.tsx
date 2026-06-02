@@ -115,9 +115,9 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
 
           <p className="text-[10px] text-gray-400 text-center leading-relaxed">
             By placing your order, you agree to HorecaStore&apos;s{" "}
-            <Link href="/" className="underline hover:text-[#186737]">Privacy Policy</Link>{" "}
+            <Link href="/pages/return-policy" className="underline hover:text-[#186737]">Privacy Policy</Link>{" "}
             and{" "}
-            <Link href="/" className="underline hover:text-[#186737]">Conditions of Use</Link>.
+            <Link href="/pages/return-policy" className="underline hover:text-[#186737]">Conditions of Use</Link>.
           </p>
         </div>
       </div>

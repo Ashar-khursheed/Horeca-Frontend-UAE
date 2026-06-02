@@ -114,6 +114,13 @@ const ORDER = {
 // ─── Timeline Steps ───────────────────────────────────────────────────────────
 
 const STEPS = [
+   {
+    key: "reserved_order",
+    label: "Reserved Order",
+    date: "Apr 08, 2026",
+    time: "03:42 AM",
+    desc: "Your reserved order was placed successfully.",
+  },
   {
     key: "order_placed",
     label: "Order Placed",
@@ -121,6 +128,7 @@ const STEPS = [
     time: "03:42 AM",
     desc: "Your order was placed successfully.",
   },
+ 
   {
     key: "order_confirmed",
     label: "Order Confirmed",
