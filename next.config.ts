@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
   },
+  //  cacheComponents: true,
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');

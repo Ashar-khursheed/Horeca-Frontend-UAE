@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useLocale } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import TickerBadge from "../ticker-badge";
+import Image from "next/image";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -220,6 +221,7 @@ export const ProductCard = ({
   const [count, setCount] = useState(minQty);
   const [wishlisted, setWishlisted] = useState(product.in_wishlist ?? false);
   const [addedSuccess, setAddedSuccess] = useState(false);
+  const addedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Price logic (sale_price=0 means no sale) ─────────────────────────
   const hasSale =
@@ -258,6 +260,7 @@ export const ProductCard = ({
   useEffect(
     () => () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
     },
     []
   );
@@ -288,7 +291,8 @@ export const ProductCard = ({
     e.stopPropagation();
     if (onAddToCart) onAddToCart(product, count);
     setAddedSuccess(true);
-    setTimeout(() => setAddedSuccess(false), 1800);
+    if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    addedTimerRef.current = setTimeout(() => setAddedSuccess(false), 1800);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -338,16 +342,18 @@ export const ProductCard = ({
         <Link href={productLink}>
           <div className="relative w-full aspect-square overflow-hidden">
             {displayImages.map((img, i) => (
-              <img
+              <Image
                 key={i}
                 src={img}
                 alt={product.alt_tags?.[i] || name}
+                fill
                 loading={i === 0 ? "eager" : "lazy"}
-                className="absolute inset-0 w-full h-full object-contain p-2 transition-opacity duration-500"
+                className="object-contain p-2 transition-opacity duration-500"
                 style={{ opacity: imgIndex === i ? 1 : 0 }}
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.opacity = "0";
                 }}
+                sizes="(max-width: 640px) 175px, (max-width: 1024px) 33vw, 20vw"
               />
             ))}
           </div>

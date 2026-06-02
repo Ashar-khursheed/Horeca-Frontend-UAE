@@ -12,17 +12,20 @@ function TickerBadge() {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
+    let fadeTimer: ReturnType<typeof setTimeout> | null = null;
+
     const timer = setInterval(() => {
-      setShow(false); // fade-out start
-
-      setTimeout(() => {
+      setShow(false);
+      fadeTimer = setTimeout(() => {
         setIdx((i) => (i + 1) % TICKER.length);
-        setShow(true); // fade-in start
-      }, 1500); // ← fade-out poora hone ka wait (= transition duration)
+        setShow(true);
+      }, 1500);
+    }, 2500);
 
-    }, 2500); // har 5s pe next text
-
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      if (fadeTimer) clearTimeout(fadeTimer);
+    };
   }, []);
 
   return (

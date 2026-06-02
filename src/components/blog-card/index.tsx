@@ -16,6 +16,7 @@ import React, { useState } from "react";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { ShareModal } from "@/components/share-modal";
+import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ApiBlog {
@@ -101,12 +102,16 @@ const parseDescription = (raw: any): string => {
   }
 };
 
-const decodeHtmlEntities = (text: string) => {
-  if (typeof window === "undefined") return text;
-
-  const txt = document.createElement("textarea");
-  txt.innerHTML = text;
-  return txt.value;
+const decodeHtmlEntities = (text: string): string => {
+  if (!text) return "";
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#039;/g, "'")
+    .replace(/&nbsp;/g, " ");
 };
 const stripHtml = (html: string) =>
   html
@@ -211,11 +216,13 @@ export const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
         style={{ aspectRatio: "16/10" }}
       >
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={imageAlt}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            fill
             loading="lazy"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (
           <div className="w-full h-full bg-gray-200" />

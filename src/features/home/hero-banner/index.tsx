@@ -140,6 +140,7 @@ export const HeroBanner = ({
           {/* ── Hero Swiper (all screens) ── */}
           <div className="w-full rounded-[7px] overflow-hidden h-full" style={{ aspectRatio: "875/380" }}>
             <Swiper
+              id="hero-main"
               modules={[Autoplay, Pagination, Navigation, EffectFade]}
               effect="fade"
               fadeEffect={{ crossFade: true }}
@@ -173,6 +174,7 @@ export const HeroBanner = ({
             {/* MOBILE ONLY — CTACard + activeSlidesTwo images */}
             <div className="block sm:hidden">
               <Swiper
+                id="hero-mobile"
                 modules={[Autoplay]}
                 autoplay={{ delay: 9000, disableOnInteraction: false, pauseOnMouseEnter: true }}
                 loop
@@ -189,22 +191,22 @@ export const HeroBanner = ({
                       {item.link ? (
                         <Link href={item.link} className="block w-full h-full outline-none">
                           <div className="relative w-full h-full">
-                            <img
-                              src={isValid ? item.image : NoImage.src}
+                            <Image
+                              src={isValid ? item.image : NoImage}
                               alt={item.title ?? "Banner"}
-                              // fill
-                              className="object-covers h-[200px]"
+                              fill
+                              className="object-cover h-[200px]"
                               sizes="100vw"
                             />
                           </div>
                         </Link>
                       ) : (
                         <div className="relative w-full h-full">
-                          <img
-                            src={isValid ? item.image : NoImage.src}
+                          <Image
+                            src={isValid ? item.image : NoImage}
                             alt={item.title ?? "Banner"}
-                            // fill
-                            className="object-covers h-[200px]"
+                            fill
+                            className="object-cover h-[200px]"
                             sizes="100vw"
                           />
                         </div>
@@ -221,6 +223,7 @@ export const HeroBanner = ({
               <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
               {/* </Link> */}
               <Swiper
+                  id="hero-tablet"
                   modules={[Autoplay, Pagination, EffectFade]}
                   effect="fade"
                   fadeEffect={{ crossFade: true }}
@@ -237,7 +240,7 @@ export const HeroBanner = ({
                           <Link href={item.link} className="block w-full h-full outline-none">
                             <div className="relative w-full h-full">
                               <Image
-                                src={isValid ? item.image : NoImage.src}
+                                src={isValid ? item.image : NoImage}
                                 alt={item.title ?? "Banner"}
                                 fill
                                 className="object-covera"
@@ -249,7 +252,7 @@ export const HeroBanner = ({
                         ) : (
                           <div className="relative w-full h-full">
                             <Image
-                              src={isValid ? item.image : NoImage.src}
+                              src={isValid ? item.image : NoImage}
                               alt={item.title ?? "Banner"}
                               fill
                               className="object-covera"
@@ -273,6 +276,7 @@ export const HeroBanner = ({
             
               <div className="w-full rounded-[7px] overflow-hidden h-full " style={{ aspectRatio: "875/380" }}>
                 <Swiper
+                  id="hero-desktop"
                   modules={[Autoplay, Pagination, EffectFade]}
                   effect="fade"
                   fadeEffect={{ crossFade: true }}
@@ -289,7 +293,7 @@ export const HeroBanner = ({
                           <Link href={item.link} className="block w-full h-full outline-none">
                             <div className="relative w-full h-full">
                               <Image
-                                src={isValid ? item.image : NoImage.src}
+                                src={isValid ? item.image : NoImage}
                                 alt={item.title ?? "Banner"}
                                 fill
                                 className="object-covera"
@@ -301,7 +305,7 @@ export const HeroBanner = ({
                         ) : (
                           <div className="relative w-full h-full">
                             <Image
-                              src={isValid ? item.image : NoImage.src}
+                              src={isValid ? item.image : NoImage}
                               alt={item.title ?? "Banner"}
                               fill
                               className="object-covera"
