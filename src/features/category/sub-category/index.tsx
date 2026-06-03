@@ -111,8 +111,8 @@ const SORT_OPTIONS = [
   "Default Sorting",
   "Price: Low to High",
   "Price: High to Low",
-  "Top Rated",
-  "Newest First",
+  // "Top Rated",
+  // "Newest First",
 ];
 
 const SHOW_OPTIONS = [20, 50, 100];
@@ -494,12 +494,12 @@ export default function SubCategoryPage({
                 pushURL({ sort: val });
               }}
             >
-              <SelectTrigger className="h-7 text-[12px] border-gray-200 px-2 bg-white cursor-pointer min-w-35">
+              <SelectTrigger className="h-7 text-[1px] border-gray-200 px-2 bg-white cursor-pointer min-w-35">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {SORT_OPTIONS.map((opt) => (
-                  <SelectItem key={opt} value={opt}>
+                  <SelectItem key={opt} value={opt} className="text-[10px]">
                     {opt}
                   </SelectItem>
                 ))}
@@ -583,7 +583,7 @@ export default function SubCategoryPage({
                       </SelectTrigger>
                       <SelectContent>
                         {SORT_OPTIONS.map((opt) => (
-                          <SelectItem key={opt} value={opt}>
+                          <SelectItem key={opt} value={opt} className="text-[12px]">
                             {opt}
                           </SelectItem>
                         ))}

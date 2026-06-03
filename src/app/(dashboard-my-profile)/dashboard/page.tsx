@@ -307,7 +307,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Quick Actions + Recent Quotes ─────────────────────────────── */}
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px]s gap-6">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-bold text-gray-900 flex items-center gap-2">
@@ -357,7 +357,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 hidden">
               <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                   <h2 className="font-bold text-gray-900 text-sm flex items-center gap-2">
@@ -417,80 +417,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── Recent Orders ──────────────────────────────────────────────── */}
-          {/* <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
-              <h2 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                <ShoppingBag size={14} className="text-[#186737]" />
-                Recent Orders
-              </h2>
-              <Link href="/dashboard/orders" className="flex items-center gap-1 text-xs text-[#186737] font-semibold hover:underline">
-                View all orders <ArrowRight size={12} />
-              </Link>
-            </div>
-
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    {["Order ID", "Product", "Date", "Amount", "Status", ""].map((h) => (
-                      <th key={h} className="text-left text-[11px] font-bold text-gray-500 uppercase tracking-wide px-5 py-3">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {RECENT_ORDERS.map((order) => {
-                    const StatusIcon = order.statusIcon;
-                    return (
-                      <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="px-5 py-4 text-xs font-bold text-[#186737]">{order.id}</td>
-                        <td className="px-5 py-4 text-sm text-gray-700 font-medium max-w-[280px]">
-                          <span className="line-clamp-1">{order.product}</span>
-                        </td>
-                        <td className="px-5 py-4 text-xs text-gray-500 whitespace-nowrap">{order.date}</td>
-                        <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">{order.amount}</td>
-                        <td className="px-5 py-4">
-                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full ${order.statusColor}`}>
-                            <StatusIcon size={11} />
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <button className="text-xs text-[#186737] font-semibold opacity-0 group-hover:opacity-100 hover:underline transition-opacity flex items-center gap-1">
-                            <Eye size={13} /> View
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="md:hidden divide-y divide-gray-50">
-              {RECENT_ORDERS.map((order) => {
-                const StatusIcon = order.statusIcon;
-                return (
-                  <div key={order.id} className="px-4 py-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-[#186737]">{order.id}</span>
-                      <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${order.statusColor}`}>
-                        <StatusIcon size={10} />
-                        {order.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 font-medium line-clamp-1">{order.product}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-gray-400">{order.date}</p>
-                      <p className="text-sm font-bold text-gray-900">{order.amount}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div> */}
+       
 
         </div>
       </div>

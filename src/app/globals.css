@@ -374,9 +374,9 @@ img {
    padding: 40px 15px;
   }
 }
-@media only screen and (max-width: 1580px) and (min-width: 1030px) {
+/* @media only screen and (max-width: 1580px) and (min-width: 1030px) {
   .global-container {
-    @apply max-w-[1480px] mx-auto px-[10px];
+    @apply max-w-[1480px] mx-auto px-[15px];
   }
 
   .responsive-text {
@@ -385,7 +385,7 @@ img {
  .custom-padding{
    padding: 40px 15px;
   }
-}
+} */
 
 @media only screen and (max-width: 1024px) {
   .responsive-text {
