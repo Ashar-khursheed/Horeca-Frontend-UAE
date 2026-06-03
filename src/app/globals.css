@@ -50,7 +50,7 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-    --breakpoint-3xl: 1920px;
+    --breakpoint-3xl: 1860px;
 }
 
 :root {
@@ -365,6 +365,18 @@ img {
 @media only screen and (max-width: 1580px) {
   .global-container {
     @apply max-w-[1480px] mx-auto px-[40px];
+  }
+
+  .responsive-text {
+    @apply text-[14px];
+  }
+ .custom-padding{
+   padding: 40px 15px;
+  }
+}
+@media only screen and (max-width: 1580px) and (min-width: 1030px) {
+  .global-container {
+    @apply max-w-[1480px] mx-auto px-[10px];
   }
 
   .responsive-text {

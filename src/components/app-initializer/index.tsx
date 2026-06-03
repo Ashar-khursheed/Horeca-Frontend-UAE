@@ -51,7 +51,7 @@ export default function AppInitializer() {
 
   // Profile: only fetch if token cookie exists
   useEffect(() => {
-    const token = document.cookie.split("; ").find((c) => c.startsWith("token="))?.split("=")[1]?.trim();
+    const token = localStorage.getItem("token")?.trim();
     if (token) {
       dispatch(fetchProfile());
     } else {

@@ -32,7 +32,7 @@ export const loginUser = createAsyncThunk(
       });
       setAuthToken(res.token);
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("user", JSON.stringify(res.customer));
+        localStorage.setItem("user", JSON.stringify(res.customer));
       }
       dispatch(setProfile(res.customer));
       return res.customer;

@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
 const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
   try {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("token");
     if (!token) return null;
     return token.trim().replace(/^["']|["']$/g, "");
   } catch {
@@ -28,7 +28,7 @@ export const setAuthToken = (token: string): void => {
   if (typeof window === "undefined") return;
   const clean = token.trim().replace(/^["']|["']$/g, "");
   const loginTime = Date.now().toString();
-  sessionStorage.setItem("token", clean);
+  localStorage.setItem("token", clean);
   localStorage.setItem("login_time", loginTime);
   document.cookie = `token=${clean}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
   document.cookie = `login_time=${loginTime}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
@@ -36,8 +36,8 @@ export const setAuthToken = (token: string): void => {
 
 export const removeAuthToken = (): void => {
   if (typeof window === "undefined") return;
-  sessionStorage.removeItem("token");
-  sessionStorage.removeItem("user");
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
   localStorage.removeItem("login_time");
   document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
   document.cookie = "login_time=; path=/; max-age=0; SameSite=Lax";
