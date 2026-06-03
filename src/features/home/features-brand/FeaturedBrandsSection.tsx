@@ -1,7 +1,7 @@
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { FeaturedCategory } from "@/utils/types";
-import FeaturedBrands from ".";
+import FeaturedBrandsClient from "./FeaturedBrandsClient";
 
 export async function FeaturedBrandsSection() {
   const res = await makeApiCallSSR<{ data: FeaturedCategory[] }>(
@@ -9,5 +9,5 @@ export async function FeaturedBrandsSection() {
     {},
     { revalidate: 3600 },
   );
-  return <FeaturedBrands products={res?.data ?? []} />;
+  return <FeaturedBrandsClient products={res?.data ?? []} />;
 }
