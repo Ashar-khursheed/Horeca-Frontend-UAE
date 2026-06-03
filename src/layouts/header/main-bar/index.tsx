@@ -220,7 +220,7 @@ export default function NavigationStatic({ navItemData = [] }: { navItemData?: C
                 <span className="text-[10px] text-gray-400 leading-none">Deliver To</span>
                 {locationData ? (
                   <span className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-[110px]">
-                    {locationData.city}, {locationData.country}
+                    {locationData.city}, {locationData.countryCode}
                   </span>
                 ) : (
                   <span className="w-20 h-3 bg-gray-200 animate-pulse rounded inline-block" />
@@ -253,14 +253,14 @@ export default function NavigationStatic({ navItemData = [] }: { navItemData?: C
 
               {/* ── Search Panel ── */}
               {searchFocused && (
-                <div
+               <div
                   onMouseDown={(e) => e.preventDefault()}
-                  className="absolute top-[calc(100%+10px)] left-0 right-0 bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden"
+                  className="absolute top-[calc(100%+10px)] left-0 right-0 bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden "
                 >
                   <div className="flex">
                     {/* Left col */}
-                    <div className="w-[55%] bg-[#f8fafc] border-r border-gray-100 flex flex-col">
-                      <div className="px-5 pt-5 pb-4">
+                    <div className="w-full xl:w-[55%] bg-[#f8fafc] xl:border-r border-gray-100 flex flex-col">
+                      <div className="px-3.5 pt-3.5 pb-4">
                         <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3">
                           Product Suggestions
                         </p>
@@ -303,8 +303,8 @@ export default function NavigationStatic({ navItemData = [] }: { navItemData?: C
                       </div>
                     </div>
 
-                    {/* Right col */}
-                    <div className="flex-1 p-5 overflow-y-auto max-h-[460px]">
+                    {/* Right col — only on xl (1280px+) */}
+                    <div className="flex-1 xl:block hidden p-3.5 overflow-y-auto max-h-115">
                       <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-4">Trending Products</p>
                       <ul className="space-y-2.5">
                         {[
@@ -317,13 +317,13 @@ export default function NavigationStatic({ navItemData = [] }: { navItemData?: C
                             <div className="w-[62px] h-[62px] rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex-shrink-0 border border-gray-100" />
                             <div className="flex-1 min-w-0 flex flex-col justify-between">
                               <p className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors">{name}</p>
-                              <div className="flex items-center lg:flex-col xl:flex-row  gap-2 mt-2">
+                              <div className="flex items-center flex-row gap-2 mt-2">
                                 <div className="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white">
                                   <button className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 text-sm font-bold transition-colors" onClick={() => updateQty(i, -1)}>−</button>
                                   <span className="w-6 text-center text-xs font-semibold text-gray-800 select-none">{quantities[i]}</span>
                                   <button className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 text-sm font-bold transition-colors" onClick={() => updateQty(i, 1)}>+</button>
                                 </div>
-                                <button className="flex-1 h-7 rounded-lg bg-[#e8f5ee] text-[#186737] text-xs font-semibold hover:bg-[#186737] hover:text-white transition-all">Add To Cart</button>
+                                <button className="flex-1 h-7 rounded-lg bg-[#e8f5ee] text-[#186737] text-xs font-semibold hover:bg-[#186737] hover:text-white transition-all whitespace-nowrap">Add To Cart</button>
                               </div>
                             </div>
                           </li>
