@@ -3,7 +3,7 @@
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { setLocation } from "@/store/slices/location/locationSlice";
 import type { LocationData } from "@/store/slices/location/locationSlice";
-import { fetchProfile } from "@/store/slices/my-profile/profileSlice";
+import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useEffect } from "react";
@@ -49,9 +49,14 @@ export default function AppInitializer() {
       .catch(() => {});
   }, [dispatch]);
 
-  // Profile: CSR fetch — token is read by axios interceptors
+  // Profile: only fetch if token cookie exists
   useEffect(() => {
-    dispatch(fetchProfile());
+    const token = document.cookie.split("; ").find((c) => c.startsWith("token="))?.split("=")[1]?.trim();
+    if (token) {
+      dispatch(fetchProfile());
+    } else {
+      dispatch(setLoading(false));
+    }
   }, [dispatch]);
 
   // Country: derive from Redux location once available
