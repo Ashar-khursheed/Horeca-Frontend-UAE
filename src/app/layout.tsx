@@ -53,7 +53,11 @@ export default async function RootLayout({
 
   const initialProfile = profileRes?.customer ?? null;
   const navItemData = navData?.data ?? [];
- 
+ console.log(
+  "Nav Size:",
+  (JSON.stringify(navItemData).length / 1024).toFixed(2),
+  "KB"
+);
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <head>

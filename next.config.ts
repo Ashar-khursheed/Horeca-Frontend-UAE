@@ -29,7 +29,6 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['lucide-react', 'swiper', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
   },
 };
