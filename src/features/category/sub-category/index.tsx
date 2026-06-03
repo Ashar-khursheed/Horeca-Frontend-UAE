@@ -138,7 +138,7 @@ export default function SubCategoryPage({
       .map((f) => [f.attribute_id, f.unit_id as number])
   );
   const products = productsData?.products ?? [];
-  const totalProducts = productsData?.total ?? products.length;
+  const totalProducts = productsData?.total_records ?? products.length;
   const totalPages = (productsData?.total_pages ?? Math.ceil(totalProducts / 20)) || 1;
 
   // Children of the currently active subcategory shown in the swiper
@@ -164,8 +164,10 @@ export default function SubCategoryPage({
     const colonIdx = entry.indexOf(":");
     return { id: Number(entry.slice(0, colonIdx)), name: entry.slice(colonIdx + 1) };
   });
-  const initMin = searchParams.get("min") ? Number(searchParams.get("min")) : apiPriceMin;
-  const initMax = searchParams.get("max") ? Number(searchParams.get("max")) : apiPriceMax;
+  const rawMin = searchParams.get("min") ? Number(searchParams.get("min")) : apiPriceMin;
+  const rawMax = searchParams.get("max") ? Number(searchParams.get("max")) : apiPriceMax;
+  const initMin = Math.max(apiPriceMin, Math.min(rawMin, apiPriceMax));
+  const initMax = Math.min(apiPriceMax, Math.max(rawMax, apiPriceMin));
   const initRF = searchParams.get("rf") ? decodeRF(searchParams.get("rf")!) : {};
   const initFF = searchParams.get("ff") ? decodeFF(searchParams.get("ff")!) : {};
 
@@ -206,7 +208,7 @@ export default function SubCategoryPage({
       if (parentSlug)    parts.push(`parent=${parentSlug}`);
       if (brands.length) parts.push("brands=" + brands.map((b) => `${b.id}:${b.name.replace(/ /g, "+")}`).join(","));
       if (min !== apiPriceMin) parts.push(`min=${min}`);
-      if (max !== apiPriceMax) parts.push(`max=${max}`);
+      if (max !== apiPriceMax || min !== apiPriceMin) parts.push(`max=${max}`);
       if (sort !== "Default Sorting") parts.push(`sort=${encodeURIComponent(sort).replace(/%20/g, "+")}`);
       if (show !== 20)   parts.push(`show=${show}`);
       if (page > 1)      parts.push(`page=${page}`);
@@ -433,10 +435,16 @@ export default function SubCategoryPage({
 
               <div className="flex items-center gap-3 justify-between">
                 <span className="text-[12px] text-gray-400 hidden sm:block">
-                  Showing{" "}
-                  <span className="font-semibold text-gray-700">{totalProducts}</span>{" "}
-                  results
-                </span>
+  Showing{" "}
+  <span className="font-semibold text-gray-700">
+    {products.length}
+  </span>{" "}
+  of{" "}
+  <span className="font-semibold text-gray-700">
+    {totalProducts}
+  </span>{" "}
+  products
+</span>
                 <div className="flex items-center gap-4">
                   <div className="hidden md:flex items-center gap-1.5">
                     <span className="text-[11px] text-gray-400">Sort:</span>

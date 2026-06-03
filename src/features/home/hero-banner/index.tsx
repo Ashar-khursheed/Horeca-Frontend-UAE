@@ -160,6 +160,7 @@ export const HeroBanner = ({
                         className="object-cover"
                         priority={index === 0}
                         sizes="(max-width: 1024px) 100vw, 70vw"
+                             fetchPriority="high"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     </div>
@@ -178,7 +179,7 @@ export const HeroBanner = ({
                 modules={[Autoplay]}
                 autoplay={{ delay: 9000, disableOnInteraction: false, pauseOnMouseEnter: true }}
                 loop
-                className="w-full h-full rounded-[7px] overflow-hidden"
+                className="w-full rounded-[7px] overflow-hidden"
               >
                 <SwiperSlide>
                   <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
@@ -189,25 +190,27 @@ export const HeroBanner = ({
                   return (
                     <SwiperSlide key={item.id}>
                       {item.link ? (
-                        <Link href={item.link} className="block w-full h-full outline-none">
-                          <div className="relative w-full h-full">
+                        <Link href={item.link} className="block w-full outline-none">
+                          <div className="relative w-full h-50">
                             <Image
                               src={isValid ? item.image : NoImage}
                               alt={item.title ?? "Banner"}
                               fill
-                              className="object-cover h-[200px]"
+                              className="object-covers"
                               sizes="100vw"
+                              fetchPriority="high"
                             />
                           </div>
                         </Link>
                       ) : (
-                        <div className="relative w-full h-full">
+                        <div className="relative w-full h-50">
                           <Image
                             src={isValid ? item.image : NoImage}
                             alt={item.title ?? "Banner"}
                             fill
-                            className="object-cover h-[200px]"
+                            className="object-covers"
                             sizes="100vw"
+                                 fetchPriority="high"
                           />
                         </div>
                       )}
@@ -245,6 +248,7 @@ export const HeroBanner = ({
                                 fill
                                 className="object-covera"
                                 sizes="50vw"
+                                fetchPriority="high"
                               />
                               {isValid && <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />}
                             </div>
@@ -257,6 +261,7 @@ export const HeroBanner = ({
                               fill
                               className="object-covera"
                               sizes="50vw"
+                                   fetchPriority="high"
                             />
                           </div>
                         )}
@@ -298,6 +303,7 @@ export const HeroBanner = ({
                                 fill
                                 className="object-covera"
                                 sizes="30vw"
+                                     fetchPriority="high"
                               />
                               {isValid && <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />}
                             </div>
@@ -310,6 +316,7 @@ export const HeroBanner = ({
                               fill
                               className="object-covera"
                               sizes="30vw"
+                                   fetchPriority="high"
                             />
                           </div>
                         )}

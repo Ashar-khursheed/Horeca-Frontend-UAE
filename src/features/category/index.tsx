@@ -140,7 +140,6 @@ export default function CategoriesPage({
   // category data page
 
   const APIDATA = categoryPage?.category_page;
-  console.log("Rendering category page with slug:", brands);
 
   const crumbs = [
     { label: "Home", href: "/" },
@@ -210,9 +209,9 @@ export default function CategoriesPage({
                 className="rounded-[7px]"
               />
             </div> */}
-              {APIDATA?.explore_section_image_details.map((img, index) => (
+              {APIDATA?.explore_section_image_details?.map((img, index) => (
                 <div key={index}>
-                  <Link href={img.url}>
+                  <Link href={img.url || "#"}>
                   <img
                     src={img.image_url}
                     alt={img.alt}

@@ -24,8 +24,8 @@ interface PageProps {
 const SORT_MAP: Record<string, { sort_by: string; sort_dir: string }> = {
   "Price: Low to High": { sort_by: "price",      sort_dir: "asc"  },
   "Price: High to Low": { sort_by: "price",      sort_dir: "desc" },
-  "Top Rated":          { sort_by: "avg_rating", sort_dir: "desc" },
-  "Newest First":       { sort_by: "created_at", sort_dir: "desc" },
+  // "Top Rated":          { sort_by: "avg_rating", sort_dir: "desc" },
+  // "Newest First":       { sort_by: "created_at", sort_dir: "desc" },
 }
 
 const buildFilterBody = (slug: string) => ({
@@ -123,11 +123,12 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     });
   }
 
-  console.log("[RAW PARAMS]", { minParam, maxParam, rfParam, ffParam, brandsParam });
+  // console.log("[RAW PARAMS]", { minParam, maxParam, rfParam, ffParam, brandsParam });
 
-  const priceFilter = minParam && maxParam
-    ? { priceRange: { min_price: minParam, max_price: maxParam } }
-    : {};
+  const priceRange: { min_price?: string; max_price?: string } = {};
+  if (minParam) priceRange.min_price = minParam;
+  if (maxParam) priceRange.max_price = maxParam;
+  const priceFilter = Object.keys(priceRange).length ? { priceRange } : {};
 
   const appliedFilters = {
     ...(brandIds.length ? { brand_ids: brandIds } : {}),
@@ -178,6 +179,7 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
 
   console.log("API Payload:", productsBody)
   console.log("Products API Response:", productsRes)
+  console.log("Sub Category Page Response:", subCategoryPageRes)
 
   return (
     <div>
