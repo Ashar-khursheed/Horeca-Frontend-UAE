@@ -7,7 +7,7 @@ import type { ApiCategory } from "@/utils/types";
 import { FeaturedProductsSection } from "./feature-product/FeaturedProductsSection";
 import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
 import { BlogsSection } from "./BlogsSection";
-
+import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 const ProductsSkeleton = () => (
   <div className="animate-pulse w-full bg-white py-5">
     <div className="global-container">
@@ -52,11 +52,10 @@ export const Home = ({
         <div className="global-container">
           <div className="grid grid-cols-1">
             <Image
-              src="https://www.thehorecastore.com/images/Banners/Food%20Truck/Hero%20Banner.webp"
+              src={FoodTruckBanner}
               alt="Food Truck Banner"
-              width={1200}
-              height={400}
-              loading="lazy"
+              priority
+              // loading="lazy"
               className="rounded-[7px] w-full h-auto"
               sizes="100vw"
               decoding="async"

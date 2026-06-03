@@ -1,8 +1,3 @@
-
-
-
-
-
 "use client";
 
 import BannerImg from "@/assets/Desktop/True Refrigeration.webp";
@@ -131,27 +126,40 @@ export const HeroBanner = ({
 }) => {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const activeSlides = slides.length > 0 ? slides : FALLBACK_SLIDES;
-  const activeSlidesTwo = sliderItemsTwo && sliderItemsTwo.length > 0 ? sliderItemsTwo : FALLBACK_SLIDES;
+  const activeSlidesTwo =
+    sliderItemsTwo && sliderItemsTwo.length > 0
+      ? sliderItemsTwo
+      : FALLBACK_SLIDES;
 
   return (
     <>
       <section className="global-container mt-3 sm:mt-6">
         <div className="flex flex-col lg:grid lg:grid-cols-[70%_30%] gap-3 lg:gap-4">
           {/* ── Hero Swiper (all screens) ── */}
-          <div className="w-full rounded-[7px] overflow-hidden h-full" style={{ aspectRatio: "875/380" }}>
+          <div
+            className="w-full rounded-[7px] overflow-hidden h-full"
+            style={{ aspectRatio: "875/380" }}
+          >
             <Swiper
               id="hero-main"
               modules={[Autoplay, Pagination, Navigation, EffectFade]}
               effect="fade"
               fadeEffect={{ crossFade: true }}
-              autoplay={{ delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
               pagination={{ clickable: true }}
               loop
               className="w-full h-full"
             >
               {activeSlides.map((banner, index) => (
                 <SwiperSlide key={banner.id}>
-                  <Link href={banner.link} className="block w-full h-full outline-none">
+                  <Link
+                    href={banner.link}
+                    className="block w-full h-full outline-none"
+                  >
                     <div className="relative w-full h-full">
                       <Image
                         src={banner.image}
@@ -159,8 +167,10 @@ export const HeroBanner = ({
                         fill
                         className="object-cover"
                         priority={index === 0}
-                        sizes="(max-width: 1024px) 100vw, 70vw"
-                             fetchPriority="high"
+                        // sizes="(max-width: 1024px) 100vw, 70vw"
+                        fetchPriority="high"
+                         sizes="100vw"
+                         quality={85}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     </div>
@@ -177,7 +187,11 @@ export const HeroBanner = ({
               <Swiper
                 id="hero-mobile"
                 modules={[Autoplay]}
-                autoplay={{ delay: 9000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+                autoplay={{
+                  delay: 9000,
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
+                }}
                 loop
                 className="w-full rounded-[7px] overflow-hidden"
               >
@@ -190,7 +204,10 @@ export const HeroBanner = ({
                   return (
                     <SwiperSlide key={item.id}>
                       {item.link ? (
-                        <Link href={item.link} className="block w-full outline-none">
+                        <Link
+                          href={item.link}
+                          className="block w-full outline-none"
+                        >
                           <div className="relative w-full h-50">
                             <Image
                               src={isValid ? item.image : NoImage}
@@ -199,6 +216,7 @@ export const HeroBanner = ({
                               className="object-covers"
                               sizes="100vw"
                               fetchPriority="high"
+                              
                             />
                           </div>
                         </Link>
@@ -210,7 +228,7 @@ export const HeroBanner = ({
                             fill
                             className="object-covers"
                             sizes="100vw"
-                                 fetchPriority="high"
+                            fetchPriority="high"
                           />
                         </div>
                       )}
@@ -226,34 +244,28 @@ export const HeroBanner = ({
               <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
               {/* </Link> */}
               <Swiper
-                  id="hero-tablet"
-                  modules={[Autoplay, Pagination, EffectFade]}
-                  effect="fade"
-                  fadeEffect={{ crossFade: true }}
-                  autoplay={{ delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true }}
-                  pagination={{ clickable: true }}
-                  loop={activeSlidesTwo.length > 1}
-                  className="w-full h-full"
-                >
-                  {activeSlidesTwo.map((item) => {
-                    const isValid = item.image?.startsWith("http");
-                    return (
-                      <SwiperSlide key={item.id}>
-                        {item.link ? (
-                          <Link href={item.link} className="block w-full h-full outline-none">
-                            <div className="relative w-full h-full">
-                              <Image
-                                src={isValid ? item.image : NoImage}
-                                alt={item.title ?? "Banner"}
-                                fill
-                                className="object-covera"
-                                sizes="50vw"
-                                fetchPriority="high"
-                              />
-                              {isValid && <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />}
-                            </div>
-                          </Link>
-                        ) : (
+                id="hero-tablet"
+                modules={[Autoplay, Pagination, EffectFade]}
+                effect="fade"
+                fadeEffect={{ crossFade: true }}
+                autoplay={{
+                  delay: 3000,
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
+                }}
+                pagination={{ clickable: true }}
+                loop={activeSlidesTwo.length > 1}
+                className="w-full h-full"
+              >
+                {activeSlidesTwo.map((item) => {
+                  const isValid = item.image?.startsWith("http");
+                  return (
+                    <SwiperSlide key={item.id}>
+                      {item.link ? (
+                        <Link
+                          href={item.link}
+                          className="block w-full h-full outline-none"
+                        >
                           <div className="relative w-full h-full">
                             <Image
                               src={isValid ? item.image : NoImage}
@@ -261,31 +273,51 @@ export const HeroBanner = ({
                               fill
                               className="object-covera"
                               sizes="50vw"
-                                   fetchPriority="high"
+                              fetchPriority="high"
                             />
+                            {isValid && (
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                            )}
                           </div>
-                        )}
-                      </SwiperSlide>
-                    );
-                  })}
-                </Swiper>
+                        </Link>
+                      ) : (
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={isValid ? item.image : NoImage}
+                            alt={item.title ?? "Banner"}
+                            fill
+                            className="object-covera"
+                            sizes="50vw"
+                            fetchPriority="high"
+                          />
+                        </div>
+                      )}
+                    </SwiperSlide>
+                  );
+                })}
+              </Swiper>
             </div>
 
             {/* DESKTOP (lg+) — stacked layout */}
             <div className="hidden lg:grid grid-rows-[auto_auto] h-full gap-3">
-             
-
               <div className="no-underline flex-11s bg-[#e2e8f033] flex justify-between items-center">
                 <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
               </div>
-            
-              <div className="w-full rounded-[7px] overflow-hidden h-full " style={{ aspectRatio: "875/380" }}>
+
+              <div
+                className="w-full rounded-[7px] overflow-hidden h-full "
+                style={{ aspectRatio: "875/380" }}
+              >
                 <Swiper
                   id="hero-desktop"
                   modules={[Autoplay, Pagination, EffectFade]}
                   effect="fade"
                   fadeEffect={{ crossFade: true }}
-                  autoplay={{ delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+                  autoplay={{
+                    delay: 3000,
+                    disableOnInteraction: false,
+                    pauseOnMouseEnter: true,
+                  }}
                   pagination={{ clickable: true }}
                   loop={activeSlidesTwo.length > 1}
                   className="w-full h-full"
@@ -295,7 +327,10 @@ export const HeroBanner = ({
                     return (
                       <SwiperSlide key={item.id}>
                         {item.link ? (
-                          <Link href={item.link} className="block w-full h-full outline-none">
+                          <Link
+                            href={item.link}
+                            className="block w-full h-full outline-none"
+                          >
                             <div className="relative w-full h-full">
                               <Image
                                 src={isValid ? item.image : NoImage}
@@ -303,9 +338,11 @@ export const HeroBanner = ({
                                 fill
                                 className="object-covera"
                                 sizes="30vw"
-                                     fetchPriority="high"
+                                fetchPriority="high"
                               />
-                              {isValid && <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />}
+                              {isValid && (
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                              )}
                             </div>
                           </Link>
                         ) : (
@@ -316,7 +353,7 @@ export const HeroBanner = ({
                               fill
                               className="object-covera"
                               sizes="30vw"
-                                   fetchPriority="high"
+                              fetchPriority="high"
                             />
                           </div>
                         )}
