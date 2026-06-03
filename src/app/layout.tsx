@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import NextTopLoader from "nextjs-toploader";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -54,7 +55,7 @@ export default async function RootLayout({
  
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
-      <link
+      {/* <link
         rel="stylesheet"
         type="text/css"
         charSet="UTF-8"
@@ -66,7 +67,7 @@ export default async function RootLayout({
         type="text/css"
         precedence="default"
         href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
-      />
+      /> */}
 
       <body suppressHydrationWarning>
         <NextTopLoader

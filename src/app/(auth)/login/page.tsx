@@ -86,7 +86,7 @@ export default function LoginPage() {
       setApiError("");
       try {
         await dispatch(
-          loginUser({ email: values.email.trim(), password: values.password })
+          loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
         const redirect = searchParams.get("redirect") ?? "/";
         router.push(redirect);
@@ -94,7 +94,8 @@ export default function LoginPage() {
         const msg =
           typeof err === "string"
             ? err
-            : (err as { message?: string })?.message ?? "Invalid email or password.";
+            : ((err as { message?: string })?.message ??
+              "Invalid email or password.");
         setApiError(msg);
       } finally {
         setLoading(false);
@@ -107,11 +108,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screens md:py-12 py-0 md:bg-gray-50 bg-white flex flex-col">
-
       {/* ── Main ──────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex items-center justify-center py-10 px-4 pt-">
         <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white">
-
           {/* ── LEFT – Brand Panel ─────────────────────────────────────────── */}
           <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-[#186737] via-[#1a7a3f] to-[#0f4d26] p-10 relative overflow-hidden">
             {/* Background pattern */}
@@ -123,7 +122,7 @@ export default function LoginPage() {
                     className="absolute w-20 h-20 rounded-full border-2 border-white"
                     style={{ top: r * 90 - 20, left: c * 110 - 20 }}
                   />
-                ))
+                )),
               )}
             </div>
 
@@ -156,48 +155,6 @@ export default function LoginPage() {
                 recommendations — all in one place.
               </p>
             </div>
-
-            {/* Feature list */}
-            {/* <div className="relative z-10 space-y-3">
-              {[
-                "Track & manage all your orders",
-                "Save items to wishlist",
-                "Request custom quotations",
-                "Exclusive deals for members",
-              ].map((text) => (
-                <div key={text} className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 10 10"
-                      fill="none"
-                    >
-                      <path
-                        d="M2 5l2.5 2.5L8 3"
-                        stroke="white"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <span className="text-white/80 text-sm">{text}</span>
-                </div>
-              ))}
-            </div> */}
-
-            {/* Trust badges row */}
-            {/* <div className="relative z-10 flex items-center gap-6 pt-6 border-t border-white/10">
-              {["VISA", "MC", "SSL", "PCI"].map((b) => (
-                <span
-                  key={b}
-                  className="text-[9px] font-black border border-white/25 rounded px-2 py-1 text-white/60 tracking-widest"
-                >
-                  {b}
-                </span>
-              ))}
-            </div> */}
           </div>
 
           {/* ── RIGHT – Form Panel ─────────────────────────────────────────── */}
@@ -219,7 +176,11 @@ export default function LoginPage() {
               Sign in for faster checkout.
             </p>
 
-            <form onSubmit={formik.handleSubmit} noValidate className="space-y-4">
+            <form
+              onSubmit={formik.handleSubmit}
+              noValidate
+              className="space-y-4"
+            >
               {/* Email */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
@@ -312,7 +273,12 @@ export default function LoginPage() {
                       />
                       <div className="w-4 h-4 rounded border-2 border-gray-300 peer-checked:border-[#186737] peer-checked:bg-[#186737] transition-all flex items-center justify-center">
                         {formik.values.consent && (
-                          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                          <svg
+                            width="9"
+                            height="9"
+                            viewBox="0 0 9 9"
+                            fill="none"
+                          >
                             <path
                               d="M1.5 4.5l2 2L7.5 2"
                               stroke="white"
@@ -325,12 +291,23 @@ export default function LoginPage() {
                       </div>
                     </div>
                     <span className="text-[11px] text-gray-500 leading-relaxed">
-                    By submitting this form, you consent to receive promotional offers from Horecastore at the number provided. Consent is not a condition of purchase. Message & data rates may apply. Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers aren't shared with third parties.
-                      <Link href="/privacy-policy" className="text-[#186737] hover:underline">
+                      By submitting this form, you consent to receive
+                      promotional offers from Horecastore at the number
+                      provided. Consent is not a condition of purchase. Message
+                      & data rates may apply. Message frequency varies.
+                      Unsubscribe by replying STOP. Reply HELP for help. Phone
+                      numbers aren't shared with third parties.
+                      <Link
+                        href="/privacy-policy"
+                        className="text-[#186737] hover:underline"
+                      >
                         Privacy Policy
                       </Link>{" "}
                       &{" "}
-                      <Link href="/terms" className="text-[#186737] hover:underline">
+                      <Link
+                        href="/terms"
+                        className="text-[#186737] hover:underline"
+                      >
                         Terms and Conditions
                       </Link>
                       .
@@ -385,12 +362,6 @@ export default function LoginPage() {
               </Link>
             </p>
 
-            {/* Trust badges */}
-            {/* <div className="flex items-center justify-center gap-6 mt-7 pt-6 border-t border-gray-100">
-              <TrustBadge icon={ShieldCheck} label="Secure Login" />
-              <TrustBadge icon={Truck} label="Fast Delivery" />
-              <TrustBadge icon={RotateCcw} label="Easy Returns" />
-            </div> */}
           </div>
         </div>
       </main>
