@@ -89,6 +89,7 @@ const resolveCurrencySymbol = (c: CurrencyField): string => {
 interface ProductCardProps {
   product: ApiProduct | RawApiProduct;
   newUrl?: string;
+  aboveFold?: boolean;
   onAddToCart?: (product: ApiProduct | RawApiProduct, quantity: number) => void;
   onWishlistToggle?: (product: ApiProduct | RawApiProduct, inWishlist: boolean) => void;
 }
@@ -198,6 +199,7 @@ export const AddToCartButton = ({
 export const ProductCard = ({
   product,
   newUrl = "products",
+  aboveFold = false,
   onAddToCart,
   onWishlistToggle,
 }: ProductCardProps) => {
@@ -240,10 +242,16 @@ export const ProductCard = ({
   const images = images_.length > 0 ? images_ : ["/placeholder.png"];
   const hasMultipleImages = images.length > 1;
   const [imgIndex, setImgIndex] = useState(0);
+  const [showHoverImages, setShowHoverImages] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasHoveredRef = useRef(false);
 
   const startSlide = useCallback(() => {
     if (!hasMultipleImages) return;
+    if (!hasHoveredRef.current) {
+      hasHoveredRef.current = true;
+      setShowHoverImages(true);
+    }
     intervalRef.current = setInterval(() => {
       setImgIndex((prev) => (prev + 1) % Math.min(images.length, 5));
     }, 900);
@@ -307,6 +315,7 @@ export const ProductCard = ({
     ? product.url
     : `/${product.parent_category_url ?? newUrl}/${product.url}`;
   const displayImages = images.slice(0, 5);
+  const visibleImages = showHoverImages ? displayImages : displayImages.slice(0, 1);
 
   return (
     <div
@@ -341,13 +350,14 @@ export const ProductCard = ({
         {/* Product images */}
         <Link href={productLink}>
           <div className="relative w-full aspect-square overflow-hidden">
-            {displayImages.map((img, i) => (
+            {visibleImages.map((img, i) => (
               <Image
-                key={i}
+                key={img}
                 src={img}
                 alt={product.alt_tags?.[i] || name}
                 fill
-                loading={i === 0 ? "eager" : "lazy"}
+                priority={aboveFold && i === 0}
+                loading={aboveFold && i === 0 ? "eager" : "lazy"}
                 className="object-contain p-2 transition-opacity duration-500"
                 style={{ opacity: imgIndex === i ? 1 : 0 }}
                 onError={(e) => {

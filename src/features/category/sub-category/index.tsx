@@ -520,7 +520,9 @@ export default function SubCategoryPage({
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
               {isPending
                 ? Array.from({ length: showCount }).map((_, i) => <ProductCardSkeleton key={i} />)
-                : products.map((product: any) => <ProductCard key={product.id} product={product} />)
+                : products.map((product: any, index: number) => (
+                    <ProductCard key={product.id} product={product} aboveFold={index < 8} />
+                  ))
               }
             </div>
 

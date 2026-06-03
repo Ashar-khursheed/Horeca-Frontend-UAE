@@ -10,8 +10,20 @@ import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
 import { BlogsSection } from "./BlogsSection";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 
-// Swiper is 219KB — code-split so it doesn't block initial paint
-const HeroBanner = dynamic(() => import("./hero-banner"), { ssr: true });
+const HeroBannerSkeleton = () => (
+  <section className="global-container mt-3 sm:mt-6">
+    <div className="flex flex-col lg:grid lg:grid-cols-[70%_30%] gap-3 lg:gap-4">
+      <div className="w-full rounded-[7px] bg-gray-200 animate-pulse" style={{ aspectRatio: "875/380" }} />
+      <div className="hidden lg:block rounded-[7px] bg-gray-100 animate-pulse" style={{ aspectRatio: "875/380" }} />
+    </div>
+  </section>
+);
+
+// Swiper is 219KB — defer so it doesn't block initial paint
+const HeroBanner = dynamic(() => import("./hero-banner"), {
+  ssr: false,
+  loading: () => <HeroBannerSkeleton />,
+});
 const ProductsSkeleton = () => (
   <div className="animate-pulse w-full bg-white py-5">
     <div className="global-container">
