@@ -11,6 +11,7 @@ import { apiUrls } from "@/apis/api-endpoint";
 import NextTopLoader from "nextjs-toploader";
 
 import "./globals.css";
+import { WebVitals } from "@/components/web-vitals/web-vitals";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,19 +56,11 @@ export default async function RootLayout({
  
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
-      {/* <link
-        rel="stylesheet"
-        type="text/css"
-        charSet="UTF-8"
-        precedence="default"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
-      />
-      <link
-        rel="stylesheet"
-        type="text/css"
-        precedence="default"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
-      /> */}
+      <head>
+        <link rel="preconnect" href="https://d2dy46c7t7z5ba.cloudfront.net" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://d1p9kdrbe10xzz.cloudfront.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
+      </head>
 
       <body suppressHydrationWarning>
         <NextTopLoader
@@ -79,6 +72,7 @@ export default async function RootLayout({
         />
         <NextIntlClientProvider messages={messages}>
           <GlobalLayout locationData={locationData} initialProfile={initialProfile} navItemData={navItemData} >
+             <WebVitals />
             {children}
           </GlobalLayout>
         </NextIntlClientProvider>

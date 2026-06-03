@@ -1,13 +1,17 @@
 import { Suspense } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import SEOMainContent from "@/seo/seo-main-content";
-import HeroBanner, { SliderItem } from "./hero-banner";
+import { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
 import type { ApiCategory } from "@/utils/types";
 import { FeaturedProductsSection } from "./feature-product/FeaturedProductsSection";
 import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
 import { BlogsSection } from "./BlogsSection";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
+
+// Swiper is 219KB — code-split so it doesn't block initial paint
+const HeroBanner = dynamic(() => import("./hero-banner"), { ssr: true });
 const ProductsSkeleton = () => (
   <div className="animate-pulse w-full bg-white py-5">
     <div className="global-container">
@@ -54,11 +58,9 @@ export const Home = ({
             <Image
               src={FoodTruckBanner}
               alt="Food Truck Banner"
-              priority
-              // loading="lazy"
+              loading="lazy"
               className="rounded-[7px] w-full h-auto"
               sizes="100vw"
-              decoding="async"
             />
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Shield, SlidersHorizontal, Truck, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { RangeFilterItem, FixedFilterItem } from "@/utils/types";
 import { Slider } from "@/components/ui/slider";
 
@@ -90,6 +90,11 @@ export default function FilterSidebar({
   onClearFixedFilter: (attrId: number) => void;
 }) {
   const [showAllBrands, setShowAllBrands] = useState(false);
+  const [localPrice, setLocalPrice] = useState<PriceRange>(priceRange);
+
+  useEffect(() => {
+    setLocalPrice(priceRange);
+  }, [priceRange]);
 
   const brandList = apiBrands ?? [];
   const visibleBrands = showAllBrands ? brandList : brandList.slice(0, 5);
@@ -138,7 +143,7 @@ export default function FilterSidebar({
         <div className="space-y-3 pt-2">
           {/* Current range display */}
           <p className="text-center text-[12px] font-semibold text-gray-700">
-            $ {priceRange.min.toLocaleString()} &ndash; $ {priceRange.max.toLocaleString()}
+            $ {localPrice.min.toLocaleString()} &ndash; $ {localPrice.max.toLocaleString()}
           </p>
 
           {/* Shadcn dual range slider */}
@@ -146,8 +151,9 @@ export default function FilterSidebar({
             min={priceMin}
             max={priceMax}
             step={1}
-            value={[priceRange.min, priceRange.max]}
-            onValueChange={([min, max]) => onPriceChange({ min, max })}
+            value={[localPrice.min, localPrice.max]}
+            onValueChange={([min, max]) => setLocalPrice({ min, max })}
+            onValueCommit={([min, max]) => onPriceChange({ min, max })}
           />
 
           {/* Min / Max labels */}

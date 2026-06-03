@@ -205,10 +205,11 @@ export default function SubCategoryPage({
       const ff     = overrides.ff     ?? selectedFixedFilters;
 
       const parts: string[] = [];
+      const priceActive = min !== apiPriceMin || max !== apiPriceMax;
       if (parentSlug)    parts.push(`parent=${parentSlug}`);
       if (brands.length) parts.push("brands=" + brands.map((b) => `${b.id}:${b.name.replace(/ /g, "+")}`).join(","));
-      if (min !== apiPriceMin) parts.push(`min=${min}`);
-      if (max !== apiPriceMax || min !== apiPriceMin) parts.push(`max=${max}`);
+      if (priceActive)   parts.push(`min=${min}`);
+      if (priceActive)   parts.push(`max=${max}`);
       if (sort !== "Default Sorting") parts.push(`sort=${encodeURIComponent(sort).replace(/%20/g, "+")}`);
       if (show !== 20)   parts.push(`show=${show}`);
       if (page > 1)      parts.push(`page=${page}`);

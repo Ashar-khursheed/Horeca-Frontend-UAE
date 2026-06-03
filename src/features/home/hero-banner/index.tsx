@@ -96,8 +96,9 @@ const CTACard = ({ onQuoteClick }: { onQuoteClick: () => void }) => (
               <Image
                 src={chefImge}
                 className="  "
-                // className=" relative 2xl:bottom-[-55px] xl:bottom-[-38px] bottom-0"
                 alt="chef image"
+                loading="lazy"
+                unoptimized
               />
             </div>
           </div>
@@ -167,10 +168,9 @@ export const HeroBanner = ({
                         fill
                         className="object-cover"
                         priority={index === 0}
-                        // sizes="(max-width: 1024px) 100vw, 70vw"
-                        fetchPriority="high"
-                         sizes="100vw"
-                         quality={85}
+                        loading={index === 0 ? "eager" : "lazy"}
+                        sizes="(max-width: 1024px) 100vw, 70vw"
+                        quality={85}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     </div>
@@ -215,8 +215,7 @@ export const HeroBanner = ({
                               fill
                               className="object-covers"
                               sizes="100vw"
-                              fetchPriority="high"
-                              
+                              loading="lazy"
                             />
                           </div>
                         </Link>
@@ -228,7 +227,7 @@ export const HeroBanner = ({
                             fill
                             className="object-covers"
                             sizes="100vw"
-                            fetchPriority="high"
+                            loading="lazy"
                           />
                         </div>
                       )}
@@ -257,7 +256,7 @@ export const HeroBanner = ({
                 loop={activeSlidesTwo.length > 1}
                 className="w-full h-full"
               >
-                {activeSlidesTwo.map((item) => {
+                {activeSlidesTwo.map((item, index) => {
                   const isValid = item.image?.startsWith("http");
                   return (
                     <SwiperSlide key={item.id}>
@@ -273,7 +272,8 @@ export const HeroBanner = ({
                               fill
                               className="object-covera"
                               sizes="50vw"
-                              fetchPriority="high"
+                              priority={index === 0}
+                              loading={index === 0 ? "eager" : "lazy"}
                             />
                             {isValid && (
                               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -288,7 +288,8 @@ export const HeroBanner = ({
                             fill
                             className="object-covera"
                             sizes="50vw"
-                            fetchPriority="high"
+                            priority={index === 0}
+                            loading={index === 0 ? "eager" : "lazy"}
                           />
                         </div>
                       )}
@@ -322,7 +323,7 @@ export const HeroBanner = ({
                   loop={activeSlidesTwo.length > 1}
                   className="w-full h-full"
                 >
-                  {activeSlidesTwo.map((item) => {
+                  {activeSlidesTwo.map((item, index) => {
                     const isValid = item.image?.startsWith("http");
                     return (
                       <SwiperSlide key={item.id}>
@@ -338,7 +339,8 @@ export const HeroBanner = ({
                                 fill
                                 className="object-covera"
                                 sizes="30vw"
-                                fetchPriority="high"
+                                priority={index === 0}
+                                loading={index === 0 ? "eager" : "lazy"}
                               />
                               {isValid && (
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -353,7 +355,8 @@ export const HeroBanner = ({
                               fill
                               className="object-covera"
                               sizes="30vw"
-                              fetchPriority="high"
+                              priority={index === 0}
+                              loading={index === 0 ? "eager" : "lazy"}
                             />
                           </div>
                         )}
