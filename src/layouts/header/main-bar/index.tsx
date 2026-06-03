@@ -127,10 +127,11 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
 // ══════════════════════════════════════════════════════════════════════════════
 // NavigationStatic
 // ══════════════════════════════════════════════════════════════════════════════
-export default function NavigationStatic({ initialProfile = null, locationData = null, navItemData = [] }: { initialProfile?: CustomerProfile | null; locationData?: LocationData | null; navItemData?: Category[] }) {
+export default function NavigationStatic({ navItemData = [] }: { navItemData?: Category[] }) {
   const reduxCustomer = useSelector((s: RootState) => s.profile.customer);
+  const locationData = useSelector((s: RootState) => s.location.data);
   const profileLoading = useSelector((s: RootState) => s.profile.loading);
-  const customer = reduxCustomer ?? initialProfile;
+  const customer = reduxCustomer;
   const dispatch = useDispatch<AppDispatch>();
   const loggingOut = useSelector((s: RootState) => s.auth.loading);
   const router = useRouter();
@@ -217,9 +218,13 @@ export default function NavigationStatic({ initialProfile = null, locationData =
               <MapPin size={15} className="text-[#186737] flex-shrink-0" />
               <div className="flex flex-col items-start overflow-hidden">
                 <span className="text-[10px] text-gray-400 leading-none">Deliver To</span>
-                <span className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-[110px]">
-                  {locationData ? `${locationData.city}, ${locationData.country}` : "Select Location"}
-                </span>
+                {locationData ? (
+                  <span className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-[110px]">
+                    {locationData.city}, {locationData.country}
+                  </span>
+                ) : (
+                  <span className="w-20 h-3 bg-gray-200 animate-pulse rounded inline-block" />
+                )}
               </div>
               <ChevronDown size={13} className="text-gray-400 flex-shrink-0 group-hover:text-[#186737] transition-colors ml-auto" />
             </button>

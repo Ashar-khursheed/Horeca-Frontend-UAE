@@ -130,7 +130,7 @@ interface FixedFilterItem {
 interface InnerCategoryPageResponse {
   success: boolean;
   filters: {
-    priceRange: { min_price: string; max_price: string };
+    priceRange: { min_price: string; max_price: string; currency?: { symbol: string; title: string } };
     brands: { id: number; name: string; thumbnail: string | null }[];
     ratings: number[];
   } | null;

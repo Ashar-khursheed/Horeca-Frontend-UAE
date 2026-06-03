@@ -1,11 +1,8 @@
 import GlobalLayout from "@/layouts/global-layout";
-import { LocationData } from "@/store/slices/location/locationSlice";
-import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import type { ApiCategory } from "@/utils/types";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import NextTopLoader from "nextjs-toploader";
@@ -28,30 +25,11 @@ export default async function RootLayout({
   const messages = await getMessages();
   const isRTL = locale === "ar";
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value?.trim();
-
-  const [locationData, profileRes, navData] = await Promise.all([
-    makeApiCallSSR<LocationData>(
-      "https://pim.thehorecastore.co/api/frontend/location",
-      {},
-      { revalidate: 3600 },
-    ),
-    token
-      ? makeApiCallSSR<{ success: boolean; customer: CustomerProfile }>(
-          apiUrls.GETMYPROFILE,
-          {},
-          { revalidate: 0, headers: { Authorization: `Bearer ${token}` } },
-        )
-      : null,
-    makeApiCallSSR<{ data: ApiCategory[] }>(
-      apiUrls.NavigationAPI,
-      {},
-      { revalidate: 3600 },
-    ),
-  ]);
-
-  const initialProfile = profileRes?.customer ?? null;
+  const navData = await makeApiCallSSR<{ data: ApiCategory[] }>(
+    apiUrls.NavigationAPI,
+    {},
+    { revalidate: 3600 },
+  );
   const navItemData = navData?.data ?? [];
 
   return (
@@ -71,7 +49,7 @@ export default async function RootLayout({
           showSpinner={false}
         />
         <NextIntlClientProvider messages={messages}>
-          <GlobalLayout locationData={locationData} initialProfile={initialProfile} navItemData={navItemData} >
+          <GlobalLayout navItemData={navItemData}>
              <WebVitals />
             {children}
           </GlobalLayout>

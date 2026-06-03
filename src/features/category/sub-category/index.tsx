@@ -1,7 +1,10 @@
 "use client";
 
+import Breadcrumb from "@/components/breadcum";
 import FilterSidebar from "@/components/filters";
+import { ProductCardSkeleton } from "@/components/loading-sketlon";
 import Pagination from "@/components/pagination";
+import ProductCard from "@/components/product-card";
 import {
   Select,
   SelectContent,
@@ -9,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ApiCategory, ApiCategoryName, InnerCategoryPageResponse, ProductsListingResponse } from "@/utils/types";
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,17 +20,13 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
-import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useRef, useState, useTransition } from "react";
+import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import type { Swiper as SwiperType } from "swiper";
-import Breadcrumb from "@/components/breadcum";
-import { useLocale } from "next-intl";
-import { ApiCategory, ApiCategoryName, InnerCategoryPageResponse, ProductsListingResponse } from "@/utils/types";
-import { ProductCardSkeleton } from "@/components/loading-sketlon";
-import ProductCard from "@/components/product-card";
 
 // ─── URL codec helpers ─────────────────────────────────────────────────────────
 // RF format: "attrId-unitId:min_max,min_max|attrId2-unitId2:min_max"
@@ -131,6 +131,8 @@ export default function SubCategoryPage({
   const rangeFiltersData = subCategoryPage?.rangeFilters;
   const fixedFiltersData = subCategoryPage?.fixedFilters;
 
+  console.log("filterAPIData", filterAPIData?.priceRange?.currency?.symbol);
+
   // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
   const unitMap: Record<number, number> = Object.fromEntries(
     Object.values(rangeFiltersData ?? {})
@@ -219,6 +221,7 @@ export default function SubCategoryPage({
       if (ffStr) parts.push(`ff=${ffStr}`);
 
       const qs = parts.join("&");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       startTransition(() => {
         router.replace(qs ? `?${qs}` : location.pathname, { scroll: false });
       });
@@ -411,6 +414,7 @@ export default function SubCategoryPage({
               selectedFixedFilters={selectedFixedFilters}
               onFixedFilterToggle={handleFixedFilterToggle}
               onClearFixedFilter={handleClearFixedFilter}
+              currency={filterAPIData?.priceRange?.currency?.symbol}
             />
           </div>
 
@@ -619,6 +623,7 @@ export default function SubCategoryPage({
             selectedFixedFilters={selectedFixedFilters}
             onFixedFilterToggle={handleFixedFilterToggle}
             onClearFixedFilter={handleClearFixedFilter}
+            currency={filterAPIData?.priceRange?.currency?.symbol}
           />
         </div>
 

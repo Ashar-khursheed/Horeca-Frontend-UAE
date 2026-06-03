@@ -1,9 +1,9 @@
 "use client";
 
+import { Slider } from "@/components/ui/slider";
+import type { FixedFilterItem, RangeFilterItem } from "@/utils/types";
 import { ChevronDown, ChevronUp, Shield, SlidersHorizontal, Truck, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { RangeFilterItem, FixedFilterItem } from "@/utils/types";
-import { Slider } from "@/components/ui/slider";
 
 interface PriceRange {
   min: number;
@@ -69,6 +69,7 @@ export default function FilterSidebar({
   selectedFixedFilters,
   onFixedFilterToggle,
   onClearFixedFilter,
+  currency 
 }: {
   priceRange: PriceRange;
   onPriceChange: (range: PriceRange) => void;
@@ -88,7 +89,9 @@ export default function FilterSidebar({
   selectedFixedFilters: Record<number, string[]>;
   onFixedFilterToggle: (attrId: number, val: string) => void;
   onClearFixedFilter: (attrId: number) => void;
+  currency?: string;
 }) {
+ 
   const [showAllBrands, setShowAllBrands] = useState(false);
   const [localPrice, setLocalPrice] = useState<PriceRange>(priceRange);
 
@@ -101,6 +104,7 @@ export default function FilterSidebar({
 
   const rangeFilterList = Object.values(rangeFilters ?? {});
   const fixedFilterList = Object.values(fixedFilters ?? {});
+  const currencySymbol = currency
 
   const totalActive =
     selectedBrands.length +
@@ -143,7 +147,7 @@ export default function FilterSidebar({
         <div className="space-y-3 pt-2">
           {/* Current range display */}
           <p className="text-center text-[12px] font-semibold text-gray-700">
-            $ {localPrice.min.toLocaleString()} &ndash; $ {localPrice.max.toLocaleString()}
+            {currencySymbol} {localPrice.min.toLocaleString()} &ndash; {currencySymbol} {localPrice.max.toLocaleString()}
           </p>
 
           {/* Shadcn dual range slider */}
@@ -158,8 +162,8 @@ export default function FilterSidebar({
 
           {/* Min / Max labels */}
           <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
-            <span>$ {priceMin.toLocaleString()} (Min)</span>
-            <span>$ {priceMax.toLocaleString()} (Max)</span>
+            <span>{currencySymbol} {priceMin.toLocaleString()} (Min)</span>
+            <span>{currencySymbol} {priceMax.toLocaleString()} (Max)</span>
           </div>
         </div>
       </AccordionSection>
