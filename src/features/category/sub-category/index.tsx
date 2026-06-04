@@ -145,9 +145,15 @@ export default function SubCategoryPage({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const filterAPIData = subCategoryPage?.filters;
-  const rangeFiltersData = subCategoryPage?.rangeFilters;
-  const fixedFiltersData = subCategoryPage?.fixedFilters;
+  // Client-side state for both filter data and products (correct local-currency)
+  const [clientSubCategoryPage, setClientSubCategoryPage] = useState<InnerCategoryPageResponse | null | undefined>(subCategoryPage);
+  const [clientProducts, setClientProducts] = useState<any[]>(productsData?.products ?? []);
+  const [clientFetchDone, setClientFetchDone] = useState(false);
+  const products = clientProducts;
+
+  const filterAPIData = clientSubCategoryPage?.filters;
+  const rangeFiltersData = clientSubCategoryPage?.rangeFilters;
+  const fixedFiltersData = clientSubCategoryPage?.fixedFilters;
 
   // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
   const unitMap: Record<number, number> = Object.fromEntries(
@@ -155,11 +161,6 @@ export default function SubCategoryPage({
       .filter((f) => f.unit_id != null)
       .map((f) => [f.attribute_id, f.unit_id as number]),
   );
-  // Client-side fetch overrides SSR data with correct local-currency prices.
-  // clientFetchDone=false → show skeletons so USD price never flashes.
-  const [clientProducts, setClientProducts] = useState<any[]>(productsData?.products ?? []);
-  const [clientFetchDone, setClientFetchDone] = useState(false);
-  const products = clientProducts;
   const totalProducts = productsData?.total_records ?? products.length;
   const totalPages =
     (productsData?.total_pages ?? Math.ceil(totalProducts / 20)) || 1;
@@ -394,13 +395,44 @@ export default function SubCategoryPage({
       ? localStorage.getItem("token")?.trim().replace(/^["']|["']$/g, "")
       : null;
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
+    // Fetch filter data (correct local-currency price range from user's IP)
+    const filterBody = {
+      category_url: subCategorySlug,
+      applied_filters: {},
+      applied_range_filters: [{}],
+      applied_fixed_filters: [{}],
+      locale: "en",
+    };
+
+    fetch(`${baseURL}${apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(filterBody),
+    })
+      .then((res) => res.json())
+      .then((data: InnerCategoryPageResponse) => {
+        if (data?.filters) {
+          setClientSubCategoryPage(data);
+          // Update price range slider bounds with correct local-currency values
+          const newMin = Math.floor(Number(data.filters.priceRange?.min_price ?? apiPriceMin));
+          const newMax = Math.ceil(Number(data.filters.priceRange?.max_price ?? apiPriceMax));
+          if (!searchParams.get("min") && !searchParams.get("max")) {
+            setPriceRange({ min: newMin, max: newMax });
+          }
+        }
+      })
+      .catch(() => {});
+
+    // Fetch products (correct local-currency prices from user's IP)
     fetch(`${baseURL}${apiUrls.PRODUCTS_LISTING}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+      headers,
       body: JSON.stringify(productsBody),
     })
       .then((res) => res.json())
