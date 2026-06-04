@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { getCountryCodeSSR } from "@/utils/country";
 
 const API_BASE =
@@ -30,11 +31,20 @@ export async function makeApiCallSSR<T = unknown>(
       }
     }
 
-    const countryCode = await getCountryCodeSSR();
+    let userIp: string | undefined;
+    try {
+      const reqHeaders = await headers();
+      const forwarded  = reqHeaders.get("x-forwarded-for") ?? reqHeaders.get("x-real-ip");
+      userIp = forwarded?.split(",")[0]?.trim() ?? undefined;
+    } catch {}
+    const countryCode = await getCountryCodeSSR(userIp);
     qs.set("force_country", countryCode);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url  = qs.toString() ? `${base}?${qs.toString()}` : base;
+
+    console.log("[SSR API]", url);
+    console.log("[SSR API] force_country:", countryCode);
 
     const method = options?.method ?? (options?.body ? "POST" : "GET");
     const res = await fetch(url, {

@@ -45,7 +45,7 @@ export default async function Page() {
   const blogs = blogsRes?.data ?? [];
   return (
     <main>
-      <h1>arshad</h1>
+      <h1>arshad khan</h1>
       <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} featuredProducts={featuredProducts} featuredBrandProducts={featuredBrandProducts} blogs={blogs} />
     </main>
   );

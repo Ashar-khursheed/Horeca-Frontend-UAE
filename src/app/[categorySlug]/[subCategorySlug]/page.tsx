@@ -177,9 +177,9 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
   const subCategories = navigationRes?.data ?? []
   const subCategoryPage = subCategoryPageRes ?? null
 
-  console.log("API Payload:", productsBody)
-  console.log("Products API Response:", productsRes)
-  console.log("Sub Category Page Response:", subCategoryPageRes)
+  // console.log("API Payload:", productsBody)
+  // console.log("Products API Response:", productsRes)
+  // console.log("Sub Category Page Response:", subCategoryPageRes)
 
   return (
     <div>

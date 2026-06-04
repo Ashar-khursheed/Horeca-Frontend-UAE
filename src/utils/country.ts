@@ -6,11 +6,15 @@ interface GeoResponse {
   countryCode: string;
 }
 
-// SSR: called from server components — hits location API directly
-export async function getCountryCodeSSR(): Promise<string> {
+// SSR: pass real user IP via X-Forwarded-For so API detects user's country, not server's
+export async function getCountryCodeSSR(userIp?: string): Promise<string> {
   try {
-    const res  = await fetch(GEO_API, { cache: "no-store" });
+    const reqHeaders: Record<string, string> = {};
+    if (userIp) reqHeaders["X-Forwarded-For"] = userIp;
+
+    const res  = await fetch(GEO_API, { cache: "no-store", headers: reqHeaders });
     const data: GeoResponse = await res.json();
+    console.log("[Location API] userIp:", userIp, "| detected countryCode:", data.countryCode);
     if (data.status === "success" && data.countryCode) return data.countryCode;
   } catch {}
   return FALLBACK;
