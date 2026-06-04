@@ -31,17 +31,18 @@ export async function makeApiCallSSR<T = unknown>(
       }
     }
 
-    let userIp: string | undefined;
-    let cookieCountry: string | undefined;
+    let countryCode = "IN";
     try {
-      const reqHeaders  = await headers();
-      const forwarded   = reqHeaders.get("x-forwarded-for") ?? reqHeaders.get("x-real-ip");
-      userIp            = forwarded?.split(",")[0]?.trim() ?? undefined;
-      const cookieStore = await cookies();
-      cookieCountry     = cookieStore.get("hc_cc")?.value;
+      const reqHeaders = await headers();
+      // x-country-code is injected by middleware (works on first visit too)
+      countryCode = reqHeaders.get("x-country-code")
+        ?? (await cookies()).get("hc_cc")?.value
+        ?? await getCountryCodeSSR(
+            reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim()
+          );
     } catch {}
-    const countryCode = await getCountryCodeSSR(userIp, cookieCountry);
     qs.set("force_country", countryCode);
+    console.log("[SSR API] force_country:", countryCode);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url  = qs.toString() ? `${base}?${qs.toString()}` : base;

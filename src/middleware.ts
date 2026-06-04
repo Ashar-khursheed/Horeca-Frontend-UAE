@@ -11,9 +11,10 @@ function clearAuthCookies(response: NextResponse): NextResponse {
   return response;
 }
 
-async function setCountryCookie(request: NextRequest, response: NextResponse): Promise<void> {
-  // Already set — skip API call
-  if (request.cookies.get("hc_cc")?.value) return;
+async function resolveCountryCode(request: NextRequest): Promise<string> {
+  // Cookie already set from a previous visit — fastest path
+  const fromCookie = request.cookies.get("hc_cc")?.value;
+  if (fromCookie) return fromCookie;
 
   try {
     const forwarded = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
@@ -22,11 +23,10 @@ async function setCountryCookie(request: NextRequest, response: NextResponse): P
 
     const res  = await fetch(GEO_API, { headers: geoHeaders });
     const data = await res.json();
-    const code = (data.status === "success" && data.countryCode) ? data.countryCode : "IN";
-    response.cookies.set("hc_cc", code, { maxAge: 3600, path: "/", sameSite: "lax" });
-  } catch {
-    response.cookies.set("hc_cc", "IN", { maxAge: 3600, path: "/", sameSite: "lax" });
-  }
+    if (data.status === "success" && data.countryCode) return data.countryCode;
+  } catch {}
+
+  return "IN";
 }
 
 export async function middleware(request: NextRequest) {
@@ -49,11 +49,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  const response = (token && !isTokenValid)
-    ? clearAuthCookies(NextResponse.next())
-    : NextResponse.next();
+  // Detect country and pass as request header so SSR reads it in the same request
+  const countryCode   = await resolveCountryCode(request);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-country-code", countryCode);
 
-  await setCountryCookie(request, response);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // Also set cookie so future requests skip the API call
+  if (!request.cookies.get("hc_cc")?.value) {
+    response.cookies.set("hc_cc", countryCode, { maxAge: 3600, path: "/", sameSite: "lax" });
+  }
+
+  if (token && !isTokenValid) clearAuthCookies(response);
 
   return response;
 }
