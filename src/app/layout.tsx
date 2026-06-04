@@ -9,6 +9,7 @@ import NextTopLoader from "nextjs-toploader";
 
 import { WebVitals } from "@/components/web-vitals/web-vitals";
 import "./globals.css";
+import CountryDetector from "@/components/country-detector";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -59,6 +60,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <GlobalLayout navItemData={navItemData} searchData={searchDataRes}>
             <WebVitals />
+             <CountryDetector />
             {children}
           </GlobalLayout>
         </NextIntlClientProvider>
