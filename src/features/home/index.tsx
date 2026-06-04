@@ -78,6 +78,8 @@
 // export default Home;
 
 "use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { BlogsCard } from "@/components/blog-card";
 import SEOMainContent from "@/seo/seo-main-content";
 import FeaturedProducts from "./feature-product";
@@ -104,6 +106,28 @@ export const Home = ({
   featuredBrandProducts?: FeaturedCategory[];
   blogs?: any[];
 }) => {
+  const router = useRouter();
+
+  useEffect(() => {
+    const currentCookie = document.cookie
+      .split(";")
+      .find(c => c.trim().startsWith("hc_cc="))
+      ?.split("=")[1];
+
+    fetch("https://pim.thehorecastore.co/api/frontend/location")
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === "success" && data.countryCode) {
+          const detected = data.countryCode;
+          document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
+          if (detected !== currentCookie) {
+            router.refresh();
+          }
+        }
+      })
+      .catch(() => {});
+  }, [router]);
+
   console.log("Featured Products:", featuredProducts);
   return (
     <>
