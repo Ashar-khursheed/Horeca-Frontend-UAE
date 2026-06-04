@@ -1,3 +1,5 @@
+import { getCountryCodeSSR } from "@/utils/country";
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "https://test-us.thehorecastore.co/api";
@@ -40,7 +42,8 @@ export async function makeApiCallSSR<T = unknown>(
       }
     }
 
-    qs.set("force_country", "IN");
+    const countryCode = await getCountryCodeSSR();
+    qs.set("force_country", countryCode);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url  = qs.toString() ? `${base}?${qs.toString()}` : base;

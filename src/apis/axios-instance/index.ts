@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { getCountryCodeClient } from "@/utils/country";
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://test-us.thehorecastore.co/api/",
@@ -48,12 +49,13 @@ export { AUTH_MAX_MS };
 // ─── Request Interceptor ──────────────────────────────────────────────────────
 
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    config.params = { ...config.params, force_country: "IN" };
+    const countryCode = await getCountryCodeClient();
+    config.params = { ...config.params, force_country: countryCode };
     return config;
   },
   (error) => Promise.reject(error)
