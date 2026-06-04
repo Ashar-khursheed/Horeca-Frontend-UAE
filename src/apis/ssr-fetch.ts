@@ -40,6 +40,8 @@ export async function makeApiCallSSR<T = unknown>(
       }
     }
 
+    qs.set("force_country", "IN");
+
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url  = qs.toString() ? `${base}?${qs.toString()}` : base;
 
