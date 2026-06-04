@@ -598,6 +598,7 @@ export default function SubCategoryPage({
               onFixedFilterToggle={handleFixedFilterToggle}
               onClearFixedFilter={handleClearFixedFilter}
               currency={filterAPIData?.priceRange?.currency?.symbol}
+              loading={!clientFetchDone}
             />
           </div>
 
@@ -859,6 +860,7 @@ export default function SubCategoryPage({
             onFixedFilterToggle={handleFixedFilterToggle}
             onClearFixedFilter={handleClearFixedFilter}
             currency={filterAPIData?.priceRange?.currency?.symbol}
+            loading={!clientFetchDone}
           />
         </div>
 

@@ -69,7 +69,8 @@ export default function FilterSidebar({
   selectedFixedFilters,
   onFixedFilterToggle,
   onClearFixedFilter,
-  currency 
+  currency,
+  loading = false,
 }: {
   priceRange: PriceRange;
   onPriceChange: (range: PriceRange) => void;
@@ -90,8 +91,9 @@ export default function FilterSidebar({
   onFixedFilterToggle: (attrId: number, val: string) => void;
   onClearFixedFilter: (attrId: number) => void;
   currency?: string;
+  loading?: boolean;
 }) {
- 
+
   const [showAllBrands, setShowAllBrands] = useState(false);
   const [localPrice, setLocalPrice] = useState<PriceRange>(priceRange);
 
@@ -141,31 +143,37 @@ export default function FilterSidebar({
       <AccordionSection
         label="Price"
         defaultOpen
-        hasActive={priceRange.min !== priceMin || priceRange.max !== priceMax}
+        hasActive={!loading && (priceRange.min !== priceMin || priceRange.max !== priceMax)}
         onClear={() => onPriceChange({ min: priceMin, max: priceMax })}
       >
-        <div className="space-y-3 pt-2">
-          {/* Current range display */}
-          <p className="text-center text-[12px] font-semibold text-gray-700">
-            {currencySymbol} {localPrice.min.toLocaleString()} &ndash; {currencySymbol} {localPrice.max.toLocaleString()}
-          </p>
-
-          {/* Shadcn dual range slider */}
-          <Slider
-            min={priceMin}
-            max={priceMax}
-            step={1}
-            value={[localPrice.min, localPrice.max]}
-            onValueChange={([min, max]) => setLocalPrice({ min, max })}
-            onValueCommit={([min, max]) => onPriceChange({ min, max })}
-          />
-
-          {/* Min / Max labels */}
-          <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
-            <span>{currencySymbol} {priceMin.toLocaleString()} (Min)</span>
-            <span>{currencySymbol} {priceMax.toLocaleString()} (Max)</span>
+        {loading ? (
+          <div className="space-y-3 pt-2 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
+            <div className="h-2 bg-gray-200 rounded-full w-full" />
+            <div className="flex justify-between">
+              <div className="h-3 bg-gray-200 rounded w-1/4" />
+              <div className="h-3 bg-gray-200 rounded w-1/4" />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-3 pt-2">
+            <p className="text-center text-[12px] font-semibold text-gray-700">
+              {currencySymbol} {localPrice.min.toLocaleString()} &ndash; {currencySymbol} {localPrice.max.toLocaleString()}
+            </p>
+            <Slider
+              min={priceMin}
+              max={priceMax}
+              step={1}
+              value={[localPrice.min, localPrice.max]}
+              onValueChange={([min, max]) => setLocalPrice({ min, max })}
+              onValueCommit={([min, max]) => onPriceChange({ min, max })}
+            />
+            <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
+              <span>{currencySymbol} {priceMin.toLocaleString()} (Min)</span>
+              <span>{currencySymbol} {priceMax.toLocaleString()} (Max)</span>
+            </div>
+          </div>
+        )}
       </AccordionSection>
 
       {/* Brand Filter */}
