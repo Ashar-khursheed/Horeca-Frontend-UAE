@@ -43,9 +43,10 @@ export default async function Page() {
   const featuredProducts = featuredProductsRes?.data ?? [];
   const featuredBrandProducts = featuredBrandProductsRes?.data ?? [];
   const blogs = blogsRes?.data ?? [];
+  console.log("Featured Products:", featuredProducts);
   return (
     <main>
-      <h1>arshad pathaan </h1>
+      <h1>arshad Khan </h1>
       <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} featuredProducts={featuredProducts} featuredBrandProducts={featuredBrandProducts} blogs={blogs} />
     </main>
   );
