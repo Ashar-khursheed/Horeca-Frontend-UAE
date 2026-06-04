@@ -90,7 +90,7 @@ export default function LoginPage() {
         ).unwrap();
         const redirect = searchParams.get("redirect") ?? "/";
         router.push(redirect);
-        window.location.href = "/"; 
+        // window.location.href = "/"; 
       } catch (err: unknown) {
         const msg =
           typeof err === "string"
