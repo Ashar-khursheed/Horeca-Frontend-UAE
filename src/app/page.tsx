@@ -4,7 +4,7 @@ import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiCategory, FeaturedCategory } from "@/utils/types";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const [slider1, slider2, categoryRes, featuredCategoriesRes, featuredProductsRes,featuredBrandProductsRes,blogsRes] = await Promise.all([
