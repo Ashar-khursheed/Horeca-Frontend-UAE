@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import TickerBadge from "../ticker-badge";
 import Image from "next/image";
 import AddToCartWidget from "../add-to-cart";
+import { useAppSelector } from "@/store/hooks";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -209,7 +210,10 @@ export const ProductCard = ({
   onWishlistToggle,
 }: ProductCardProps) => {
   const locale = useLocale();
-  console.log("productproductproduct",product)
+
+  // ── Country from Redux (client-side currency conversion) ─────────────
+  const country = useAppSelector((s) => s.country.data);
+
   // ── Normalise fields that may arrive in either flat or localised form ──
   const name = resolveStr(product.name, locale);
   const rawImages = product.images;
@@ -219,7 +223,7 @@ export const ProductCard = ({
         ? ((rawImages as { ar?: string[]; en?: string[] })?.ar ?? (rawImages as { en?: string[] })?.en ?? [])
         : ((rawImages as { en?: string[] })?.en ?? (rawImages as { ar?: string[] })?.ar ?? []));
   const deliveryDays = product.delivery_days ?? ("suppliers" in product ? (product as RawApiProduct).suppliers?.[0]?.delivery_days : undefined) ?? "";
-  const currencyStr = resolveCurrencySymbol(product.currency as CurrencyField);
+  const apiCurrencyStr = resolveCurrencySymbol(product.currency as CurrencyField);
   const sellUnitStr = resolveStr(product.selling_type?.attribute_value_unit, locale);
   const originalPrice = product.original_price ?? product.price ?? 0;
   const supplier0 = (product as RawApiProduct).suppliers?.[0];
@@ -239,6 +243,11 @@ export const ProductCard = ({
   const discountPct = hasSale
     ? ((originalPrice - product.sale_price) / originalPrice) * 100
     : 0;
+
+  // ── Currency symbol: prefer country Redux, fallback to API field ─────
+  // Price amount comes from API as-is. Client-side fetch (useEffect in
+  // sub-category) re-fetches with user IP → correct local-currency prices.
+  const currencyStr = country?.currency_symbol ?? apiCurrencyStr;
 
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
 
@@ -335,7 +344,7 @@ export const ProductCard = ({
               visibleImages.map((img, i) => (
                 <Image
                   key={img}
-                  src={img || "https://placehold.co/400"}
+                  src={img }
                   alt={product.alt_tags?.[i] || name}
                   fill
                   priority={aboveFold && i === 0}

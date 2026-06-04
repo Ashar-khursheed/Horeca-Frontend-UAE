@@ -155,7 +155,11 @@ export default function SubCategoryPage({
       .filter((f) => f.unit_id != null)
       .map((f) => [f.attribute_id, f.unit_id as number]),
   );
-  const products = productsData?.products ?? [];
+  // Client-side fetch overrides SSR data with correct local-currency prices.
+  // clientFetchDone=false → show skeletons so USD price never flashes.
+  const [clientProducts, setClientProducts] = useState<any[]>(productsData?.products ?? []);
+  const [clientFetchDone, setClientFetchDone] = useState(false);
+  const products = clientProducts;
   const totalProducts = productsData?.total_records ?? products.length;
   const totalPages =
     (productsData?.total_pages ?? Math.ceil(totalProducts / 20)) || 1;
@@ -400,8 +404,13 @@ export default function SubCategoryPage({
       body: JSON.stringify(productsBody),
     })
       .then((res) => res.json())
-      .then((data) => console.log("Products API Response:", data))
-      .catch((err) => console.error("Products API Error:", err));
+      .then((data) => {
+        if (data?.products?.length) {
+          setClientProducts(data.products);
+        }
+      })
+      .catch((err) => console.error("Products API Error:", err))
+      .finally(() => setClientFetchDone(true));
   }, [productsBody]);
 
   return (
@@ -692,7 +701,7 @@ export default function SubCategoryPage({
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
-                {isPending
+                {isPending || !clientFetchDone
                   ? Array.from({ length: showCount }).map((_, i) => (
                       <ProductCardSkeleton key={i} />
                     ))

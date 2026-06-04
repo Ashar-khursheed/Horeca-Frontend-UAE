@@ -152,13 +152,13 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { slug: categorySlug, with_parent: false },
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<InnerCategoryPageResponse>(
       apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
       {},
       {
-        revalidate: 3600,
+        revalidate: 0,
         method: "POST",
         body: buildFilterBody(subCategorySlug),
       },
@@ -167,7 +167,7 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
       apiUrls.PRODUCTS_LISTING,
       {},
       {
-        revalidate: 60,
+        revalidate: 0,
         method: "POST",
         body: productsBody,
       },
