@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { getCountryCodeSSR } from "@/utils/country";
 
 const API_BASE =
@@ -32,12 +32,15 @@ export async function makeApiCallSSR<T = unknown>(
     }
 
     let userIp: string | undefined;
+    let cookieCountry: string | undefined;
     try {
-      const reqHeaders = await headers();
-      const forwarded  = reqHeaders.get("x-forwarded-for") ?? reqHeaders.get("x-real-ip");
-      userIp = forwarded?.split(",")[0]?.trim() ?? undefined;
+      const reqHeaders  = await headers();
+      const forwarded   = reqHeaders.get("x-forwarded-for") ?? reqHeaders.get("x-real-ip");
+      userIp            = forwarded?.split(",")[0]?.trim() ?? undefined;
+      const cookieStore = await cookies();
+      cookieCountry     = cookieStore.get("hc_cc")?.value;
     } catch {}
-    const countryCode = await getCountryCodeSSR(userIp);
+    const countryCode = await getCountryCodeSSR(userIp, cookieCountry);
     qs.set("force_country", countryCode);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
