@@ -6,10 +6,11 @@ interface GeoResponse {
   countryCode: string;
 }
 
-// SSR: Next.js caches this fetch for 1 hour across requests
-export async function getCountryCodeSSR(): Promise<string> {
+// SSR: pass user's real IP so the API detects their location, not the server's
+export async function getCountryCodeSSR(userIp?: string): Promise<string> {
   try {
-    const res = await fetch(GEO_API, { next: { revalidate: 3600 } });
+    const url = userIp ? `${GEO_API}?ip=${userIp}` : GEO_API;
+    const res = await fetch(url, { next: { revalidate: 3600 } });
     const data: GeoResponse = await res.json();
     if (data.status === "success" && data.countryCode) return data.countryCode;
   } catch {}
