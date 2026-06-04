@@ -21,6 +21,7 @@ export default function LocationInitializer() {
       .then((res) => res.json())
       .then((data: LocationData) => {
         sessionStorage.setItem("location", JSON.stringify(data));
+        localStorage.setItem("location", JSON.stringify(data)); // for cross-tab access
         dispatch(setLocation(data));
       })
       .catch(() => {});

@@ -35,6 +35,7 @@ export const loginUser = createAsyncThunk(
         localStorage.setItem("user", JSON.stringify(res.customer));
       }
       dispatch(setProfile(res.customer));
+      // window.location.href = "/"; 
       return res.customer;
     } catch (err: unknown) {
       const msg =

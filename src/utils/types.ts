@@ -192,6 +192,74 @@ interface ApiCategoryPage {
     faqs: { question: string; answer: string }[];  } | null;
 }
 
+interface LocalizedName {
+  en: string;
+  ar: string | null;
+}
+
+interface SearchProduct {
+  id: number;
+  sku: string;
+  name: LocalizedName;
+  images: { en: string[] | null; ar: string[] | null };
+  url: string;
+  category_url_resolved: string;
+  parent_category_url_resolved: string;
+  price: number;
+  sale_price: number;
+  currency: { symbol: string; title: string };
+}
+
+interface SearchCategory {
+  id: number;
+  name: LocalizedName;
+  image: string | null;
+  url: string;
+  super_parent_url: string;
+  super_parent: { id: number; name: LocalizedName; url: string };
+}
+
+interface SearchBrand {
+  id: number;
+  name: LocalizedName;
+  image: string | null;
+  slug: string;
+  url: string | null;
+}
+
+interface SearchFilterBrand {
+  id: number;
+  name: LocalizedName;
+  thumbnail: string | null;
+}
+
+interface SearchFilters {
+  priceRange: {
+    min_price: number;
+    max_price: number;
+    currency: { symbol: string; title: string };
+  };
+  brands: SearchFilterBrand[];
+  ratings: number[];
+}
+
+interface SearchSuggestions {
+  success: boolean;
+  data: {
+    original_query: string;
+    corrected_query: string;
+    did_you_mean: string | null;
+    products: SearchProduct[];
+    categories: SearchCategory[];
+    brands: SearchBrand[];
+    total_records: number;
+    total_pages: number;
+    current_page: number;
+    length: number;
+    filters?: SearchFilters;
+  };
+}
+
 export type {
     HeaderProps,
     Props,
@@ -208,5 +276,9 @@ export type {
     RangeFilterItem,
     FixedFilterItem,
     ProductsListingResponse,
+    SearchSuggestions,
+    SearchProduct,
+    SearchCategory,
+    SearchBrand,
 };
 

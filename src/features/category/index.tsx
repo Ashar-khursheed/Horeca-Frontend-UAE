@@ -272,9 +272,6 @@ export default function CategoriesPage({
                         images: [...product.images],
                         alt_tags: [...product.alt_tags],
                       }}
-                      onAddToCart={(p, qty) =>
-                        console.log("Cart:", p.name, qty)
-                      }
                       onWishlistToggle={(p, w) =>
                         console.log("Wishlist:", p.name, w)
                       }

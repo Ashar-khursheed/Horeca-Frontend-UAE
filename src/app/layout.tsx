@@ -1,14 +1,14 @@
+import { apiUrls } from "@/apis/api-endpoint";
+import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import GlobalLayout from "@/layouts/global-layout";
-import type { ApiCategory } from "@/utils/types";
+import type { ApiCategory, SearchSuggestions } from "@/utils/types";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
-import { makeApiCallSSR } from "@/apis/ssr-fetch";
-import { apiUrls } from "@/apis/api-endpoint";
 import NextTopLoader from "nextjs-toploader";
 
-import "./globals.css";
 import { WebVitals } from "@/components/web-vitals/web-vitals";
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,12 +25,20 @@ export default async function RootLayout({
   const messages = await getMessages();
   const isRTL = locale === "ar";
 
-  const navData = await makeApiCallSSR<{ data: ApiCategory[] }>(
-    apiUrls.NavigationAPI,
-    {},
-    { revalidate: 3600 },
-  );
+  const [navData, searchData] = await Promise.all([
+    makeApiCallSSR<{ data: ApiCategory[] }>(
+      apiUrls.NavigationAPI,
+      {},
+      { revalidate: 3600 },
+    ),
+    makeApiCallSSR<SearchSuggestions>(
+      apiUrls.SEARCH,
+      { query: "hoshiki", page: 1, length: 5 },
+      { revalidate: 3600 },
+    ),
+  ]);
   const navItemData = navData?.data ?? [];
+  const searchDataRes = searchData 
 
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
@@ -49,8 +57,8 @@ export default async function RootLayout({
           showSpinner={false}
         />
         <NextIntlClientProvider messages={messages}>
-          <GlobalLayout navItemData={navItemData}>
-             <WebVitals />
+          <GlobalLayout navItemData={navItemData} searchData={searchDataRes}>
+            <WebVitals />
             {children}
           </GlobalLayout>
         </NextIntlClientProvider>

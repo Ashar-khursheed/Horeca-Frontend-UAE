@@ -179,7 +179,6 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
 
   console.log("API Payload:", productsBody)
   console.log("Products API Response:", productsRes)
-  console.log("Sub Category Page Response:", subCategoryPageRes)
 
   return (
     <div>
@@ -191,6 +190,7 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
         subCategoryPage={subCategoryPage}
         productsData={productsRes}
         currentPage={currentPage}
+        productsBody={productsBody}
       />
     </div>
   )

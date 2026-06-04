@@ -133,7 +133,6 @@ export default function BlogDetailClient({
   blog: ApiBlogDetail;
   initialComments: BlogComment[];
 }) {
-  console.log("BlogDetailClient render", blog);
   const router = useRouter();
   const [readingProgress, setReadingProgress] = useState(0);
   const [activeSection, setActiveSection] = useState("");

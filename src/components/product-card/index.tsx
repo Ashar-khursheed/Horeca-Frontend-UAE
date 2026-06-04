@@ -13,6 +13,7 @@ import { useLocale } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import TickerBadge from "../ticker-badge";
 import Image from "next/image";
+import AddToCartWidget from "../add-to-cart";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -45,7 +46,7 @@ export interface ApiProduct {
   isRequired: boolean;
 }
 
-interface RawApiProduct {
+export interface RawApiProduct {
   id: number;
   name: LS;
   url: string;
@@ -66,7 +67,13 @@ interface RawApiProduct {
   is_fixed?: number | boolean;
   quote_available?: number | boolean | null;
   selling_type?: { attribute_value: LS; attribute_value_unit: LS };
-  suppliers?: { delivery_days?: string; free_shipping?: boolean | number }[];
+  suppliers?: {
+    vendor_id?: number;
+    delivery_days?: string;
+    free_shipping?: boolean | number;
+    min_quantity?: number;
+    is_fixed?: boolean | number;
+  }[];
   isRequired?: boolean;
 }
 
@@ -90,7 +97,6 @@ interface ProductCardProps {
   product: ApiProduct | RawApiProduct;
   newUrl?: string;
   aboveFold?: boolean;
-  onAddToCart?: (product: ApiProduct | RawApiProduct, quantity: number) => void;
   onWishlistToggle?: (product: ApiProduct | RawApiProduct, inWishlist: boolean) => void;
 }
 
@@ -200,10 +206,10 @@ export const ProductCard = ({
   product,
   newUrl = "products",
   aboveFold = false,
-  onAddToCart,
   onWishlistToggle,
 }: ProductCardProps) => {
   const locale = useLocale();
+  console.log("productproductproduct",product)
   // ── Normalise fields that may arrive in either flat or localised form ──
   const name = resolveStr(product.name, locale);
   const rawImages = product.images;
@@ -216,14 +222,12 @@ export const ProductCard = ({
   const currencyStr = resolveCurrencySymbol(product.currency as CurrencyField);
   const sellUnitStr = resolveStr(product.selling_type?.attribute_value_unit, locale);
   const originalPrice = product.original_price ?? product.price ?? 0;
-  const minQty = product.min_quantity || 1;
-  const isFixed = !!product.is_fixed;
+  const supplier0 = (product as RawApiProduct).suppliers?.[0];
+  const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
+  const isFixed = product.is_fixed != null ? !!product.is_fixed : !!(supplier0?.is_fixed);
   const isQuote = !!product.quote_available;
 
-  const [count, setCount] = useState(minQty);
   const [wishlisted, setWishlisted] = useState(product.in_wishlist ?? false);
-  const [addedSuccess, setAddedSuccess] = useState(false);
-  const addedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Price logic (sale_price=0 means no sale) ─────────────────────────
   const hasSale =
@@ -268,40 +272,9 @@ export const ProductCard = ({
   useEffect(
     () => () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
     },
     []
   );
-
-  // ── Handlers ────────────────────────────────────────────────────────
-  const handleIncrement = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isFixed) {
-      if (count + minQty <= 99) setCount(count + minQty);
-    } else if (count < 99) {
-      setCount(count + 1);
-    }
-  };
-
-  const handleDecrement = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isFixed) {
-      if (count - minQty >= minQty) setCount(count - minQty);
-    } else if (count > minQty) {
-      setCount(count - 1);
-    }
-  };
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onAddToCart) onAddToCart(product, count);
-    setAddedSuccess(true);
-    if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
-    addedTimerRef.current = setTimeout(() => setAddedSuccess(false), 1800);
-  };
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -349,23 +322,34 @@ export const ProductCard = ({
 
         {/* Product images */}
         <Link href={productLink}>
-          <div className="relative w-full aspect-square overflow-hidden">
-            {visibleImages.map((img, i) => (
+          <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+            {visibleImages.length === 0 ? (
               <Image
-                key={img}
-                src={img}
-                alt={product.alt_tags?.[i] || name}
+                src="https://placehold.co/400"
+                alt={name}
                 fill
-                priority={aboveFold && i === 0}
-                loading={aboveFold && i === 0 ? "eager" : "lazy"}
-                className="object-contain p-2 transition-opacity duration-500"
-                style={{ opacity: imgIndex === i ? 1 : 0 }}
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.opacity = "0";
-                }}
+                className="object-contain p-2"
                 sizes="(max-width: 640px) 175px, (max-width: 1024px) 33vw, 20vw"
               />
-            ))}
+            ) : (
+              visibleImages.map((img, i) => (
+                <Image
+                  key={img}
+                  src={img || "https://placehold.co/400"}
+                  alt={product.alt_tags?.[i] || name}
+                  fill
+                  priority={aboveFold && i === 0}
+                  loading={aboveFold && i === 0 ? "eager" : "lazy"}
+                  className="object-contain p-2 transition-opacity duration-500"
+                  style={{ opacity: imgIndex === i ? 1 : 0 }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "https://placehold.co/400";
+                    (e.currentTarget as HTMLImageElement).style.opacity = "1";
+                  }}
+                  sizes="(max-width: 640px) 175px, (max-width: 1024px) 33vw, 20vw"
+                />
+              ))
+            )}
           </div>
         </Link>
 
@@ -503,24 +487,25 @@ export const ProductCard = ({
         </div>
 
         {/* ── COUNTER + CTA ─────────────────────────────────────────── */}
-        <div className="flex gap-2 items-center w-full mt-2">
-          {!isQuote && (
-            <QuantityCounter
-              count={count}
-              min={minQty}
-              isFixed={isFixed}
-              onIncrement={handleIncrement}
-              onDecrement={handleDecrement}
-              onChange={setCount}
+        {/*
+          AddToCartWidget — sirf product pass karo, baaki sab widget khud handle karta hai:
+            - Quantity counter (min_quantity aur is_fixed respect karta hai)
+            - Redux cart mein item add karta hai
+            - Guest user ke liye localStorage mein save karta hai
+            - "Added!" success flash automatically dikhata hai
+
+          Dusri jagah use karne ke liye CSS customize karo:
+            <AddToCartWidget
+              product={product}
+              wrapperClassName="flex gap-3 mt-4"           ← wrapper div
+              counterClassName="flex border rounded-lg h-10 w-28"  ← counter size
+              buttonClassName="h-10 px-6 rounded-lg font-semibold bg-[#186737] text-white"  ← button
             />
-          )}
-          <AddToCartButton
-            onClick={handleAddToCart}
-            label={isQuote ? "Request a Quote" : "Add To Cart"}
-            variant={isQuote ? "quote" : "cart"}
-            success={addedSuccess}
-          />
-        </div>
+        */}
+        <AddToCartWidget
+          product={product}
+          wrapperClassName="flex gap-2 items-center w-full mt-2"
+        />
       </div>
     </div>
   );

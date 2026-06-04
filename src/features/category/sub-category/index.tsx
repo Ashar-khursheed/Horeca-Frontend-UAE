@@ -1,5 +1,7 @@
 "use client";
 
+import { apiUrls } from "@/apis/api-endpoint";
+import { makeApiRequest } from "@/apis/axios-instance";
 import Breadcrumb from "@/components/breadcum";
 import FilterSidebar from "@/components/filters";
 import { ProductCardSkeleton } from "@/components/loading-sketlon";
@@ -28,7 +30,7 @@ import {
 import { useLocale } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -126,6 +128,7 @@ export default function SubCategoryPage({
   parentSlug,
   subCategoryPage,
   productsData,
+  productsBody,
   currentPage = 1,
 }: {
   subCategories: ApiCategory[];
@@ -135,6 +138,7 @@ export default function SubCategoryPage({
   productsData?: ProductsListingResponse | null;
   subCategoryPage?: InnerCategoryPageResponse | null;
   currentPage?: number;
+  productsBody?: any;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -144,8 +148,6 @@ export default function SubCategoryPage({
   const filterAPIData = subCategoryPage?.filters;
   const rangeFiltersData = subCategoryPage?.rangeFilters;
   const fixedFiltersData = subCategoryPage?.fixedFilters;
-
-  console.log("filterAPIData", filterAPIData?.priceRange?.currency?.symbol);
 
   // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
   const unitMap: Record<number, number> = Object.fromEntries(
@@ -380,6 +382,28 @@ export default function SubCategoryPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiPriceMin, apiPriceMax, pushURL]);
 
+  useEffect(() => {
+    if (!productsBody) return;
+
+    const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://test-us.thehorecastore.co/api/";
+    const token = typeof window !== "undefined"
+      ? localStorage.getItem("token")?.trim().replace(/^["']|["']$/g, "")
+      : null;
+
+    fetch(`${baseURL}${apiUrls.PRODUCTS_LISTING}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(productsBody),
+    })
+      .then((res) => res.json())
+      .then((data) => console.log("Products API Response:", data))
+      .catch((err) => console.error("Products API Error:", err));
+  }, [productsBody]);
+
   return (
     <main className="min-h-screen bg-gray-5p0">
       <Breadcrumb crumbs={crumbs} />
@@ -583,7 +607,11 @@ export default function SubCategoryPage({
                       </SelectTrigger>
                       <SelectContent>
                         {SORT_OPTIONS.map((opt) => (
-                          <SelectItem key={opt} value={opt} className="text-[12px]">
+                          <SelectItem
+                            key={opt}
+                            value={opt}
+                            className="text-[12px]"
+                          >
                             {opt}
                           </SelectItem>
                         ))}
@@ -645,19 +673,38 @@ export default function SubCategoryPage({
             )}
 
             {/* Product Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
-              {isPending
-                ? Array.from({ length: showCount }).map((_, i) => (
-                    <ProductCardSkeleton key={i} />
-                  ))
-                : products.map((product: any, index: number) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      aboveFold={index < 8}
-                    />
-                  ))}
-            </div>
+            {!isPending && products.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-[7px]">
+                <Search size={52} className="text-gray-200 mb-5" />
+                <h3 className="text-[17px] font-semibold text-gray-700 mb-2">
+                  No Products Found
+                </h3>
+                <p className="text-[13px] text-gray-400 text-center max-w-xs leading-relaxed">
+                  We couldn&apos;t find any products matching your filters. Try
+                  adjusting or clearing them.
+                </p>
+                <button
+                  onClick={handleClearAll}
+                  className="mt-6 px-6 py-2.5 rounded-[7px] bg-[#186737] text-white text-[13px] font-semibold hover:bg-[#145c30] transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
+                {isPending
+                  ? Array.from({ length: showCount }).map((_, i) => (
+                      <ProductCardSkeleton key={i} />
+                    ))
+                  : products.map((product: any, index: number) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        aboveFold={index < 8}
+                      />
+                    ))}
+              </div>
+            )}
 
             {totalPages > 1 && (
               <Pagination

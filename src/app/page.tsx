@@ -23,12 +23,12 @@ export default async function Page() {
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_PRODUCTS,
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },  // admin se update hone pe fresh data chahiye
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },  // admin se update hone pe fresh data chahiye
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.BLOGS,

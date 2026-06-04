@@ -55,7 +55,6 @@ export default function SavedProductCard({
       <div className="flex-1">
         <ProductCard
           product={product}
-          onAddToCart={() => onAddToCart(item.id)}
           onWishlistToggle={() => {}}
         />
       </div>

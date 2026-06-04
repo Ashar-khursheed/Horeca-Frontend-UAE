@@ -441,10 +441,10 @@ export default function WishlistPage() {
                   {copied ? "Link Copied!" : "Share List"}
                 </button>
 
-                <Link href="/create-quotation"><button className="flex items-center gap-2 px-4 py-2 rounded-[7px] bg-[#A6131D] hover:bg-[#8b1018] text-white text-sm font-semibold transition-colors duration-200">
+                {/* <Link href="/create-quotation"><button className="flex items-center gap-2 px-4 py-2 rounded-[7px] bg-[#A6131D] hover:bg-[#8b1018] text-white text-sm font-semibold transition-colors duration-200">
                   <FileText size={15} />
                   Get Instant Quote
-                </button></Link>
+                </button></Link> */}
               </div>
             )}
           </div>

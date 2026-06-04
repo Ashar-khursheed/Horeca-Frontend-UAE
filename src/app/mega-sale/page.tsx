@@ -953,7 +953,6 @@ export default function MegaSalePage() {
               <ProductCard
                 key={product.id + product.sku}
                 product={product}
-                onAddToCart={(p, qty) => console.log("Add to cart:", p.name, qty)}
                 onWishlistToggle={(p, w) => console.log("Wishlist:", p.name, w)}
               />
             ))}

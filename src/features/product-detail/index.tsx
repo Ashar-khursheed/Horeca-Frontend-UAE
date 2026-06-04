@@ -27,7 +27,6 @@ const slugToLabel = (slug: string) =>
   slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
 const ProductDetailPage = ({ productData, categorySlug, subCategorySlug }: Props) => {
-  console.log("Product Data:", productData);
   const name = productData.name ?? "";
   const images = productData.images ?? [];
   const description = productData.description ?? [];

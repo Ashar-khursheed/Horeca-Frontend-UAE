@@ -4,6 +4,8 @@ import locationReducer from "./slices/location/locationSlice";
 import countryReducer from "./slices/country/countrySlice";
 import authReducer from "./slices/auth/authSlice";
 import blogInteractionReducer from "./slices/blog/blogInteractionSlice";
+import cartReducer from "./slices/cart/cartSlice";
+import taxReducer from "./slices/tax/taxSlice";
 
 const store = configureStore({
   reducer: {
@@ -12,6 +14,8 @@ const store = configureStore({
     location: locationReducer,
     country: countryReducer,
     blogInteraction: blogInteractionReducer,
+    cart: cartReducer,
+    tax: taxReducer,
   },
 });
 

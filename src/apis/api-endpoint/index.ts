@@ -31,6 +31,11 @@ export const apiUrls = {
   PRODUCTS_LISTING: "frontend/products/filters/get-products",
   PRODUCT_DETAIL: (slug: string) => `frontend/products/${slug}`,
   BRANDS: "frontend/brands",
+  SEARCH_API_SUGGESTIONS: (query: string) => `frontend/search?q=${encodeURIComponent(query)}`,
+  SEARCH: "frontend/search",
+
+  // Cart
+  CART_ADD: "frontend/carts/add",
 
   // General
   COUNTRIES: "frontend/countries",

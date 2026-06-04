@@ -45,6 +45,7 @@ export default function AppInitializer() {
       .then((data: LocationData) => {
         dispatch(setLocation(data));
         sessionStorage.setItem("location", JSON.stringify(data));
+        localStorage.setItem("location", JSON.stringify(data)); // also cache in localStorage for cross-tab access
       })
       .catch(() => {});
   }, [dispatch]);

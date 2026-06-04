@@ -35,9 +35,11 @@ import { logoutUser } from "@/store/slices/auth/authSlice";
 import { LocationData } from "@/store/slices/location/locationSlice";
 import { apiUrls } from "@/apis/api-endpoint";
 import { AppDispatch, RootState } from "@/store/store";
+import type { SearchSuggestions } from "@/utils/types";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import FinancingModal from "@/components/financing-modal";
+import SearchBar from "./SearchBar";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CategoryName { en?: string; ar?: string; }
@@ -127,7 +129,13 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
 // ══════════════════════════════════════════════════════════════════════════════
 // NavigationStatic
 // ══════════════════════════════════════════════════════════════════════════════
-export default function NavigationStatic({ navItemData = [] }: { navItemData?: Category[] }) {
+export default function NavigationStatic({
+  navItemData = [],
+  searchData,
+}: {
+  navItemData?: Category[];
+  searchData?: SearchSuggestions | null;
+}) {
   const reduxCustomer = useSelector((s: RootState) => s.profile.customer);
   const locationData = useSelector((s: RootState) => s.location.data);
   const profileLoading = useSelector((s: RootState) => s.profile.loading);
@@ -156,27 +164,9 @@ export default function NavigationStatic({ navItemData = [] }: { navItemData?: C
   }, []);
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [quantities, setQuantities] = useState([1, 1, 1, 1]);
   const [isModalOpen, setIsModalOpen] = useState({
-      modalOne: false,
-    });
-  
-  const goToSearch = (q?: string) => {
-    const term = (q ?? searchQuery).trim();
-    setSearchFocused(false);
-    if (term) {
-      router.push(`/search?q=${encodeURIComponent(term)}`);
-    } else {
-      router.push("/search");
-    }
-  };
-
-  const updateQty = (index: number, delta: number) =>
-    setQuantities((prev) =>
-      prev.map((q, i) => (i === index ? Math.max(1, q + delta) : q)),
-    );
+    modalOne: false,
+  });
 
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -230,110 +220,7 @@ export default function NavigationStatic({ navItemData = [] }: { navItemData?: C
             </button>
 
             {/* ── Search ── */}
-            <div className="flex-1 hidden lg:block relative">
-              <div className={`flex items-center border rounded-full px-4 h-11 gap-2 transition-all duration-200 bg-white ${searchFocused ? "border-[#186737]" : "border-gray-200"}`}>
-                <Search size={16} className="text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && goToSearch()}
-                  placeholder="Search 100,000+ products trusted by hotels & restaurants..."
-                  className="flex-1 bg-white text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                />
-                <button
-                  onClick={() => goToSearch()}
-                  className="bg-[#186737] text-white rounded-full w-7 h-7 flex items-center justify-center flex-shrink-0 hover:bg-[#145c2e] transition-colors"
-                >
-                  <Search size={13} />
-                </button>
-              </div>
-
-              {/* ── Search Panel ── */}
-              {searchFocused && (
-               <div
-                  onMouseDown={(e) => e.preventDefault()}
-                  className="absolute top-[calc(100%+10px)] left-0 right-0 bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden "
-                >
-                  <div className="flex">
-                    {/* Left col */}
-                    <div className="w-full xl:w-[55%] bg-[#f8fafc] xl:border-r border-gray-100 flex flex-col">
-                      <div className="px-3.5 pt-3.5 pb-4">
-                        <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3">
-                          Product Suggestions
-                        </p>
-                        <ul className="space-y-0.5">
-                          {[
-                            'True TBR36-PTSZ1-L-B-S-S-1 36" Pass-Through Back Bar Refrigerator',
-                            'True TBR36-PTSZ1-L-S-S-S-1 36" Pass-Through Back Bar Refrigerator',
-                            'True TBR60-PTSZ1-L-S-SS-SS-1 60" Pass-Through Back Bar Refrigerator',
-                            'True TBR36-PTSZ1-L-S-G-G-1 36" Pass-Through Back Bar Refrigerator',
-                          ].map((s, i) => (
-                            <li key={i}>
-                              <button
-                                onMouseDown={() => goToSearch(s)}
-                                className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm transition-all group"
-                              >
-                                <Search size={12} className="text-gray-300 flex-shrink-0 group-hover:text-[#186737] transition-colors" />
-                                <span className="text-[13px] text-gray-500 line-clamp-1 group-hover:text-[#186737] transition-colors">{s}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="mx-5 border-t border-gray-200" />
-                      <div className="px-5 py-4">
-                        <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3">Categories</p>
-                        <div className="flex flex-wrap gap-2">
-                          {["Back Bar Cooler", "Beer Dispenser", "Reach In Freezer", "Reach In Refrigerator"].map((c) => (
-                            <button key={c} className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all">{c}</button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="mx-5 border-t border-gray-200" />
-                      <div className="px-5 py-4 mt-auto">
-                        <button
-                          onMouseDown={() => goToSearch()}
-                          className="w-full h-9 rounded-xl bg-[#186737] text-white text-[13px] font-semibold hover:bg-[#145c2e] transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Search size={13} /> View all results
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Right col — only on xl (1280px+) */}
-                    <div className="flex-1 xl:block hidden p-3.5 overflow-y-auto max-h-115">
-                      <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-4">Trending Products</p>
-                      <ul className="space-y-2.5">
-                        {[
-                          'True TBR36 36" Pass-through Back Bar Refrigerator, Solid Door',
-                          'True TBR36 36" Pass-through Back Bar Refrigerator, Solid Door',
-                          'True TBR60 60" Pass-through Back Bar Refrigerator, Solid Door',
-                          'True TBR36 36" Pass-through Back Bar Refrigerator, Glass Door',
-                        ].map((name, i) => (
-                          <li key={i} className="flex gap-3 p-3 rounded-xl border border-gray-100 hover:border-[#186737]/25 hover:bg-[#f8fdf9] transition-all cursor-pointer group">
-                            <div className="w-[62px] h-[62px] rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex-shrink-0 border border-gray-100" />
-                            <div className="flex-1 min-w-0 flex flex-col justify-between">
-                              <p className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors">{name}</p>
-                              <div className="flex items-center flex-row gap-2 mt-2">
-                                <div className="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white">
-                                  <button className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 text-sm font-bold transition-colors" onClick={() => updateQty(i, -1)}>−</button>
-                                  <span className="w-6 text-center text-xs font-semibold text-gray-800 select-none">{quantities[i]}</span>
-                                  <button className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 text-sm font-bold transition-colors" onClick={() => updateQty(i, 1)}>+</button>
-                                </div>
-                                <button className="flex-1 h-7 rounded-lg bg-[#e8f5ee] text-[#186737] text-xs font-semibold hover:bg-[#186737] hover:text-white transition-all whitespace-nowrap">Add To Cart</button>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <SearchBar searchData={searchData} />
 
             {/* ── Phone / Contact Dropdown (xl only) ── */}
             <div className="relative hidden xl:block shrink-0" ref={contactRef}>

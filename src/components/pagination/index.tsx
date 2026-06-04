@@ -68,6 +68,7 @@ export default function Pagination({
 
   const goTo = (page: number) => {
     if (page < 1 || page > totalPages || page === current) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
     setAnimatingPage(page);
     setTimeout(() => {
       setCurrent(page);
@@ -335,7 +336,7 @@ function NavButton({
         ${
           disabled
             ? "border-gray-100 text-gray-300 cursor-not-allowed bg-white shadow-sm"
-            : "border-gray-100 text-gray-400 bg-white shadow-sm hover:border-[#186737]/40 hover:text-[#186737] hover:bg-[#186737]/5 hover:scale-105 active:scale-95"
+            : "border-gray-100 text-gray-500 bg-white shadow-sm cursor-pointer hover:border-[#186737] hover:text-white hover:bg-[#186737] hover:scale-105 active:scale-95"
         }
       `}
     >
