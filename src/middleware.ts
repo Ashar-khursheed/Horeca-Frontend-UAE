@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 const PROTECTED_ROUTES = ["/dashboard", "/checkout", "/create-quotation"];
 const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
 const AUTH_MAX_MS = 24 * 60 * 60 * 1000; // 24 hours
-const GEO_API = "https://pim.thehorecastore.co/api/frontend/location";
-
 function clearAuthCookies(response: NextResponse): NextResponse {
   response.cookies.set("token", "", { maxAge: 0, path: "/" });
   response.cookies.set("login_time", "", { maxAge: 0, path: "/" });
@@ -12,19 +10,22 @@ function clearAuthCookies(response: NextResponse): NextResponse {
 }
 
 async function resolveCountryCode(request: NextRequest): Promise<string> {
-  // Cookie already set from a previous visit — fastest path
+  // Cookie already set by client-side — fastest path, no API call
   const fromCookie = request.cookies.get("hc_cc")?.value;
   if (fromCookie) return fromCookie;
 
-  try {
-    const forwarded = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
-    const userIp    = forwarded?.split(",")[0]?.trim();
-    const geoHeaders: Record<string, string> = userIp ? { "X-Forwarded-For": userIp } : {};
+  // Get user's real IP from proxy headers
+  const forwarded = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
+  const userIp    = forwarded?.split(",")[0]?.trim();
 
-    const res  = await fetch(GEO_API, { headers: geoHeaders });
-    const data = await res.json();
-    if (data.status === "success" && data.countryCode) return data.countryCode;
-  } catch {}
+  if (userIp) {
+    try {
+      // ip-api.com supports IP in URL path — works correctly from server
+      const res  = await fetch(`http://ip-api.com/json/${userIp}?fields=status,countryCode`);
+      const data = await res.json();
+      if (data.status === "success" && data.countryCode) return data.countryCode;
+    } catch {}
+  }
 
   return "IN";
 }
