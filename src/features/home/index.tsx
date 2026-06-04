@@ -104,6 +104,7 @@ export const Home = ({
   featuredBrandProducts?: FeaturedCategory[];
   blogs?: any[];
 }) => {
+  console.log("Featured Products:", featuredProducts);
   return (
     <>
       <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
