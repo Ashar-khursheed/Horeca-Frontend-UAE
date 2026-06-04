@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const PROTECTED_ROUTES = ["/dashboard", "/checkout", "/create-quotation"];
 const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
 const AUTH_MAX_MS = 24 * 60 * 60 * 1000; // 24 hours
+const GEO_API = "https://pim.thehorecastore.co/api/frontend/location";
 
 function clearAuthCookies(response: NextResponse): NextResponse {
   response.cookies.set("token", "", { maxAge: 0, path: "/" });
@@ -10,49 +11,55 @@ function clearAuthCookies(response: NextResponse): NextResponse {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+async function setCountryCookie(request: NextRequest, response: NextResponse): Promise<void> {
+  // Already set — skip API call
+  if (request.cookies.get("hc_cc")?.value) return;
+
+  try {
+    const forwarded = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
+    const userIp    = forwarded?.split(",")[0]?.trim();
+    const geoHeaders: Record<string, string> = userIp ? { "X-Forwarded-For": userIp } : {};
+
+    const res  = await fetch(GEO_API, { headers: geoHeaders });
+    const data = await res.json();
+    const code = (data.status === "success" && data.countryCode) ? data.countryCode : "IN";
+    response.cookies.set("hc_cc", code, { maxAge: 3600, path: "/", sameSite: "lax" });
+  } catch {
+    response.cookies.set("hc_cc", "IN", { maxAge: 3600, path: "/", sameSite: "lax" });
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("token")?.value?.trim();
+  const token        = request.cookies.get("token")?.value?.trim();
   const loginTimeStr = request.cookies.get("login_time")?.value;
 
-  // Token is valid only if login_time exists and is within 24 hours
-  const loginTime = loginTimeStr ? parseInt(loginTimeStr, 10) : null;
-  const isTokenValid =
-    !!token && !!loginTime && Date.now() - loginTime < AUTH_MAX_MS;
+  const loginTime    = loginTimeStr ? parseInt(loginTimeStr, 10) : null;
+  const isTokenValid = !!token && !!loginTime && Date.now() - loginTime < AUTH_MAX_MS;
+  const isProtected  = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
+  const isAuthRoute  = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
-  const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
-  const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r));
-
-  // Protected route: no valid token → redirect to login and clear stale cookies
   if (isProtected && !isTokenValid) {
     const url = new URL("/login", request.url);
     url.searchParams.set("redirect", pathname);
     return clearAuthCookies(NextResponse.redirect(url));
   }
 
-  // Auth route: valid token exists → redirect to home
   if (isAuthRoute && isTokenValid) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Stale/orphan token with no login_time → clear it so future requests are clean
-  if (token && !isTokenValid) {
-    return clearAuthCookies(NextResponse.next());
-  }
+  const response = (token && !isTokenValid)
+    ? clearAuthCookies(NextResponse.next())
+    : NextResponse.next();
 
-  return NextResponse.next();
+  await setCountryCookie(request, response);
+
+  return response;
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/checkout",
-    "/create-quotation",
-    // "/login",
-    // "/register",
-    // "/forgot-password",
-  ],
-  // matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)",],
 };
 
 // export const config = {
