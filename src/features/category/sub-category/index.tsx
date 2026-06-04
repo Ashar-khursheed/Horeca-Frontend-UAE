@@ -136,17 +136,16 @@ export default function SubCategoryPage({
   subCategoryPage?: InnerCategoryPageResponse | null;
   currentPage?: number;
 }) {
-
-  console.log("[SubCategoryPage] Render",productsData )
   const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-
+console.log("[SubCategoryPage] Render",productsData )
   const filterAPIData = subCategoryPage?.filters;
   const rangeFiltersData = subCategoryPage?.rangeFilters;
   const fixedFiltersData = subCategoryPage?.fixedFilters;
 
+  
 
   // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
   const unitMap: Record<number, number> = Object.fromEntries(
@@ -646,35 +645,19 @@ export default function SubCategoryPage({
             )}
 
             {/* Product Grid */}
-            {!isPending && products.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-[7px]">
-                <Search size={52} className="text-gray-200 mb-5" />
-                <h3 className="text-[17px] font-semibold text-gray-700 mb-2">No Products Found</h3>
-                <p className="text-[13px] text-gray-400 text-center max-w-xs leading-relaxed">
-                  We couldn&apos;t find any products matching your filters. Try adjusting or clearing them.
-                </p>
-                <button
-                  onClick={handleClearAll}
-                  className="mt-6 px-6 py-2.5 rounded-[7px] bg-[#186737] text-white text-[13px] font-semibold hover:bg-[#145c30] transition-colors"
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
-                {isPending
-                  ? Array.from({ length: showCount }).map((_, i) => (
-                      <ProductCardSkeleton key={i} />
-                    ))
-                  : products.map((product: any, index: number) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        aboveFold={index < 8}
-                      />
-                    ))}
-              </div>
-            )}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
+              {isPending
+                ? Array.from({ length: showCount }).map((_, i) => (
+                    <ProductCardSkeleton key={i} />
+                  ))
+                : products.map((product: any, index: number) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      aboveFold={index < 8}
+                    />
+                  ))}
+            </div>
 
             {totalPages > 1 && (
               <Pagination
