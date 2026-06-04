@@ -1,31 +1,17 @@
 "use client";
-
-import { setLocation, LocationData } from "@/store/slices/location/locationSlice";
-import { AppDispatch } from "@/store/store";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-
-export type { LocationData };
+import { getLocationData, setLocationData } from "@/utils/locationStorage";
 
 export default function LocationInitializer() {
-  const dispatch = useDispatch<AppDispatch>();
-
   useEffect(() => {
-    const cached = sessionStorage.getItem("location");
-    if (cached) {
-      dispatch(setLocation(JSON.parse(cached) as LocationData));
-      return;
-    }
+    // Already cached — skip API call
+    if (getLocationData()) return;
 
     fetch("https://pim.thehorecastore.co/api/frontend/location")
       .then((res) => res.json())
-      .then((data: LocationData) => {
-        sessionStorage.setItem("location", JSON.stringify(data));
-        localStorage.setItem("location", JSON.stringify(data)); // for cross-tab access
-        dispatch(setLocation(data));
-      })
+      .then((data) => { setLocationData(data); })
       .catch(() => {});
-  }, [dispatch]);
+  }, []);
 
   return null;
 }

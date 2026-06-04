@@ -1,20 +1,19 @@
 "use client";
 
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
-import { setLocation } from "@/store/slices/location/locationSlice";
-import type { LocationData } from "@/store/slices/location/locationSlice";
 import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
-import { AppDispatch, RootState } from "@/store/store";
+import { AppDispatch } from "@/store/store";
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { getLocationData, setLocationData } from "@/utils/locationStorage";
 
-const AUTH_MAX_MS = 24 * 60 * 60 * 1000;
-const LOCATION_API = "https://pim.thehorecastore.co/api/frontend/location";
+const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
+const LOCATION_API   = "https://pim.thehorecastore.co/api/frontend/location";
+const LOCATION_EVENT = "hc_location_updated";
 
 export default function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
-  const locationFromRedux = useSelector((s: RootState) => s.location.data);
 
   // Auto-logout: check 24h expiry on mount and schedule timer for remainder
   useEffect(() => {
@@ -31,26 +30,33 @@ export default function AppInitializer() {
     return () => clearTimeout(timer);
   }, [dispatch]);
 
-  // Location: sessionStorage cache first, then API fetch
+  // Location: localStorage cache first, then API fetch
   useEffect(() => {
-    const cached = sessionStorage.getItem("location");
+    const cached = getLocationData();
     if (cached) {
-      try {
-        dispatch(setLocation(JSON.parse(cached) as LocationData));
-        return;
-      } catch {}
+      if (cached.country) dispatch(fetchCountryByName(cached.country));
+      return;
     }
     fetch(LOCATION_API)
       .then((r) => r.json())
-      .then((data: LocationData) => {
-        dispatch(setLocation(data));
-        sessionStorage.setItem("location", JSON.stringify(data));
-        localStorage.setItem("location", JSON.stringify(data)); // also cache in localStorage for cross-tab access
+      .then((data) => {
+        setLocationData(data);
+        if (data.country) dispatch(fetchCountryByName(data.country));
       })
       .catch(() => {});
   }, [dispatch]);
 
-  // Profile: only fetch if token cookie exists
+  // Re-trigger country fetch when location updates (e.g. after VPN change)
+  useEffect(() => {
+    const handler = () => {
+      const loc = getLocationData();
+      if (loc?.country) dispatch(fetchCountryByName(loc.country));
+    };
+    window.addEventListener(LOCATION_EVENT, handler);
+    return () => window.removeEventListener(LOCATION_EVENT, handler);
+  }, [dispatch]);
+
+  // Profile: only fetch if token exists
   useEffect(() => {
     const token = localStorage.getItem("token")?.trim();
     if (token) {
@@ -59,13 +65,6 @@ export default function AppInitializer() {
       dispatch(setLoading(false));
     }
   }, [dispatch]);
-
-  // Country: derive from Redux location once available
-  useEffect(() => {
-    if (locationFromRedux?.country) {
-      dispatch(fetchCountryByName(locationFromRedux.country));
-    }
-  }, [locationFromRedux?.country, dispatch]);
 
   return null;
 }

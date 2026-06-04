@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CheckCircle, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useLocationData } from "@/utils/locationStorage";
 import { addItem, hydrateCart } from "@/store/slices/cart/cartSlice";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
@@ -73,7 +74,7 @@ export const AddToCartWidget = ({
 
   // ── Redux selectors ──────────────────────────────────────────────────────
   const country = useAppSelector((s) => s.country.data);
-  const location = useAppSelector((s) => s.location.data);
+  const location = useLocationData();
 
   // ── Normalise product fields ─────────────────────────────────────────────
   // min_quantity, is_fixed, vendor_id may live at top-level OR inside suppliers[0]

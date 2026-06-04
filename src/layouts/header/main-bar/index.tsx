@@ -32,7 +32,7 @@ import {
 import { NAV_LINKS } from "@/data";
 import { clearProfile, CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
-import { LocationData } from "@/store/slices/location/locationSlice";
+import { useLocationData } from "@/utils/locationStorage";
 import { apiUrls } from "@/apis/api-endpoint";
 import { AppDispatch, RootState } from "@/store/store";
 import type { SearchSuggestions } from "@/utils/types";
@@ -137,7 +137,7 @@ export default function NavigationStatic({
   searchData?: SearchSuggestions | null;
 }) {
   const reduxCustomer = useSelector((s: RootState) => s.profile.customer);
-  const locationData = useSelector((s: RootState) => s.location.data);
+  const locationData = useLocationData();
   const profileLoading = useSelector((s: RootState) => s.profile.loading);
   const customer = reduxCustomer;
   const dispatch = useDispatch<AppDispatch>();

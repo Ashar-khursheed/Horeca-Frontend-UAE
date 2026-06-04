@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RootState } from "@/store/store";
+import { useLocationData } from "@/utils/locationStorage";
 import {
   CheckCircle,
   ChevronDown,
@@ -21,7 +21,6 @@ import {
   Truck,
 } from "lucide-react";
 import { useState } from "react";
-import { useSelector } from "react-redux";
 import { RatingStars } from "./rating-stars";
 import type { Accessory, AccessoryItem, VariantItem } from "./types";
 
@@ -75,7 +74,7 @@ export const ProductInfo = ({
     useState<AccessoryItem | null>(null);
   const [qty, setQty] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
-  const locationState = useSelector((s: RootState) => s.location.data);
+  const locationState = useLocationData();
 
   const hasSale = activeOriginal > activePrice;
   const discountPct = hasSale

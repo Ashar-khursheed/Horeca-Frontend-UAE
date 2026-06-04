@@ -13,8 +13,7 @@ import { QASection } from "./qa-section";
 import { ReviewsSection } from "./reviews-section";
 import { SpecificationsSection } from "./specifications-section";
 import type { ProductDetailResponse, VariantItem } from "./types";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useLocationData } from "@/utils/locationStorage";
 
 interface Props {
   productData: ProductDetailResponse;
@@ -31,7 +30,7 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug }: Props
   const images = productData.images ?? [];
   const description = productData.description ?? [];
   const benefitsFeatures = productData.benefits_features ?? [];
-  const state = useSelector((s: RootState) => s.location.data);
+  const state = useLocationData();
 
   const supplier = productData.suppliers?.[0] ?? null;
   const activePrice = productData.sale_price > 0 ? productData.sale_price : productData.price;

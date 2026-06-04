@@ -1,4 +1,5 @@
 "use client";
+import { useAppSelector } from "@/store/hooks";
 import {
   CheckCircle,
   Heart,
@@ -8,13 +9,12 @@ import {
   Star,
   Truck,
 } from "lucide-react";
-import Link from "next/link";
 import { useLocale } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import TickerBadge from "../ticker-badge";
 import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AddToCartWidget from "../add-to-cart";
-import { useAppSelector } from "@/store/hooks";
+import TickerBadge from "../ticker-badge";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -60,7 +60,10 @@ export interface RawApiProduct {
   avg_rating: number | null;
   total_reviews: number;
   delivery_days?: string;
-  currency?: LS | { name?: string; symbol?: string };
+  currency?: {
+    name?: string;
+    symbol?: string;
+  };
   images: string[] | { en?: string[]; ar?: string[] };
   alt_tags?: string[];
   in_wishlist?: boolean;
@@ -100,6 +103,9 @@ interface ProductCardProps {
   aboveFold?: boolean;
   onWishlistToggle?: (product: ApiProduct | RawApiProduct, inWishlist: boolean) => void;
 }
+
+
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const fmtPrice = (n: number) =>
@@ -210,7 +216,7 @@ export const ProductCard = ({
   onWishlistToggle,
 }: ProductCardProps) => {
   const locale = useLocale();
-
+console.log("productproductproduct",product);
   // ── Country from Redux (client-side currency conversion) ─────────────
   const country = useAppSelector((s) => s.country.data);
 
@@ -223,7 +229,7 @@ export const ProductCard = ({
         ? ((rawImages as { ar?: string[]; en?: string[] })?.ar ?? (rawImages as { en?: string[] })?.en ?? [])
         : ((rawImages as { en?: string[] })?.en ?? (rawImages as { ar?: string[] })?.ar ?? []));
   const deliveryDays = product.delivery_days ?? ("suppliers" in product ? (product as RawApiProduct).suppliers?.[0]?.delivery_days : undefined) ?? "";
-  const apiCurrencyStr = resolveCurrencySymbol(product.currency as CurrencyField);
+
   const sellUnitStr = resolveStr(product.selling_type?.attribute_value_unit, locale);
   const originalPrice = product.original_price ?? product.price ?? 0;
   const supplier0 = (product as RawApiProduct).suppliers?.[0];
@@ -247,7 +253,7 @@ export const ProductCard = ({
   // ── Currency symbol: prefer country Redux, fallback to API field ─────
   // Price amount comes from API as-is. Client-side fetch (useEffect in
   // sub-category) re-fetches with user IP → correct local-currency prices.
-  const currencyStr = country?.currency_symbol ?? apiCurrencyStr;
+  
 
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
 
@@ -465,9 +471,10 @@ export const ProductCard = ({
                     className={`font-bold leading-none ${
                       hasSale ? "text-[#186737]" : "text-gray-900"
                     }`}
-                    
                   >
-                 {currencyStr || "AED"}
+                    {typeof product?.currency === "object"
+                      ? product.currency?.symbol || "AED"
+                      : product?.currency || "AED"}
                     {priceInt}
                   </b>
                   <span
@@ -488,7 +495,9 @@ export const ProductCard = ({
               {/* WAS price */}
               {hasSale ? (
                 <p className="text-[#6B7280] font-semibold text-[13px] line-through mt-1">
-                  WAS {currencyStr} {fmtPrice(originalPrice)}
+                  WAS     {typeof product?.currency === "object"
+                      ? product.currency?.symbol || "AED"
+                      : product?.currency || "AED"} {fmtPrice(originalPrice)}
                 </p>
               ) : null}
             </div>

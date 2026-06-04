@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { useAppSelector } from "@/store/hooks";
+import { useLocationData } from "@/utils/locationStorage";
 import { setTaxRate, TAX_STORAGE_KEY, type TaxRateData } from "@/store/slices/tax/taxSlice";
 import type { AppDispatch } from "@/store/store";
 
@@ -10,7 +10,7 @@ const TAX_API_BASE = "https://pim.thehorecastore.co/api/frontend/tax/rate";
 
 export default function TaxInitializer() {
   const dispatch = useDispatch<AppDispatch>();
-  const location = useAppSelector((s) => s.location.data);
+  const location = useLocationData();
   const fetchedZip = useRef<string | null>(null);
 
   useEffect(() => {

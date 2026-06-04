@@ -9,25 +9,32 @@ function clearAuthCookies(response: NextResponse): NextResponse {
   return response;
 }
 
-async function resolveCountryCode(request: NextRequest): Promise<string> {
-  // Cookie already set by client-side — fastest path, no API call
-  const fromCookie = request.cookies.get("hc_cc")?.value;
-  if (fromCookie) return fromCookie;
+// In-memory IP cache — avoids calling ip-api on every request
+const ipCache = new Map<string, { country: string; expires: number }>();
+const IP_CACHE_MS = 30 * 1000; // 30 seconds
 
-  // Get user's real IP from proxy headers
+async function resolveCountryCode(request: NextRequest): Promise<string> {
   const forwarded = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
   const userIp    = forwarded?.split(",")[0]?.trim();
 
   if (userIp) {
+    // Return from cache if fresh (30s)
+    const cached = ipCache.get(userIp);
+    if (cached && Date.now() < cached.expires) return cached.country;
+
+    // Always detect from real user IP — ignores stale cookie
     try {
-      // ip-api.com supports IP in URL path — works correctly from server
       const res  = await fetch(`http://ip-api.com/json/${userIp}?fields=status,countryCode`);
       const data = await res.json();
-      if (data.status === "success" && data.countryCode) return data.countryCode;
+      if (data.status === "success" && data.countryCode) {
+        ipCache.set(userIp, { country: data.countryCode, expires: Date.now() + IP_CACHE_MS });
+        return data.countryCode;
+      }
     } catch {}
   }
 
-  return "IN";
+  // Fallback: cookie or default
+  return request.cookies.get("hc_cc")?.value ?? "IN";
 }
 
 export async function middleware(request: NextRequest) {

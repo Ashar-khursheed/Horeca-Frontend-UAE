@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
-import type { LocationData } from "@/store/slices/location/locationSlice";
+import { useLocationData } from "@/utils/locationStorage";
 import { loginUser } from "@/store/slices/auth/authSlice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { registerSchema } from "@/validation/schema";
@@ -59,8 +59,9 @@ export default function RegisterPage() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  const locationFromRedux = useSelector((s: RootState) => s.location.data);
+  const locationFromRedux = useLocationData();
   const country = useSelector((s: RootState) => s.country);
+  console.log("Country from Redux:", country); // Debug log for country data
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,9 +69,9 @@ export default function RegisterPage() {
 
   // Fetch country details (once) using sessionStorage first, then Redux fallback
   useEffect(() => {
-    const cached = sessionStorage.getItem("location");
+    const cached = locationFromRedux;
     if (cached) {
-      const data = JSON.parse(cached) as LocationData;
+      const data = cached;
       if (data?.country) {
         dispatch(fetchCountryByName(data.country));
         return;
@@ -83,11 +84,7 @@ export default function RegisterPage() {
 
   // Derived display values from Redux country + location
   const dialCode = country.data?.phone_code ?? "";
-  const isoCode =
-    locationFromRedux?.countryCode ??
-    (sessionStorage.getItem("location")
-      ? (JSON.parse(sessionStorage.getItem("location")!) as LocationData).countryCode
-      : "");
+  const isoCode = locationFromRedux?.countryCode ?? "";
   const flagEmoji = isoCode ? getFlagEmoji(isoCode) : "🌍";
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
 

@@ -22,8 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Accessory, AccessoryItem } from "./types";
-import { RootState } from "@/store/store";
-import { useSelector } from "react-redux";
+import { useLocationData } from "@/utils/locationStorage";
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -66,7 +65,7 @@ export const PurchasePanel = ({
     useState<AccessoryItem | null>(null);
   const [qty, setQty] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
- const state = useSelector((s: RootState) => s.location.data);
+  const state = useLocationData();
   const hasSale = activeOriginal > activePrice;
   const discountPct = hasSale
     ? ((activeOriginal - activePrice) / activeOriginal) * 100
