@@ -46,7 +46,6 @@ export default async function Page() {
   
   return (
     <main>
-      <h1>arshad pp </h1>
       <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} featuredProducts={featuredProducts} featuredBrandProducts={featuredBrandProducts} blogs={blogs} />
     </main>
   );
