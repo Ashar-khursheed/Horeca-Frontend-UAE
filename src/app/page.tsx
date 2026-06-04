@@ -23,12 +23,12 @@ export default async function Page() {
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_PRODUCTS,
       {},
-      { revalidate: 0 },  // admin se update hone pe fresh data chahiye
+      { revalidate: 3600 },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate: 0 },  // admin se update hone pe fresh data chahiye
+      { revalidate: 3600 },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.BLOGS,
@@ -45,6 +45,7 @@ export default async function Page() {
   const blogs = blogsRes?.data ?? [];
   return (
     <main>
+      <h1>arshad</h1>
       <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} featuredProducts={featuredProducts} featuredBrandProducts={featuredBrandProducts} blogs={blogs} />
     </main>
   );

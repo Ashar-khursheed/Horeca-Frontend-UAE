@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { getCountryCodeSSR } from "@/utils/country";
 
 const API_BASE =
@@ -15,18 +14,6 @@ type Options = {
   body?: Record<string, any>;
 };
 
-/**
- * SSR-safe fetch wrapper for Next.js Server Components / page.tsx files.
- *
- * Usage:
- *   const json = await makeApiCallSSR("/products", { page: "1", per_page: "20" });
- *   const json = await makeApiCallSSR("/products", params, { revalidate: 300 });
- *   const json = await makeApiCallSSR<MyType>("/products");
- *
- * - Prepends API_BASE automatically (pass a full URL to skip).
- * - Filters out undefined / null / empty-string params.
- * - Returns parsed JSON on success, null on any error.
- */
 export async function makeApiCallSSR<T = unknown>(
   path: string,
   params?: Params,
@@ -43,13 +30,7 @@ export async function makeApiCallSSR<T = unknown>(
       }
     }
 
-    let userIp: string | undefined;
-    try {
-      const reqHeaders = await headers();
-      const forwarded  = reqHeaders.get("x-forwarded-for");
-      userIp = forwarded?.split(",")[0]?.trim() ?? undefined;
-    } catch {}
-    const countryCode = await getCountryCodeSSR(userIp);
+    const countryCode = await getCountryCodeSSR();
     qs.set("force_country", countryCode);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;

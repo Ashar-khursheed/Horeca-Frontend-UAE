@@ -6,11 +6,10 @@ interface GeoResponse {
   countryCode: string;
 }
 
-// SSR: pass user's real IP so the API detects their location, not the server's
-export async function getCountryCodeSSR(userIp?: string): Promise<string> {
+// SSR: called from server components — hits location API directly
+export async function getCountryCodeSSR(): Promise<string> {
   try {
-    const url = userIp ? `${GEO_API}?ip=${userIp}` : GEO_API;
-    const res = await fetch(url, { next: { revalidate: 3600 } });
+    const res  = await fetch(GEO_API, { cache: "no-store" });
     const data: GeoResponse = await res.json();
     if (data.status === "success" && data.countryCode) return data.countryCode;
   } catch {}
