@@ -152,13 +152,13 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { slug: categorySlug, with_parent: false },
-      { revalidate: 0 },
+      { revalidate: 3600 },
     ),
     makeApiCallSSR<InnerCategoryPageResponse>(
       apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
       {},
       {
-        revalidate: 0,
+        revalidate: 3600,
         method: "POST",
         body: buildFilterBody(subCategorySlug),
       },
@@ -167,7 +167,7 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
       apiUrls.PRODUCTS_LISTING,
       {},
       {
-        revalidate: 0,
+        revalidate: 60,
         method: "POST",
         body: productsBody,
       },
@@ -178,7 +178,8 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
   const subCategoryPage = subCategoryPageRes ?? null
 
   console.log("API Payload:", productsBody)
-  console.log("Products API Response:", subCategoryPage)
+  console.log("Products API Response:", productsRes)
+  console.log("Sub Category Page Response:", subCategoryPageRes)
 
   return (
     <div>
@@ -190,7 +191,6 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
         subCategoryPage={subCategoryPage}
         productsData={productsRes}
         currentPage={currentPage}
-        productsBody={productsBody}
       />
     </div>
   )

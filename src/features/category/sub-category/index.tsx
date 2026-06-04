@@ -1,7 +1,5 @@
 "use client";
 
-import { apiUrls } from "@/apis/api-endpoint";
-import { makeApiRequest } from "@/apis/axios-instance";
 import Breadcrumb from "@/components/breadcum";
 import FilterSidebar from "@/components/filters";
 import { ProductCardSkeleton } from "@/components/loading-sketlon";
@@ -30,7 +28,7 @@ import {
 import { useLocale } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -128,7 +126,6 @@ export default function SubCategoryPage({
   parentSlug,
   subCategoryPage,
   productsData,
-  productsBody,
   currentPage = 1,
 }: {
   subCategories: ApiCategory[];
@@ -138,22 +135,18 @@ export default function SubCategoryPage({
   productsData?: ProductsListingResponse | null;
   subCategoryPage?: InnerCategoryPageResponse | null;
   currentPage?: number;
-  productsBody?: any;
 }) {
+
+  console.log("[SubCategoryPage] Render",productsData )
   const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  // Client-side state for both filter data and products (correct local-currency)
-  const [clientSubCategoryPage, setClientSubCategoryPage] = useState<InnerCategoryPageResponse | null | undefined>(subCategoryPage);
-  const [clientProducts, setClientProducts] = useState<any[]>(productsData?.products ?? []);
-  const [clientFetchDone, setClientFetchDone] = useState(false);
-  const products = clientProducts;
+  const filterAPIData = subCategoryPage?.filters;
+  const rangeFiltersData = subCategoryPage?.rangeFilters;
+  const fixedFiltersData = subCategoryPage?.fixedFilters;
 
-  const filterAPIData = clientSubCategoryPage?.filters;
-  const rangeFiltersData = clientSubCategoryPage?.rangeFilters;
-  const fixedFiltersData = clientSubCategoryPage?.fixedFilters;
 
   // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
   const unitMap: Record<number, number> = Object.fromEntries(
@@ -161,6 +154,7 @@ export default function SubCategoryPage({
       .filter((f) => f.unit_id != null)
       .map((f) => [f.attribute_id, f.unit_id as number]),
   );
+  const products = productsData?.products ?? [];
   const totalProducts = productsData?.total_records ?? products.length;
   const totalPages =
     (productsData?.total_pages ?? Math.ceil(totalProducts / 20)) || 1;
@@ -387,64 +381,6 @@ export default function SubCategoryPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiPriceMin, apiPriceMax, pushURL]);
 
-  useEffect(() => {
-    if (!productsBody) return;
-
-    const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://test-us.thehorecastore.co/api/";
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")?.trim().replace(/^["']|["']$/g, "")
-      : null;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-
-    // Fetch filter data (correct local-currency price range from user's IP)
-    const filterBody = {
-      category_url: subCategorySlug,
-      applied_filters: {},
-      applied_range_filters: [{}],
-      applied_fixed_filters: [{}],
-      locale: "en",
-    };
-
-    fetch(`${baseURL}${apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(filterBody),
-    })
-      .then((res) => res.json())
-      .then((data: InnerCategoryPageResponse) => {
-        if (data?.filters) {
-          setClientSubCategoryPage(data);
-          // Update price range slider bounds with correct local-currency values
-          const newMin = Math.floor(Number(data.filters.priceRange?.min_price ?? apiPriceMin));
-          const newMax = Math.ceil(Number(data.filters.priceRange?.max_price ?? apiPriceMax));
-          if (!searchParams.get("min") && !searchParams.get("max")) {
-            setPriceRange({ min: newMin, max: newMax });
-          }
-        }
-      })
-      .catch(() => {});
-
-    // Fetch products (correct local-currency prices from user's IP)
-    fetch(`${baseURL}${apiUrls.PRODUCTS_LISTING}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(productsBody),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.products?.length) {
-          setClientProducts(data.products);
-        }
-      })
-      .catch((err) => console.error("Products API Error:", err))
-      .finally(() => setClientFetchDone(true));
-  }, [productsBody]);
-
   return (
     <main className="min-h-screen bg-gray-5p0">
       <Breadcrumb crumbs={crumbs} />
@@ -598,7 +534,6 @@ export default function SubCategoryPage({
               onFixedFilterToggle={handleFixedFilterToggle}
               onClearFixedFilter={handleClearFixedFilter}
               currency={filterAPIData?.priceRange?.currency?.symbol}
-              loading={!clientFetchDone}
             />
           </div>
 
@@ -649,11 +584,7 @@ export default function SubCategoryPage({
                       </SelectTrigger>
                       <SelectContent>
                         {SORT_OPTIONS.map((opt) => (
-                          <SelectItem
-                            key={opt}
-                            value={opt}
-                            className="text-[12px]"
-                          >
+                          <SelectItem key={opt} value={opt} className="text-[12px]">
                             {opt}
                           </SelectItem>
                         ))}
@@ -718,12 +649,9 @@ export default function SubCategoryPage({
             {!isPending && products.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-[7px]">
                 <Search size={52} className="text-gray-200 mb-5" />
-                <h3 className="text-[17px] font-semibold text-gray-700 mb-2">
-                  No Products Found
-                </h3>
+                <h3 className="text-[17px] font-semibold text-gray-700 mb-2">No Products Found</h3>
                 <p className="text-[13px] text-gray-400 text-center max-w-xs leading-relaxed">
-                  We couldn&apos;t find any products matching your filters. Try
-                  adjusting or clearing them.
+                  We couldn&apos;t find any products matching your filters. Try adjusting or clearing them.
                 </p>
                 <button
                   onClick={handleClearAll}
@@ -734,7 +662,7 @@ export default function SubCategoryPage({
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
-                {isPending || !clientFetchDone
+                {isPending
                   ? Array.from({ length: showCount }).map((_, i) => (
                       <ProductCardSkeleton key={i} />
                     ))
@@ -860,7 +788,6 @@ export default function SubCategoryPage({
             onFixedFilterToggle={handleFixedFilterToggle}
             onClearFixedFilter={handleClearFixedFilter}
             currency={filterAPIData?.priceRange?.currency?.symbol}
-            loading={!clientFetchDone}
           />
         </div>
 
