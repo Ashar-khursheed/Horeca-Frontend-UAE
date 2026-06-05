@@ -136,11 +136,11 @@ export default function DashboardPage() {
                 <p className="text-white text-lg font-bold">1</p>
                 <p className="text-white/80 text-xs">Wishlist</p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
+              {/* <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
                 <DollarSign className="w-5 h-5 text-white mx-auto mb-1" />
                 <p className="text-white text-lg font-bold">$0.00</p>
                 <p className="text-white/80 text-[10px] leading-tight">Net Terms Credit</p>
-              </div>
+              </div> */}
             </div>
           )}
         </div>

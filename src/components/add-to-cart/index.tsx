@@ -5,7 +5,16 @@ import { CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useLocationData } from "@/utils/locationStorage";
-import { addItem, hydrateCart, removeItem, updateQuantity } from "@/store/slices/cart/cartSlice";
+import {
+  addItem,
+  hydrateCart,
+  removeItem,
+  updateQuantity,
+  fetchCart,
+  addApiEntry,
+  updateApiEntryQty,
+  removeApiEntry,
+} from "@/store/slices/cart/cartSlice";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { getShippingCharge } from "@/utils/shipping";
@@ -58,33 +67,6 @@ export interface AddToCartWidgetProps {
 // ─── Module-level hydration guard ────────────────────────────────────────────
 let cartHydrated = false;
 
-// ─── Shared cart cache (one CART_GET call for all widget instances) ───────────
-interface CachedCartItem { id: number; product_id: number; quantity: number }
-let cachedCartItems: CachedCartItem[] = [];
-let cartCacheFetched = false;
-let cartFetchPromise: Promise<void> | null = null;
-
-const fetchSharedCart = (countryName: string): Promise<void> => {
-  if (cartCacheFetched) return Promise.resolve();
-  if (cartFetchPromise) return cartFetchPromise;
-  cartFetchPromise = makeApiRequest<any>( // eslint-disable-line @typescript-eslint/no-explicit-any
-    apiUrls.CART_GET,
-    { params: { country: countryName } },
-  )
-    .then((res: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      cachedCartItems = res?.data?.customer_cart_products ?? [];
-      cartCacheFetched = true;
-    })
-    .catch(() => {})
-    .finally(() => { cartFetchPromise = null; });
-  return cartFetchPromise;
-};
-
-const invalidateCartCache = () => {
-  cartCacheFetched = false;
-  cachedCartItems = [];
-};
-
 // ─── Component ───────────────────────────────────────────────────────────────
 export const AddToCartWidget = ({
   product,
@@ -97,20 +79,21 @@ export const AddToCartWidget = ({
   const dispatch = useAppDispatch();
   const locale = useLocale();
 
-  const country = useAppSelector((s) => s.country.data);
-  const cartItems = useAppSelector((s) => s.cart.items);
-  const location = useLocationData();
+  const country    = useAppSelector((s) => s.country.data);
+  const cartItems  = useAppSelector((s) => s.cart.items);
+  const apiEntries = useAppSelector((s) => s.cart.apiEntries);
+  const apiStatus  = useAppSelector((s) => s.cart.apiStatus);
+  const location   = useLocationData();
 
   // ── Normalise product fields ─────────────────────────────────────────────
   const supplier0 = (product as RawApiProduct).suppliers?.[0];
-  const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
-  const isFixed =
-    product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
-  const isQuote = !!product.quote_available;
-  const vendorId = supplier0?.vendor_id ?? 0;
+  const minQty    = product.min_quantity ?? supplier0?.min_quantity ?? 1;
+  const isFixed   = product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
+  const isQuote   = !!product.quote_available;
+  const vendorId  = supplier0?.vendor_id ?? 0;
   const showCounter = showCounterProp ?? !isQuote;
 
-  const name = resolveStr(product.name as LS, locale);
+  const name           = resolveStr(product.name as LS, locale);
   const currencySymbol = resolveCurrencySymbol(
     product.currency as string | { name?: string; symbol?: string } | undefined,
   );
@@ -129,28 +112,32 @@ export const AddToCartWidget = ({
   })();
 
   const originalPrice = product.original_price ?? product.price ?? 0;
-  const hasSale =
-    product.sale_price > 0 && product.sale_price !== originalPrice;
-  const activePrice = hasSale ? product.sale_price : originalPrice;
+  const hasSale       = product.sale_price > 0 && product.sale_price !== originalPrice;
+  const activePrice   = hasSale ? product.sale_price : originalPrice;
 
-  // ── Desktop state ────────────────────────────────────────────────────────
-  const [count, setCount] = useState(minQty);
-  const [addedSuccess, setAddedSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // ── Redux-derived cart state ──────────────────────────────────────────────
+  // For logged-in: read from Redux apiEntries
+  const myApiEntry      = apiEntries.find((e) => e.productId === product.id);
+  // cartItemId > 0 means it's a confirmed server ID; 0 = optimistic placeholder
+  const apiCartItemId   = myApiEntry && myApiEntry.cartItemId > 0 ? myApiEntry.cartItemId : null;
+  const apiInCart       = !!myApiEntry;
+  const apiQty          = myApiEntry?.quantity ?? minQty;
+
+  // For guest: read from local Redux items
+  const guestCartItem   = cartItems.find((i) => i.productId === product.id);
+
+  // ── Local UI state ────────────────────────────────────────────────────────
+  const [count,        setCount]        = useState(minQty);   // desktop qty selector
+  const [addedSuccess, setAddedSuccess] = useState(false);    // desktop flash
+  const [loading,      setLoading]      = useState(false);    // desktop button
+  const [isMobile,     setIsMobile]     = useState(false);
+  const [isLoggedIn,   setIsLoggedIn]   = useState(false);
+  const [mobileLoading,setMobileLoading]= useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Mobile state ─────────────────────────────────────────────────────────
-  const [isMobile, setIsMobile] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mobileInCart, setMobileInCart] = useState(false);
-  const [mobileCartItemId, setMobileCartItemId] = useState<number | null>(null);
-  const [mobileQty, setMobileQty] = useState(minQty);
-  const [mobileLoading, setMobileLoading] = useState(false);
-
-  // For guest users: check if item is in local cart
-  const guestCartItem = cartItems.find((i) => i.productId === product.id);
-  const effectiveMobileInCart = isLoggedIn ? mobileInCart : !!guestCartItem;
-  const currentMobileQty = isLoggedIn ? mobileQty : (guestCartItem?.quantity ?? minQty);
+  // Derived mobile display values
+  const effectiveMobileInCart = isLoggedIn ? apiInCart : !!guestCartItem;
+  const currentMobileQty      = isLoggedIn ? apiQty : (guestCartItem?.quantity ?? minQty);
 
   // ── Init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -170,19 +157,35 @@ export const AddToCartWidget = ({
     };
   }, [dispatch]);
 
-  // ── Load initial cart state for logged-in users (runs once country is ready) ─
+  // ── Fetch cart from API once (shared across all widget instances) ─────────
   useEffect(() => {
     if (!isLoggedIn || !country?.name) return;
-    fetchSharedCart(country.name).then(() => {
-      const found = cachedCartItems.find((i) => i.product_id === product.id);
-      if (found) {
-        setMobileInCart(true);
-        setMobileCartItemId(found.id);
-        setMobileQty(found.quantity);
-      }
-    });
+    // Only fetch if not already loading or succeeded
+    if (apiStatus === "idle" || apiStatus === "failed") {
+      dispatch(fetchCart(country.name));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, country?.name]);
+
+  // ── Resolve cartItemId (uses Redux first, falls back to CART_GET) ─────────
+  const resolveCartItemId = async (): Promise<number | null> => {
+    if (apiCartItemId) return apiCartItemId;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = await makeApiRequest<any>(apiUrls.CART_GET, {
+        params: { country: country?.name ?? "" },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const products: any[] = res?.data?.customer_cart_products ?? [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const found = products.find((cp: any) => cp.product_id === product.id);
+      if (found?.id) {
+        dispatch(addApiEntry({ cartItemId: found.id, productId: product.id, quantity: found.quantity }));
+        return found.id;
+      }
+    } catch {}
+    return null;
+  };
 
   // ── Desktop handlers ──────────────────────────────────────────────────────
   const handleIncrement = (e: React.MouseEvent) => {
@@ -209,14 +212,10 @@ export const AddToCartWidget = ({
     e.preventDefault();
     e.stopPropagation();
 
-    const shippingCharge = getShippingCharge(
-      location?.city ?? "",
-      location?.regionName ?? "",
-    );
-    const subTotal = activePrice * count;
+    const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
+    const subTotal   = activePrice * count;
     const totalPrice = subTotal + shippingCharge;
-
-    const token = getToken();
+    const token      = getToken();
 
     if (token) {
       setLoading(true);
@@ -232,6 +231,8 @@ export const AddToCartWidget = ({
             accessory_item_ids: accessoryItemIds,
           },
         });
+        // Refresh Redux cart so count in header stays accurate
+        if (country?.name) dispatch(fetchCart(country.name));
       } catch {
         // silent
       } finally {
@@ -248,7 +249,7 @@ export const AddToCartWidget = ({
           price: item.price,
         }));
 
-      const cartItem = {
+      dispatch(addItem({
         productId: product.id,
         name,
         url: product.url ?? "",
@@ -271,8 +272,7 @@ export const AddToCartWidget = ({
         accessoryItemIds,
         selectedAccessories,
         rawProduct: product,
-      };
-      dispatch(addItem(cartItem as Parameters<typeof addItem>[0]));
+      } as Parameters<typeof addItem>[0]));
     }
 
     setAddedSuccess(true);
@@ -282,29 +282,6 @@ export const AddToCartWidget = ({
 
   // ── Mobile handlers ───────────────────────────────────────────────────────
 
-  // Returns cached cartItemId or fetches it on demand — used by all mobile handlers
-  const resolveCartItemId = async (): Promise<number | null> => {
-    if (mobileCartItemId) return mobileCartItemId;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = await makeApiRequest<any>(apiUrls.CART_GET, {
-        params: { country: country?.name ?? "" },
-      });
-      // Response: { success, data: { customer_cart_products: [{ id, product_id, ... }] } }
-      const items: any[] = res?.data?.customer_cart_products ?? []; // eslint-disable-line @typescript-eslint/no-explicit-any
-      // Update shared cache so other instances benefit too
-      cachedCartItems = items;
-      cartCacheFetched = true;
-      const found = items.find((i: any) => i.product_id === product.id); // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (found?.id) {
-        setMobileCartItemId(found.id);
-        setMobileQty(found.quantity ?? minQty);
-        return found.id;
-      }
-    } catch {}
-    return null;
-  };
-
   const handleMobileAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -312,10 +289,7 @@ export const AddToCartWidget = ({
 
     const token = getToken();
     if (token) {
-      const shippingCharge = getShippingCharge(
-        location?.city ?? "",
-        location?.regionName ?? "",
-      );
+      const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const res = await makeApiRequest<any>(apiUrls.CART_ADD, {
@@ -330,36 +304,28 @@ export const AddToCartWidget = ({
           },
         });
 
-        // Show counter immediately — don't wait for cartItemId
-        setMobileInCart(true);
-        setMobileQty(minQty);
-        invalidateCartCache();
-
-        // Try to get cartItemId from add response first
-        const itemId =
+        // Try to get cartItemId from CART_ADD response
+        const itemId: number =
           res?.data?.id ??
           res?.data?.cart_product?.id ??
           res?.data?.cart_item?.id ??
           res?.id ??
-          null;
+          0; // 0 = placeholder, resolveCartItemId will fix it
 
-        if (itemId) {
-          setMobileCartItemId(itemId);
-        } else {
-          // Fallback: fetch with country param — result gets cached in mobileCartItemId
-          resolveCartItemId().catch(() => {});
-        }
+        // Optimistically add to Redux → shows counter immediately
+        dispatch(addApiEntry({ cartItemId: itemId, productId: product.id, quantity: minQty }));
+
+        // If no real ID yet, resolve in background
+        if (!itemId) resolveCartItemId().catch(() => {});
+
       } catch {
         // silent
       }
     } else {
-      const shippingCharge = getShippingCharge(
-        location?.city ?? "",
-        location?.regionName ?? "",
-      );
-      const subTotal = activePrice * minQty;
+      const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
+      const subTotal   = activePrice * minQty;
       const totalPrice = subTotal + shippingCharge;
-      const rawAcc = (product as RawApiProduct).accessories ?? [];
+      const rawAcc     = (product as RawApiProduct).accessories ?? [];
       const selectedAccessories = rawAcc
         .flatMap((acc) => acc.accessory_item ?? [])
         .filter((item) => accessoryItemIds.includes(item.id))
@@ -369,32 +335,30 @@ export const AddToCartWidget = ({
           price: item.price,
         }));
 
-      dispatch(
-        addItem({
-          productId: product.id,
-          name,
-          url: product.url ?? "",
-          parentCategoryUrl: product.parent_category_url ?? "",
-          image,
-          price: activePrice,
-          originalPrice,
-          hasSale,
-          currencySymbol,
-          quantity: minQty,
-          minQty,
-          isFixed,
-          isQuote,
-          sellUnit,
-          sku: product.sku ?? "",
-          vendorId,
-          shippingCharge,
-          subTotal,
-          totalPrice,
-          accessoryItemIds,
-          selectedAccessories,
-          rawProduct: product,
-        } as Parameters<typeof addItem>[0]),
-      );
+      dispatch(addItem({
+        productId: product.id,
+        name,
+        url: product.url ?? "",
+        parentCategoryUrl: product.parent_category_url ?? "",
+        image,
+        price: activePrice,
+        originalPrice,
+        hasSale,
+        currencySymbol,
+        quantity: minQty,
+        minQty,
+        isFixed,
+        isQuote,
+        sellUnit,
+        sku: product.sku ?? "",
+        vendorId,
+        shippingCharge,
+        subTotal,
+        totalPrice,
+        accessoryItemIds,
+        selectedAccessories,
+        rawProduct: product,
+      } as Parameters<typeof addItem>[0]));
     }
 
     setMobileLoading(false);
@@ -416,8 +380,8 @@ export const AddToCartWidget = ({
             method: "PUT",
             data: { quantity: newQty },
           });
+          dispatch(updateApiEntryQty({ cartItemId: cartId, quantity: newQty }));
         }
-        setMobileQty(newQty);
       } catch {
         // silent
       } finally {
@@ -444,8 +408,8 @@ export const AddToCartWidget = ({
             method: "PUT",
             data: { quantity: newQty },
           });
+          dispatch(updateApiEntryQty({ cartItemId: cartId, quantity: newQty }));
         }
-        setMobileQty(newQty);
       } catch {
         // silent
       } finally {
@@ -466,14 +430,12 @@ export const AddToCartWidget = ({
       try {
         const cartId = await resolveCartItemId();
         if (cartId) {
-          await makeApiRequest(apiUrls.CART_REMOVE(cartId), {
-            method: "DELETE",
-          });
+          await makeApiRequest(apiUrls.CART_REMOVE(cartId), { method: "DELETE" });
+          dispatch(removeApiEntry(cartId));
+        } else {
+          // No valid cartId — remove by productId from Redux
+          dispatch(removeApiEntry(myApiEntry?.cartItemId ?? 0));
         }
-        setMobileInCart(false);
-        setMobileCartItemId(null);
-        setMobileQty(minQty);
-        invalidateCartCache();
       } catch {
         // silent
       } finally {
@@ -486,7 +448,7 @@ export const AddToCartWidget = ({
 
   // ── Desktop button class ──────────────────────────────────────────────────
   const variant = isQuote ? "quote" : "cart";
-  const label = isQuote ? "Request a Quote" : "Add To Cart";
+  const label   = isQuote ? "Request a Quote" : "Add To Cart";
 
   const computedButtonClass = buttonClassName
     ? `${buttonClassName} flex items-center justify-center gap-2 transition-colors duration-200${addedSuccess ? " !bg-emerald-600 !text-white" : ""}`
@@ -502,7 +464,7 @@ export const AddToCartWidget = ({
               : "bg-[#186737] hover:bg-[#145c30] text-white",
       ].join(" ");
 
-  // ── Mobile: quote products use desktop-style button ───────────────────────
+  // ── Mobile layout (non-quote only) ───────────────────────────────────────
   // if (isMobile && !isQuote) {
   //   return (
   //     <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
@@ -511,19 +473,14 @@ export const AddToCartWidget = ({
   //         <div className="flex items-center bg-[#2563EB] rounded-[6px] overflow-hidden flex-1 h-8.5">
   //           {/* Left: trash (at minQty) or minus (above minQty) */}
   //           <button
-  //             onClick={
-  //               currentMobileQty <= minQty
-  //                 ? handleMobileDelete
-  //                 : handleMobileDecrement
-  //             }
+  //             onClick={currentMobileQty <= minQty ? handleMobileDelete : handleMobileDecrement}
   //             disabled={mobileLoading}
   //             className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
   //           >
-  //             {currentMobileQty <= minQty ? (
-  //               <Trash2 size={14} strokeWidth={2} />
-  //             ) : (
-  //               <Minus size={14} strokeWidth={2} />
-  //             )}
+  //             {currentMobileQty <= minQty
+  //               ? <Trash2 size={14} strokeWidth={2} />
+  //               : <Minus size={14} strokeWidth={2} />
+  //             }
   //           </button>
 
   //           {/* Count */}
@@ -548,14 +505,9 @@ export const AddToCartWidget = ({
   //           className="flex-1 h-8.5 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:bg-gray-400 disabled:cursor-wait"
   //         >
   //           {mobileLoading ? (
-  //             <>
-  //               Adding <Loader />
-  //             </>
+  //             <>Adding <Loader /></>
   //           ) : (
-  //             <>
-  //               <ShoppingCart size={13} strokeWidth={2} />
-  //               Add To Cart
-  //             </>
+  //             <><ShoppingCart size={13} strokeWidth={2} /> Add To Cart</>
   //           )}
   //         </button>
   //       )}
@@ -566,8 +518,7 @@ export const AddToCartWidget = ({
   // ── Desktop layout ────────────────────────────────────────────────────────
   return (
     <>
-    <div className="hidden md:block">
-      <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
+      <div className="md:block hidden"> <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
       {/* Quantity Counter */}
       {showCounter && (
         <div
@@ -615,38 +566,28 @@ export const AddToCartWidget = ({
           <ShoppingCart size={16} strokeWidth={2} />
         ) : null}
         {loading ? (
-          <>
-            Adding <Loader />
-          </>
+          <>Adding <Loader /></>
         ) : addedSuccess ? (
           "Added!"
         ) : (
           label
         )}
       </button>
-    </div>
-    </div>
-
-    <div className="md:hidden block">
-       <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
-        {effectiveMobileInCart ? (
+    </div></div>
+      <div className="md:hidden block"> <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
+        {effectiveMobileInCart && !isQuote ? (
           /* Mobile counter */
           <div className="flex items-center bg-[#2563EB] rounded-[6px] overflow-hidden flex-1 h-8.5">
             {/* Left: trash (at minQty) or minus (above minQty) */}
             <button
-              onClick={
-                currentMobileQty <= minQty
-                  ? handleMobileDelete
-                  : handleMobileDecrement
-              }
+              onClick={currentMobileQty <= minQty ? handleMobileDelete : handleMobileDecrement}
               disabled={mobileLoading}
               className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              {currentMobileQty <= minQty ? (
-                <Trash2 size={14} strokeWidth={2} />
-              ) : (
-                <Minus size={14} strokeWidth={2} />
-              )}
+              {currentMobileQty <= minQty
+                ? <Trash2 size={14} strokeWidth={2} />
+                : <Minus size={14} strokeWidth={2} />
+              }
             </button>
 
             {/* Count */}
@@ -663,6 +604,15 @@ export const AddToCartWidget = ({
               <Plus size={14} strokeWidth={2} />
             </button>
           </div>
+        ) : isQuote ? (
+          /* Mobile Request a Quote button */
+          <button
+            // onClick={handleAddToCart}
+            disabled={loading}
+            className="flex-1 h-8.5 rounded-lg bg-[#A6131D] hover:bg-[#8b1018] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+          >
+            Request a Quote
+          </button>
         ) : (
           /* Mobile Add To Cart button */
           <button
@@ -671,20 +621,15 @@ export const AddToCartWidget = ({
             className="flex-1 h-8.5 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:bg-gray-400 disabled:cursor-wait"
           >
             {mobileLoading ? (
-              <>
-                Adding <Loader />
-              </>
+              <>Adding <Loader /></>
             ) : (
-              <>
-                <ShoppingCart size={13} strokeWidth={2} />
-                Add To Cart
-              </>
+              <><ShoppingCart size={13} strokeWidth={2} /> Add To Cart</>
             )}
           </button>
         )}
-      </div>
-    </div>
+      </div></div>
     </>
+   
   );
 };
 

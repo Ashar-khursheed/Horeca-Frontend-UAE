@@ -20,6 +20,8 @@ import { apiUrls } from "@/apis/api-endpoint";
 import { getLocationData } from "@/utils/locationStorage";
 import { Modal } from "@/components/ui/modal";
 import { getShippingCharge } from "@/utils/shipping";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchCart, updateApiEntryQty, removeApiEntry } from "@/store/slices/cart/cartSlice";
 
 const CART_CACHE_KEY = "horeca_cart_display";
 
@@ -97,6 +99,8 @@ interface ApiCartResponse {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CartPage() {
+  const dispatch = useAppDispatch();
+
   const [cartItems,    setCartItems]    = useState<CartItem[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [isLoggedIn,   setIsLoggedIn]   = useState(false);
@@ -113,6 +117,8 @@ export default function CartPage() {
       // ── LOGGED IN CART: API only, never reads guest localStorage ──────────
       setIsLoggedIn(true);
       const countryName = location?.country ?? "";
+      // Keep Redux apiEntries in sync so AddToCartWidget counters stay accurate
+      dispatch(fetchCart(countryName));
       makeApiRequest<ApiCartResponse>(apiUrls.CART_GET, {
         params: { country: countryName },
       })
@@ -162,7 +168,7 @@ export default function CartPage() {
       // Update localStorage cache
       localStorage.setItem(CART_CACHE_KEY, JSON.stringify(updated));
 
-      // Logged in → call update-quantity API
+      // Logged in → call update-quantity API + sync Redux
       const token = getToken();
       const item = prev.find((c) => c.id === id);
       if (token && item?.cartItemId) {
@@ -170,6 +176,7 @@ export default function CartPage() {
           method: "PUT",
           data: { quantity: qty },
         }).catch(() => {});
+        dispatch(updateApiEntryQty({ cartItemId: item.cartItemId, quantity: qty }));
       }
       return updated;
     });
@@ -181,12 +188,13 @@ export default function CartPage() {
       const updated = prev.filter((c) => c.id !== id);
       localStorage.setItem(CART_CACHE_KEY, JSON.stringify(updated));
 
-      // Logged in → call remove API
+      // Logged in → call remove API + sync Redux
       const token = getToken();
       if (token && item?.cartItemId) {
         makeApiRequest(apiUrls.CART_REMOVE(item.cartItemId), {
           method: "DELETE",
         }).catch(() => {});
+        dispatch(removeApiEntry(item.cartItemId));
       }
       return updated;
     });
