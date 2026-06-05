@@ -159,6 +159,8 @@ export const Home = ({
       })
       .catch(() => {});
   }, [router]);
+
+  console.log("productsproductsproductsproductsproducts", products,);
   return (
     <>
       <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />

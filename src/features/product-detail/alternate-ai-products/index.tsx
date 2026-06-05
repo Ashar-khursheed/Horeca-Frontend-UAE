@@ -81,7 +81,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       {/* Info */}
       <div className="p-2">
         <Link href={product.url}>
-          <p className="text-[10px] text-gray-700 leading-tight line-clamp-2 min-h-7 hover:text-[#186737] transition-colors">
+          <p className="text-[10px] text-gray-700 leading-tight line-clamp-2  hover:text-[#186737] transition-colors">
             {product.name}
           </p>
         </Link>
@@ -194,7 +194,7 @@ const AlternateAiProducts = ({
       {hasAI && (
         <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="heading-font-size font-bold text-gray-800">
+            <h2 className="lg:text-lg xl:text-2xl md:text-base font-bold text-gray-800">
               AI-Recommended Alternatives
             </h2>
           </div>
@@ -207,7 +207,7 @@ const AlternateAiProducts = ({
       {hasSimilar && (
         <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="heading-font-size font-bold text-gray-800">
+            <h2 className="lg:text-lg xl:text-2xl md:text-base font-bold text-gray-800">
               Similar Products
             </h2>
           </div>

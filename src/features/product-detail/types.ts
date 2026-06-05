@@ -1,3 +1,5 @@
+import { ApiProduct, RawApiProduct } from "@/components/product-card";
+
 export type VariantItem = {
   product_id: number;
   sku: string;
@@ -105,3 +107,17 @@ export type ProductDetailResponse = {
   in_wishlist: boolean;
   breadcrumbs?: ProductBreadcrumb[];
 };
+
+
+export interface AddToCartWidgetProps {
+  product: ApiProduct | RawApiProduct;
+  wrapperClassName?: string;
+  counterClassName?: string;
+  counterButtonClassName?: string; // override minus/plus button size
+  buttonClassName?: string;
+  showCounter?: boolean;
+  accessoryItemIds?: number[];
+  isWishlist?: boolean;
+  onAddedToCart?: (productId: number) => void;
+  iconShow?: boolean;
+}

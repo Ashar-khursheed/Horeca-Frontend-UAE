@@ -71,7 +71,7 @@ const RECENT_QUOTES = [
 const MOBILE_NAV_ITEMS = [
   { name: "My Profile",          href: "/dashboard/my-profile", Icon: Settings },
   { name: "My Orders",           href: "/dashboard/orders",     Icon: ShoppingBag },
-  { name: "My Quotes",           href: "/dashboard/quotes",     Icon: FileText },
+  // { name: "My Quotes",           href: "/dashboard/quotes",     Icon: FileText },
   { name: "Payments & Invoices", href: "/dashboard/payments",   Icon: CreditCard },
   { name: "My Wishlist",         href: "/wishlist",             Icon: Heart },
   { name: "Saved Docs",          href: "/dashboard/documents",  Icon: FolderOpen },

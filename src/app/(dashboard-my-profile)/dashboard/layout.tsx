@@ -21,7 +21,7 @@ import { useState } from "react";
 const NAV = [
   { label: "Overview",          href: "/dashboard",              icon: LayoutDashboard },
   { label: "My Orders",         href: "/dashboard/orders",       icon: ShoppingBag },
-  { label: "My Quotes",         href: "/dashboard/quotes",       icon: FileText },
+  // { label: "My Quotes",         href: "/dashboard/quotes",       icon: FileText },
   { label: "Payments & Invoices", href: "/dashboard/payments",  icon: CreditCard },
   { label: "My Wishlist",       href: "/wishlist",               icon: Heart },
   { label: "Account Settings",  href: "/dashboard/my-profile",   icon: Settings },

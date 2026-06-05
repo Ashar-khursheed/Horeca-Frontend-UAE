@@ -17,6 +17,7 @@ export type CartItem = {
   shipBy: string;
   qty: number;
   inWishlist: boolean;
+  url: string;
 };
 
 export type SavedItem = {

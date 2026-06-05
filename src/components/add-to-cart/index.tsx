@@ -24,6 +24,7 @@ import {
 import { getShippingCharge } from "@/utils/shipping";
 import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
+import { AddToCartWidgetProps } from "@/features/product-detail/types";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -59,18 +60,6 @@ const getToken = (): string | null => {
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
-export interface AddToCartWidgetProps {
-  product: ApiProduct | RawApiProduct;
-  wrapperClassName?: string;
-  counterClassName?: string;
-  counterButtonClassName?: string; // override minus/plus button size
-  buttonClassName?: string;
-  showCounter?: boolean;
-  accessoryItemIds?: number[];
-  isWishlist?: boolean;
-  onAddedToCart?: (productId: number) => void;
-  iconShow?: boolean;
-}
 
 // ─── Module-level hydration guard ────────────────────────────────────────────
 let cartHydrated = false;

@@ -184,7 +184,7 @@ export const HeroBanner = ({
           <div className="lg:col-s">
             {/* MOBILE ONLY — CTACard + activeSlidesTwo images */}
             <div className="block sm:hidden">
-              <Swiper
+              {/* <Swiper
                 id="hero-mobile"
                 modules={[Autoplay]}
                 autoplay={{
@@ -234,7 +234,8 @@ export const HeroBanner = ({
                     </SwiperSlide>
                   );
                 })}
-              </Swiper>
+              </Swiper> */}
+                 <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
             </div>
 
             {/* TABLET (sm → lg) — 50/50 grid */}

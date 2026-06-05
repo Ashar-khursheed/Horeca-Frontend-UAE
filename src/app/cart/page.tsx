@@ -73,6 +73,7 @@ const apiProductToCartItem = (cp: any): CartItem => ({
     name: acc.accessory_item_name,
     price: parseFloat(acc.accessory_item_price ?? 0),
   })),
+  url: cp.product?.url ?? "#",
 });
 
 // ── Transform localStorage Redux CartItem → display CartItem ──────────────────
@@ -84,6 +85,7 @@ const localItemToCartItem = (item: any): CartItem => ({
   modelNo:        item.sku ?? "",
   image:          item.image ?? "",
   price:          item.price ?? 0,
+  url:            item.url ?? "#",
   originalPrice:  item.originalPrice ?? item.price ?? 0,
   unit:           item.sellUnit ?? "Each",
   shippingCost:   item.shippingCharge ?? 0,
@@ -348,7 +350,7 @@ export default function CartPage() {
             </div>
             <button
               onClick={() => setConfirmClear(true)}
-              className="text-xs text-white md:p-3.5 p-2 rounded-md bg-red-500  font-semibold hover:underline transition-colors"
+              className="text-xs md:text-base  text-red-500  font-semibold hover:underline transition-colors"
             >
               Remove All Items
             </button>

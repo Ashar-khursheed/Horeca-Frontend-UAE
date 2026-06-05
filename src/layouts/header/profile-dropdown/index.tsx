@@ -25,7 +25,7 @@ const menuItems = [
   { icon: Settings,        label: "My Dashboard",             href: "/dashboard" },
   { icon: User,        label: "My Profile",             href: "/dashboard/my-profile" },
   { icon: ShoppingBag, label: "My Orders",              href: "/dashboard/orders" },
-  { icon: FileText,    label: "My Quotes",              href: "/dashboard/quotes" },
+  // { icon: FileText,    label: "My Quotes",              href: "/dashboard/quotes" },
   { icon: History,     label: "Browsing History",       href: "/dashboard/history" },
   { icon: Heart,       label: "Saved Items",            href: "/wishlist" },
   // { icon: Receipt,     label: "Net Payment Terms",      href: "/dashboard/payment-terms" },

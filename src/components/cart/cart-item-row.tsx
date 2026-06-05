@@ -77,7 +77,10 @@ export default function CartItemRow({
           <div className="min-w-0">
             <Link href="/">
               <h3 className="text-sm font-semibold text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
-                {item.name}
+                {/* {item.name} */}
+                <Link href={item.url} className="text-[#186737] hover:underline">
+                  {item.name}
+                </Link>
               </h3>
             </Link>
             <p className="text-xs text-[#186737] font-semibold mt-1">{item.brand}</p>

@@ -215,7 +215,6 @@ const WishlistCard = ({
   onAddedToCart: (id: number) => void;
 }) => {
   const [removing, setRemoving] = useState(false);
-
   const hasSale = item.originalPrice > item.price;
   const discountPct = hasSale ? ((item.originalPrice - item.price) / item.originalPrice) * 100 : 0;
   const [priceInt, priceDec] = fmtPrice(item.price).split(".");
@@ -271,7 +270,10 @@ const WishlistCard = ({
               </div>
               <Link href={item.url}>
                 <h3 className="font-semibold text-[13px] sm:text-[15px] text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
-                  {item.name}
+                  {/* {item.name} */}
+                  <Link href={item.rawProduct?.url} className="text-[#186737] hover:underline">
+                    {item.name}
+                  </Link>
                 </h3>
               </Link>
               {item.rating > 0 && (
