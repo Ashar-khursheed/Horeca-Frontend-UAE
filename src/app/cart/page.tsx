@@ -64,6 +64,11 @@ const apiProductToCartItem = (cp: any): CartItem => ({
   minQty: cp.product?.suppliers?.[0]?.min_quantity ?? 1,
   isFixed: !!cp.product?.suppliers?.[0]?.is_fixed,
   inWishlist: false,
+  selectedAccessories: (cp.accessory_charges ?? []).map((acc: any) => ({
+    id: acc.accessory_item_id,
+    name: acc.accessory_item_name,
+    price: parseFloat(acc.accessory_item_price ?? 0),
+  })),
 });
 
 // ── Transform localStorage Redux CartItem → display CartItem ──────────────────
