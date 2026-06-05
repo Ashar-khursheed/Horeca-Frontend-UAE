@@ -1,213 +1,215 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
-import { useRef, useState } from "react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
+import AddToCartWidget from "@/components/add-to-cart";
 
 type Product = {
   id: number;
   name: string;
   image: string;
   price: number;
+  originalPrice: number;
+  currencySymbol: string;
   unit: string;
+  url: string;
+  hasSale: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawProduct?: any;
 };
 
-const AI_PRODUCTS: Product[] = [
-  {
-    id: 1,
-    name: "Ellis Mezzaroma Dark Regular Ground Espresso 12",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/jNOl08wEvHaZXVAxMGMC2DlV3cOtng1wPy4RbXgF.webp",
-    price: 59.99,
-    unit: "Case",
-  },
-  {
-    id: 2,
-    name: "Crown Beverages Royal Reserve Guatemalan Coarse",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/m31OGvCZpK6cb2ir36O53rEmAIpZJDFHI5T5a3j3.webp",
-    price: 104.99,
-    unit: "Case",
-  },
-  {
-    id: 3,
-    name: "Crown Beverages Emperor's Finest Decaf Coarse",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/2PVVLTvZ0a84B4gMbHXCxEvSHgb1Kvpe3ayRe27a.webp",
-    price: 86.99,
-    unit: "Case",
-  },
-  {
-    id: 4,
-    name: "Crown Beverages Emperor's Finest Coarse Ground",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/soAbqr3YuewI5zrkrKXWVgeZN5gaL631uNkefMc4.webp",
-    price: 78.99,
-    unit: "Case",
-  },
-  {
-    id: 5,
-    name: "Crown Beverages Emperor's Finest Whole Bean Decaf",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/k49XDTZSyc2cSabCoOxG2yohcB00EGxC267fS0Xj.webp",
-    price: 89.99,
-    unit: "Case",
-  },
-];
+// ── Map API similar product to internal Product type ──────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapApiProduct = (p: any): Product => {
+  const name = p.name?.en ?? p.name?.ar ?? String(p.name ?? "");
+  const image =
+    p.images?.en?.[0] ??
+    p.images?.ar?.[0] ??
+    (Array.isArray(p.images) ? p.images[0] : "") ??
+    "";
+  const original = parseFloat(p.price ?? 0);
+  const sale = parseFloat(p.sale_price ?? 0);
+  const hasSale = sale > 0 && sale < original;
+  const price = hasSale ? sale : original;
+  const currency = p.currency?.symbol ?? "$";
+  const unitVal = p.selling_type?.attribute_value_unit;
+  const unit =
+    (typeof unitVal === "object" ? (unitVal?.en ?? unitVal?.ar) : unitVal) ??
+    "Each";
+  const url = p.url ?? p.seo?.url ?? "#";
 
-const BOUGHT_TOGETHER: Product[] = [
-  {
-    id: 101,
-    name: "Crown Beverages Emperor's Blend Decaf Coffee",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/MdaXVF5lIZmpwJ1bYcrp39qM0glVwBt7a5RqKowh.webp",
-    price: 72.49,
-    unit: "Case",
-  },
-  {
-    id: 102,
-    name: "Crown Beverages Single Origin Ethiopia Yirgacheffe",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/rONKFHkusKtD3dGKItl6XPE6EHcEbXXr7S24Av8r.webp",
-    price: 94.99,
-    unit: "Case",
-  },
-  {
-    id: 103,
-    name: "Ellis Mezzaroma Dark Regular Ground Espresso 12",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/jNOl08wEvHaZXVAxMGMC2DlV3cOtng1wPy4RbXgF.webp",
-    price: 59.99,
-    unit: "Case",
-  },
-  {
-    id: 104,
-    name: "Crown Beverages Emperor's Finest Whole Bean Decaf",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/k49XDTZSyc2cSabCoOxG2yohcB00EGxC267fS0Xj.webp",
-    price: 89.99,
-    unit: "Case",
-  },
-  {
-    id: 105,
-    name: "Crown Beverages Royal Reserve Guatemalan Coarse",
-    image: "https://d1p9kdrbe10xzz.cloudfront.net/production/products/m31OGvCZpK6cb2ir36O53rEmAIpZJDFHI5T5a3j3.webp",
-    price: 104.99,
-    unit: "Case",
-  },
-];
-
-const ProductCard = ({ product }: { product: Product }) => {
-  const [qty, setQty] = useState(1);
-  const [added, setAdded] = useState(false);
-
-  const handleAdd = () => {
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+  return {
+    id: p.id,
+    name,
+    image,
+    price,
+    originalPrice: original,
+    currencySymbol: currency,
+    unit,
+    url,
+    hasSale,
+    rawProduct: p,
   };
+};
+
+// ── Mini Product Card ─────────────────────────────────────────────────────────
+const ProductCard = ({ product }: { product: Product }) => {
+  const fmtPrice = (n: number) =>
+    n.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   return (
     <div className="shrink-0 w-36 border border-gray-200 rounded-[7px] bg-white overflow-hidden">
       {/* Image */}
-      <div className="bg-gray-50 h-24 flex items-center justify-center">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="h-20 w-full object-contain px-2"
-        />
-      </div>
+      <Link href={product.url}>
+        <div className="bg-gray-50 h-24 flex items-center justify-center">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="h-20 w-full object-contain px-2"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src =
+                "https://placehold.co/80x80/f3f4f6/9ca3af?text=No+Img";
+            }}
+          />
+        </div>
+      </Link>
 
       {/* Info */}
       <div className="p-2">
-        <p className="text-[10px] text-gray-700 leading-tight line-clamp-2 min-h-7">
-          {product.name}
-        </p>
-        <p className="text-[#145c30] font-bold text-xs mt-1">
-          ${product.price.toFixed(2)}
-          <span className="text-gray-400 font-normal text-[9px]">/{product.unit}</span>
-        </p>
+        <Link href={product.url}>
+          <p className="text-[10px] text-gray-700 leading-tight line-clamp-2 min-h-7 hover:text-[#186737] transition-colors">
+            {product.name}
+          </p>
+        </Link>
 
-        {/* Qty + Add */}
-        <div className="flex items-center gap-1 mt-1.5">
-          <div className="flex items-center border border-gray-300 rounded overflow-hidden h-6 shrink-0">
-            <button
-              onClick={() => setQty((v) => Math.max(1, v - 1))}
-              disabled={qty <= 1}
-              className="w-4 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Minus size={8} className="text-gray-600" strokeWidth={2.5} />
-            </button>
-            <span className="w-5 text-center text-[10px] font-bold text-[#186737]">
-              {qty}
-            </span>
-            <button
-              onClick={() => setQty((v) => Math.min(99, v + 1))}
-              disabled={qty >= 99}
-              className="w-4 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Plus size={8} className="text-gray-600" strokeWidth={2.5} />
-            </button>
-          </div>
-          <button
-            onClick={handleAdd}
-            className={`flex-1 h-6 text-[9px] font-bold rounded flex items-center justify-center gap-0.5 transition-colors ${
-              added
-                ? "bg-emerald-600 text-white"
-                : "bg-[#186737] hover:bg-[#145c30] text-white"
-            }`}
+        <div className="mt-1">
+          <p
+            className={`font-bold text-xs ${product.hasSale ? "text-[#186737]" : "text-[#145c30]"}`}
           >
-            {/* <ShoppingCart size={9} strokeWidth={2.5} /> */}
-            {added ? "Added!" : "Add to Cart"}
-          </button>
+            {product.currencySymbol}
+            {fmtPrice(product.price)}
+            <span className="text-gray-400 font-normal text-[9px]">
+              /{product.unit}
+            </span>
+          </p>
+          {product.hasSale && (
+            <p className="text-[9px] text-gray-400 line-through">
+              {product.currencySymbol}
+              {fmtPrice(product.originalPrice)}
+            </p>
+          )}
         </div>
+
+        {/* Add To Cart Widget */}
+        {product.rawProduct ? (
+          <AddToCartWidget
+            product={product.rawProduct}
+            wrapperClassName="flex gap-1 items-center w-full mt-1.5"
+            counterClassName="flex items-center border border-[#BCE3C9] rounded overflow-hidden h-6 shrink-0 w-[60px]"
+            counterButtonClassName="w-5 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+            buttonClassName="flex-1 h-6 text-[9px] font-bold rounded flex items-center justify-center bg-[#186737] hover:bg-[#145c30] text-white"
+            iconShow={false}
+          />
+        ) : (
+          <button className="w-full mt-1.5 h-6 text-[9px] font-bold rounded bg-[#186737] hover:bg-[#145c30] text-white transition-colors">
+            Add to Cart
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
+// ── Scrollable Row ────────────────────────────────────────────────────────────
 const ProductRow = ({ products }: { products: Product[] }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollRight = () => {
-    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  const slide = (dir: "left" | "right") => {
+    scrollRef.current?.scrollBy({
+      left: dir === "right" ? 300 : -300,
+      behavior: "smooth",
+    });
   };
 
   return (
-    <div className="relative pr-6">
+    <div className="relative group">
+      {/* Left Arrow */}
+      <button
+        onClick={() => slide("left")}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-7 h-7 bg-white border border-gray-200 shadow rounded-full flex items-center justify-center hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <ChevronLeft size={14} className="text-gray-600" />
+      </button>
+
+      {/* Scrollable list */}
       <div
         ref={scrollRef}
-        className="flex gap-2 overflow-x-auto scroll-smooth"
+        className="flex gap-2 overflow-x-auto scroll-smooth px-1"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
       </div>
-      {/* <button
-        onClick={scrollRight}
-        className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border border-gray-200 shadow-sm rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-50 transition-colors z-10"
+
+      {/* Right Arrow */}
+      <button
+        onClick={() => slide("right")}
+        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-7 h-7 bg-white border border-gray-200 shadow rounded-full flex items-center justify-center hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
       >
-        <ChevronRight size={12} className="text-gray-600" />
-      </button> */}
+        <ChevronRight size={14} className="text-gray-600" />
+      </button>
     </div>
   );
 };
 
-const AlternateAiProducts = () => {
-  return (
-    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:flex hidden">
-      {/* AI-Recommended Alternatives */}
-      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-          {/* <Sparkles size={14} className="text-[#186737] shrink-0" /> */}
-          <h2 className="heading-font-size font-bold text-gray-800">AI-Recommended Alternatives</h2>
-          {/* <HelpCircle size={13} className="text-gray-400 ml-auto shrink-0" /> */}
-        </div>
-        <div className="px-4 py-3">
-          <ProductRow products={AI_PRODUCTS} />
-        </div>
-      </div>
+// ── Main Component ────────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const AlternateAiProducts = ({
+  similarProductsGuest = [],
+  alternateProducts = [],
+}: {
+  similarProductsGuest?: any[];
+  alternateProducts?: any[];
+}) => {
+  const similar = similarProductsGuest.map(mapApiProduct);
+  const AI_PRODUCTS = alternateProducts.map(mapApiProduct);
 
-      {/* Frequently Bought Together */}
-      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-          {/* <ShoppingCart size={14} className="text-[#186737] shrink-0" /> */}
-          <h2 className="heading-font-size font-bold text-gray-800">Frequently Bought Together</h2>
+  const hasAI = AI_PRODUCTS.length > 0;
+  const hasSimilar = similar.length > 0;
+  if (!hasAI && !hasSimilar) return null;
+
+  return (
+    <div className="mt-8 hidden md:grid grid-cols-2  gap-4">
+      {hasAI && (
+        <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <h2 className="heading-font-size font-bold text-gray-800">
+              AI-Recommended Alternatives
+            </h2>
+          </div>
+          <div className="px-4 py-3">
+            <ProductRow products={AI_PRODUCTS} />
+          </div>
         </div>
-        <div className="px-4 py-3">
-          <ProductRow products={BOUGHT_TOGETHER} />
+      )}
+
+      {hasSimilar && (
+        <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <h2 className="heading-font-size font-bold text-gray-800">
+              Similar Products
+            </h2>
+          </div>
+          <div className="px-4 py-3">
+            <ProductRow products={similar} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

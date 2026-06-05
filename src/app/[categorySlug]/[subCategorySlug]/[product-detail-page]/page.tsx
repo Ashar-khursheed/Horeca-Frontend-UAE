@@ -22,6 +22,45 @@ async function fetchProduct(slug: string, locale: string) {
     { revalidate: 0 },
   )
 }
+async function fetchSimilarProductsForGuestUser(slug: string, locale: string) {
+  return makeApiCallSSR<{ data: any[] }>(
+    apiUrls.SIMILAR_PRODUCTS_FOR_GUEST_USERS(slug),
+    { lang: locale },
+    { revalidate: 0 },
+  )
+}
+async function fetchAlternateProducts(slug: string, locale: string) {
+  return makeApiCallSSR<{ data: any[] }>(
+    apiUrls.ALTERNATE_PRODUCTS_FOR_AUTHENTIC_USERS(slug),
+    { lang: locale },
+    { revalidate: 0 },
+  )
+}
+// const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://test-us.thehorecastore.co/api"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// async function fetchSimilarProductsForAuthenticUser(slug: string, locale: string): Promise<any[] | null> {
+//   try {
+//     const cookieStore = await cookies()
+//     const token = cookieStore.get("token")?.value
+
+//     const url = `${API_BASE}/frontend/products/${slug}/similar?lang=${locale}`
+//     const res = await fetch(url, {
+//       next: { revalidate: 0 }, // no cache — auth-protected endpoint
+//       headers: {
+//         "Content-Type": "application/json",
+//         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+//       },
+//     })
+//     if (!res.ok) return null
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     const json: any = await res.json()
+//     // API returns { success: true, data: [...] }
+//     return Array.isArray(json?.data) ? json.data : null
+//   } catch {
+//     return null
+//   }
+// }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { 'product-detail-page': productSlug, categorySlug, subCategorySlug } = await params
@@ -66,9 +105,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailSlugPage({ params }: PageProps) {
   const { 'product-detail-page': productSlug, categorySlug, subCategorySlug } = await params
+  // console.log("Received params:", { categorySlug, subCategorySlug, productSlug })
   const locale = await getLocale()
 
-  const productData = await fetchProduct(productSlug, locale)
+  const [productData, similarProductsGuest, alternateProducts] = await Promise.all([
+    fetchProduct(productSlug, locale),
+    fetchSimilarProductsForGuestUser(productSlug, locale),
+    fetchAlternateProducts(productSlug, locale),
+  ])
 
   if (!productData?.data) {
     return <div>Product not found</div>
@@ -76,7 +120,7 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
 
   const schema = productData.data.seo?.seo_schema
 
-  console.log("productData.productData.productData", productData?.data)
+
   return (
     <>
       <ProductJsonLd schema={schema} />
@@ -85,6 +129,8 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
         locale={locale}
         categorySlug={categorySlug}
         subCategorySlug={subCategorySlug}
+        similarProductsGuest={similarProductsGuest?.data ?? []}
+        alternateProducts={alternateProducts?.data ?? []}
       />
     </>
   )

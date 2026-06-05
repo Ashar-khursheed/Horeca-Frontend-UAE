@@ -1,19 +1,27 @@
 "use client";
 
-import { fetchCountryByName } from "@/store/slices/country/countrySlice";
+import { fetchCountryByName, resetCountry } from "@/store/slices/country/countrySlice";
 import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
 import { AppDispatch } from "@/store/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { FeaturedCategory } from "@/utils/types";
+import { apiUrls } from "@/apis/api-endpoint";
+import FeaturedProducts from "@/features/home/feature-product";
+import { useRouter } from "next/navigation";
 
 const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
 const LOCATION_API   = "https://pim.thehorecastore.co/api/frontend/location";
 const LOCATION_EVENT = "hc_location_updated";
 
 export default function AppInitializer() {
+    const router   = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const [products,      setProducts]      = useState<FeaturedCategory[]>([]);
+  const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>([]);
 
   // Auto-logout: check 24h expiry on mount and schedule timer for remainder
   useEffect(() => {
@@ -65,6 +73,52 @@ export default function AppInitializer() {
       dispatch(setLoading(false));
     }
   }, [dispatch]);
+
+    useEffect(() => {
+      const DETECT_KEY = "hc_detect_time";
+      const DETECT_TTL = 10 * 1000; // 10 seconds
+  
+      const currentCookie = document.cookie
+        .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
+  
+      const lastDetect  = localStorage.getItem(DETECT_KEY);
+      const isCacheValid = lastDetect && Date.now() - Number(lastDetect) < DETECT_TTL;
+  
+      if (isCacheValid && currentCookie) return;
+  
+      fetch("https://pim.thehorecastore.co/api/frontend/location")
+        .then(r => r.json())
+        .then(async data => {
+          if (data.status === "success" && data.countryCode) {
+            const detected = data.countryCode;
+            const now = Date.now().toString();
+            localStorage.setItem(DETECT_KEY,             now);
+            localStorage.setItem("hc_country_code",      detected);
+            localStorage.setItem("hc_country_code_time", now);
+            document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
+  
+            if (detected !== currentCookie) {
+              // Reset Redux country so it re-fetches with new force_country
+              dispatch(resetCountry());
+              dispatch(fetchCountryByName(data.country));
+  
+              // Client-side re-fetch products — no SSR round-trip, ~300ms
+              try {
+                const [fp, fbp] = await Promise.all([
+                  makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
+                  makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
+                ]);
+                if (fp?.data)  setProducts(fp.data);
+                if (fbp?.data) setBrandProducts(fbp.data);
+              } catch {
+                router.refresh(); // fallback
+              }
+            }
+          }
+        })
+        .catch(() => {});
+    }, [router]);
+
 
   return null;
 }

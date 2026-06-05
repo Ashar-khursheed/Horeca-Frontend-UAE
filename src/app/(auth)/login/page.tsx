@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useFormik } from "formik";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Eye,
   EyeOff,
@@ -19,6 +19,8 @@ import { loginSchema } from "@/validation/schema";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { loginUser } from "@/store/slices/auth/authSlice";
+import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
+import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
 
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
@@ -65,6 +67,7 @@ const TrustBadge = ({
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
 export default function LoginPage() {
+  const router      = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const [showPass, setShowPass] = useState(false);
@@ -87,8 +90,18 @@ export default function LoginPage() {
         await dispatch(
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
+        // Sync guest wishlist → server (only if items exist)
+        const guestWishlist = localStorage.getItem("horeca_wishlist");
+        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+          await syncGuestWishlistAfterLogin();
+        }
+        // Sync guest cart → server (only if items exist)
+        const guestCart = localStorage.getItem("horeca_cart");
+        if (guestCart && JSON.parse(guestCart)?.length > 0) {
+          await syncGuestCartAfterLogin();
+        }
         const redirect = searchParams.get("redirect") ?? "/";
-        window.location.href = redirect;
+        router.push(redirect);
       } catch (err: unknown) {
         const msg =
           typeof err === "string"

@@ -337,14 +337,14 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
         (category as any).sub_categories ??
         (category as any).subcategories ??
         [];
-      console.log(
-        "[Nav] hover:",
-        category.slug,
-        "| children count:",
-        children.length,
-        "| raw:",
-        category,
-      );
+      // console.log(
+      //   "[Nav] hover:",
+      //   category.slug,
+      //   "| children count:",
+      //   children.length,
+      //   "| raw:",
+      //   category,
+      // );
 
       /* No children or brands → schedule close */
       if (!children.length || category.slug === "shop-by-brands") {

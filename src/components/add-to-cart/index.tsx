@@ -17,6 +17,10 @@ import {
 } from "@/store/slices/cart/cartSlice";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
+import {
+  toggleWishlistItem,
+  toggleGuestWishlistItem,
+} from "@/store/slices/wishlist/wishlistSlice";
 import { getShippingCharge } from "@/utils/shipping";
 import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
@@ -59,9 +63,13 @@ export interface AddToCartWidgetProps {
   product: ApiProduct | RawApiProduct;
   wrapperClassName?: string;
   counterClassName?: string;
+  counterButtonClassName?: string; // override minus/plus button size
   buttonClassName?: string;
   showCounter?: boolean;
   accessoryItemIds?: number[];
+  isWishlist?: boolean;
+  onAddedToCart?: (productId: number) => void;
+  iconShow?: boolean;
 }
 
 // ─── Module-level hydration guard ────────────────────────────────────────────
@@ -72,9 +80,13 @@ export const AddToCartWidget = ({
   product,
   wrapperClassName,
   counterClassName,
+  counterButtonClassName,
   buttonClassName,
   showCounter: showCounterProp,
   accessoryItemIds = [],
+  isWishlist = false,
+  onAddedToCart,
+  iconShow = true,
 }: AddToCartWidgetProps) => {
   const dispatch = useAppDispatch();
   const locale = useLocale();
@@ -278,6 +290,19 @@ export const AddToCartWidget = ({
     setAddedSuccess(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setAddedSuccess(false), 1800);
+
+    // If used inside wishlist: remove the item from wishlist after add
+    if (isWishlist) {
+      const token = getToken();
+      if (token) {
+        // toggleWishlistItem thunk handles the API call internally — no direct makeApiRequest here
+        dispatch(toggleWishlistItem({ productId: product.id, currentlyInWishlist: true }));
+      } else {
+        dispatch(toggleGuestWishlistItem({ productId: product.id, rawProduct: product }));
+      }
+      // After "Added!" flash, notify parent to remove card from UI
+      setTimeout(() => onAddedToCart?.(product.id), 900);
+    }
   };
 
   // ── Mobile handlers ───────────────────────────────────────────────────────
@@ -530,9 +555,9 @@ export const AddToCartWidget = ({
           <button
             onClick={handleDecrement}
             disabled={count <= minQty || loading}
-            className="w-10 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+            className={counterButtonClassName ?? "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"}
           >
-            <Minus size={15} className="text-[#4B5563]" strokeWidth={2} />
+            <Minus size={counterButtonClassName ? 10 : 15} className="text-[#4B5563]" strokeWidth={2} />
           </button>
           <input
             type="text"
@@ -542,14 +567,14 @@ export const AddToCartWidget = ({
               const v = parseInt(e.target.value);
               if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
             }}
-            className="w-8 text-center 3xl:text-[15px] xl:text-[12px] text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed"
+            className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed "
           />
           <button
             onClick={handleIncrement}
             disabled={count >= 99 || loading}
-            className="w-10 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+            className={counterButtonClassName ?? "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"}
           >
-            <Plus size={15} className="text-[#4B5563]" strokeWidth={2} />
+            <Plus size={counterButtonClassName ? 10 : 15} className="text-[#4B5563]" strokeWidth={2} />
           </button>
         </div>
       )}
@@ -561,12 +586,12 @@ export const AddToCartWidget = ({
         className={computedButtonClass}
       >
         {addedSuccess ? (
-          <CheckCircle size={16} strokeWidth={2} />
+       <>  {iconShow &&  <CheckCircle size={16} strokeWidth={2} />}</>
         ) : variant !== "quote" ? (
-          <ShoppingCart size={16} strokeWidth={2} />
+    <>{iconShow && <ShoppingCart size={13} strokeWidth={2} />}</>
         ) : null}
         {loading ? (
-          <>Adding <Loader /></>
+          <> <Loader /></>
         ) : addedSuccess ? (
           "Added!"
         ) : (
@@ -575,7 +600,7 @@ export const AddToCartWidget = ({
       </button>
     </div></div>
       <div className="md:hidden block"> <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
-        {effectiveMobileInCart && !isQuote ? (
+        {effectiveMobileInCart && !isQuote && showCounter ? (
           /* Mobile counter */
           <div className="flex items-center bg-[#2563EB] rounded-[6px] overflow-hidden flex-1 h-8.5">
             {/* Left: trash (at minQty) or minus (above minQty) */}
@@ -621,9 +646,9 @@ export const AddToCartWidget = ({
             className="flex-1 h-8.5 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:bg-gray-400 disabled:cursor-wait"
           >
             {mobileLoading ? (
-              <>Adding <Loader /></>
+              <><Loader /></>
             ) : (
-              <><ShoppingCart size={13} strokeWidth={2} /> Add To Cart</>
+              <>{iconShow && <ShoppingCart size={13} strokeWidth={2} /> } Add To Cart</>
             )}
           </button>
         )}

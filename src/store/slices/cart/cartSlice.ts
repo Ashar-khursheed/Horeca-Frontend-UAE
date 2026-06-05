@@ -39,8 +39,10 @@ export interface ApiCartEntry {
 type ApiStatus = "idle" | "loading" | "succeeded" | "failed";
 
 interface CartState {
-  items: CartItem[];          // guest cart (localStorage)
-  apiEntries: ApiCartEntry[]; // logged-in cart (server)
+  items: CartItem[];           // guest cart (localStorage)
+  apiEntries: ApiCartEntry[];  // logged-in cart minimal (for widget counters)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawProducts: any[];          // full API products for cart page display
   apiStatus: ApiStatus;
 }
 
@@ -72,14 +74,17 @@ export const fetchCart = createAsyncThunk(
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const products: any[] = res?.data?.customer_cart_products ?? [];
-    return products.map((cp) => ({
-      cartItemId: cp.id as number,
-      productId: cp.product_id as number,
-      quantity: cp.quantity as number,
-    })) as ApiCartEntry[];
+    return {
+      entries: products.map((cp) => ({
+        cartItemId: cp.id as number,
+        productId: cp.product_id as number,
+        quantity: cp.quantity as number,
+      })) as ApiCartEntry[],
+      rawProducts: products,
+    };
   },
   {
-    // Skip dispatch if already loading or succeeded — prevents N calls from N widgets
+    // Skip if already loading or succeeded — prevents N calls from N widgets
     condition: (_, { getState }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const status: ApiStatus = (getState() as any).cart?.apiStatus;
@@ -92,6 +97,7 @@ export const fetchCart = createAsyncThunk(
 const initialState: CartState = {
   items: [],
   apiEntries: [],
+  rawProducts: [],
   apiStatus: "idle",
 };
 
@@ -154,16 +160,27 @@ const cartSlice = createSlice({
     ) {
       const entry = state.apiEntries.find((e) => e.cartItemId === action.payload.cartItemId);
       if (entry) entry.quantity = action.payload.quantity;
+      // Sync rawProducts so cart page display updates too
+      const raw = state.rawProducts.find((p) => p.id === action.payload.cartItemId);
+      if (raw) raw.quantity = action.payload.quantity;
     },
 
     // Optimistic remove after CART_REMOVE
     removeApiEntry(state, action: PayloadAction<number>) {
       state.apiEntries = state.apiEntries.filter((e) => e.cartItemId !== action.payload);
+      // Sync rawProducts so cart page display updates too
+      state.rawProducts = state.rawProducts.filter((p) => p.id !== action.payload);
+    },
+
+    // Reset status so next dispatch(fetchCart()) fetches fresh data
+    resetApiStatus(state) {
+      state.apiStatus = "idle";
     },
 
     // Reset on logout
     clearApiEntries(state) {
       state.apiEntries = [];
+      state.rawProducts = [];
       state.apiStatus = "idle";
     },
   },
@@ -175,7 +192,8 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.apiStatus = "succeeded";
-        state.apiEntries = action.payload;
+        state.apiEntries = action.payload.entries;
+        state.rawProducts = action.payload.rawProducts;
       })
       .addCase(fetchCart.rejected, (state) => {
         state.apiStatus = "failed";
@@ -192,6 +210,7 @@ export const {
   addApiEntry,
   updateApiEntryQty,
   removeApiEntry,
+  resetApiStatus,
   clearApiEntries,
 } = cartSlice.actions;
 

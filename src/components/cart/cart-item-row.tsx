@@ -2,7 +2,14 @@
 
 import { Calendar, Heart, Minus, Plus, Trash2, Truck } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 import { CartItem, fmtPrice } from "./cart-types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  toggleWishlistItem,
+  toggleGuestWishlistItem,
+  hydrateGuestWishlist,
+} from "@/store/slices/wishlist/wishlistSlice";
 
 export default function CartItemRow({
   item,
@@ -15,10 +22,31 @@ export default function CartItemRow({
   onRemove: (id: number) => void;
   onWishlist: (id: number) => void;
 }) {
+  const dispatch   = useAppDispatch();
+  const inWishlist = useAppSelector((s) => s.wishlist.ids.includes(item.id));
+  const isToggling = useAppSelector((s) => s.wishlist.toggling.includes(item.id));
+
+  // Hydrate guest wishlist from localStorage (must be in useEffect, not render)
+  useEffect(() => {
+    dispatch(hydrateGuestWishlist());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const hasSale = item.originalPrice > item.price;
   const discountPct = hasSale
     ? ((item.originalPrice - item.price) / item.originalPrice) * 100
     : 0;
+
+  const handleWishlistClick = () => {
+    if (isToggling) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (token) {
+      dispatch(toggleWishlistItem({ productId: item.id, currentlyInWishlist: inWishlist }));
+    } else {
+      dispatch(toggleGuestWishlistItem({ productId: item.id, rawProduct: item }));
+    }
+    onWishlist(item.id);
+  };
 
   return (
     <div className="flex gap-3 sm:gap-4 group">
@@ -116,10 +144,10 @@ export default function CartItemRow({
         <div className="mt-3 flex items-center gap-3 flex-wrap">
           {/* Qty */}
           {(() => {
-            const min     = item.minQty  ?? 1;
-            const fixed   = item.isFixed ?? false;
-            const decQty  = fixed ? item.qty - min : item.qty - 1;
-            const incQty  = fixed ? item.qty + min : item.qty + 1;
+            const min    = item.minQty  ?? 1;
+            const fixed  = item.isFixed ?? false;
+            const decQty = fixed ? item.qty - min : item.qty - 1;
+            const incQty = fixed ? item.qty + min : item.qty + 1;
             return (
               <div className="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white">
                 <button
@@ -150,17 +178,18 @@ export default function CartItemRow({
             );
           })()}
 
-          {/* Wishlist */}
+          {/* Save for Later / Wishlist */}
           <button
-            onClick={() => onWishlist(item.id)}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 ${
-              item.inWishlist
+            onClick={handleWishlistClick}
+            disabled={isToggling}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 disabled:opacity-60 ${
+              inWishlist
                 ? "border-[#186737] text-[#186737] bg-[#f0f9f4]"
                 : "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737] hover:bg-[#f0f9f4]"
             }`}
           >
-            <Heart size={13} className={item.inWishlist ? "fill-[#186737]" : ""} />
-            {item.inWishlist ? "Wishlisted" : "Save for Later"}
+            <Heart size={13} className={inWishlist ? "fill-[#186737]" : ""} />
+            {inWishlist ? "Wishlisted" : "Save for Later"}
           </button>
 
           {/* Remove */}

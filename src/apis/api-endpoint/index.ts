@@ -30,16 +30,27 @@ export const apiUrls = {
   INNER_CATEGORY_PAGES_WITH_FILTER: "frontend/products/filters/get-filters",
   PRODUCTS_LISTING: "frontend/products/filters/get-products",
   PRODUCT_DETAIL: (slug: string) => `frontend/products/${slug}`,
+  ALTERNATE_PRODUCTS_FOR_AUTHENTIC_USERS: (slug: string) => `frontend/products/${slug}/alternates`,
+  SIMILAR_PRODUCTS_FOR_GUEST_USERS: (slug: string) => `frontend/products/${slug}/similar`,
+  // SIMILAR_PRODUCTS_FOR_GUEST_USERS: (slug: string) => `frontend/guest/products/${slug}/similar`,
+  // https://test-us.thehorecastore.co/api/frontend/products/berjaya-electric-griddle-1-plate/similar
   BRANDS: "frontend/brands",
   SEARCH_API_SUGGESTIONS: (query: string) => `frontend/search?q=${encodeURIComponent(query)}`,
   SEARCH: "frontend/search",
 
   // Cart
-  CART_GET: "frontend/carts",
-  CART_ADD: "frontend/carts/add",
+  CART_GET:          "frontend/carts",
+  CART_ADD:          "frontend/carts/add",
+  CART_ADD_MULTIPLE: "frontend/carts/add-multiple",
   CART_UPDATE_QTY: (id: number) => `frontend/carts/update-quantity/${id}`,
   CART_REMOVE:     (id: number) => `frontend/carts/remove/${id}`,
   CART_EMPTY:      "frontend/carts/empty",
+
+  // Wishlist
+  WISHLIST_GET:          "frontend/wishlist",
+  WISHLIST_ADD:          "frontend/wishlist/add",
+  WISHLIST_REMOVE:       "frontend/wishlist/remove",
+  WISHLIST_ADD_MULTIPLE: "frontend/wishlist/add-multiple",
 
   // General
   COUNTRIES: "frontend/countries",

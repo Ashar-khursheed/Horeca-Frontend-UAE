@@ -13,6 +13,8 @@ import {
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { useLocationData } from "@/utils/locationStorage";
 import { loginUser } from "@/store/slices/auth/authSlice";
+import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
+import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
 import type { AppDispatch, RootState } from "@/store/store";
 import { registerSchema } from "@/validation/schema";
 import { useFormik } from "formik";
@@ -25,7 +27,6 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -56,12 +57,10 @@ interface RegisterResponse {
 }
 
 export default function RegisterPage() {
-  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
   const locationFromRedux = useLocationData();
   const country = useSelector((s: RootState) => s.country);
-  console.log("Country from Redux:", country); // Debug log for country data
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -127,7 +126,17 @@ export default function RegisterPage() {
         await dispatch(
           loginUser({ email: values.email.trim(), password: values.password })
         ).unwrap();
-        router.push("/");
+        // Sync guest wishlist → server (only if items exist)
+        const guestWishlist = localStorage.getItem("horeca_wishlist");
+        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+          await syncGuestWishlistAfterLogin();
+        }
+        // Sync guest cart → server (only if items exist)
+        const guestCart = localStorage.getItem("horeca_cart");
+        if (guestCart && JSON.parse(guestCart)?.length > 0) {
+          await syncGuestCartAfterLogin();
+        }
+        window.location.href = "/";
       } catch (err: unknown) {
         const msg =
           (err as { response?: { data?: { message?: string } } })?.response

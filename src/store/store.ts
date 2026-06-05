@@ -5,6 +5,7 @@ import authReducer from "./slices/auth/authSlice";
 import blogInteractionReducer from "./slices/blog/blogInteractionSlice";
 import cartReducer from "./slices/cart/cartSlice";
 import taxReducer from "./slices/tax/taxSlice";
+import wishlistReducer from "./slices/wishlist/wishlistSlice";
 
 const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ const store = configureStore({
     blogInteraction: blogInteractionReducer,
     cart: cartReducer,
     tax: taxReducer,
+    wishlist: wishlistReducer,
   },
 });
 

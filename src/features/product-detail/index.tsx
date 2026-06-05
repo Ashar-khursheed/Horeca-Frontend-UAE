@@ -20,13 +20,17 @@ interface Props {
   locale: string;
   categorySlug: string;
   subCategorySlug: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  similarProductsGuest?: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  alternateProducts?: any[];
 }
 
 const slugToLabel = (slug: string) =>
   slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
-const ProductDetailPage = ({ productData, categorySlug, subCategorySlug }: Props) => {
-  console.log("ProductDetailPage render", productData);
+const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similarProductsGuest = [],alternateProducts = [] }: Props) => {
+  // console.log("ProductDetailPage render", productData);
   const name = productData.name ?? "";
   const images = productData.images ?? [];
   const description = productData.description ?? [];
@@ -104,13 +108,25 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug }: Props
         <div className="global-container mx-auto px-4 sm:px-6 md:py-6 py-0 ">
           <div className="grid grid-cols-1 xl:hidden">
             <div className="relative lg:sticky lg:top-4">
-              <ProductGallery images={images} productName={name} />
+              <ProductGallery
+                images={images}
+                productName={name}
+                productId={productData.id}
+                inWishlist={productData.in_wishlist}
+                rawProduct={productData}
+              />
             </div>
           </div>
  
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[36%_38%_26%] gap-4 items-start md:mt-11 mt-11 xl:mt-0">
             <div className="relative lg:sticky lg:top-4 hidden xl:block">
-              <ProductGallery images={images} productName={name} />
+              <ProductGallery
+                images={images}
+                productName={name}
+                productId={productData.id}
+                inWishlist={productData.in_wishlist}
+                rawProduct={productData}
+              />
             </div>
 
             <ProductInfo
@@ -150,7 +166,7 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug }: Props
             />
           </div>
 
-          <AlternateAiProducts />
+          <AlternateAiProducts similarProductsGuest={similarProductsGuest} alternateProducts={alternateProducts} />
 
           <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-300">

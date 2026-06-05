@@ -14,16 +14,20 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { makeApiRequest } from "@/apis/axios-instance";
-import { apiUrls } from "@/apis/api-endpoint";
+import { useEffect, useRef, useState } from "react";
 import { getLocationData } from "@/utils/locationStorage";
 import { Modal } from "@/components/ui/modal";
 import { getShippingCharge } from "@/utils/shipping";
-import { useAppDispatch } from "@/store/hooks";
-import { fetchCart, updateApiEntryQty, removeApiEntry } from "@/store/slices/cart/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchCart,
+  updateApiEntryQty,
+  removeApiEntry,
+  resetApiStatus,
+} from "@/store/slices/cart/cartSlice";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 
-const CART_CACHE_KEY = "horeca_cart_display";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getToken = (): string | null => {
@@ -93,121 +97,91 @@ const localItemToCartItem = (item: any): CartItem => ({
   inWishlist:     false,
 });
 
-// ── API response type ─────────────────────────────────────────────────────────
-interface ApiCartResponse {
-  success: boolean;
-  data: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    customer_cart_products: any[];
-  };
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CartPage() {
-  const dispatch = useAppDispatch();
+  const dispatch    = useAppDispatch();
+  const rawProducts = useAppSelector((s) => s.cart.rawProducts);
+  const apiStatus   = useAppSelector((s) => s.cart.apiStatus);
 
-  const [cartItems,    setCartItems]    = useState<CartItem[]>([]);
-  const [loading,      setLoading]      = useState(true);
   const [isLoggedIn,   setIsLoggedIn]   = useState(false);
+  const [guestItems,   setGuestItems]   = useState<CartItem[]>([]);
   const [shipmentOpen, setShipmentOpen] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
+  const fetchedRef = useRef(false);
 
   // ── Load cart on mount ────────────────────────────────────────────────────
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
     const token    = getToken();
     const location = getLocationData();
     const shipping = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
 
     if (token) {
-      // ── LOGGED IN CART: API only, never reads guest localStorage ──────────
       setIsLoggedIn(true);
       const countryName = location?.country ?? "";
-      // Keep Redux apiEntries in sync so AddToCartWidget counters stay accurate
+      dispatch(resetApiStatus());
       dispatch(fetchCart(countryName));
-      makeApiRequest<ApiCartResponse>(apiUrls.CART_GET, {
-        params: { country: countryName },
-      })
-        .then((res) => {
-          if (res?.success && res.data?.customer_cart_products) {
-            const items = res.data.customer_cart_products.map((cp) => ({
-              ...apiProductToCartItem(cp),
-              shippingCost: shipping,
-            }));
-            setCartItems(items);
-            localStorage.setItem(CART_CACHE_KEY, JSON.stringify(items));
-          }
-        })
-        .catch(() => {
-          // API failed → use cached login cart only (NOT guest cart)
-          try {
-            const cached = localStorage.getItem(CART_CACHE_KEY);
-            if (cached) setCartItems(JSON.parse(cached));
-          } catch {}
-        })
-        .finally(() => setLoading(false));
     } else {
-      // ── GUEST CART: localStorage only, never calls API ────────────────────
       setIsLoggedIn(false);
       try {
-        const raw   = localStorage.getItem("horeca_cart");
-        const items = raw ? JSON.parse(raw) : [];
-        const mapped = items.map((item: Parameters<typeof localItemToCartItem>[0]) => ({
-          ...localItemToCartItem(item),
-          shippingCost: shipping,
-        }));
-        setCartItems(mapped);
-      } catch {
-        /* empty cart */
-      }
-      setLoading(false);
+        const raw  = localStorage.getItem("horeca_cart");
+        const list = raw ? JSON.parse(raw) : [];
+        setGuestItems(
+          list.map((item: Parameters<typeof localItemToCartItem>[0]) => ({
+            ...localItemToCartItem(item),
+            shippingCost: shipping,
+          })),
+        );
+      } catch { /* empty */ }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Derive display items from Redux (logged-in) or local state (guest)
+  const location   = getLocationData();
+  const shipping   = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
+  const cartItems: CartItem[] = isLoggedIn
+    ? rawProducts.map((cp) => ({ ...apiProductToCartItem(cp), shippingCost: shipping }))
+    : guestItems;
+
+  const loading  = isLoggedIn ? (apiStatus === "idle" || apiStatus === "loading") : false;
   const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
-  const subtotal = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
+  const subtotal   = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleQty = (id: number, qty: number) => {
-    setCartItems((prev) => {
-      const updated = prev.map((c) => (c.id === id ? { ...c, qty } : c));
-      // Update localStorage cache
-      localStorage.setItem(CART_CACHE_KEY, JSON.stringify(updated));
-
-      // Logged in → call update-quantity API + sync Redux
-      const token = getToken();
-      const item = prev.find((c) => c.id === id);
-      if (token && item?.cartItemId) {
+    if (isLoggedIn) {
+      const item = cartItems.find((c) => c.id === id);
+      if (item?.cartItemId) {
         makeApiRequest(apiUrls.CART_UPDATE_QTY(item.cartItemId), {
           method: "PUT",
           data: { quantity: qty },
         }).catch(() => {});
+        // updateApiEntryQty also syncs rawProducts → cartItems re-derives
         dispatch(updateApiEntryQty({ cartItemId: item.cartItemId, quantity: qty }));
       }
-      return updated;
-    });
+    } else {
+      setGuestItems((prev) => prev.map((c) => (c.id === id ? { ...c, qty } : c)));
+    }
   };
 
   const handleRemove = (id: number) => {
-    setCartItems((prev) => {
-      const item = prev.find((c) => c.id === id);
-      const updated = prev.filter((c) => c.id !== id);
-      localStorage.setItem(CART_CACHE_KEY, JSON.stringify(updated));
-
-      // Logged in → call remove API + sync Redux
-      const token = getToken();
-      if (token && item?.cartItemId) {
-        makeApiRequest(apiUrls.CART_REMOVE(item.cartItemId), {
-          method: "DELETE",
-        }).catch(() => {});
+    if (isLoggedIn) {
+      const item = cartItems.find((c) => c.id === id);
+      if (item?.cartItemId) {
+        makeApiRequest(apiUrls.CART_REMOVE(item.cartItemId), { method: "DELETE" }).catch(() => {});
+        // removeApiEntry also syncs rawProducts → cartItems re-derives
         dispatch(removeApiEntry(item.cartItemId));
       }
-      return updated;
-    });
+    } else {
+      setGuestItems((prev) => prev.filter((c) => c.id !== id));
+    }
   };
-  const handleWishlist = (id: number) =>
-    setCartItems((p) =>
-      p.map((c) => (c.id === id ? { ...c, inWishlist: !c.inWishlist } : c)),
-    );
+
+  // Wishlist state comes from Redux (cart-item-row reads s.wishlist.ids directly)
+  const handleWishlist = () => {};
 
   // ── Loading skeleton ─────────────────────────────────────────────────────
   if (loading) {
@@ -328,11 +302,13 @@ export default function CartPage() {
         showFooter
         footerBtnText="Yes, Remove All"
         onConfirm={() => {
-          setCartItems([]);
           if (getToken()) {
-            localStorage.removeItem(CART_CACHE_KEY);
-            makeApiRequest(apiUrls.CART_EMPTY, { method: "DELETE" }).catch(() => {});
+            dispatch(resetApiStatus());
+            makeApiRequest(apiUrls.CART_EMPTY, { method: "DELETE" })
+              .then(() => dispatch(fetchCart(location?.country ?? "")))
+              .catch(() => {});
           } else {
+            setGuestItems([]);
             localStorage.removeItem("horeca_cart");
           }
         }}
@@ -372,7 +348,7 @@ export default function CartPage() {
             </div>
             <button
               onClick={() => setConfirmClear(true)}
-              className="text-xs text-gray-400 hover:text-red-500 font-semibold hover:underline transition-colors"
+              className="text-xs text-white p-3.5 rounded-md bg-red-500  font-semibold hover:underline transition-colors"
             >
               Remove All Items
             </button>

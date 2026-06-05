@@ -1,25 +1,64 @@
 "use client";
 
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Heart, Share2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  seedWishlistIds,
+  toggleWishlistItem,
+  toggleGuestWishlistItem,
+  hydrateGuestWishlist,
+} from "@/store/slices/wishlist/wishlistSlice";
 
 type ProductGalleryProps = {
   images: string[];
   productName: string;
+  productId: number;
+  inWishlist?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawProduct?: any;
 };
 
 const VISIBLE = 6;
 const MOBILE_VISIBLE = 5;
 
-export const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
-  const [activeImg, setActiveImg] = useState(0);
-  const [wishlisted, setWishlisted] = useState(false);
-  const [thumbOffset, setThumbOffset] = useState(0);
+export const ProductGallery = ({
+  images,
+  productName,
+  productId,
+  inWishlist: initialInWishlist = false,
+  rawProduct,
+}: ProductGalleryProps) => {
+  const dispatch    = useAppDispatch();
+  const inWishlist  = useAppSelector((s) => s.wishlist.ids.includes(productId));
+  const isToggling  = useAppSelector((s) => s.wishlist.toggling.includes(productId));
+
+  const [activeImg,    setActiveImg]    = useState(0);
+  const [thumbOffset,  setThumbOffset]  = useState(0);
   const [mobileOffset, setMobileOffset] = useState(0);
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const [showZoom, setShowZoom] = useState(false);
-  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [zoomPos,  setZoomPos]  = useState({ x: 50, y: 50 });
   const [zoomRect, setZoomRect] = useState<DOMRect | null>(null);
+
+  // Hydrate guest wishlist + seed from product API's in_wishlist field
+  useEffect(() => {
+    dispatch(hydrateGuestWishlist());
+    if (initialInWishlist) dispatch(seedWishlistIds([productId]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isToggling) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (token) {
+      dispatch(toggleWishlistItem({ productId, currentlyInWishlist: inWishlist }));
+    } else {
+      dispatch(toggleGuestWishlistItem({ productId, rawProduct: rawProduct ?? { id: productId } }));
+    }
+  };
 
   const ZOOM_FACTOR = 2.5;
   const LENS_PCT = 100 / ZOOM_FACTOR;
@@ -27,18 +66,18 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
   const prevImg = () => setActiveImg((p) => (p === 0 ? images.length - 1 : p - 1));
   const nextImg = () => setActiveImg((p) => (p === images.length - 1 ? 0 : p + 1));
 
-  const canScrollUp = thumbOffset > 0;
+  const canScrollUp   = thumbOffset > 0;
   const canScrollDown = thumbOffset + VISIBLE < images.length;
-  const scrollUp = () => setThumbOffset((o) => Math.max(0, o - 1));
-  const scrollDown = () => setThumbOffset((o) => Math.min(images.length - VISIBLE, o + 1));
+  const scrollUp      = () => setThumbOffset((o) => Math.max(0, o - 1));
+  const scrollDown    = () => setThumbOffset((o) => Math.min(images.length - VISIBLE, o + 1));
 
-  const canScrollLeft = mobileOffset > 0;
+  const canScrollLeft  = mobileOffset > 0;
   const canScrollRight = mobileOffset + MOBILE_VISIBLE < images.length;
-  const scrollLeft = () => setMobileOffset((o) => Math.max(0, o - 1));
-  const scrollRight = () => setMobileOffset((o) => Math.min(images.length - MOBILE_VISIBLE, o + 1));
+  const scrollLeft     = () => setMobileOffset((o) => Math.max(0, o - 1));
+  const scrollRight    = () => setMobileOffset((o) => Math.min(images.length - MOBILE_VISIBLE, o + 1));
 
   const visibleThumbs = images.slice(thumbOffset, thumbOffset + VISIBLE);
-  const mobileThumbs = images.slice(mobileOffset, mobileOffset + MOBILE_VISIBLE);
+  const mobileThumbs  = images.slice(mobileOffset, mobileOffset + MOBILE_VISIBLE);
 
   const handleMouseEnter = () => {
     if (window.innerWidth < 1280) return;
@@ -119,7 +158,7 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
             <img
               src={images[activeImg]}
               alt={productName}
-              className="w-full md:h-[400px] xl:h-full object-contain p-4 transition-all duration-300 pointer-events-none select-none"
+              className="w-full md:h-100 xl:h-full object-contain p-4 transition-all duration-300 pointer-events-none select-none"
             />
 
             {/* Zoom Lens */}
@@ -136,8 +175,6 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
                 }}
               />
             )}
-
-           
 
             {/* Prev / Next */}
             {images.length > 1 && (
@@ -161,33 +198,34 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
               </>
             )}
           </div>
-           {/* Wishlist */}
-            <button
-              onClick={() => setWishlisted((v) => !v)}
-              className={`absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
-                showZoom ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              <Heart
-                size={17}
-                strokeWidth={2}
-                className={wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
-              />
-            </button>
 
-            {/* Share */}
-            <button
-              className={`absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
-                showZoom ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              <Share2 size={15} className="text-gray-400" />
-            </button>
+          {/* Wishlist */}
+          <button
+            onClick={handleWishlist}
+            disabled={isToggling}
+            className={`absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 disabled:opacity-60 ${
+              showZoom ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <Heart
+              size={17}
+              strokeWidth={2}
+              className={inWishlist ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
+            />
+          </button>
+
+          {/* Share */}
+          <button
+            className={`absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
+              showZoom ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <Share2 size={15} className="text-gray-400" />
+          </button>
 
           {/* Mobile Thumbnail Strip (horizontal, < xl) with left/right arrows */}
           {images.length > 1 && (
             <div className="flex xl:hidden items-center gap-2 order-2 justify-center">
-              {/* Left Arrow */}
               <button
                 onClick={scrollLeft}
                 disabled={!canScrollLeft}
@@ -200,7 +238,6 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
                 <ChevronLeft size={14} strokeWidth={2} />
               </button>
 
-              {/* 5 Thumbnails */}
               <div className="flex gap-1.5">
                 {mobileThumbs.map((img, i) => {
                   const realIndex = mobileOffset + i;
@@ -220,7 +257,6 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
                 })}
               </div>
 
-              {/* Right Arrow */}
               <button
                 onClick={scrollRight}
                 disabled={!canScrollRight}

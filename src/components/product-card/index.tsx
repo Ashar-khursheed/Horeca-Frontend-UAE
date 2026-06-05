@@ -1,5 +1,11 @@
 "use client";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import {
+  seedWishlistIds,
+  toggleWishlistItem,
+  toggleGuestWishlistItem,
+  hydrateGuestWishlist,
+} from "@/store/slices/wishlist/wishlistSlice";
 import {
   CheckCircle,
   Heart,
@@ -225,9 +231,13 @@ export const ProductCard = ({
   onWishlistToggle,
 }: ProductCardProps) => {
   const locale = useLocale();
+  const dispatch = useAppDispatch();
   // ── Country from Redux (client-side currency conversion) ─────────────
   const country = useAppSelector((s) => s.country.data);
-
+  // ── Wishlist from Redux ───────────────────────────────────────────────
+  const wishlistIds  = useAppSelector((s) => s.wishlist.ids);
+  const isToggling   = useAppSelector((s) => s.wishlist.toggling.includes(product.id));
+  const inWishlist   = wishlistIds.includes(product.id);
   // ── Normalise fields that may arrive in either flat or localised form ──
   const name = resolveStr(product.name, locale);
   const rawImages = product.images;
@@ -246,7 +256,13 @@ export const ProductCard = ({
   const isQuote = !!product.quote_available;
   if (isQuote) console.log("[QUOTE PRODUCT]", product.id, product.quote_available);
 
-  const [wishlisted, setWishlisted] = useState(product.in_wishlist ?? false);
+  // Hydrate guest wishlist from localStorage (guarded inside reducer — runs once)
+  // and seed logged-in wishlist from product's in_wishlist field
+  useEffect(() => {
+    dispatch(hydrateGuestWishlist());
+    if (product.in_wishlist) dispatch(seedWishlistIds([product.id]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Accessories modal ────────────────────────────────────────────────
   const rawAccessories = (product as RawApiProduct).accessories ?? [];
@@ -320,9 +336,16 @@ export const ProductCard = ({
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const next = !wishlisted;
-    setWishlisted(next);
-    if (onWishlistToggle) onWishlistToggle(product, next);
+    if (isToggling) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (token) {
+      // Logged-in: call API
+      dispatch(toggleWishlistItem({ productId: product.id, currentlyInWishlist: inWishlist }));
+    } else {
+      // Guest: save full product to localStorage
+      dispatch(toggleGuestWishlistItem({ productId: product.id, rawProduct: product }));
+    }
+    if (onWishlistToggle) onWishlistToggle(product, !inWishlist);
   };
 
   const productLink = product.url?.startsWith("/")
@@ -350,12 +373,13 @@ export const ProductCard = ({
         {/* Wishlist button */}
         <button
           onClick={handleWishlist}
-          className="absolute top-2.5 right-2.5 z-10 w-[36px] h-[36px] bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors duration-200"
+          disabled={isToggling}
+          className="absolute top-2.5 right-2.5 z-10 w-[36px] h-[36px] bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 disabled:opacity-60"
         >
           <Heart
             size={17}
             strokeWidth={2}
-            className={wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
+            className={inWishlist ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
           />
         </button>
 
@@ -364,7 +388,7 @@ export const ProductCard = ({
           <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
             {visibleImages.length === 0 ? (
               <Image
-                src="https://placehold.co/400"
+                src=""
                 alt={name}
                 fill
                 className="object-contain p-2"
