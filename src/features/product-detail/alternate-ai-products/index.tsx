@@ -135,15 +135,19 @@ const ProductRow = ({ products }: { products: Product[] }) => {
     });
   };
 
+  const showArrows = products.length > 6;
+
   return (
     <div className="relative group">
       {/* Left Arrow */}
-      <button
-        onClick={() => slide("left")}
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-7 h-7 bg-white border border-gray-200 shadow rounded-full flex items-center justify-center hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronLeft size={14} className="text-gray-600" />
-      </button>
+      {showArrows && (
+        <button
+          onClick={() => slide("left")}
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-7 h-7 bg-white border border-gray-200 shadow rounded-full flex items-center justify-center hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <ChevronLeft size={14} className="text-gray-600" />
+        </button>
+      )}
 
       {/* Scrollable list */}
       <div
@@ -157,12 +161,14 @@ const ProductRow = ({ products }: { products: Product[] }) => {
       </div>
 
       {/* Right Arrow */}
-      <button
-        onClick={() => slide("right")}
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-7 h-7 bg-white border border-gray-200 shadow rounded-full flex items-center justify-center hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronRight size={14} className="text-gray-600" />
-      </button>
+      {showArrows && (
+        <button
+          onClick={() => slide("right")}
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-7 h-7 bg-white border border-gray-200 shadow rounded-full flex items-center justify-center hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <ChevronRight size={14} className="text-gray-600" />
+        </button>
+      )}
     </div>
   );
 };
