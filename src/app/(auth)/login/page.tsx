@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useFormik } from "formik";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Eye,
   EyeOff,
@@ -65,7 +65,6 @@ const TrustBadge = ({
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const [showPass, setShowPass] = useState(false);
@@ -89,8 +88,7 @@ export default function LoginPage() {
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
         const redirect = searchParams.get("redirect") ?? "/";
-        router.push(redirect);
-        // window.location.href = "/"; 
+        window.location.href = redirect;
       } catch (err: unknown) {
         const msg =
           typeof err === "string"
