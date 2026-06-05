@@ -602,7 +602,7 @@ export const AddToCartWidget = ({
       <div className="md:hidden block"> <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
         {effectiveMobileInCart && !isQuote && showCounter ? (
           /* Mobile counter */
-          <div className="flex items-center bg-[#2563EB] rounded-[6px] overflow-hidden flex-1 h-8.5">
+          <div className="flex items-center bg-green-800 rounded-[6px] overflow-hidden flex-1 h-8.5">
             {/* Left: trash (at minQty) or minus (above minQty) */}
             <button
               onClick={currentMobileQty <= minQty ? handleMobileDelete : handleMobileDecrement}
