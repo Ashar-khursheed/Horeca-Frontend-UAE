@@ -41,14 +41,14 @@ export async function makeApiCallSSR<T = unknown>(
             reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim()
           );
     } catch {}
-    qs.set("force_country", countryCode);
-    console.log("[SSR API] force_country:", countryCode);
+    // qs.set("force_country", countryCode);
+    // console.log("[SSR API] force_country:", countryCode);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url  = qs.toString() ? `${base}?${qs.toString()}` : base;
 
-    console.log("[SSR API]", url);
-    console.log("[SSR API] force_country:", countryCode);
+    // console.log("[SSR API]", url);
+    // console.log("[SSR API] force_country:", countryCode);
 
     const method = options?.method ?? (options?.body ? "POST" : "GET");
     const res = await fetch(url, {
