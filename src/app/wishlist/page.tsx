@@ -359,9 +359,9 @@ const SummaryCard = ({ items }: { items: WishlistItem[] }) => {
         )}
       </button>
 
-      <button className="w-full mt-2.5 py-3 rounded-[7px] font-semibold text-sm flex items-center justify-center gap-2 border border-[#A6131D] text-[#A6131D] hover:bg-red-50 transition-colors duration-200">
+      {/* <button className="w-full mt-2.5 py-3 rounded-[7px] font-semibold text-sm flex items-center justify-center gap-2 border border-[#A6131D] text-[#A6131D] hover:bg-red-50 transition-colors duration-200">
         <FileText size={15} /> Get Instant Quote
-      </button>
+      </button> */}
 
       <div className="mt-5 bg-[#f0f9f4] rounded-[7px] p-3.5 space-y-2">
         <div className="flex items-center gap-2 text-xs text-gray-600">

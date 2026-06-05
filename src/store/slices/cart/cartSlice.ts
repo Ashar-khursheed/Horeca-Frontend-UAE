@@ -21,6 +21,10 @@ export interface CartItem {
   subTotal: number;       // price × quantity
   totalPrice: number;     // subTotal + shippingCharge
   accessoryItemIds: number[];
+  selectedAccessories?: { id: number; name: string; price: number }[];
+  // Full raw product — stored for guest cart, used to sync to API on login
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawProduct?: any;
 }
 
 interface CartState {

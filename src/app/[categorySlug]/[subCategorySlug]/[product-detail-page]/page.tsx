@@ -19,7 +19,7 @@ async function fetchProduct(slug: string, locale: string) {
   return makeApiCallSSR<{ data: ProductDetailResponse }>(
     apiUrls.PRODUCT_DETAIL(slug),
     { lang: locale },
-    { revalidate: 3600 },
+    { revalidate: 0 },
   )
 }
 
@@ -76,6 +76,7 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
 
   const schema = productData.data.seo?.seo_schema
 
+  console.log("productData.productData.productData", productData?.data)
   return (
     <>
       <ProductJsonLd schema={schema} />

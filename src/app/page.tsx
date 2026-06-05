@@ -13,27 +13,27 @@ export default async function Page() {
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: false, is_featured: true },
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: true, is_featured: true },
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_PRODUCTS,
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.BLOGS,
       { per_page: 10, lang: "en", page: 1 },
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
   ]);
 

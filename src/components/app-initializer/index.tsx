@@ -32,11 +32,11 @@ export default function AppInitializer() {
 
   // Location: localStorage cache first, then API fetch
   useEffect(() => {
-    const cached = getLocationData();
-    if (cached) {
-      if (cached.country) dispatch(fetchCountryByName(cached.country));
-      return;
-    }
+    // const cached = getLocationData();
+    // if (cached) {
+    //   if (cached.country) dispatch(fetchCountryByName(cached.country));
+    //   return;
+    // }
     fetch(LOCATION_API)
       .then((r) => r.json())
       .then((data) => {

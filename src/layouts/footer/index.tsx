@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { useLocale } from "next-intl";
+import NewsletterForm from "./newsletter-form";
 import { ApiCategory, ApiCategoryName } from "@/features/category";
 
 const getName = (name: ApiCategoryName | string, locale: string): string => {
@@ -360,16 +361,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
             <p className="text-[12px] text-gray-400 mb-4 leading-relaxed">
               Get deals, new products & restaurant tips straight to your inbox.
             </p>
-            <div className="flex flex-col gap-2">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="w-full border border-gray-200 rounded-[7px] px-3.5 py-2.5 text-[13px] text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all"
-              />
-              <button className="w-full bg-[#186737] hover:bg-[#145a2f] text-white text-[13px] font-semibold py-2.5 rounded-[7px] transition-colors duration-200">
-                Subscribe
-              </button>
-            </div>
+            <NewsletterForm />
             <div className="mt-5">
               <p className="text-[11px] text-gray-400 font-medium uppercase tracking-widest mb-3">
                 Follow Us

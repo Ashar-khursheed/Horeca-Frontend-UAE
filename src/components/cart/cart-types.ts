@@ -1,5 +1,10 @@
 export type CartItem = {
   id: number;
+  cartItemId?: number; // API cart line item ID (used for update-quantity endpoint)
+  minQty?: number;
+  isFixed?: boolean;
+  currencySymbol?: string;
+  selectedAccessories?: { id: number; name: string; price: number }[];
   name: string;
   brand: string;
   modelNo: string;

@@ -59,25 +59,38 @@ export default function CartItemRow({
           {/* Price – desktop */}
           <div className="hidden sm:block text-right shrink-0 ml-4">
             <p className="text-base font-bold text-gray-900">
-              ${fmtPrice(item.price * item.qty)}
+              {item.currencySymbol ?? "$"}{fmtPrice(item.price * item.qty)}
             </p>
             {hasSale && (
               <p className="text-xs text-gray-400 line-through">
-                ${fmtPrice(item.originalPrice * item.qty)}
+                {item.currencySymbol ?? "$"}{fmtPrice(item.originalPrice * item.qty)}
               </p>
             )}
             <p className="text-xs text-gray-500 mt-0.5">
-              ${fmtPrice(item.price)} /{item.unit}
+              {item.currencySymbol ?? "$"}{fmtPrice(item.price)} /{item.unit}
             </p>
           </div>
         </div>
+
+        {/* Selected Accessories */}
+        {item.selectedAccessories && item.selectedAccessories.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {item.selectedAccessories.map((acc) => (
+              <span key={acc.id} className="text-[11px] bg-[#f0f9f4] text-[#186737] border border-[#c3e6d4] rounded-full px-2 py-0.5 font-medium">
+                {acc.name} {acc.price > 0 ? `+${fmtPrice(acc.price)}` : ""}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Shipping */}
         <div className="mt-2 flex items-center gap-1.5 flex-wrap">
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Truck size={12} className="text-[#186737]" />
             <span className="font-semibold text-gray-700">
-              Shipping: ${fmtPrice(item.shippingCost)}
+              {item.shippingCost === 0
+                ? "Free Shipping"
+                : `Shipping Charges: $${fmtPrice(item.shippingCost)}`}
             </span>
           </div>
           <span className="text-gray-300">·</span>
@@ -90,11 +103,11 @@ export default function CartItemRow({
         {/* Mobile price */}
         <div className="sm:hidden mt-2">
           <p className="text-sm font-bold text-gray-900">
-            ${fmtPrice(item.price * item.qty)}
+            {item.currencySymbol ?? "$"}{fmtPrice(item.price * item.qty)}
           </p>
           {hasSale && (
             <p className="text-xs text-gray-400 line-through">
-              ${fmtPrice(item.originalPrice * item.qty)}
+              {item.currencySymbol ?? "$"}{fmtPrice(item.originalPrice * item.qty)}
             </p>
           )}
         </div>
@@ -102,25 +115,40 @@ export default function CartItemRow({
         {/* Actions */}
         <div className="mt-3 flex items-center gap-3 flex-wrap">
           {/* Qty */}
-          <div className="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white">
-            <button
-              onClick={() => onQty(item.id, Math.max(1, item.qty - 1))}
-              disabled={item.qty <= 1}
-              className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Minus size={13} className="text-gray-600" strokeWidth={2} />
-            </button>
-            <span className="w-8 text-center text-sm font-bold text-[#186737]">
-              {item.qty}
-            </span>
-            <button
-              onClick={() => onQty(item.id, Math.min(99, item.qty + 1))}
-              disabled={item.qty >= 99}
-              className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Plus size={13} className="text-gray-600" strokeWidth={2} />
-            </button>
-          </div>
+          {(() => {
+            const min     = item.minQty  ?? 1;
+            const fixed   = item.isFixed ?? false;
+            const decQty  = fixed ? item.qty - min : item.qty - 1;
+            const incQty  = fixed ? item.qty + min : item.qty + 1;
+            return (
+              <div className="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white">
+                <button
+                  onClick={() => onQty(item.id, Math.max(min, decQty))}
+                  disabled={item.qty <= min}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Minus size={13} className="text-gray-600" strokeWidth={2} />
+                </button>
+                <input
+                  type="text"
+                  value={item.qty}
+                  disabled={fixed}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value);
+                    if (!isNaN(v) && v >= min && v <= 99) onQty(item.id, v);
+                  }}
+                  className="w-9 text-center text-sm font-bold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed"
+                />
+                <button
+                  onClick={() => onQty(item.id, Math.min(99, incQty))}
+                  disabled={item.qty >= 99}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus size={13} className="text-gray-600" strokeWidth={2} />
+                </button>
+              </div>
+            );
+          })()}
 
           {/* Wishlist */}
           <button

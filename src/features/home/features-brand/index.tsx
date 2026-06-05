@@ -12,9 +12,12 @@ function str(v: LocalizedString | string | undefined, locale = "en"): string {
   return locale === "ar" ? (v.ar ?? v.en ?? "") : (v.en ?? v.ar ?? "");
 }
 
-
 // ─── FeaturedProducts Component ───────────────────────────────────────────────
-export const FeaturedBrands = ({ products = [] }: { products?: FeaturedCategory[] }) => {
+export const FeaturedBrands = ({
+  products = [],
+}: {
+  products?: FeaturedCategory[];
+}) => {
   const locale = useLocale();
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -29,7 +32,7 @@ export const FeaturedBrands = ({ products = [] }: { products?: FeaturedCategory[
         {/* ── HEADER ─────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-2 mb-3  flex-wrap">
           <h2 className="heading-font-size font-bold text-slate-900 shrink-0">
-          Top Stories: Brand Directory
+            Top Stories: Brand Directory
           </h2>
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar ">
             {products.map((g, i) => (
@@ -65,20 +68,20 @@ export const FeaturedBrands = ({ products = [] }: { products?: FeaturedCategory[
         {/* MOBILE — horizontal scroll */}
         <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
           {featuredProducts.map((product) => (
-                     <div key={product.id} className="shrink-0 w-[175px]">
-                       <ProductCard product={product} />
-                     </div>
-                   ))}
+            <div key={product.id} className="shrink-0 w-[175px]">
+              <ProductCard product={product as any} />
+            </div>
+          ))}
         </div>
 
         {/* TABLET + DESKTOP — grid */}
-          {/* <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-5 2xl:grid-cols-6  3xl:grid-cols-6 gap-3"> */}
-          <div className={generateDynamicCSSProductCard}>
-         {featuredProducts.map((product) => (
-                    <div key={product.id} className="shrink-0">
-                      <ProductCard product={product} />
-                    </div>
-                  ))}
+        {/* <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-5 2xl:grid-cols-6  3xl:grid-cols-6 gap-3"> */}
+        <div className={generateDynamicCSSProductCard}>
+          {featuredProducts.map((product) => (
+            <div key={product.id} className="shrink-0">
+              <ProductCard key={product.id} product={product as any} />
+            </div>
+          ))}
         </div>
       </div>
 

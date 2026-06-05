@@ -18,6 +18,7 @@ export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategor
 
   const activeGroup = products[activeIdx];
   const featuredProducts = (activeGroup?.products ?? []).slice(0, 10);
+  console.log("productsproductsproductsproductsproducts", products);
 
   if (!products.length) return null;
 
@@ -56,7 +57,7 @@ export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategor
         <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
           {featuredProducts.map((product) => (
             <div key={product.id} className="shrink-0 w-[175px]">
-              <ProductCard product={product} />
+              <ProductCard product={product as any} />
             </div>
           ))}
         </div>
@@ -64,7 +65,7 @@ export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategor
         {/* TABLET + DESKTOP — grid */}
         <div className={generateDynamicCSSProductCard}>
           {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product as any} />
           ))}
         </div>
       </div>

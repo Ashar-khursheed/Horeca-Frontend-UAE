@@ -10,6 +10,7 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { getShippingCharge } from "@/utils/shipping";
 import type { ApiProduct, RawApiProduct } from "@/components/product-card";
+import Loader from "../Loader";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -146,73 +147,71 @@ export const AddToCartWidget = ({
     e.preventDefault();
     e.stopPropagation();
 
-    // ── Calculate shipping + totals ────────────────────────────────────
     const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
-    const subTotal = activePrice * count;
-    const totalPrice = subTotal + shippingCharge;
-
-    const cartItem = {
-      productId: product.id,
-      name,
-      url: product.url ?? "",
-      parentCategoryUrl: product.parent_category_url ?? "",
-      image,
-      price: activePrice,
-      originalPrice,
-      hasSale,
-      currencySymbol,
-      quantity: count,
-      minQty,
-      isFixed,
-      isQuote,
-      sellUnit,
-      sku: product.sku ?? "",
-      vendorId,
-      shippingCharge,
-      subTotal,
-      totalPrice,
-      accessoryItemIds,
-    };
+    const subTotal       = activePrice * count;
+    const totalPrice     = subTotal + shippingCharge;
 
     const token = getToken();
 
     if (token) {
-      // ── Logged in: hit API ───────────────────────────────────────────
+      // ── Logged in: API call only, no localStorage ──────────────────────
       setLoading(true);
       try {
         await makeApiRequest(apiUrls.CART_ADD, {
           method: "POST",
           data: {
-            
-                country: country?.name ?? "",
-                product_id: product.id,
-                vendor_id: vendorId,
-                quantity: count,
-                shipping_charge: shippingCharge,
-                accessory_item_ids: accessoryItemIds,
+            country:              country?.name ?? "",
+            product_id:           product.id,
+            vendor_id:            vendorId,
+            quantity:             count,
+            shipping_charge:      shippingCharge,
+            accessory_item_ids:   accessoryItemIds,
           },
-          // data: {
-          //   country: country?.name ?? "",
-          //   products: [
-          //     {
-          //       product_id: product.id,
-          //       vendor_id: vendorId,
-          //       quantity: count,
-          //       shipping_charge: shippingCharge,
-          //       accessory_item_ids: accessoryItemIds,
-          //     },
-          //   ],
-          // },
         });
       } catch {
-        // API failed — still update local state so UI stays consistent
+        // API failed silently
       } finally {
         setLoading(false);
       }
-    }
+    } else {
+      // ── Guest: save full product + quantity + accessories to localStorage ─
+      // Resolve full accessory item objects (name, price) from product data
+      const rawAcc = (product as RawApiProduct).accessories ?? [];
+      const selectedAccessories = rawAcc
+        .flatMap((acc) => acc.accessory_item ?? [])
+        .filter((item) => accessoryItemIds.includes(item.id))
+        .map((item) => ({
+          id:    item.id,
+          name:  resolveStr(item.name as LS, locale),
+          price: item.price,
+        }));
 
-    // ── Always update Redux + localStorage (guest: primary; logged in: cache) ──
-    dispatch(addItem(cartItem));
+      const cartItem = {
+        productId:            product.id,
+        name,
+        url:                  product.url ?? "",
+        parentCategoryUrl:    product.parent_category_url ?? "",
+        image,
+        price:                activePrice,
+        originalPrice,
+        hasSale,
+        currencySymbol,
+        quantity:             count,
+        minQty,
+        isFixed,
+        isQuote,
+        sellUnit,
+        sku:                  product.sku ?? "",
+        vendorId,
+        shippingCharge,
+        subTotal,
+        totalPrice,
+        accessoryItemIds,
+        selectedAccessories,  // full accessory data with names + prices
+        rawProduct:           product,
+      };
+      dispatch(addItem(cartItem as Parameters<typeof addItem>[0]));
+    }
 
     setAddedSuccess(true);
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -281,7 +280,7 @@ export const AddToCartWidget = ({
         ) : variant !== "quote" ? (
           <ShoppingCart size={16} strokeWidth={2} />
         ) : null}
-        {loading ? "Adding..." : addedSuccess ? "Added!" : label}
+        {loading ?<>Adding  <Loader /></>: addedSuccess ? "Added!" : label}
       </button>
     </div>
   );

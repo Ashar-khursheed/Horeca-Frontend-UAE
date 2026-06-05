@@ -8,21 +8,18 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    CheckCircle,
     ChevronRight,
-    Minus,
     Package,
     Phone,
-    Plus,
     RotateCcw,
     ShieldCheck,
-    ShoppingCart,
     Truck,
     UtensilsCrossed,
 } from "lucide-react";
 import { useState } from "react";
 import type { Accessory, AccessoryItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
+import AddToCartWidget from "@/components/add-to-cart";
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -44,6 +41,7 @@ type PurchasePanelProps = {
   brand: string;
   brandLogo: string;
   brandUrl: string;
+  productData: any;
 };
 
 export const PurchasePanel = ({
@@ -60,36 +58,51 @@ export const PurchasePanel = ({
   brand,
   brandLogo,
   brandUrl,
+  productData,
 }: PurchasePanelProps) => {
-  const [selectedAccessory, setSelectedAccessory] =
-    useState<AccessoryItem | null>(null);
-  const [qty, setQty] = useState(1);
-  const [addedSuccess, setAddedSuccess] = useState(false);
+  // Per-accessory selections: { [accessoryId]: selectedItem | null }
+  const [selectedItems, setSelectedItems] = useState<Record<number, AccessoryItem | null>>({});
+  const [showErrors, setShowErrors]       = useState(false);
   const state = useLocationData();
+
+  const resolveName = (n: AccessoryItem["name"]): string =>
+    typeof n === "string" ? n : n?.en ?? "";
+
+  // All required accessories must have a selection
+  const requiredUnmet = accessories.filter(
+    (acc) => acc.is_required === 1 && !selectedItems[acc.id]
+  );
+  const canAddToCart = requiredUnmet.length === 0;
+  const selectedItemIds = Object.values(selectedItems)
+    .filter(Boolean)
+    .map((it) => it!.id);
   const hasSale = activeOriginal > activePrice;
   const discountPct = hasSale
     ? ((activeOriginal - activePrice) / activeOriginal) * 100
     : 0;
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
 
-  const handleAddToCart = () => {
-    setAddedSuccess(true);
-    setTimeout(() => setAddedSuccess(false), 1800);
-  };
-
   return (
     <div className="space-y-3">
       {/* Price Card */}
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5 md:block hidden">
         {/* Price */}
-        <div className="flex items-baseline gap-1.5 flex-wrap">
+
+        {productData?.quote_available ? <>      <div style={{ minHeight: "62px" }}>
+              <h2 className="text-[#186737] text-[15px] font-normal">
+                Can&apos;t See the Price?
+              </h2>
+              <p className="text-[#64748B] text-[12px] mt-1 leading-snug">
+                Click &ldquo;Request A Quote&rdquo; to receive your best prices.
+              </p>
+            </div></>:<>   <div className="flex items-baseline gap-1.5 flex-wrap">
           {hasSale && (
             <span className="text-red-500 text-sm font-semibold">
               -{Math.round(discountPct)}%
             </span>
           )}
           <div className="flex items-baseline gap-0.5">
-            <span className="text-3xl font-bold text-gray-900">${priceInt}</span>
+            <span className="text-3xl font-bold text-gray-900">{currency}{priceInt}</span>
             <span className="text-lg font-bold text-gray-900">.{priceDec}</span>
           </div>
           <span className="text-sm text-gray-500 font-medium">/{unit}</span>
@@ -108,7 +121,7 @@ export const PurchasePanel = ({
           <Truck size={16} className="text-[#186737] shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-gray-800">
-              {freeShipping ? "Free Shipping" : "Shipping Charges Apply"}
+             Shipping Charges Apply
             </p>
             <p className="text-xs text-gray-500 mt-0.5">Ships {deliveryDays}</p>
           </div>
@@ -134,77 +147,61 @@ export const PurchasePanel = ({
         </div>
 
         {/* Accessories */}
-        {accessories.map((acc) => (
-          <div key={acc.id} className="mb-4">
-            <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
-              <ShieldCheck size={16} className="text-[#186737] shrink-0 mt-0.5" />
-              {acc.name}
-            </p>
-            <Select
-              value={selectedAccessory?.id?.toString() ?? "none"}
-              onValueChange={(val) => {
-                if (val === "none") {
-                  setSelectedAccessory(null);
-                  return;
-                }
-                setSelectedAccessory(
-                  acc.items.find((it) => it.id.toString() === val) ?? null,
-                );
-              }}
-            >
-              <SelectTrigger className="w-full h-10 text-sm border-gray-200 focus:ring-[#186737] focus:border-[#186737]">
-                <SelectValue placeholder="Select warranty…" />
-              </SelectTrigger>
-              <SelectContent>
-                {acc.items.map((item) => (
-                  <SelectItem key={item.id} value={item.id.toString()}>
-                    {item.name} — +${item.price}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ))}
-
+        {accessories?.map((acc) => {
+          const isRequired = acc?.is_required === 1;
+          const hasError   = showErrors && isRequired && !selectedItems[acc.id];
+          return (
+            <div key={acc?.id} className="mb-4">
+              <p className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1.5">
+                <ShieldCheck size={16} className={`shrink-0 mt-0.5 ${isRequired ? "text-red-500" : "text-[#186737]"}`} />
+                <span className="capitalize">{acc?.name}</span>
+                {isRequired && <span className="text-red-500 text-xs font-normal">*</span>}
+              </p>
+              <Select
+                value={selectedItems[acc.id]?.id?.toString() ?? ""}
+                onValueChange={(val) => {
+                  const item = acc?.accessory_item.find((it) => it.id.toString() === val) ?? null;
+                  setSelectedItems((prev) => ({ ...prev, [acc.id]: item }));
+                  if (val) setShowErrors(false);
+                }}
+              >
+                <SelectTrigger className={`w-full h-10 text-sm focus:ring-[#186737] focus:border-[#186737] ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`}>
+                  <SelectValue placeholder={`Select ${acc.name}…`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {acc?.accessory_item?.map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {resolveName(item.name)} — +{fmtPrice(item.price)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasError && (
+                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                  Please select {acc.name} before adding to cart
+                </p>
+              )}
+            </div>
+          );
+        })}
+</>}
+     
         {/* Qty + Add to Cart */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white shrink-0 h-11">
-            <button
-              onClick={() => setQty((v) => Math.max(1, v - 1))}
-              disabled={qty <= 1}
-              className="w-10 h-full flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Minus size={14} className="text-gray-600" strokeWidth={2} />
-            </button>
-            <span className="w-9 text-center text-sm font-bold text-[#186737]">
-              {qty}
-            </span>
-            <button
-              onClick={() => setQty((v) => Math.min(99, v + 1))}
-              disabled={qty >= 99}
-              className="w-10 h-full flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Plus size={14} className="text-gray-600" strokeWidth={2} />
-            </button>
-          </div>
-          <button
-            onClick={handleAddToCart}
-            className={`flex-1 h-11 rounded-[7px] text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 ${
-              addedSuccess
-                ? "bg-emerald-600 text-white"
-                : "bg-[#186737] hover:bg-[#145c30] text-white"
-            }`}
-          >
-            {addedSuccess ? (
-              <>
-                <CheckCircle size={16} strokeWidth={2} /> Added!
-              </>
-            ) : (
-              <>
-                <ShoppingCart size={16} strokeWidth={2} /> Add To Cart
-              </>
-            )}
-          </button>
+        <div
+          onClickCapture={(e) => {
+            if (!canAddToCart) {
+              e.stopPropagation();
+              setShowErrors(true);
+            }
+          }}
+        >
+          <AddToCartWidget
+            product={productData}
+            accessoryItemIds={selectedItemIds}
+            wrapperClassName="flex items-center gap-2 mb-2"
+            counterClassName="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white shrink-0 h-11 w-[90px]"
+            buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${productData?.quote_available ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"}`}
+          />
         </div>
       </div>
 

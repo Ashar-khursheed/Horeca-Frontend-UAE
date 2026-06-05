@@ -137,28 +137,7 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
               />
             )}
 
-            {/* Wishlist */}
-            <button
-              onClick={() => setWishlisted((v) => !v)}
-              className={`absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
-                showZoom ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              <Heart
-                size={17}
-                strokeWidth={2}
-                className={wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
-              />
-            </button>
-
-            {/* Share */}
-            <button
-              className={`absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
-                showZoom ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              <Share2 size={15} className="text-gray-400" />
-            </button>
+           
 
             {/* Prev / Next */}
             {images.length > 1 && (
@@ -182,6 +161,28 @@ export const ProductGallery = ({ images, productName }: ProductGalleryProps) => 
               </>
             )}
           </div>
+           {/* Wishlist */}
+            <button
+              onClick={() => setWishlisted((v) => !v)}
+              className={`absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
+                showZoom ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <Heart
+                size={17}
+                strokeWidth={2}
+                className={wishlisted ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
+              />
+            </button>
+
+            {/* Share */}
+            <button
+              className={`absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
+                showZoom ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <Share2 size={15} className="text-gray-400" />
+            </button>
 
           {/* Mobile Thumbnail Strip (horizontal, < xl) with left/right arrows */}
           {images.length > 1 && (

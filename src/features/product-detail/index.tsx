@@ -26,6 +26,7 @@ const slugToLabel = (slug: string) =>
   slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
 const ProductDetailPage = ({ productData, categorySlug, subCategorySlug }: Props) => {
+  console.log("ProductDetailPage render", productData);
   const name = productData.name ?? "";
   const images = productData.images ?? [];
   const description = productData.description ?? [];
@@ -124,27 +125,28 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug }: Props
               activePrice={activePrice}
               activeOriginal={productData.price}
               unit={unit}
-              currency={currencySymbol}
+              currency={productData.currency?.symbol}
               freeShipping={supplier?.free_shipping ?? false}
               deliveryDays={supplier?.delivery_days ?? ""}
               returnPolicy={supplier?.return_policy ?? ""}
-              accessories={[]}
+              accessories={productData.accessories ?? []}
             />
 
             <PurchasePanel
               activePrice={activePrice}
               activeOriginal={productData.price}
               unit={unit}
-              currency={currencySymbol}
+              currency={productData.currency?.symbol}
               freeShipping={supplier?.free_shipping ?? false}
               deliveryDays={supplier?.delivery_days ?? ""}
               shipTo={supplier ? `${supplier.vendor.city}, ${supplier.vendor.country}` : ""}
               returnPolicy={supplier?.return_policy ?? ""}
-              accessories={[]}
+              accessories={productData.accessories ?? []}
               phone=""
               brand={brand}
               brandLogo=""
               brandUrl=""
+              productData={productData}
             />
           </div>
 

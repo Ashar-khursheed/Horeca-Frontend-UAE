@@ -6,6 +6,7 @@ import {
   Minus,
   Plus,
   ShoppingCart,
+  ShieldCheck,
   Star,
   Truck,
 } from "lucide-react";
@@ -15,6 +16,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AddToCartWidget from "../add-to-cart";
 import TickerBadge from "../ticker-badge";
+import { Modal } from "@/components/ui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -79,6 +82,12 @@ export interface RawApiProduct {
     is_fixed?: boolean | number;
   }[];
   isRequired?: boolean;
+  accessories?: {
+    id: number;
+    name: LS | { en?: string; ar?: string };
+    is_required: number;
+    accessory_item: { id: number; name: LS | { en?: string; ar?: string }; price: number }[];
+  }[];
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -216,7 +225,6 @@ export const ProductCard = ({
   onWishlistToggle,
 }: ProductCardProps) => {
   const locale = useLocale();
-console.log("productproductproduct",product);
   // ── Country from Redux (client-side currency conversion) ─────────────
   const country = useAppSelector((s) => s.country.data);
 
@@ -236,8 +244,26 @@ console.log("productproductproduct",product);
   const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
   const isFixed = product.is_fixed != null ? !!product.is_fixed : !!(supplier0?.is_fixed);
   const isQuote = !!product.quote_available;
+  if (isQuote) console.log("[QUOTE PRODUCT]", product.id, product.quote_available);
 
   const [wishlisted, setWishlisted] = useState(product.in_wishlist ?? false);
+
+  // ── Accessories modal ────────────────────────────────────────────────
+  const rawAccessories = (product as RawApiProduct).accessories ?? [];
+  const hasRequiredAccessories = rawAccessories.some((a) => a.is_required === 1);
+  const [accessoryModalOpen, setAccessoryModalOpen] = useState(false);
+  const [selectedAccItems, setSelectedAccItems]     = useState<Record<number, number | null>>({});
+  const [accShowErrors, setAccShowErrors]           = useState(false);
+  const accCanAddToCart = rawAccessories.every(
+    (a) => a.is_required !== 1 || selectedAccItems[a.id] != null
+  );
+  const resolveAccName = (n: LS | { en?: string; ar?: string } | undefined): string => {
+    if (!n) return "";
+    if (typeof n === "string") return n;
+    const o = n as Record<string, string | undefined>;
+    return locale === "ar" ? (o.ar ?? o.en ?? "") : (o.en ?? o.ar ?? "");
+  };
+  const selectedAccessoryIds = Object.values(selectedAccItems).filter((v): v is number => v != null);
 
   // ── Price logic (sale_price=0 means no sale) ─────────────────────────
   const hasSale =
@@ -308,8 +334,6 @@ console.log("productproductproduct",product);
   return (
     <div
       className="bg-white rounded-[7px] shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden cursor-pointer flex flex-col h-full border border-transparent hover:border-[#dceee4] hover:shadow-[0_4px_20px_rgba(0,0,0,0.11)] transition-all duration-200"
-      onMouseEnter={startSlide}
-      onMouseLeave={stopSlide}
     >
       {/* ── IMAGE AREA ───────────────────────────────────────────────── */}
       <div className="relative bg-white">
@@ -520,10 +544,90 @@ console.log("productproductproduct",product);
               buttonClassName="h-10 px-6 rounded-lg font-semibold bg-[#186737] text-white"  ← button
             />
         */}
-        <AddToCartWidget
-          product={product}
-          wrapperClassName="flex gap-2 items-center w-full mt-2"
-        />
+        {/* Accessories Modal */}
+        <Modal
+          isOpen={accessoryModalOpen}
+          onClose={() => { setAccessoryModalOpen(false); setAccShowErrors(false); setSelectedAccItems({}); }}
+          title={`Product Accessories`}
+          width="max-w-md"
+          showFooter={false}
+          zIndex
+        >
+          {/* Product mini info */}
+          <div className="flex items-center gap-3 pb-4 mb-4 border-b border-gray-100">
+            {images_.length > 0 && (
+              <img src={images_[0]} alt={name} className="w-14 h-14 object-contain rounded-[7px] border border-gray-100 bg-gray-50" />
+            )}
+            <div>
+              <p className="text-sm font-semibold text-gray-900 line-clamp-2">{name}</p>
+              {product.sku && <p className="text-xs text-gray-400 mt-0.5">Model No: {product.sku}</p>}
+            </div>
+          </div>
+
+          {/* Accessory selectors */}
+          {rawAccessories.map((acc) => {
+            const isRequired = acc.is_required === 1;
+            const hasError   = accShowErrors && isRequired && selectedAccItems[acc.id] == null;
+            return (
+              <div key={acc.id} className="mb-4">
+                <p className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1.5">
+                  <ShieldCheck size={15} className={isRequired ? "text-red-500 shrink-0" : "text-[#186737] shrink-0"} />
+                  <span className="capitalize">{resolveAccName(acc.name)}</span>
+                  {isRequired && <span className="text-red-500 text-xs font-normal">*</span>}
+                </p>
+                <Select
+                  value={selectedAccItems[acc.id]?.toString() ?? ""}
+                  onValueChange={(val) => {
+                    setSelectedAccItems((prev) => ({ ...prev, [acc.id]: Number(val) }));
+                    if (val) setAccShowErrors(false);
+                  }}
+                >
+                  <SelectTrigger className={`w-full h-10 text-sm focus:ring-[#186737] ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`}>
+                    <SelectValue placeholder={`Select ${resolveAccName(acc.name)}…`} />
+                  </SelectTrigger>
+                  <SelectContent className="z-10000">
+                    {acc.accessory_item.map((item) => (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {resolveAccName(item.name)} — +{Number(item.price).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {hasError && <p className="text-xs text-red-500 mt-1">Please select {resolveAccName(acc.name)}</p>}
+              </div>
+            );
+          })}
+
+          {/* Add to Cart inside modal */}
+          <div
+            onClickCapture={(e) => {
+              if (!accCanAddToCart) { e.stopPropagation(); setAccShowErrors(true); }
+            }}
+          >
+            <AddToCartWidget
+              product={product}
+              accessoryItemIds={selectedAccessoryIds}
+              wrapperClassName="flex gap-2 items-center w-full mt-2"
+              buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${(product as RawApiProduct).quote_available ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"}`}
+            />
+          </div>
+        </Modal>
+
+        {/* Add To Cart — open modal if required accessories exist */}
+        <div
+          onClickCapture={(e) => {
+            if (hasRequiredAccessories && !accessoryModalOpen) {
+              e.stopPropagation();
+              setAccessoryModalOpen(true);
+            }
+          }}
+        >
+          <AddToCartWidget
+            product={product}
+            accessoryItemIds={selectedAccessoryIds}
+            wrapperClassName="flex gap-2 items-center w-full mt-2"
+          />
+        </div>
       </div>
     </div>
   );

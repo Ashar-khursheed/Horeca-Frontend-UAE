@@ -19,8 +19,9 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(false);
 
-  const subtotal     = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
-  const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
+  const currencySymbol = cartItems[0]?.currencySymbol ?? "$";
+  const subtotal       = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
+  const shippingTotal  = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const tax          = (subtotal - promoDiscount) * TAX_RATE;
   const grandTotal   = subtotal + shippingTotal - promoDiscount + tax;
@@ -49,27 +50,27 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
           <div className="space-y-2.5 text-sm">
             <SummaryRow
               label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
-              value={`$${fmtPrice(subtotal)}`}
+              value={`${currencySymbol}${fmtPrice(subtotal)}`}
             />
             <SummaryRow
               label={`Shipping & Handling (${cartItems.length} item${cartItems.length !== 1 ? "s" : ""})`}
-              value={shippingTotal === 0 ? "Free" : `$${fmtPrice(shippingTotal)}`}
+              value={shippingTotal === 0 ? "Free" : `${currencySymbol}${fmtPrice(shippingTotal)}`}
               green={shippingTotal === 0}
             />
             {promoApplied && (
               <SummaryRow
                 label="Promo (HORECA10)"
-                value={`-$${fmtPrice(promoDiscount)}`}
+                value={`-${currencySymbol}${fmtPrice(promoDiscount)}`}
                 green
                 icon={<Tag size={12} />}
               />
             )}
-            <SummaryRow label="Tax (8.25%)" value={`$${fmtPrice(tax)}`} />
+            <SummaryRow label="Tax (8.25%)" value={`${currencySymbol}${fmtPrice(tax)}`} />
           </div>
 
           <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
             <span className="font-bold text-gray-900">Total Amount</span>
-            <span className="font-bold text-gray-900 text-xl">${fmtPrice(grandTotal)}</span>
+            <span className="font-bold text-gray-900 text-xl">{currencySymbol}{fmtPrice(grandTotal)}</span>
           </div>
 
           {/* Promo code */}

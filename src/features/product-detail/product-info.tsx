@@ -32,6 +32,10 @@ const fmtPrice = (n: number) =>
     maximumFractionDigits: 2,
   });
 
+const formatAccessoryName = (
+  name: string | { en?: string; ar?: string } | undefined,
+) => (typeof name === "string" ? name : name?.en ?? name?.ar ?? "");
+
 type ProductInfoProps = {
   name: string;
   model: string;
@@ -191,7 +195,7 @@ export const ProductInfo = ({
                   return;
                 }
                 setSelectedAccessory(
-                  acc.items.find((it) => it.id.toString() === val) ?? null,
+                  acc.accessory_item.find((it) => it.id.toString() === val) ?? null,
                 );
               }}
             >
@@ -199,9 +203,9 @@ export const ProductInfo = ({
                 <SelectValue placeholder="Select warranty…" />
               </SelectTrigger>
               <SelectContent>
-                {acc.items.map((item) => (
-                  <SelectItem key={item.id} value={item.id.toString()}>
-                    {item.name} — +${item.price}
+                {acc.accessory_item.map((item) => (
+                  <SelectItem key={item?.id} value={item?.id?.toString()}>
+                    {formatAccessoryName(item?.name)} — +{fmtPrice(item?.price)}
                   </SelectItem>
                 ))}
               </SelectContent>

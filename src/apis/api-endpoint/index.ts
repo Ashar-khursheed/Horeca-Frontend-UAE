@@ -35,7 +35,11 @@ export const apiUrls = {
   SEARCH: "frontend/search",
 
   // Cart
+  CART_GET: "frontend/carts",
   CART_ADD: "frontend/carts/add",
+  CART_UPDATE_QTY: (id: number) => `frontend/carts/update-quantity/${id}`,
+  CART_REMOVE:     (id: number) => `frontend/carts/remove/${id}`,
+  CART_EMPTY:      "frontend/carts/empty",
 
   // General
   COUNTRIES: "frontend/countries",

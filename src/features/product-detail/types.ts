@@ -9,13 +9,17 @@ export type VariantItem = {
   images: string[];
 };
 
-export type AccessoryItem = { id: number; name: string; price: number };
+export type AccessoryItem = {
+  id: number;
+  name: string | { en?: string; ar?: string };
+  price: number;
+};
 
 export type Accessory = {
   id: number;
   name: string;
-  isRequired: number;
-  items: AccessoryItem[];
+  is_required: number;
+  accessory_item: AccessoryItem[];
 };
 
 export type Spec = { attribute_name: string; attribute_value: string };
@@ -97,6 +101,7 @@ export type ProductDetailResponse = {
   variants: unknown[];
   reviews: ProductReview[];
   seo: ProductSeo | null;
+  accessories?: Accessory[];
   in_wishlist: boolean;
   breadcrumbs?: ProductBreadcrumb[];
 };

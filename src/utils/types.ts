@@ -1,4 +1,3 @@
-import { LocationData } from "@/components/LocationInitializer";
 import { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 
 interface HeaderProps {
@@ -13,7 +12,6 @@ interface HeaderProps {
   initialProfile?: CustomerProfile | null;
 }
 interface Props extends HeaderProps {
-  locationData?: LocationData | null;
   navItemData?: unknown[];
 }
 
@@ -261,24 +259,8 @@ interface SearchSuggestions {
 }
 
 export type {
-    HeaderProps,
-    Props,
-    ApiCategory,
-    ApiCategoryName,
-    LocalizedString,
-    ApiProductRaw,
-    FeaturedCategory,
-    ApiCategoryPage,
-    CategoryPageSeoTranslation,
-    CategoryPageImageDetail,
-    InnerCategoryPageResponse,
-    InnerCategoryPageSeo,
-    RangeFilterItem,
-    FixedFilterItem,
-    ProductsListingResponse,
-    SearchSuggestions,
-    SearchProduct,
-    SearchCategory,
-    SearchBrand,
+  ApiCategory,
+  ApiCategoryName, ApiCategoryPage, ApiProductRaw, CategoryPageImageDetail, CategoryPageSeoTranslation, FeaturedCategory, FixedFilterItem, HeaderProps, InnerCategoryPageResponse,
+  InnerCategoryPageSeo, LocalizedString, ProductsListingResponse, Props, RangeFilterItem, SearchBrand, SearchCategory, SearchProduct, SearchSuggestions
 };
 
