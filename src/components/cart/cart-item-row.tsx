@@ -179,7 +179,7 @@ export default function CartItemRow({
           })()}
 
           {/* Save for Later / Wishlist */}
-          <button
+          {/* <button
             onClick={handleWishlistClick}
             disabled={isToggling}
             className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 disabled:opacity-60 ${
@@ -190,7 +190,7 @@ export default function CartItemRow({
           >
             <Heart size={13} className={inWishlist ? "fill-[#186737]" : ""} />
             {inWishlist ? "Wishlisted" : "Save for Later"}
-          </button>
+          </button> */}
 
           {/* Remove */}
           <button

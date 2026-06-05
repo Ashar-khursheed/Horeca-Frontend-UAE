@@ -136,11 +136,22 @@ export default function NavigationStatic({
   navItemData?: Category[];
   searchData?: SearchSuggestions | null;
 }) {
-  const reduxCustomer = useSelector((s: RootState) => s.profile.customer);
-  const locationData = useLocationData();
+  const reduxCustomer  = useSelector((s: RootState) => s.profile.customer);
+  const locationData   = useLocationData();
   const profileLoading = useSelector((s: RootState) => s.profile.loading);
-  const customer = reduxCustomer;
-  const dispatch = useDispatch<AppDispatch>();
+  const customer       = reduxCustomer;
+  const dispatch       = useDispatch<AppDispatch>();
+
+  // ── Dynamic counts ──────────────────────────────────────────────────────────
+  const wishlistCount = useSelector((s: RootState) => s.wishlist.ids.length);
+  const cartApiQty    = useSelector((s: RootState) =>
+    s.cart.apiEntries.reduce((sum, e) => sum + e.quantity, 0)
+  );
+  const cartGuestQty  = useSelector((s: RootState) =>
+    s.cart.items.reduce((sum, i) => sum + i.quantity, 0)
+  );
+  const cartCount     = cartApiQty > 0 ? cartApiQty : cartGuestQty;
+  const cartLabel     = cartCount > 99 ? "99+" : String(cartCount);
   const loggingOut = useSelector((s: RootState) => s.auth.loading);
   const router = useRouter();
   const pathname = usePathname();
@@ -336,14 +347,22 @@ export default function NavigationStatic({
               {/* Wishlist */}
               <Link href="/wishlist" className="relative w-10 h-10 flex items-center justify-center rounded-[7px] hover:bg-gray-50 transition-colors group">
                 <Heart size={20} className="text-gray-500 group-hover:text-[#186737] transition-colors" />
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#186737] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">4</span>
+                {/* {wishlistCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 bg-[#186737] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )} */}
               </Link>
 
               {/* Cart */}
               <Link href="/cart"><button className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] transition-colors text-white rounded-[7px] pl-3 pr-4 h-10">
                 <div className="relative">
                   <ShoppingCart size={18} />
-                  <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-white text-[#186737] text-[10px] font-black rounded-full flex items-center justify-center px-1 leading-none border border-[#186737]">99+</span>
+                  {/* {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 min-w-4.5 h-4.5 bg-white text-[#186737] text-[10px] font-black rounded-full flex items-center justify-center px-1 leading-none border border-[#186737]">
+                      {cartLabel}
+                    </span>
+                  )} */}
                 </div>
                 <span className="text-xs font-semibold">Cart</span>
               </button></Link>

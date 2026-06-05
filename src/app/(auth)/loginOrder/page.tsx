@@ -1,39 +1,65 @@
 "use client";
 
+import { apiUrls } from "@/apis/api-endpoint";
+import { makeApiRequest } from "@/apis/axios-instance";
 import Loader from "@/components/Loader";
 import { loginUser } from "@/store/slices/auth/authSlice";
-import { AppDispatch } from "@/store/store";
+import { fetchCountryByName } from "@/store/slices/country/countrySlice";
+import { AppDispatch, RootState } from "@/store/store";
+import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
+import { useLocationData } from "@/utils/locationStorage";
+import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
 import { guestCheckoutSchema, loginSchema } from "@/validation/schema";
 import { useFormik } from "formik";
-import { ChevronDown, Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
-// ── Country Codes ─────────────────────────────────────────────────────────────
-const COUNTRIES = [
-  { code: "+1",   flag: "🇺🇸", abbr: "US" },
-  { code: "+971", flag: "🇦🇪", abbr: "AE" },
-  { code: "+44",  flag: "🇬🇧", abbr: "UK" },
-  { code: "+91",  flag: "🇮🇳", abbr: "IN" },
-  { code: "+966", flag: "🇸🇦", abbr: "SA" },
-  { code: "+974", flag: "🇶🇦", abbr: "QA" },
-  { code: "+965", flag: "🇰🇼", abbr: "KW" },
-  { code: "+20",  flag: "🇪🇬", abbr: "EG" },
-  { code: "+49",  flag: "🇩🇪", abbr: "DE" },
-  { code: "+33",  flag: "🇫🇷", abbr: "FR" },
-];
+// Converts 2-letter ISO code → flag emoji ("AE" → "🇦🇪")
+const getFlagEmoji = (isoCode: string): string =>
+  isoCode
+    .toUpperCase()
+    .split("")
+    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .join("");
+
+// Auto-generate a secure random password for guest registration
+const generateGuestPassword = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
+  return Array.from({ length: 16 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
+};
 
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4" />
-    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853" />
-    <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" />
-    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335" />
+    <path
+      d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+      fill="#4285F4"
+    />
+    <path
+      d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+      fill="#34A853"
+    />
+    <path
+      d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+      fill="#FBBC05"
+    />
+    <path
+      d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"
+      fill="#EA4335"
+    />
   </svg>
 );
 
@@ -66,29 +92,43 @@ function ConsentCheckbox({
           <div className="w-4 h-4 rounded border-2 border-gray-300 peer-checked:border-[#186737] peer-checked:bg-[#186737] transition-all flex items-center justify-center">
             {checked && (
               <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                <path d="M1.5 4.5l2 2L7.5 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M1.5 4.5l2 2L7.5 2"
+                  stroke="white"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             )}
           </div>
         </div>
         <span className="text-[11px] text-gray-500 leading-relaxed">
-          By submitting this form, you consent to receive promotional offers from Horecastore at the
-          number provided. Consent is not a condition of purchase. Message &amp; data rates may apply.
-          Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers
-          aren&apos;t shared with third parties.{" "}
-          <Link href="/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>
-          {" "}&amp;{" "}
-          <Link href="/terms" className="text-[#186737] hover:underline">Terms and condition</Link>
+          By submitting this form, you consent to receive promotional offers
+          from Horecastore at the number provided. Consent is not a condition of
+          purchase. Message &amp; data rates may apply. Message frequency
+          varies. Unsubscribe by replying STOP. Reply HELP for help. Phone
+          numbers aren&apos;t shared with third parties.{" "}
+          <Link
+            href="/privacy-policy"
+            className="text-[#186737] hover:underline"
+          >
+            Privacy Policy
+          </Link>{" "}
+          &amp;{" "}
+          <Link href="/terms" className="text-[#186737] hover:underline">
+            Terms and condition
+          </Link>
         </span>
       </label>
-      {error && <p className="text-[11px] text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-xs font-semibold text-red-500 mt-1">{error}</p>}
     </div>
   );
 }
 
 // ── Field Error ───────────────────────────────────────────────────────────────
 const FieldError = ({ msg }: { msg?: string }) =>
-  msg ? <p className="text-[11px] text-red-500 mt-1">{msg}</p> : null;
+  msg ? <p className="text-xs font-semibold text-red-500 mt-1">{msg}</p> : null;
 
 // ── Input class helper ────────────────────────────────────────────────────────
 const inputCls = (hasError: boolean) =>
@@ -116,14 +156,25 @@ function LoginPanel() {
       setLoading(true);
       setApiError("");
       try {
-        await dispatch(loginUser({ email: values.email.trim(), password: values.password })).unwrap();
-        const redirect = searchParams.get("redirect") ?? "/";
+        await dispatch(
+          loginUser({ email: values.email.trim(), password: values.password }),
+        ).unwrap();
+        const guestWishlist = localStorage.getItem("horeca_wishlist");
+        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+          await syncGuestWishlistAfterLogin();
+        }
+        const guestCart = localStorage.getItem("horeca_cart");
+        if (guestCart && JSON.parse(guestCart)?.length > 0) {
+          await syncGuestCartAfterLogin();
+        }
+        const redirect = searchParams.get("redirect") ?? "/checkout";
         router.push(redirect);
       } catch (err: unknown) {
         setApiError(
           typeof err === "string"
             ? err
-            : (err as { message?: string })?.message ?? "Invalid email or password.",
+            : ((err as { message?: string })?.message ??
+                "Invalid email or password."),
         );
       } finally {
         setLoading(false);
@@ -145,7 +196,10 @@ function LoginPanel() {
         {/* Email */}
         <div>
           <div className="relative">
-            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Mail
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="email"
               name="email"
@@ -162,7 +216,10 @@ function LoginPanel() {
         {/* Password */}
         <div>
           <div className="relative">
-            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Lock
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type={showPass ? "text" : "password"}
               name="password"
@@ -181,7 +238,10 @@ function LoginPanel() {
             </button>
           </div>
           <div className="flex justify-end mt-1">
-            <Link href="/forgot-password" className="text-[11px] text-[#186737] hover:underline">
+            <Link
+              href="/forgot-password"
+              className="text-[11px] text-[#186737] hover:underline"
+            >
               Forgot Password?
             </Link>
           </div>
@@ -204,7 +264,7 @@ function LoginPanel() {
         )}
 
         {apiError && (
-          <p className="text-[11px] text-red-500 text-center">{apiError}</p>
+          <p className="text-sm font-bold text-red-500 text-center">{apiError}</p>
         )}
 
         <button
@@ -231,13 +291,20 @@ function LoginPanel() {
 
       <p className="text-center text-[11px] text-gray-500 mt-5 leading-relaxed">
         By registering you agree to the user{" "}
-        <Link href="/terms" className="text-[#186737] hover:underline">Terms &amp; Conditions</Link>
-        {" "}and{" "}
-        <Link href="/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>
+        <Link href="/terms" className="text-[#186737] hover:underline">
+          Terms &amp; Conditions
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy-policy" className="text-[#186737] hover:underline">
+          Privacy Policy
+        </Link>
       </p>
       <p className="text-center text-[11px] text-gray-500 mt-1.5">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-[#186737] font-semibold hover:underline">
+        <Link
+          href="/register"
+          className="text-[#186737] font-semibold hover:underline"
+        >
           Sign up now and join us!
         </Link>
       </p>
@@ -247,9 +314,26 @@ function LoginPanel() {
 
 // ── Guest Panel ───────────────────────────────────────────────────────────────
 function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const locationFromRedux = useLocationData();
+  const country = useSelector((s: RootState) => s.country);
+
   const [showForm, setShowForm] = useState(false);
-  const [countryCode, setCountryCode] = useState("+1");
   const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  // Auto-detect dial code from location (same as register page)
+  useEffect(() => {
+    if (locationFromRedux?.country) {
+      dispatch(fetchCountryByName(locationFromRedux.country));
+    }
+  }, [locationFromRedux?.country, dispatch]);
+
+  const dialCode = country.data?.phone_code ?? "";
+  const isoCode = locationFromRedux?.countryCode ?? "";
+  const flagEmoji = isoCode ? getFlagEmoji(isoCode) : "🌍";
+  const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
 
   const formik = useFormik({
     initialValues: { name: "", email: "", phone: "", consent: false },
@@ -258,10 +342,49 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
     validateOnChange: true,
     onSubmit: async (values) => {
       setLoading(true);
-      console.log("Guest checkout:", { ...values, countryCode, fullPhone: `${countryCode}${values.phone}` });
-      await new Promise((r) => setTimeout(r, 600));
-      setLoading(false);
-      onSuccess();
+      setApiError("");
+      try {
+        const guestPassword = generateGuestPassword();
+        const formData = new FormData();
+        formData.append("name", values.name.trim());
+        formData.append("email", values.email.trim());
+        formData.append("password", guestPassword);
+        formData.append("password_confirmation", guestPassword);
+        formData.append("type", "Private");
+        formData.append("country_code", dialCode);
+        formData.append("mobile_number", values.phone);
+
+        await makeApiRequest(apiUrls.REGISTER, {
+          method: "POST",
+          data: formData,
+        });
+
+        // Auto-login after registration
+        await dispatch(
+          loginUser({ email: values.email.trim(), password: guestPassword })
+        ).unwrap();
+
+        // Sync guest wishlist & cart
+        const guestWishlist = localStorage.getItem("horeca_wishlist");
+        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+          await syncGuestWishlistAfterLogin();
+        }
+        const guestCart = localStorage.getItem("horeca_cart");
+        if (guestCart && JSON.parse(guestCart)?.length > 0) {
+          await syncGuestCartAfterLogin();
+        }
+
+        onSuccess();
+        router.push("/cart");
+      } catch (err: unknown) {
+        const msg =
+          (err as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message ??
+          (typeof err === "string" ? err : "Registration failed. Please try again.");
+        setApiError(msg);
+      } finally {
+        setLoading(false);
+      }
     },
   });
 
@@ -275,7 +398,9 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         <div className="w-14 h-14 rounded-full bg-[#186737]/10 flex items-center justify-center mb-4">
           <User size={24} className="text-[#186737]" />
         </div>
-        <h2 className="text-xl font-black text-gray-900 mb-2">Continue As Guest</h2>
+        <h2 className="text-xl font-black text-gray-900 mb-2">
+          Continue As Guest
+        </h2>
         <p className="text-sm text-gray-500 mb-8 max-w-xs">
           Checkout quickly without creating an account.
         </p>
@@ -294,13 +419,18 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
       <h2 className="text-xl font-black text-gray-900 mb-1">
         Enter Contact Details For Delivery
       </h2>
-      <p className="text-sm text-gray-500 mb-5">We&apos;ll use this to confirm your order.</p>
+      <p className="text-sm text-gray-500 mb-5">
+        We&apos;ll use this to confirm your order.
+      </p>
 
       <form onSubmit={formik.handleSubmit} noValidate className="space-y-4">
         {/* Name */}
         <div>
           <div className="relative">
-            <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <User
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
               name="name"
@@ -317,7 +447,10 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         {/* Email */}
         <div>
           <div className="relative">
-            <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Mail
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="email"
               name="email"
@@ -331,7 +464,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
           <FieldError msg={emailErr ? formik.errors.email : undefined} />
         </div>
 
-        {/* Phone with country code */}
+        {/* Phone — auto-detected country code (no dropdown) */}
         <div>
           <div
             className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${
@@ -340,25 +473,19 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
                 : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
             }`}
           >
-            {/* Country code select */}
-            <div className="relative flex items-center border-r border-gray-200 bg-gray-50 shrink-0">
-              <select
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                className="appearance-none bg-transparent pl-2.5 pr-6 text-sm text-gray-700 outline-none cursor-pointer h-full font-medium"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.flag} {c.code}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                size={12}
-                className="absolute right-1.5 text-gray-400 pointer-events-none"
-              />
+            {/* Auto-detected flag + dial code */}
+            <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 shrink-0">
+              {country.loading ? (
+                <span className="text-xs text-gray-400 animate-pulse">...</span>
+              ) : (
+                <>
+                  <span className="text-base leading-none">{flagEmoji}</span>
+                  <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                    {dialCode}
+                  </span>
+                </>
+              )}
             </div>
-            {/* Number input */}
             <input
               type="tel"
               name="phone"
@@ -368,11 +495,17 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
                 formik.setFieldValue("phone", v);
               }}
               onBlur={formik.handleBlur}
-              placeholder="(866) 446-7322"
+              placeholder="501234567"
+              inputMode="numeric"
               maxLength={15}
               className="flex-1 h-full px-3 text-sm outline-none bg-transparent placeholder:text-gray-400"
             />
           </div>
+          {detectedCountry && !phoneErr && (
+            <p className="text-[11px] text-gray-400 mt-1">
+              Detected: {detectedCountry}
+            </p>
+          )}
           <FieldError msg={phoneErr ? formik.errors.phone : undefined} />
         </div>
 
@@ -388,6 +521,10 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
               : undefined
           }
         />
+
+        {apiError && (
+          <p className="text-sm font-bold text-red-500 text-center">{apiError}</p>
+        )}
 
         <button
           type="submit"
@@ -414,12 +551,11 @@ export default function LoginOrderPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4">
+    <div className="min-h-screens bg-gray-50 flex items-center justify-center py-8 px-4">
       <div className="w-full max-w-4xl">
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[560px]">
-
             {/* ── Left: Login ── */}
             <div className="border-b lg:border-b-0 lg:border-r border-gray-100">
               <LoginPanel />
@@ -428,7 +564,9 @@ export default function LoginOrderPage() {
             {/* ── Divider (mobile) ── */}
             <div className="flex lg:hidden items-center gap-3 px-6 py-1">
               <div className="flex-1 h-px bg-gray-100" />
-              <span className="text-xs text-gray-400 font-medium bg-white px-2">Or</span>
+              <span className="text-xs text-gray-400 font-medium bg-white px-2">
+                Or
+              </span>
               <div className="flex-1 h-px bg-gray-100" />
             </div>
 
@@ -440,7 +578,7 @@ export default function LoginOrderPage() {
                   Or
                 </span>
               </div>
-              <GuestPanel onSuccess={() => router.push("/")} />
+              <GuestPanel onSuccess={() => router.push("/checkout")} />
             </div>
           </div>
         </div>

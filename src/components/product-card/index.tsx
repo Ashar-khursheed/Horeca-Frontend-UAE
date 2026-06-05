@@ -365,7 +365,7 @@ export const ProductCard = ({
         {hasSale && discountPct > 0 && (
           <div className="absolute top-3 left-3 z-10">
             <span className="bg-[#FCE8EA] text-red-500 px-3 py-1 rounded-full text-[12px] font-semibold whitespace-nowrap">
-              {discountPct.toFixed(2)}% off
+              -{Math.round(discountPct)}%
             </span>
           </div>
         )}

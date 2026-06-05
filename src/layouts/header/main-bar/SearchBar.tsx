@@ -1,10 +1,12 @@
 "use client";
 
+import AddToCartWidget from "@/components/add-to-cart";
+import type { RawApiProduct } from "@/components/product-card";
 import type { SearchSuggestions } from "@/utils/types";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
@@ -29,14 +31,6 @@ export default function SearchBar({ searchData }: SearchBarProps) {
   const products = d?.products ?? [];
   const categories = d?.categories ?? [];
   const brands = d?.brands ?? [];
-
-  const [quantities, setQuantities] = useState<number[]>([]);
-
-  // Keep quantities in sync with products length
-  useEffect(() => {
-    setQuantities(products.map(() => 1));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products.length]);
 
   const fetchSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -78,11 +72,6 @@ export default function SearchBar({ searchData }: SearchBarProps) {
       router.push("/search");
     }
   };
-
-  const updateQty = (index: number, delta: number) =>
-    setQuantities((prev) =>
-      prev.map((q, i) => (i === index ? Math.max(1, q + delta) : q)),
-    );
 
   return (
     <div className="flex-1 hidden lg:block relative">
@@ -163,7 +152,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                       <li key={i}>
                         <Link
                           href={p.url}
-                          onMouseDown={() => goToSearch(p.name.en)}
+                          // onMouseDown={() => goToSearch(p.name.en)}
                           className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white hover:shadow-sm transition-all group"
                         >
                           <Search
@@ -206,7 +195,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                       <Link
                         key={i}
                         href={`/${c.super_parent_url}/${c.url}`}
-                        onMouseDown={() =>
+                        onClick={() =>
                           router.push(`/${c.super_parent_url}/${c.url}`)
                         }
                         className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
@@ -242,7 +231,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                       <Link
                         key={i}
                         href={`/brands/${b.slug}`}
-                        onMouseDown={() => router.push(`/brands/${b.slug}`)}
+                        onClick={() => router.push(`/brands/${b.slug}`)}
                         className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
                       >
                         {b.name.en}
@@ -293,7 +282,6 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                   {products.slice(0, 4).map((p, i) => (
                     <li
                       key={i}
-                      onMouseDown={() => router.push(p.url)}
                       className="flex gap-3 p-3 rounded-xl border border-gray-100 hover:border-[#186737]/25 hover:bg-[#f8fdf9] transition-all cursor-pointer group"
                     >
                       <div className="w-15.5 h-15.5 rounded-xl bg-gray-100 shrink-0 border border-gray-100 overflow-hidden">
@@ -302,44 +290,30 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                             src={p.images.en[0]}
                             alt={p.name.en}
                             className="w-full h-full object-contain"
+                            onClick={() => { setSearchFocused(false); router.push(p.url); }}
                           />
                         )}
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
-                        <p className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors">
+                        <p
+                          className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors"
+                          onClick={() => { setSearchFocused(false); router.push(p.url); }}
+                        >
                           {p.name.en}
                         </p>
-                        <div className="flex items-center flex-row gap-2 mt-2">
-                          <div className="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white">
-                            <button
-                              className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 text-sm font-bold transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateQty(i, -1);
-                              }}
-                            >
-                              −
-                            </button>
-                            <span className="w-6 text-center text-xs font-semibold text-gray-800 select-none">
-                              {quantities[i] ?? 1}
-                            </span>
-                            <button
-                              className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 text-sm font-bold transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateQty(i, 1);
-                              }}
-                            >
-                              +
-                            </button>
-                          </div>
-                          <button
-                            className="flex-1 h-7 rounded-lg bg-[#e8f5ee] text-[#186737] text-xs font-semibold hover:bg-[#186737] hover:text-white transition-all whitespace-nowrap"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Add To Cart
-                          </button>
-                        </div>
+                        <AddToCartWidget
+                          product={{
+                            ...p,
+                            original_price: p.price,
+                            parent_category_url: p.parent_category_url_resolved,
+                            images: { en: p.images.en ?? [], ar: p.images.ar ?? [] },
+                          } as unknown as RawApiProduct}
+                          wrapperClassName="flex items-center flex-row gap-2 mt-2"
+                          counterClassName="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white w-[80px] shrink-0"
+                          counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 transition-colors"
+                          buttonClassName="flex-1 h-7 rounded-lg bg-[#e8f5ee] text-[#186737] text-xs font-semibold hover:bg-[#186737] hover:text-white transition-all whitespace-nowrap"
+                          iconShow={false}
+                        />
                       </div>
                     </li>
                   ))}

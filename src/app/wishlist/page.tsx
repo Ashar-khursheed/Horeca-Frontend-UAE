@@ -78,10 +78,12 @@ const apiEntryToWishlistItem = (entry: any, currencySymbol: string): WishlistIte
     name: resolveStr(p.name) || p.name || "",
     brand: p.brand?.name ?? resolveStr(p.brand?.translations?.[0]?.name) ?? "",
     modelNo: p.sku ?? "",
-    image: Array.isArray(p.images) ? (p.images[0] ?? "") : "",
+    image: Array.isArray(p.images)
+      ? (p.images[0] ?? "")
+      : (p.images?.en?.[0] ?? p.images?.ar?.[0] ?? ""),
     price: activePrice,
     originalPrice: price,
-    currencySymbol,
+    currencySymbol: p.currency?.symbol ?? currencySymbol,
     warranty: "",
     deliveryDays: supplier?.delivery_days ?? "",
     freeShipping: !!supplier?.free_shipping,

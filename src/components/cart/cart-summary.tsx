@@ -11,13 +11,19 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CartItem, fmtPrice, TAX_RATE } from "./cart-types";
 
 export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
 
   const currencySymbol = cartItems[0]?.currencySymbol ?? "$";
   const subtotal       = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
@@ -108,7 +114,7 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
           </div>
 
           <Link
-            href="/checkout"
+            href={isLoggedIn ? "/checkout" : "/loginOrder"}
             className="w-full py-3 rounded-[7px] bg-[#186737] hover:bg-[#145c30] text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors duration-200"
           >
             Confirm &amp; Pay <ArrowRight size={16} />

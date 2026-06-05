@@ -348,7 +348,7 @@ export default function CartPage() {
             </div>
             <button
               onClick={() => setConfirmClear(true)}
-              className="text-xs text-white p-3.5 rounded-md bg-red-500  font-semibold hover:underline transition-colors"
+              className="text-xs text-white md:p-3.5 p-2 rounded-md bg-red-500  font-semibold hover:underline transition-colors"
             >
               Remove All Items
             </button>
