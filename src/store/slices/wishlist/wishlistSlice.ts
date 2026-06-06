@@ -153,6 +153,9 @@ const wishlistSlice = createSlice({
       state.hydrated = false;
       state.apiEntries = [];
       state.fetchStatus = "idle";
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(WISHLIST_KEY);
+      }
     },
   },
 

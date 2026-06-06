@@ -24,6 +24,8 @@ import {
   updateApiEntryQty,
   removeApiEntry,
   resetApiStatus,
+  removeItem,
+  updateQuantity,
 } from "@/store/slices/cart/cartSlice";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
@@ -161,11 +163,11 @@ export default function CartPage() {
           method: "PUT",
           data: { quantity: qty },
         }).catch(() => {});
-        // updateApiEntryQty also syncs rawProducts → cartItems re-derives
         dispatch(updateApiEntryQty({ cartItemId: item.cartItemId, quantity: qty }));
       }
     } else {
       setGuestItems((prev) => prev.map((c) => (c.id === id ? { ...c, qty } : c)));
+      dispatch(updateQuantity({ productId: id, quantity: qty }));
     }
   };
 
@@ -174,11 +176,11 @@ export default function CartPage() {
       const item = cartItems.find((c) => c.id === id);
       if (item?.cartItemId) {
         makeApiRequest(apiUrls.CART_REMOVE(item.cartItemId), { method: "DELETE" }).catch(() => {});
-        // removeApiEntry also syncs rawProducts → cartItems re-derives
         dispatch(removeApiEntry(item.cartItemId));
       }
     } else {
       setGuestItems((prev) => prev.filter((c) => c.id !== id));
+      dispatch(removeItem(id));
     }
   };
 
