@@ -3,6 +3,7 @@ import SubCategoryPage from '@/features/category/sub-category'
 import { makeApiCallSSR } from '@/apis/ssr-fetch'
 import { apiUrls } from '@/apis/api-endpoint'
 import { ApiCategory, InnerCategoryPageResponse, ProductsListingResponse } from '@/utils/types'
+import { cookies } from 'next/headers'
 
 export const revalidate = 3600
 
@@ -75,6 +76,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SubCategorySlugPage({ params, searchParams }: PageProps) {
+    const cookieStore = await cookies();
+  const isLoggedIn  = !!cookieStore.get("token")?.value;
   const { categorySlug, subCategorySlug } = await params
   const { parent, page: pageParam, sort: sortParam, show: showParam, brands: brandsParam, min: minParam, max: maxParam, rf: rfParam, ff: ffParam } = await searchParams
   const currentPage = Math.max(1, Number(pageParam ?? 1))
@@ -152,11 +155,11 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { slug: categorySlug, with_parent: false },
-      { revalidate: 3600 },
+      { revalidate: 3600, withAuth: isLoggedIn },
     ),
     makeApiCallSSR<InnerCategoryPageResponse>(
       apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
-      {},
+      {  withAuth: isLoggedIn },
       {
         revalidate: 3600,
         method: "POST",
@@ -165,9 +168,9 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     ),
     makeApiCallSSR<ProductsListingResponse>(
       apiUrls.PRODUCTS_LISTING,
-      {},
+       {  withAuth: isLoggedIn },
       {
-        revalidate: 60,
+        revalidate: revalidate,
         method: "POST",
         body: productsBody,
       },

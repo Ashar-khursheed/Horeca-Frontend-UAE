@@ -422,6 +422,18 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
                   )}
                 </Link>
               ))}
+                  <Link
+                                          href={"/brands"}
+                                    className={`
+                    text-white transition-colors duration-200
+                    cursor-pointer relative group flex items-center gap-1
+                    md:text-[15px] lg:text-[14px] text-xs whitespace-nowrap
+                 
+                    hover:font-bold
+                  `}
+                                        >
+                                       Shop by Brands
+                                        </Link>
             </div>
           </div>
 

@@ -152,32 +152,41 @@
 //   );
 // }
 
-
-
 "use client";
 
+import { useAppSelector } from "@/store/hooks";
+import { Globe, Heart, Home, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, ShoppingCart, Heart, User, Globe } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Home",     href: "/",        icon: Home                      },
-  { label: "Language",   href: "/search",  icon: Globe                    },
-  { label: "Cart",     href: "/cart",    icon: ShoppingCart, isCart: true },
-  { label: "Wishlist", href: "/wishlist",icon: Heart                     },
-  { label: "Account",  href: "/dashboard", icon: User                      },
+  { label: "Home",     href: "/",         icon: Home,         isCart: false },
+  { label: "Language", href: "/search",   icon: Globe,        isCart: false },
+  { label: "Cart",     href: "/cart",     icon: ShoppingCart, isCart: true  },
+  { label: "Wishlist", href: "/wishlist", icon: Heart,        isCart: false },
+  { label: "Account",  href: "/account",  icon: User,         isCart: false },
 ];
 
-interface BottomNavProps {
-  cartCount?:     number;
-  wishlistCount?: number;
-}
+export default function BottomNav() {
+  const pathname   = usePathname();
+  const isLoggedIn = useAppSelector((s) => !!s.profile.customer);
 
-export default function BottomNav({
-  cartCount     = 3,
-  wishlistCount = 4,
-}: BottomNavProps) {
-  const pathname = usePathname();
+  // Cart count
+  const cartCount = useAppSelector((s) =>
+    isLoggedIn
+      ? s.customerCounts.cart_quantity_sum
+      : s.cart.items.reduce((sum, item) => sum + item.quantity, 0)
+  );
+
+  // Wishlist count
+  const wishlistCount = useAppSelector((s) =>
+    isLoggedIn
+      ? s.customerCounts.wishlist_count
+      : s.wishlist.guestItems.length
+  );
+
+  const accountHref = isLoggedIn ? "/dashboard" : "/login";
+
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
@@ -204,15 +213,16 @@ export default function BottomNav({
           }}
         >
           {NAV_ITEMS.map((item) => {
-            const active = isActive(item.href);
+            const href   = item.label === "Account" ? accountHref : item.href;
+            const active = isActive(href);
             const Icon   = item.icon;
 
             /* ── Cart elevated bubble ── */
             if (item.isCart) {
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={href}
+                  href={href}
                   className="flex-1 flex flex-col items-center justify-end pb-2.5 gap-1"
                 >
                   <div className="relative" style={{ marginTop: "-22px" }}>
@@ -248,8 +258,8 @@ export default function BottomNav({
             /* ── Normal tab ── */
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={href}
+                href={href}
                 className="flex-1 flex flex-col items-center justify-center gap-[5px] py-3 relative active:scale-95 transition-transform duration-100"
               >
                 {/* Active dot above icon */}
@@ -284,7 +294,7 @@ export default function BottomNav({
                 <span
                   className="text-[10px] leading-none"
                   style={{
-                    color:      active ? "#186737" : "#9ca3af",
+                    color: active ? "#186737" : "#9ca3af",
                     fontWeight: active ? 600 : 400,
                     transition: "all 0.18s ease",
                   }}

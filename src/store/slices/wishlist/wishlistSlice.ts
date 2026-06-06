@@ -38,6 +38,7 @@ interface WishlistState {
   guestItems: WishlistGuestItem[];  // full product data for guest (localStorage)
   toggling: number[];               // IDs currently being toggled
   guestHydrated: boolean;
+  hydrated: boolean;                // true once ids[] is seeded — used to avoid SSR→client flicker
   apiEntries: WishlistApiEntry[];   // raw API entries for wishlist page display
   fetchStatus: FetchStatus;
 }
@@ -47,6 +48,7 @@ const initialState: WishlistState = {
   guestItems: [],
   toggling: [],
   guestHydrated: false,
+  hydrated: false,
   apiEntries: [],
   fetchStatus: "idle",
 };
@@ -106,6 +108,7 @@ const wishlistSlice = createSlice({
       for (const id of action.payload) {
         if (!state.ids.includes(id)) state.ids.push(id);
       }
+      state.hydrated = true;
     },
 
     // Load guest wishlist from localStorage (always fresh — toggleGuestWishlistItem keeps it in sync)
@@ -113,6 +116,7 @@ const wishlistSlice = createSlice({
       const items = loadGuestWishlist();
       state.guestItems = items;
       state.guestHydrated = true;
+      state.hydrated = true;
       for (const item of items) {
         if (!state.ids.includes(item.productId)) state.ids.push(item.productId);
       }
@@ -146,6 +150,7 @@ const wishlistSlice = createSlice({
       state.guestItems = [];
       state.toggling = [];
       state.guestHydrated = false;
+      state.hydrated = false;
       state.apiEntries = [];
       state.fetchStatus = "idle";
     },
@@ -160,6 +165,7 @@ const wishlistSlice = createSlice({
       .addCase(fetchWishlist.fulfilled, (state, action) => {
         state.fetchStatus = "succeeded";
         state.apiEntries = action.payload;
+        state.hydrated = true;
         // Seed product IDs into ids[] so heart icons work across the app
         for (const entry of action.payload) {
           const pid = entry.product_id as number;

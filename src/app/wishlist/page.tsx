@@ -18,6 +18,7 @@ import Breadcrumb from "@/components/breadcum";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchWishlist,
+  resetWishlistFetch,
   toggleWishlistItem,
   toggleGuestWishlistItem,
   hydrateGuestWishlist,
@@ -431,17 +432,16 @@ export default function WishlistPage() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [copied,     setCopied]     = useState(false);
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   useEffect(() => {
     dispatch(hydrateGuestWishlist());
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     setIsLoggedIn(!!token);
     if (token) {
-      // fetchWishlist thunk's condition prevents duplicate calls automatically
+      dispatch(resetWishlistFetch());
       dispatch(fetchWishlist());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, []);
 
   // Items derived from Redux — no local state needed
   const items: WishlistItem[] = isLoggedIn
@@ -468,9 +468,14 @@ export default function WishlistPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const crumbs = [
+    { label: "Home", href: "/" },
+    { label: "My Wishlist", href: null },
+  ];
+
   return (
     <>
-      <Breadcrumb />
+      <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screen bg-gray-50/70">
         <div className="global-container py-6 sm:py-8">
           {/* Header */}

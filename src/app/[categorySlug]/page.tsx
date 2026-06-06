@@ -5,8 +5,9 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiCategory, ApiCategoryPage } from "@/utils/types";
 import type { ApiBrand } from "@/components/brands-section";
+import { cookies } from "next/headers";
+import { revalidate } from "@/utils";
 
-export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ categorySlug: string }>;
@@ -20,7 +21,7 @@ export async function generateMetadata({
   const res = await makeApiCallSSR<{ success: boolean; data: ApiCategoryPage }>(
     apiUrls.MAIN_CATEGPRY_PAGES(categorySlug),
     {},
-    { revalidate: 3600 },
+    { revalidate: revalidate },
   );
 
   const seo = res?.data?.seo?.current_translation;
@@ -61,7 +62,8 @@ export async function generateMetadata({
 
 export default async function CategorySlugPage({ params }: PageProps) {
   const { categorySlug } = await params;
-
+  const cookieStore = await cookies();
+  const isLoggedIn  = !!cookieStore.get("token")?.value;
   const [navigationRes, categoryPageRes, brandsRes] = await Promise.all([
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
@@ -71,7 +73,7 @@ export default async function CategorySlugPage({ params }: PageProps) {
     makeApiCallSSR<{ success: boolean; data: ApiCategoryPage }>(
       apiUrls.MAIN_CATEGPRY_PAGES(categorySlug),
       {},
-      { revalidate: 3600 },
+      { revalidate: 3600, withAuth: isLoggedIn },
     ),
     makeApiCallSSR<{ success: boolean; data: ApiBrand[] }>(
       apiUrls.BRANDS,

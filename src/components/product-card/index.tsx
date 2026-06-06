@@ -235,9 +235,15 @@ export const ProductCard = ({
   // ── Country from Redux (client-side currency conversion) ─────────────
   const country = useAppSelector((s) => s.country.data);
   // ── Wishlist from Redux ───────────────────────────────────────────────
-  const wishlistIds  = useAppSelector((s) => s.wishlist.ids);
-  const isToggling   = useAppSelector((s) => s.wishlist.toggling.includes(product.id));
-  const inWishlist   = wishlistIds.includes(product.id);
+  const wishlistIds      = useAppSelector((s) => s.wishlist.ids);
+  const wishlistHydrated = useAppSelector((s) => s.wishlist.hydrated);
+  const isToggling       = useAppSelector((s) => s.wishlist.toggling.includes(product.id));
+  const isLoggedIn       = useAppSelector((s) => !!(s.auth as any).customer);
+  // Logged-in: ISR cache ka in_wishlist unreliable hai (shared cache) — sirf Redux use karo
+  // Guest: SSR in_wishlist reliable hai (no auth, sab ko same data) — flicker bachao
+  const inWishlist = wishlistHydrated
+    ? wishlistIds.includes(product.id)
+    : (isLoggedIn ? false : !!product.in_wishlist);
   // ── Normalise fields that may arrive in either flat or localised form ──
   const name = resolveStr(product.name, locale);
   const rawImages = product.images;

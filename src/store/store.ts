@@ -6,6 +6,8 @@ import blogInteractionReducer from "./slices/blog/blogInteractionSlice";
 import cartReducer from "./slices/cart/cartSlice";
 import taxReducer from "./slices/tax/taxSlice";
 import wishlistReducer from "./slices/wishlist/wishlistSlice";
+import customerAddressReducer from "./slices/customer-address/customerAddressSlice";
+import customerCountsReducer from "./slices/customer-counts/customerCountsSlice";
 
 const store = configureStore({
   reducer: {
@@ -16,6 +18,8 @@ const store = configureStore({
     cart: cartReducer,
     tax: taxReducer,
     wishlist: wishlistReducer,
+    customerAddress: customerAddressReducer,
+    customerCounts: customerCountsReducer,
   },
 });
 

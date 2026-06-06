@@ -3,37 +3,42 @@ import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiCategory, FeaturedCategory } from "@/utils/types";
+import { cookies } from "next/headers";
+import { revalidate } from "@/utils";
 
-export const dynamic = "force-dynamic";
-
+// export const dynamic = "force-dynamic";
+// export const revalidate = 3600;
 export default async function Page() {
+  const cookieStore = await cookies();
+  const isLoggedIn  = !!cookieStore.get("token")?.value;
+
   const [slider1, slider2, categoryRes, featuredCategoriesRes, featuredProductsRes,featuredBrandProductsRes,blogsRes] = await Promise.all([
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: 3600 }),
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: 3600 }),
+    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: revalidate }),
+    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: revalidate }),
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: false, is_featured: true },
-      { revalidate: 0 },
+      { revalidate: revalidate },
     ),
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: true, is_featured: true },
-      { revalidate: 0 },
+      { revalidate: revalidate},
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_PRODUCTS,
       {},
-      { revalidate: 0 },
+      { revalidate: revalidate, withAuth: isLoggedIn },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate: 0 },
+      { revalidate: revalidate, withAuth: isLoggedIn },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.BLOGS,
       { per_page: 10, lang: "en", page: 1 },
-      { revalidate: 0 },
+      { revalidate: revalidate },
     ),
   ]);
 

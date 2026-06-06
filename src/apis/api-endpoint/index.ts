@@ -52,7 +52,24 @@ export const apiUrls = {
   WISHLIST_REMOVE:       "frontend/wishlist/remove",
   WISHLIST_ADD_MULTIPLE: "frontend/wishlist/add-multiple",
 
+  // Customer Address
+  GET_CUSTOMER_ADDRESS: "frontend/customer-address",
+  ADD_CUSTOMER_ADDRESS: "frontend/customer-address",
+  UPDATE_CUSTOMER_ADDRESS: (id: number) => `frontend/customer-address/${id}`,
+  DELETE_CUSTOMER_ADDRESS: (id: number) => `frontend/customer-address/${id}`,
+  GET_BY_ID_CUSTOMER_ADDRESS: (id: number) => `frontend/customer-address/${id}`,
+  DEFAULT_CUSTOMER_ADDRESS: "frontend/customer-address/default",
+  
+
+  // Customer
+  CUSTOMER_COUNTS: "frontend/customer/counts",
+
+  // Brand detail
+  BRAND_BY_SLUG: (slug: string) => `frontend/brand-by-slug/${slug}`,
+
   // General
   COUNTRIES: "frontend/countries",
+  STATES: "frontend/states",
+  CITIES: "frontend/cities",
   SLIDER: (id: number) => `frontend/sliders/${id}`,
 };

@@ -32,6 +32,9 @@ import {
 import { NAV_LINKS } from "@/data";
 import { clearProfile, CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
+import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
+import { fetchCounts, clearCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { fetchWishlist, clearWishlist } from "@/store/slices/wishlist/wishlistSlice";
 import { useLocationData } from "@/utils/locationStorage";
 import { apiUrls } from "@/apis/api-endpoint";
 import { AppDispatch, RootState } from "@/store/store";
@@ -142,15 +145,39 @@ export default function NavigationStatic({
   const customer       = reduxCustomer;
   const dispatch       = useDispatch<AppDispatch>();
 
+  const addressesLoading = useSelector((s: RootState) => s.customerAddress.loading);
+  const cachedDefault    = useSelector((s: RootState) => s.customerAddress.cachedDefault);
+  const liveDefault      = useSelector((s: RootState) => s.customerAddress.addresses.find((a) => a.is_default) ?? null);
+
+  useEffect(() => {
+    if (customer) {
+      dispatch(fetchAddresses());
+      dispatch(fetchCounts());
+      dispatch(fetchWishlist());
+    }
+  }, [customer, dispatch]);
+
+  // Priority: live API default → cached localStorage default → locationData
+  const resolvedDefault  = liveDefault ?? cachedDefault;
+  const isResolvingAddress = !!customer && addressesLoading && !cachedDefault;
+
+  const deliverCity    = resolvedDefault?.city    ?? locationData?.city    ?? null;
+  const deliverCountry = resolvedDefault?.country ?? locationData?.countryCode ?? null;
+  const deliverLabel   = deliverCity && deliverCountry
+    ? `${deliverCity}, ${deliverCountry}`
+    : (deliverCity ?? deliverCountry ?? null);
+
   // ── Dynamic counts ──────────────────────────────────────────────────────────
-  const wishlistCount = useSelector((s: RootState) => s.wishlist.ids.length);
-  const cartApiQty    = useSelector((s: RootState) =>
-    s.cart.apiEntries.reduce((sum, e) => sum + e.quantity, 0)
-  );
-  const cartGuestQty  = useSelector((s: RootState) =>
+  const countsLoaded      = useSelector((s: RootState) => s.customerCounts.loaded);
+  const wishlistApiCount  = useSelector((s: RootState) => s.customerCounts.wishlist_count);
+  const cartApiQtySum     = useSelector((s: RootState) => s.customerCounts.cart_quantity_sum);
+  const wishlistLocalCount = useSelector((s: RootState) => s.wishlist.ids.length);
+  const cartGuestQty      = useSelector((s: RootState) =>
     s.cart.items.reduce((sum, i) => sum + i.quantity, 0)
   );
-  const cartCount     = cartApiQty > 0 ? cartApiQty : cartGuestQty;
+  // Logged-in → use server counts (with optimistic updates); guest → use local counts
+  const wishlistCount = customer ? wishlistApiCount : wishlistLocalCount;
+  const cartCount     = customer ? cartApiQtySum : cartGuestQty;
   const cartLabel     = cartCount > 99 ? "99+" : String(cartCount);
   const loggingOut = useSelector((s: RootState) => s.auth.loading);
   const router = useRouter();
@@ -219,12 +246,12 @@ export default function NavigationStatic({
               <MapPin size={15} className="text-[#186737] flex-shrink-0" />
               <div className="flex flex-col items-start overflow-hidden">
                 <span className="text-[10px] text-gray-400 leading-none">Deliver To</span>
-                {locationData ? (
-                  <span className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-[110px]">
-                    {locationData.city}, {locationData.countryCode}
-                  </span>
-                ) : (
+                {isResolvingAddress || !deliverLabel ? (
                   <span className="w-20 h-3 bg-gray-200 animate-pulse rounded inline-block" />
+                ) : (
+                  <span className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-27.5">
+                    {deliverLabel}
+                  </span>
                 )}
               </div>
               <ChevronDown size={13} className="text-gray-400 flex-shrink-0 group-hover:text-[#186737] transition-colors ml-auto" />
@@ -347,22 +374,22 @@ export default function NavigationStatic({
               {/* Wishlist */}
               <Link href="/wishlist" className="relative w-10 h-10 flex items-center justify-center rounded-[7px] hover:bg-gray-50 transition-colors group">
                 <Heart size={20} className="text-gray-500 group-hover:text-[#186737] transition-colors" />
-                {/* {wishlistCount > 0 && (
+                {wishlistCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 bg-[#186737] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
                     {wishlistCount > 99 ? "99+" : wishlistCount}
                   </span>
-                )} */}
+                )}
               </Link>
 
               {/* Cart */}
               <Link href="/cart"><button className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] transition-colors text-white rounded-[7px] pl-3 pr-4 h-10">
                 <div className="relative">
                   <ShoppingCart size={18} />
-                  {/* {cartCount > 0 && (
+                  {cartCount > 0 && (
                     <span className="absolute -top-2 -right-2 min-w-4.5 h-4.5 bg-white text-[#186737] text-[10px] font-black rounded-full flex items-center justify-center px-1 leading-none border border-[#186737]">
                       {cartLabel}
                     </span>
-                  )} */}
+                  )}
                 </div>
                 <span className="text-xs font-semibold">Cart</span>
               </button></Link>
@@ -374,11 +401,19 @@ export default function NavigationStatic({
             <Link href={"/cart"}>
               <button className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
                 <ShoppingCart size={20} />
-                {/* <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">99+</span> */}
+                {cartCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-4 h-4 bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                    {cartLabel}
+                  </span>
+                )}
               </button></Link>
               <Link href={"/wishlist"}><button className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
                 <Heart size={20} />
-                {/* <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">99+</span> */}
+                {wishlistCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-4 h-4 bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
               </button></Link>
               <button
                 onClick={() => router.push("/search")}
@@ -440,6 +475,8 @@ export default function NavigationStatic({
                             disabled={loggingOut}
                             onClick={async () => {
                               await dispatch(logoutUser());
+                              dispatch(clearWishlist());
+                              dispatch(clearCounts());
                               window.location.href = "/";
                             }}
                             className="flex items-center gap-1.5 text-[12px] text-red-500 font-medium border border-red-100 rounded-full px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
@@ -490,6 +527,12 @@ export default function NavigationStatic({
                                       )}
                       </>
                     ))}
+                    <Link
+                                          href={"/brands"}
+                                        className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors "text-gray-900"}` }
+                                        >
+                                       Shop by Brands
+                                        </Link>
                     {/* {NAV_LINKS.map((link) => (
                       <Link
                         key={link.href}

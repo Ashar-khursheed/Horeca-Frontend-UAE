@@ -18,8 +18,6 @@ export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategor
 
   const activeGroup = products[activeIdx];
   const featuredProducts = (activeGroup?.products ?? []).slice(0, 10);
-  console.log("productsproductsproductsproductsproducts", products);
-
   if (!products.length) return null;
 
   return (

@@ -13,6 +13,7 @@ type Options = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: Record<string, any>;
+  withAuth?: boolean;
 };
 
 export async function makeApiCallSSR<T = unknown>(
@@ -49,6 +50,16 @@ export async function makeApiCallSSR<T = unknown>(
     // console.log("[SSR API]", url);
     // console.log("[SSR API] force_country:", countryCode);
 
+    // Auth token from cookie (only when withAuth: true)
+    let authHeader: Record<string, string> = {};
+    if (options?.withAuth) {
+      const cookieStore = await cookies();
+      const token = cookieStore.get("token")?.value;
+      if (token) {
+        authHeader = { Authorization: `Bearer ${token}` };
+      }
+    }
+
     const method = options?.method ?? (options?.body ? "POST" : "GET");
     const res = await fetch(url, {
       method,
@@ -58,6 +69,7 @@ export async function makeApiCallSSR<T = unknown>(
       },
       headers: {
         "Content-Type": "application/json",
+        ...authHeader,
         ...(options?.headers ?? {}),
       },
       ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
