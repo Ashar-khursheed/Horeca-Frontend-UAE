@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HomeLoading() {
   return (
-    <main>
+    <main className="global-container">
       {/* Hero Banner */}
       <div className="w-full flex gap-4 p-4">
         <Skeleton className="h-[400px] w-full rounded-xl" />
