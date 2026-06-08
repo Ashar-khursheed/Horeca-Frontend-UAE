@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductDetailLoading() {
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-6">
+    <div className="global-container ">
       {/* Breadcrumb */}
       <div className="flex gap-2 mb-6">
         {Array.from({ length: 4 }).map((_, i) => (

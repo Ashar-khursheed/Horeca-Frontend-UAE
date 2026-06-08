@@ -399,7 +399,7 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
       onMouseLeave={handleCloseDropdown}
     >
       <div className="global-container">
-        <div className="grid grid-cols-[75%_25%]">
+        <div className="grid xl:grid-cols-[80%_20%] 2xl:grid-cols-[83%_17%] md:grid-cols-[80%_20%]">
           {/* ── LEFT: scrollable category links ── */}
           <div className="relative flex items-center">
             {/* Left arrow */}

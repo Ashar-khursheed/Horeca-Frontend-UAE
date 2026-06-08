@@ -48,6 +48,9 @@ export default async function Page() {
   const featuredProducts = featuredProductsRes?.data ?? [];
   const featuredBrandProducts = featuredBrandProductsRes?.data ?? [];
   const blogs = blogsRes?.data ?? [];
+
+
+  console.log("Home page data:", featuredProducts);
   
   return (
     <main>

@@ -14,6 +14,8 @@ function str(v: LocalizedString | string | undefined, locale = "en"): string {
 
 export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategory[] }) => {
   const locale = useLocale();
+
+
   const [activeIdx, setActiveIdx] = useState(0);
 
   const activeGroup = products[activeIdx];

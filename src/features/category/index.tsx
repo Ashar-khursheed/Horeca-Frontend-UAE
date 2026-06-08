@@ -133,6 +133,7 @@ export default function CategoriesPage({
   brands?: ApiBrand[] | null;
 }) {
   const locale = useLocale();
+  const [bannerLoaded, setBannerLoaded] = useState(false);
 
   const uniqueCategories = categories.filter(
     (cat, i, arr) => arr.findIndex((c) => c.id === cat.id) === i,
@@ -153,20 +154,25 @@ export default function CategoriesPage({
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
         {/* Hero Header */}
-        <section className="bg-white border-b border-gray-100">
+        <section className="bg-white border-b border-gray-100 relative">
           {APIDATA?.banner_image_detail?.image_url ? (
-            <Image
-              src={APIDATA.banner_image_detail.image_url}
-              alt={APIDATA.banner_image_detail?.alt || "Category banner"}
-              width={0}
-              height={0}
-              sizes="100vw"
-              className="w-full h-auto"
-              priority
-              
-            />
+            <>
+              {!bannerLoaded && (
+                <div className="w-full h-45 md:h-80 bg-gray-200 animate-pulse" />
+              )}
+              <Image
+                src={APIDATA.banner_image_detail.image_url}
+                alt={APIDATA.banner_image_detail?.alt || "Category banner"}
+                width={0}
+                height={0}
+                sizes="100vw"
+                className={`w-full h-auto transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+                priority
+                onLoad={() => setBannerLoaded(true)}
+              />
+            </>
           ) : (
-            <div className="w-full h-[260px] bg-gray-100" />
+            <div className="w-full h-45 md:h-80 bg-gray-100" />
           )}
         </section>
         <div className="">

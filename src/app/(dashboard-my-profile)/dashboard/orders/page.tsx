@@ -305,9 +305,9 @@ export default function MyOrdersPage() {
                             <MapPin size={11} /> Track
                           </button>
                           <Link href={`/dashboard/orders/cancel-order/${order.id}`} className="text-red-400 hover:text-red-600 hover:underline transition-colors">Cancel</Link>
-                          <button className="flex items-center gap-1 text-gray-400 hover:text-gray-700 hover:underline transition-colors">
+                     <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 hover:underline transition-colors">
                             <RotateCcw size={10} /> Return
-                          </button>
+                          </Link>
                           <Link href={`/dashboard/orders/${order.id}`} className="flex items-center gap-1 text-[#186737] hover:underline">
                             <Eye size={11} /> View
                           </Link>
