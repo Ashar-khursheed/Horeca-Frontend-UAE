@@ -101,8 +101,7 @@ export default function LoginPage() {
           await syncGuestCartAfterLogin();
         }
         const redirect = searchParams.get("redirect") ?? "/";
-        // router.push(redirect);
-        window.location.href = redirect; // Force reload to update any server-fetched data (e.g. cart count in header)
+        router.push(redirect);
       } catch (err: unknown) {
         const msg =
           typeof err === "string"
