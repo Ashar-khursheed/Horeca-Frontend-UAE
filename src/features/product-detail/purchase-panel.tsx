@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import {
     ChevronRight,
+    FileText,
     Package,
     Phone,
     RotateCcw,
@@ -250,6 +251,27 @@ export const PurchasePanel = ({
           >
             Visit Store <ChevronRight size={12} />
           </a>
+        </div>
+      )}
+
+      {/* Documents */}
+      {productData?.documents?.length > 0 && (
+        <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+          <p className="text-xs text-gray-400 mb-2 font-medium">Documents</p>
+          <div className="flex flex-col gap-2">
+            {productData.documents.map((doc: { title: string; path: string }, i: number) => (
+              <a
+                key={i}
+                href={doc.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-xs text-[#186737] font-semibold hover:underline"
+              >
+                <FileText size={14} className="flex-shrink-0 text-red-500" />
+                <span className="truncate">{doc.title}</span>
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </div>

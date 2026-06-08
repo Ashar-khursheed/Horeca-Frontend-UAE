@@ -14,6 +14,7 @@ import SEOMainContent from "@/seo/seo-main-content";
 import { ApiCategory, ApiCategoryName, ApiCategoryPage } from "@/utils/types";
 import { ChevronLeft, ChevronRight, ChevronUp, MoveRight } from "lucide-react";
 import { useLocale } from "next-intl";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Navigation } from "swiper/modules";
@@ -152,16 +153,25 @@ export default function CategoriesPage({
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
         {/* Hero Header */}
-        <section className="bg-white border-b border-gray-100 ">
-          <img
-            src={APIDATA?.banner_image_detail?.image_url}
-            alt={APIDATA?.banner_image_detail?.alt}
-            className="w-full "
-          />
+        <section className="bg-white border-b border-gray-100">
+          {APIDATA?.banner_image_detail?.image_url ? (
+            <Image
+              src={APIDATA.banner_image_detail.image_url}
+              alt={APIDATA.banner_image_detail?.alt || "Category banner"}
+              width={0}
+              height={0}
+              sizes="100vw"
+              className="w-full h-auto"
+              priority
+              
+            />
+          ) : (
+            <div className="w-full h-[260px] bg-gray-100" />
+          )}
         </section>
-<div className="">
-  <SEOMainContent APIDATA={APIDATA} categorySlug={categorySlug} />
-</div>
+        <div className="">
+          <SEOMainContent APIDATA={APIDATA} categorySlug={categorySlug} />
+        </div>
         {/* <section className="md:py-7 py-3">
           <div className="global-container">
             <div className="grid grid-cols-1">
@@ -212,11 +222,11 @@ export default function CategoriesPage({
               {APIDATA?.explore_section_image_details?.map((img, index) => (
                 <div key={index}>
                   <Link href={img.url || "#"}>
-                  <img
-                    src={img.image_url}
-                    alt={img.alt}
-                    className="rounded-[7px]"
-                  />
+                    <img
+                      src={img.image_url}
+                      alt={img.alt}
+                      className="rounded-[7px]"
+                    />
                   </Link>
                 </div>
               ))}
@@ -285,22 +295,23 @@ export default function CategoriesPage({
         <section className="md:py-7 py-3">
           <div className="global-container">
             <div className="mt-8">
-            <Link
-              href={APIDATA?.secondary_banner_image_detail?.url || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src={APIDATA?.secondary_banner_image_detail?.image_url}
-                alt={APIDATA?.secondary_banner_image_detail?.alt || "SEO Banner"}
-                className="w-full rounded-[7px] object-cover"
-                loading="lazy"
-              />
-            </Link>
-          </div>
+              <Link
+                href={APIDATA?.secondary_banner_image_detail?.url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={APIDATA?.secondary_banner_image_detail?.image_url}
+                  alt={
+                    APIDATA?.secondary_banner_image_detail?.alt || "SEO Banner"
+                  }
+                  className="w-full rounded-[7px] object-cover"
+                  loading="lazy"
+                />
+              </Link>
+            </div>
           </div>
         </section>
-
 
         <BrandsSection brands={brands} />
         <section className="bg-whiste hidden  py-10 md:pb-10 pb-0">

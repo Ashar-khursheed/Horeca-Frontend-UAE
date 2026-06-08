@@ -32,6 +32,7 @@ export default function BrandsPage() {
   const [activeLetter, setActiveLetter] = useState("");
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bannerLoaded, setBannerLoaded] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -107,7 +108,16 @@ export default function BrandsPage() {
 
       {/* Banner */}
       <div className="relative w-full">
-        <Image src={Banner} alt="Brands" className="w-full h-auto" />
+        {!bannerLoaded && (
+          <div className="w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-200 animate-pulse" />
+        )}
+        <Image
+          src={Banner}
+          alt="Brands"
+          className={`w-full h-auto transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+          onLoad={() => setBannerLoaded(true)}
+          priority
+        />
         <div className="absolute inset-0 flex items-center pl-8 md:pl-16">
           <div className="max-w-md space-y-1 md:space-y-2 lg:space-y-2">
             <h1 className="text-[12px] md:text-2xl lg:text-[30px] font-bold text-yellow-400 leading-tight">

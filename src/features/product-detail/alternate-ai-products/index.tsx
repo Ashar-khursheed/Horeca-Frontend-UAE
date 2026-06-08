@@ -135,7 +135,7 @@ const ProductRow = ({ products }: { products: Product[] }) => {
     });
   };
 
-  const showArrows = products.length > 8;
+  const showArrows = products.length > 4;
 
   return (
     <div className="relative group">
