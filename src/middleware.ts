@@ -11,18 +11,20 @@ function clearAuthCookies(response: NextResponse): NextResponse {
 
 // In-memory IP cache — avoids calling ip-api on every request
 const ipCache = new Map<string, { country: string; expires: number }>();
-const IP_CACHE_MS = 30 * 1000; // 30 seconds
+const IP_CACHE_MS = 10 * 60 * 1000; // 10 minutes
 
 async function resolveCountryCode(request: NextRequest): Promise<string> {
+  // Cookie check first — skips any network call on repeat visits
+  const cookieCountry = request.cookies.get("hc_cc")?.value;
+  if (cookieCountry) return cookieCountry;
+
   const forwarded = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
   const userIp    = forwarded?.split(",")[0]?.trim();
 
   if (userIp) {
-    // Return from cache if fresh (30s)
     const cached = ipCache.get(userIp);
     if (cached && Date.now() < cached.expires) return cached.country;
 
-    // Always detect from real user IP — ignores stale cookie
     try {
       const res  = await fetch(`http://ip-api.com/json/${userIp}?fields=status,countryCode`);
       const data = await res.json();
@@ -33,8 +35,7 @@ async function resolveCountryCode(request: NextRequest): Promise<string> {
     } catch {}
   }
 
-  // Fallback: cookie or default
-  return request.cookies.get("hc_cc")?.value ?? "IN";
+  return "IN";
 }
 
 export async function middleware(request: NextRequest) {
@@ -66,7 +67,7 @@ export async function middleware(request: NextRequest) {
 
   // Also set cookie so future requests skip the API call
   if (!request.cookies.get("hc_cc")?.value) {
-    response.cookies.set("hc_cc", countryCode, { maxAge: 3600, path: "/", sameSite: "lax" });
+    response.cookies.set("hc_cc", countryCode, { maxAge: 60 * 60 * 24 * 3, path: "/", sameSite: "lax" });
   }
 
   if (token && !isTokenValid) clearAuthCookies(response);
