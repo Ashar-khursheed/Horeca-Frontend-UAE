@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Heart, Minus, Plus, Trash2, Truck } from "lucide-react";
+import { Bookmark, Calendar, Heart, Minus, Plus, Trash2, Truck } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 import { CartItem, fmtPrice } from "./cart-types";
@@ -182,18 +182,14 @@ export default function CartItemRow({
           })()}
 
           {/* Save for Later / Wishlist */}
-          {/* <button
-            onClick={handleWishlistClick}
+          <button
             disabled={isToggling}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 disabled:opacity-60 ${
-              inWishlist
-                ? "border-[#186737] text-[#186737] bg-[#f0f9f4]"
-                : "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737] hover:bg-[#f0f9f4]"
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 disabled:opacity-60 border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737] hover:bg-[#f0f9f4]"
             }`}
           >
-            <Heart size={13} className={inWishlist ? "fill-[#186737]" : ""} />
-            {inWishlist ? "Wishlisted" : "Save for Later"}
-          </button> */}
+            <Bookmark  size={13} className={""} />
+           Save for Later
+          </button>
 
           {/* Remove */}
           <button

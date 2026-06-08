@@ -5,7 +5,8 @@ import type { ApiCategory, ApiCategoryName } from "@/utils/types";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import { useState } from "react";
-
+import BannerImage from "@/assets/banners/category/Hero Banner - 1920 x 450 copy.webp";
+import Image from "next/image";
 const getName = (name: ApiCategoryName | string, locale: string): string => {
   if (typeof name === "string") return name;
   return locale === "ar" ? (name.ar || name.en) : (name.en || name.ar);
@@ -73,10 +74,13 @@ export default function AllCategoriesPage({ categories }: { categories: ApiCateg
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screen bg-gray-50">
         <section className="bg-white border-b border-gray-100">
-          <img
-            src="https://www.thehorecastore.com/images/Banners/NewBanner/6%20Categories/Main%20Categories/Desktop/Restaurant%20Equipment/Hero%20Banner%20-%201920%20x%20450%20copy.webp"
+          <Image
+            src={BannerImage}
             alt="All Categories"
             className="w-full"
+            width={1920}
+            height={450}
+
           />
         </section>
 
