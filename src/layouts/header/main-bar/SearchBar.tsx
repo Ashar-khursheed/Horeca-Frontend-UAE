@@ -152,6 +152,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                       <li key={i}>
                         <Link
                           href={p.url}
+                            onClick={() => { setSearchFocused(false); router.push(p.url); }}
                           // onMouseDown={() => goToSearch(p.name.en)}
                           className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white hover:shadow-sm transition-all group"
                         >
@@ -195,9 +196,10 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                       <Link
                         key={i}
                         href={`/${c.super_parent_url}/${c.url}`}
-                        onClick={() =>
-                          router.push(`/${c.super_parent_url}/${c.url}`)
-                        }
+                        // onClick={() =>
+                        //   router.push(`/${c.super_parent_url}/${c.url}`)
+                        // }
+                          onClick={() => { setSearchFocused(false);  router.push(`/${c.super_parent_url}/${c.url}`)}}
                         className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
                       >
                         {c.name.en}
@@ -231,7 +233,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                       <Link
                         key={i}
                         href={`/brands/${b.slug}`}
-                        onClick={() => router.push(`/brands/${b.slug}`)}
+                        onClick={() => { setSearchFocused(false); router.push(`/brands/${b.slug}`); }}
                         className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
                       >
                         {b.name.en}
@@ -310,8 +312,8 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                           } as unknown as RawApiProduct}
                           wrapperClassName="flex items-center flex-row gap-2 mt-2"
                           counterClassName="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white w-[80px] shrink-0"
-                          counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 hover:text-[#186737] hover:bg-gray-50 transition-colors"
-                          buttonClassName="flex-1 h-7 rounded-lg bg-[#e8f5ee] text-[#186737] text-xs font-semibold hover:bg-[#186737] hover:text-white transition-all whitespace-nowrap"
+                          counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 2xl:hover:text-[#186737] hover:bg-gray-50 transition-colors"
+                          buttonClassName="flex-1 h-7 rounded-lg 2xl:bg-[#e8f5ee] text-[#186737] text-xs font-semibold 2xl:hover:text-white transition-all whitespace-nowrap"
                           iconShow={false}
                         />
                       </div>

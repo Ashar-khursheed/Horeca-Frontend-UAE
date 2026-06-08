@@ -115,6 +115,10 @@ function DropdownPanel({
         .custom-scrollbar::-webkit-scrollbar       { width: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 
+        /* Hide nav scrollbar */
+        .nav-scroll::-webkit-scrollbar { display: none; }
+        .nav-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
         /* Mega sale pill */
         .mega-sale-pill {
           position: relative;
@@ -386,6 +390,8 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
   }, []);
 
   return (
+    <>
+    <style>{`.nav-scroll::-webkit-scrollbar{display:none}`}</style>
     <div
       ref={menuRef}
       className="relative w-full bg-green-700 py-2.5 border-b border-green-800 hidden xl:block"
@@ -396,11 +402,19 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
         <div className="grid grid-cols-[75%_25%]">
           {/* ── LEFT: scrollable category links ── */}
           <div className="relative flex items-center">
-           
-
+            {/* Left arrow */}
+            {/* {showLeftArrow && ( */}
+              <button
+                onClick={doScrollLeft}
+                className="absolute left-[-28px] z-10 flex items-center justify-center w-6 h-6 bg-green-700 text-white hover:bg-green-600 transition-colors duration-150 rounded-full shadow-md 2xl:hidden  "
+              >
+                <ChevronLeft size={16} />
+              </button>
+            {/* // )} */}
             <div
               ref={scrollRef}
-              className="flex space-x-4 items-center overflow-x-aueto scrollbar-hide scroll-smooth"
+              className={`nav-scroll flex space-x-4 items-center overflow-x-auto scroll-smooth ${showLeftArrow ? "pl-7" : ""} ${showRightArrow ? "pr-7" : ""}`}
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
             >
               {navItemData.map((category: any) => (
                 <Link
@@ -422,27 +436,34 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
                   )}
                 </Link>
               ))}
-                  <Link
-                                          href={"/brands"}
-                                    className={`
+              <Link
+                href={"/brands"}
+                className={`
                     text-white transition-colors duration-200
                     cursor-pointer relative group flex items-center gap-1
                     md:text-[15px] lg:text-[14px] text-xs whitespace-nowrap
                  
                     hover:font-bold
                   `}
-                                        >
-                                       Shop by Brands
-                                        </Link>
+              >
+                Shop by Brands
+              </Link>
             </div>
+            {/* Right arrow */}
+            {/* {showRightArrow && ( */}
+              <button
+                onClick={doScrollRight}
+                className="absolute right-[-51px] z-10 flex items-center justify-center w-6 h-6 bg-green-700 text-white hover:bg-green-600 transition-colors duration-150 rounded-full shadow-md 2xl:hidden"
+              >
+                <ChevronRight size={16} />
+              </button>
+            {/* )} */}
           </div>
 
           {/* ── RIGHT: phone · financing · sale ── */}
           <div>
             {" "}
             <div className="flex gap-3 items-center justify-end text-white font-normal ">
-            
-
               {/* Financing */}
               <Link href="/mega-sale" style={{ textDecoration: "none" }}>
                 <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
@@ -472,6 +493,7 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
           />
         )}
     </div>
+    </>
   );
 };
 
