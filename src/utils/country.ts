@@ -20,7 +20,7 @@ export async function getCountryCodeSSR(userIp?: string, cookieValue?: string): 
     if (userIp) reqHeaders["X-Forwarded-For"] = userIp;
     const res  = await fetch(GEO_API, { cache: "no-store", headers: reqHeaders });
     const data: GeoResponse = await res.json();
-    console.log("[Location] from API | userIp:", userIp, "| countryCode:", data.countryCode);
+    // console.log("[Location] from API | userIp:", userIp, "| countryCode:", data.countryCode);
     if (data.status === "success" && data.countryCode) return data.countryCode;
   } catch {}
   console.log("[Location] fallback to:", FALLBACK);

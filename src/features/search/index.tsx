@@ -112,8 +112,19 @@ export default function SearchFeature({
     thumbnail: b.thumbnail,
   }));
 
+  // Map API filter categories to FilterSidebar format
+  const filterCategories = (d?.categories ?? []).map((c: any) => ({
+    id: c.id,
+    name: typeof c.name === "string" ? c.name : (c.name?.en ?? ""),
+    url: c.url ?? "",
+  }));
+
   // ── Read initial filter state from URL ──────────────────────────────────────
   const initBrands = (searchParams.get("brands")?.split(",").filter(Boolean) ?? []).map((entry) => {
+    const ci = entry.indexOf(":");
+    return { id: Number(entry.slice(0, ci)), name: entry.slice(ci + 1) };
+  });
+  const initCategories = (searchParams.get("cats")?.split(",").filter(Boolean) ?? []).map((entry) => {
     const ci = entry.indexOf(":");
     return { id: Number(entry.slice(0, ci)), name: entry.slice(ci + 1) };
   });
@@ -122,16 +133,19 @@ export default function SearchFeature({
 
   const [priceRange, setPriceRange] = useState({ min: initMin, max: initMax });
   const [selectedBrands, setSelectedBrands] = useState<{ id: number; name: string }[]>(initBrands);
+  const [selectedCategories, setSelectedCategories] = useState<{ id: number; name: string }[]>(initCategories);
 
   // ── URL push (SSR re-fetch) ─────────────────────────────────────────────────
   const pushURL = useCallback((overrides: {
     brands?: { id: number; name: string }[];
+    cats?: { id: number; name: string }[];
     min?: number;
     max?: number;
     page?: number;
     q?: string;
   }) => {
     const brands = overrides.brands ?? selectedBrands;
+    const cats   = overrides.cats   ?? selectedCategories;
     const min    = overrides.min    ?? priceRange.min;
     const max    = overrides.max    ?? priceRange.max;
     const q2     = overrides.q      ?? query;
@@ -140,6 +154,8 @@ export default function SearchFeature({
     const parts: string[] = [`q=${encodeURIComponent(q2)}`];
     if (brands.length)
       parts.push("brands=" + brands.map((b) => `${b.id}:${b.name.replace(/ /g, "+")}`).join(","));
+    if (cats.length)
+      parts.push("cats=" + cats.map((c) => `${c.id}:${c.name.replace(/ /g, "+")}`).join(","));
     const priceActive = min !== apiPriceMin || max !== apiPriceMax;
     if (priceActive) { parts.push(`min=${min}`); parts.push(`max=${max}`); }
     if (pg > 1) parts.push(`page=${pg}`);
@@ -149,7 +165,7 @@ export default function SearchFeature({
       router.replace(`/search?${parts.join("&")}`, { scroll: false });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBrands, priceRange, query, apiPriceMin, apiPriceMax]);
+  }, [selectedBrands, selectedCategories, priceRange, query, apiPriceMin, apiPriceMax]);
 
   // ── Sort (client-side only) ─────────────────────────────────────────────────
   const sortedProducts = [...allProducts].sort((a, b) => {
@@ -184,6 +200,14 @@ export default function SearchFeature({
     pushURL({ brands: next, page: 1 });
   }, [selectedBrands, pushURL]);
 
+  const handleCategoryToggle = useCallback((cat: { id: number; name: string }) => {
+    const next = selectedCategories.some((c) => c.id === cat.id)
+      ? selectedCategories.filter((c) => c.id !== cat.id)
+      : [...selectedCategories, cat];
+    setSelectedCategories(next);
+    pushURL({ cats: next, page: 1 });
+  }, [selectedCategories, pushURL]);
+
   const handlePriceChange = useCallback((range: { min: number; max: number }) => {
     setPriceRange(range);
     pushURL({ min: range.min, max: range.max, page: 1 });
@@ -191,13 +215,15 @@ export default function SearchFeature({
 
   const handleClearAll = useCallback(() => {
     setSelectedBrands([]);
+    setSelectedCategories([]);
     setPriceRange({ min: apiPriceMin, max: apiPriceMax });
-    pushURL({ brands: [], min: apiPriceMin, max: apiPriceMax, page: 1 });
+    pushURL({ brands: [], cats: [], min: apiPriceMin, max: apiPriceMax, page: 1 });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiPriceMin, apiPriceMax, pushURL]);
 
   const totalActiveFilters =
     selectedBrands.length +
+    selectedCategories.length +
     (priceRange.min !== apiPriceMin || priceRange.max !== apiPriceMax ? 1 : 0);
 
   // ── JSX ─────────────────────────────────────────────────────────────────────
@@ -209,6 +235,10 @@ export default function SearchFeature({
     onClearBrands: () => { setSelectedBrands([]); pushURL({ brands: [], page: 1 }); },
     onClearAll: handleClearAll,
     brands: filterBrands,
+    categories: filterCategories,
+    selectedCategories,
+    onCategoryToggle: handleCategoryToggle,
+    onClearCategories: () => { setSelectedCategories([]); pushURL({ cats: [], page: 1 }); },
     priceMin: apiPriceMin,
     priceMax: apiPriceMax,
     selectedRangeFilters: {} as Record<number, { min: number; max: number }[]>,

@@ -59,6 +59,10 @@ export default function FilterSidebar({
   onClearAll,
   mobile = false,
   brands: apiBrands,
+  categories: apiCategories,
+  selectedCategories = [],
+  onCategoryToggle,
+  onClearCategories,
   priceMin = 10,
   priceMax = 78000,
   rangeFilters,
@@ -80,6 +84,10 @@ export default function FilterSidebar({
   onClearAll: () => void;
   mobile?: boolean;
   brands?: { id: number; name: string; thumbnail: string | null }[];
+  categories?: { id: number; name: string; url: string }[];
+  selectedCategories?: { id: number; name: string }[];
+  onCategoryToggle?: (cat: { id: number; name: string }) => void;
+  onClearCategories?: () => void;
   priceMin?: number;
   priceMax?: number;
   rangeFilters?: Record<string, RangeFilterItem> | null;
@@ -95,6 +103,7 @@ export default function FilterSidebar({
 }) {
 
   const [showAllBrands, setShowAllBrands] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [localPrice, setLocalPrice] = useState<PriceRange>(priceRange);
 
   useEffect(() => {
@@ -103,6 +112,9 @@ export default function FilterSidebar({
 
   const brandList = apiBrands ?? [];
   const visibleBrands = showAllBrands ? brandList : brandList.slice(0, 5);
+
+  const categoryList = apiCategories ?? [];
+  const visibleCategories = showAllCategories ? categoryList : categoryList.slice(0, 5);
 
   const rangeFilterList = Object.values(rangeFilters ?? {});
   const fixedFilterList = Object.values(fixedFilters ?? {});
@@ -204,6 +216,40 @@ export default function FilterSidebar({
                 className="text-[11px] font-semibold text-[#186737] hover:text-[#1e5230] mt-1 transition-colors"
               >
                 {showAllBrands ? "Show Less" : `See More (${brandList.length - 5})`}
+              </button>
+            )}
+          </div>
+        </AccordionSection>
+      )}
+
+      {/* Category Filter */}
+      {categoryList.length > 0 && (
+        <AccordionSection
+          label="Category"
+          defaultOpen
+          hasActive={selectedCategories.length > 0}
+          onClear={onClearCategories}
+        >
+          <div className="space-y-2 pt-1">
+            {visibleCategories.map((cat) => (
+              <label key={cat.id} className="flex items-center gap-2.5 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.some((c) => c.id === cat.id)}
+                  onChange={() => onCategoryToggle?.({ id: cat.id, name: cat.name })}
+                  className="w-3.5 h-3.5 accent-[#186737] rounded flex-shrink-0"
+                />
+                <span className="text-[12px] text-gray-600 group-hover:text-gray-800 transition-colors flex-1 leading-tight">
+                  {cat.name}
+                </span>
+              </label>
+            ))}
+            {categoryList.length > 5 && (
+              <button
+                onClick={() => setShowAllCategories((p) => !p)}
+                className="text-[11px] font-semibold text-[#186737] hover:text-[#1e5230] mt-1 transition-colors"
+              >
+                {showAllCategories ? "Show Less" : `See More (${categoryList.length - 5})`}
               </button>
             )}
           </div>
