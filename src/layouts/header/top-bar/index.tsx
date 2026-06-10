@@ -80,7 +80,7 @@ const TopBar = () => {
               </li>
             ))}
             <li>
-              <LangSwitcher />
+              {/* <LangSwitcher /> */}
             </li>
           </ul>
         </div>

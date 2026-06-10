@@ -8,6 +8,6 @@ export const getShippingCharge = (city: string, regionName: string): number => {
   const c = (city ?? "").toLowerCase().trim();
   const r = (regionName ?? "").toLowerCase().trim();
   if (c === "houston") return 99;
-  if (r === "texas") return 199;
+  if (r === "texas" || r === "tx") return 199;
   return 299;
 };

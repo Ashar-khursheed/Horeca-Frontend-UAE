@@ -69,7 +69,7 @@ const initialState: CustomerAddressState = {
   submitting: false,
   deletingId: null,
   error: null,
-  cachedDefault: getDefaultAddressCache(),
+  cachedDefault: null,
   countries: [],
   states: [],
   cities: [],
@@ -124,7 +124,17 @@ export const updateAddress = createAsyncThunk(
         apiUrls.UPDATE_CUSTOMER_ADDRESS(id),
         { method: "PUT", data: payload }
       );
-      dispatch(fetchAddresses());
+      if (payload.is_default) {
+        await makeApiRequest(apiUrls.DEFAULT_CUSTOMER_ADDRESS, {
+          method: "POST",
+          data: { address_id: id },
+        });
+      }
+      await dispatch(fetchAddresses());
+      // Save after fetchAddresses so it overwrites any cache clear that happened inside fulfilled
+      if (payload.is_default && res.data) {
+        setDefaultAddressCache({ ...res.data, is_default: true });
+      }
       return res.message;
     } catch (err: unknown) {
       const msg =
@@ -259,6 +269,9 @@ const customerAddressSlice = createSlice({
       state.cachedDefault = null;
       clearDefaultAddressCache();
     },
+    hydrateCachedDefault(state) {
+      state.cachedDefault = getDefaultAddressCache();
+    },
   },
   extraReducers: (builder) => {
     // fetchAddresses
@@ -378,7 +391,7 @@ const customerAddressSlice = createSlice({
   },
 });
 
-export const { clearStates, clearCities, clearError, optimisticSetDefault, clearAddresses } =
+export const { clearStates, clearCities, clearError, optimisticSetDefault, clearAddresses, hydrateCachedDefault } =
   customerAddressSlice.actions;
 
 export default customerAddressSlice.reducer;

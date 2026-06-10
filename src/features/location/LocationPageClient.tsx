@@ -5,7 +5,7 @@ import Image from "next/image";
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import Breadcrumb from "@/components/breadcum";
 import ProductCard from "@/components/product-card";
-import type { ApiProduct } from "@/components/product-card";
+import type { RawApiProduct } from "@/components/product-card";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface PopularTag {
@@ -46,7 +46,7 @@ export interface LocationProductType {
   id: number;
   type: string;
   description: string;
-  products: ApiProduct[];
+  products: RawApiProduct[];
 }
 
 export interface LocationFAQ {
@@ -99,11 +99,11 @@ function useVisibleCount() {
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      if (w >= 1920) setCount(5);
-      else if (w >= 1280) setCount(4);
+      if (w >= 1920) setCount(6);
+      else if (w >= 1480) setCount(5);
       else if (w >= 1024) setCount(3);
       else if (w >= 768) setCount(2);
-      else setCount(1);
+      else setCount(2);
     };
     update();
     window.addEventListener("resize", update);
@@ -112,7 +112,7 @@ function useVisibleCount() {
   return count;
 }
 
-const ProductSlider = ({ products }: { products: ApiProduct[] }) => {
+const ProductSlider = ({ products }: { products: RawApiProduct[] }) => {
   const [index, setIndex] = useState(0);
   const visibleCount = useVisibleCount();
   const max = Math.max(0, products.length - visibleCount);

@@ -32,6 +32,15 @@ const slugToLabel = (slug: string) =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
+// Resolve a value that may come from the API as a localized { en, ar } object or a plain string
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const resolveAttr = (v: any): string => {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "object") return v.en ?? v.ar ?? String(v);
+  return String(v);
+};
+
 const ProductDetailPage = ({
   productData,
   categorySlug,
@@ -49,18 +58,21 @@ const ProductDetailPage = ({
   const supplier = productData.suppliers?.[0] ?? null;
   const activePrice =
     productData.sale_price > 0 ? productData.sale_price : productData.price;
-  const unit = productData.selling_type?.attribute_value_unit ?? "Each";
+  const unit = resolveAttr(productData.selling_type?.attribute_value_unit) || "Each";
   const currencySymbol = productData.currency?.symbol ?? "";
   const brand =
-    productData.attributes?.find((a) => a.attribute_name === "Manufacturer")
-      ?.attribute_value ?? "";
+    resolveAttr(productData.attributes?.find((a) => resolveAttr(a.attribute_name) === "Manufacturer")
+      ?.attribute_value) ?? "";
 
-  const allSpecs = (productData.attributes ?? []).map((a) => ({
-    attribute_name: a.attribute_name,
-    attribute_value: a.measurement_unit
-      ? `${a.attribute_value} ${a.measurement_unit}`
-      : a.attribute_value,
-  }));
+  const allSpecs = (productData.attributes ?? []).map((a) => {
+    const attrVal = resolveAttr(a.attribute_value);
+    return {
+      attribute_name: resolveAttr(a.attribute_name),
+      attribute_value: a.measurement_unit
+        ? `${attrVal} ${a.measurement_unit}`
+        : attrVal,
+    };
+  });
   const mid = Math.ceil(allSpecs.length / 2);
   const specifications = {
     left: allSpecs.slice(0, mid),

@@ -74,7 +74,7 @@ export const AddToCartWidget = ({
   showCounter: showCounterProp,
   accessoryItemIds = [],
   isWishlist = false,
-  isSearchbar = false,
+  isSearchbar = true,
   onBeforeAdd,
   onAddSuccess,
   onAddedToCart,
@@ -589,11 +589,13 @@ export const AddToCartWidget = ({
         {" "}
         <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
           {/* Quantity Counter */}
-          {showCounter && !isSearchbar && (
-            <div
+          {showCounter && isSearchbar && (
+          <>
+          <div className="">
+              <div
               className={
                 counterClassName ??
-                "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]"
+                "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]  "
               }
             >
               <button
@@ -635,6 +637,7 @@ export const AddToCartWidget = ({
                 />
               </button>
             </div>
+            </div></>
           )}
 
           {/* Add To Cart / Request Quote Button */}

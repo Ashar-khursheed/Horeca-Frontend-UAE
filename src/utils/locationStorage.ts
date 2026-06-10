@@ -79,9 +79,10 @@ export function setLocationData(data: LocationData): void {
 
 // React hook — reactive, updates when localStorage changes
 export function useLocationData(): LocationData | null {
-  const [data, setData] = useState<LocationData | null>(() => getLocationData());
+  const [data, setData] = useState<LocationData | null>(null);
 
   useEffect(() => {
+    setData(getLocationData());
     const update = () => setData(getLocationData());
     window.addEventListener(LOCATION_EVENT, update);
     window.addEventListener("storage",      update);

@@ -32,6 +32,10 @@ const addressSchema = Yup.object({
   is_default: Yup.boolean(),
 });
 
+const addressEditSchema = addressSchema.shape({
+  is_default: Yup.boolean().oneOf([true], "You must set this as your default address"),
+});
+
 // ── Add / Edit Form (inside Modal) ─────────────────────────────────────────────
 const AddressForm = ({
   editAddress,
@@ -59,7 +63,7 @@ const AddressForm = ({
       zip_code:   editAddress?.zip_code   ?? "",
       is_default: editAddress?.is_default ?? true,
     },
-    validationSchema: addressSchema,
+    validationSchema: editAddress ? addressEditSchema : addressSchema,
     validateOnBlur:   true,
     validateOnChange: true,
     onSubmit: async (values) => {
@@ -88,6 +92,14 @@ const AddressForm = ({
       }
     },
   });
+
+  // Sync detected country into the form once locationData loads from localStorage (add mode only)
+  useEffect(() => {
+    if (!editAddress && locationData?.country) {
+      formik.setFieldValue("country", locationData.country);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationData?.country]);
 
   const err = (field: keyof typeof formik.values) =>
     formik.touched[field] && formik.errors[field] ? formik.errors[field] : null;
@@ -199,17 +211,23 @@ const AddressForm = ({
 
       {/* Set as Default — only in edit mode */}
       {editAddress && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-[7px] border border-gray-200 bg-gray-50 mb-6">
-          <input
-            id="is_default"
-            type="checkbox"
-            checked={formik.values.is_default}
-            onChange={(e) => formik.setFieldValue("is_default", e.target.checked)}
-            className="w-4 h-4 rounded accent-[#186737] cursor-pointer"
-          />
-          <label htmlFor="is_default" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">
-            Set as Default Address
-          </label>
+        <div className="mb-6">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-[7px] border bg-gray-50 ${formik.touched.is_default && formik.errors.is_default ? "border-red-400" : "border-gray-200"}`}>
+            <input
+              id="is_default"
+              type="checkbox"
+              checked={formik.values.is_default}
+              onChange={(e) => formik.setFieldValue("is_default", e.target.checked, true)}
+              onBlur={() => formik.setFieldTouched("is_default", true)}
+              className="w-4 h-4 rounded accent-[#186737] cursor-pointer"
+            />
+            <label htmlFor="is_default" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">
+              Set as Default Address <span className="text-red-500">*</span>
+            </label>
+          </div>
+          {formik.touched.is_default && formik.errors.is_default && (
+            <p className="text-[11px] text-red-500 mt-1">{formik.errors.is_default}</p>
+          )}
         </div>
       )}
 

@@ -26,40 +26,47 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   const isRTL = locale === "ar";
-
+const isUS = process.env.NEXT_PUBLIC_REGION === "US";
   const [navData, searchData] = await Promise.all([
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<SearchSuggestions>(
       apiUrls.SEARCH,
-      { query: "hoshiki", page: 1, length: 5 },
-      { revalidate: 3600 },
+      { query: "true" , page: 1, length: 5 },
+      { revalidate: 0 },
     ),
   ]);
   const navItemData = navData?.data ?? [];
-  const searchDataRes = searchData 
+  const searchDataRes = searchData;
 
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <head>
-        <link rel="preconnect" href="https://d2dy46c7t7z5ba.cloudfront.net" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://d1p9kdrbe10xzz.cloudfront.net" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://d2dy46c7t7z5ba.cloudfront.net"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://d1p9kdrbe10xzz.cloudfront.net"
+          crossOrigin="anonymous"
+        />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
         <link
-  rel="stylesheet"
-  type="text/css"
-  charSet="UTF-8"
-  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
-/
->
-<link
-  rel="stylesheet"
-  type="text/css"
-  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
-/>
+          rel="stylesheet"
+          type="text/css"
+          charSet="UTF-8"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
+        />
+        <link
+          rel="stylesheet"
+          type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
+        />
       </head>
 
       <body suppressHydrationWarning>

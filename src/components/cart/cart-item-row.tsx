@@ -139,7 +139,7 @@ export default function CartItemRow({
             <span className="font-semibold text-gray-700">
               {item.shippingCost === 0
                 ? "Free Shipping"
-                : `Shipping Charges: $${fmtPrice(item.shippingCost)}`}
+                : `Shipping Charges: $${fmtPrice(item.shippingCost * item.qty)}`}
             </span>
           </div>
           <span className="text-gray-300">·</span>

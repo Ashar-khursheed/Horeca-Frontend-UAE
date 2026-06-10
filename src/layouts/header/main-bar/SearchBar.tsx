@@ -6,7 +6,7 @@ import type { SearchSuggestions } from "@/utils/types";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
@@ -25,6 +25,31 @@ export default function SearchBar({ searchData }: SearchBarProps) {
   );
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [is2xl, setIs2xl] = useState(true);
+
+  useEffect(() => {
+    const update = () => {
+      if (window.innerWidth >= 1920) setIs2xl(true);
+      else if (window.innerWidth >= 768) setIs2xl(false);
+      else setIs2xl(true);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  // Close and clear search when nav is hovered
+  useEffect(() => {
+    const close = () => {
+      setSearchFocused(false);
+      setSearchQuery("");
+      setLiveData(null);
+      inputRef.current?.blur();
+    };
+    document.addEventListener("nav-hover", close);
+    return () => document.removeEventListener("nav-hover", close);
+  }, []);
 
   // Active data: live results if available, otherwise SSR initial data
   const d = liveData ?? searchData?.data;
@@ -83,6 +108,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
       >
         <Search size={16} className="text-gray-400 shrink-0" />
         <input
+          ref={inputRef}
           type="text"
           value={searchQuery}
           onChange={(e) => handleQueryChange(e.target.value)}
@@ -106,6 +132,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
         <button
           onClick={() => goToSearch()}
           className="bg-[#186737] text-white rounded-full w-7 h-7 flex items-center justify-center shrink-0 hover:bg-[#145c2e] transition-colors"
+          disabled={!searchQuery}
         >
           <Search size={13} />
         </button>
@@ -315,7 +342,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                           counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 2xl:hover:text-[#186737] hover:bg-gray-50 transition-colors"
                           buttonClassName="flex-1 h-7 rounded-lg 2xl:bg-[#e8f5ee] text-[#186737] text-xs font-semibold 2xl:hover:text-[#186737] transition-all whitespace-nowrap"
                           iconShow={false}
-                          isSearchbar={true}
+                          isSearchbar={is2xl}
                         />
                       </div>
                     </li>

@@ -336,6 +336,7 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
   const handleMouseEnter = useCallback(
     (category: Category) => {
       clearTimeout(closeTimeoutRef.current!);
+      document.dispatchEvent(new CustomEvent("nav-hover"));
 
       const children =
         category.children ??

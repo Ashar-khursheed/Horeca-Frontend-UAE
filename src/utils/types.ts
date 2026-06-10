@@ -206,6 +206,27 @@ interface SearchProduct {
   price: number;
   sale_price: number;
   currency: { symbol: string; title: string };
+  quote_available?: boolean | null;
+  isRequired?: boolean;
+  total_reviews?: number;
+  avg_rating?: number | null;
+  alt_tags?: string[];
+  in_wishlist?: boolean;
+  in_cart?: boolean;
+  selling_type?: {
+    attribute_value: { en?: string | null; ar?: string | null } | string;
+    attribute_value_unit: { en?: string | null; ar?: string | null } | string;
+  };
+  suppliers?: {
+    vendor_id?: number;
+    price?: number;
+    sale_price?: number;
+    delivery_days?: string;
+    return_policy?: string;
+    free_shipping?: boolean | number;
+    min_quantity?: number;
+    is_fixed?: boolean | number;
+  }[];
 }
 
 interface SearchCategory {

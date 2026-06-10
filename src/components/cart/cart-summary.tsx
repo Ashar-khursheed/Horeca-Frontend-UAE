@@ -36,7 +36,7 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     );
     return s + (c.price + accessoriesTotal) * c.qty;
   }, 0);
-  const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost, 0);
+  const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
   const { totalTax, ratePercent } = calculateTax(

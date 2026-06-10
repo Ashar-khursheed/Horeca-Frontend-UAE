@@ -3,6 +3,7 @@
 import { fetchCountryByName, resetCountry } from "@/store/slices/country/countrySlice";
 import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
+import { hydrateCachedDefault } from "@/store/slices/customer-address/customerAddressSlice";
 import { AppDispatch } from "@/store/store";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -22,6 +23,11 @@ export default function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
   const [products,      setProducts]      = useState<FeaturedCategory[]>([]);
   const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>([]);
+
+  // Hydrate default address cache from localStorage (must be after mount to avoid SSR mismatch)
+  useEffect(() => {
+    dispatch(hydrateCachedDefault());
+  }, [dispatch]);
 
   // Auto-logout: check 24h expiry on mount and schedule timer for remainder
   useEffect(() => {

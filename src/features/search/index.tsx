@@ -35,6 +35,7 @@ const SORT_OPTIONS = ["Default Sorting", "Price: Low to High", "Price: High to L
 const SHOW_OPTIONS = [20, 50, 100];
 
 function mapProduct(p: SearchProduct): ApiProduct {
+  const s0 = p.suppliers?.[0];
   return {
     id: p.id,
     name: p.name.en,
@@ -42,25 +43,33 @@ function mapProduct(p: SearchProduct): ApiProduct {
     sku: p.sku,
     category_url: p.category_url_resolved,
     parent_category_url: p.parent_category_url_resolved,
-    price: p.price,
-    sale_price: p.sale_price,
-    original_price: p.price,
-    front_sale_price: p.sale_price,
-    best_price: p.sale_price || p.price,
-    avg_rating: null,
-    total_reviews: 0,
-    delivery_days: "",
+    price: s0?.price ?? p.price,
+    sale_price: s0?.sale_price ?? p.sale_price,
+    original_price: s0?.price ?? p.price,
+    front_sale_price: s0?.sale_price ?? p.sale_price,
+    best_price: s0?.sale_price || s0?.price || p.sale_price || p.price,
+    avg_rating: p.avg_rating ?? null,
+    total_reviews: p.total_reviews ?? 0,
+    delivery_days: s0?.delivery_days ?? "",
     currency: p.currency?.symbol ?? "$",
     images: p.images?.en ?? [],
-    alt_tags: [],
-    in_wishlist: false,
-    min_quantity: 1,
-    is_fixed: 0,
-    quote_available: null,
-    selling_type: { attribute_value: "", attribute_value_unit: "" },
-    free_shipping: 0,
-    return_policy: "",
-    isRequired: false,
+    alt_tags: p.alt_tags ?? [],
+    in_wishlist: p.in_wishlist ?? false,
+    min_quantity: s0?.min_quantity ?? 1,
+    is_fixed: s0?.is_fixed ? 1 : 0,
+    quote_available: p.quote_available == null ? null : p.quote_available ? 1 : 0,
+    selling_type: {
+      attribute_value: typeof p.selling_type?.attribute_value === "object"
+        ? (p.selling_type.attribute_value?.en ?? "")
+        : (p.selling_type?.attribute_value ?? ""),
+      attribute_value_unit: typeof p.selling_type?.attribute_value_unit === "object"
+        ? (p.selling_type.attribute_value_unit?.en ?? "")
+        : (p.selling_type?.attribute_value_unit ?? ""),
+    },
+    free_shipping: s0?.free_shipping ? 1 : 0,
+    return_policy: s0?.return_policy ?? "",
+    isRequired: p.isRequired ?? false,
+    suppliers: p.suppliers ?? [],
   };
 }
 
@@ -94,6 +103,7 @@ export default function SearchFeature({
 
   // ── Filter data from API ────────────────────────────────────────────────────
   const d = initialData?.data;
+  console.log("ddddddddddddddddddddddddddddd",d)
   const allProducts = (d?.products ?? []).map(mapProduct);
   const totalPages = d?.total_pages ?? 1;
   const totalRecords = d?.total_records ?? allProducts.length;

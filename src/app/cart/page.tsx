@@ -24,7 +24,7 @@ import {
   removeSaveForLater,
   toggleGuestSaveItem,
 } from "@/store/slices/save-for-later/saveForLaterSlice";
-import { getLocationData } from "@/utils/locationStorage";
+import { getDefaultAddressCache, getLocationData } from "@/utils/locationStorage";
 import { getShippingCharge } from "@/utils/shipping";
 import {
   ArrowRight,
@@ -190,10 +190,11 @@ export default function CartPage() {
   }, []);
 
   // Derive display items from Redux (logged-in) or local state (guest)
-  const location = getLocationData();
+  const defaultAddr = getDefaultAddressCache();
+  const location    = getLocationData();
   const shipping = getShippingCharge(
-    location?.city ?? "",
-    location?.regionName ?? "",
+    defaultAddr?.city    ?? location?.city       ?? "",
+    defaultAddr?.state   ?? location?.regionName ?? "",
   );
   const cartItems: CartItem[] = isLoggedIn
     ? rawProducts.map((cp) => ({
@@ -584,13 +585,20 @@ function SavedForLaterSection({
 }) {
   const [perPage, setPerPage] = useState(4);
   const [page, setPage] = useState(1);
+  const [is2xl, setIs2xl] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIs2xl(window.innerWidth >= 1536);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     const update = () => {
-      if (window.innerWidth >= 1820) setPerPage(4);
-      else if (window.innerWidth >= 1480) setPerPage(4);
-      else if (window.innerWidth >= 1280) setPerPage(3);
-      else if (window.innerWidth >= 1024) setPerPage(2);
+      if (window.innerWidth >= 1820) setPerPage(5);
+      else if (window.innerWidth >= 1536) setPerPage(5);
+      else if (window.innerWidth >= 1280) setPerPage(4);
       else if (window.innerWidth >= 768) setPerPage(3);
       else setPerPage(2);
     };
