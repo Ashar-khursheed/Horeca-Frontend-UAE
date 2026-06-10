@@ -48,6 +48,18 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://d2dy46c7t7z5ba.cloudfront.net" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://d1p9kdrbe10xzz.cloudfront.net" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
+        <link
+  rel="stylesheet"
+  type="text/css"
+  charSet="UTF-8"
+  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
+/
+>
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
+/>
       </head>
 
       <body suppressHydrationWarning>

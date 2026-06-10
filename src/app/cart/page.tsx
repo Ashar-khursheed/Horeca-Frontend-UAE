@@ -1,36 +1,43 @@
 "use client";
 
+import { apiUrls } from "@/apis/api-endpoint";
+import { makeApiRequest } from "@/apis/axios-instance";
 import CartItemRow from "@/components/cart/cart-item-row";
 import CartSummary from "@/components/cart/cart-summary";
-import { CartItem, fmtPrice } from "@/components/cart/cart-types";
+import { CartItem, SavedItem } from "@/components/cart/cart-types";
+import SavedProductCard from "@/components/cart/saved-product-card";
+import { Modal } from "@/components/ui/modal";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  clearCart,
+  fetchCart,
+  hydrateCart,
+  removeApiEntry,
+  removeItem,
+  resetApiStatus,
+  updateApiEntryQty,
+  updateQuantity,
+} from "@/store/slices/cart/cartSlice";
+import {
+  fetchSaveForLater,
+  hydrateGuestSaveItems,
+  removeSaveForLater,
+  toggleGuestSaveItem,
+} from "@/store/slices/save-for-later/saveForLaterSlice";
+import { getLocationData } from "@/utils/locationStorage";
+import { getShippingCharge } from "@/utils/shipping";
 import {
   ArrowRight,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Home,
-  ChevronRight,
   Package,
-  ShoppingCart,
-  Truck,
+  ShoppingCart
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { getLocationData } from "@/utils/locationStorage";
-import { Modal } from "@/components/ui/modal";
-import { getShippingCharge } from "@/utils/shipping";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  fetchCart,
-  updateApiEntryQty,
-  removeApiEntry,
-  resetApiStatus,
-  removeItem,
-  updateQuantity,
-} from "@/store/slices/cart/cartSlice";
-import { makeApiRequest } from "@/apis/axios-instance";
-import { apiUrls } from "@/apis/api-endpoint";
-
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -55,6 +62,7 @@ const resolveStr = (
 const apiProductToCartItem = (cp: any): CartItem => ({
   id: cp.product_id ?? cp.id,
   cartItemId: cp.id,
+  vendorId: cp.vendor_id ?? cp.product?.vendor_id ?? 1,
   name: resolveStr(cp.product?.name),
   brand: "",
   modelNo: cp.product?.sku ?? "",
@@ -81,36 +89,81 @@ const apiProductToCartItem = (cp: any): CartItem => ({
 // ── Transform localStorage Redux CartItem → display CartItem ──────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const localItemToCartItem = (item: any): CartItem => ({
-  id:             item.productId,
-  name:           item.name ?? "",
-  brand:          "",
-  modelNo:        item.sku ?? "",
-  image:          item.image ?? "",
-  price:          item.price ?? 0,
-  url:            item.url ?? "#",
-  originalPrice:  item.originalPrice ?? item.price ?? 0,
-  unit:           item.sellUnit ?? "Each",
-  shippingCost:   item.shippingCharge ?? 0,
-  deliveryDays:   item.rawProduct?.delivery_days ?? item.rawProduct?.suppliers?.[0]?.delivery_days ?? "",
-  shipBy:         item.rawProduct?.suppliers?.[0]?.delivery_days ?? item.rawProduct?.delivery_days ?? "",
-  qty:            item.quantity ?? 1,
-  minQty:         item.minQty ?? 1,
-  isFixed:        item.isFixed ?? false,
-  currencySymbol:        item.currencySymbol ?? item.rawProduct?.currency?.symbol ?? "$",
-  selectedAccessories:   item.selectedAccessories ?? [],
-  inWishlist:     false,
+  id: item.productId,
+  vendorId: item.vendorId ?? 1,
+  name: item.name ?? "",
+  brand: "",
+  modelNo: item.sku ?? "",
+  image: item.image ?? "",
+  price: item.price ?? 0,
+  url: item.url ?? "#",
+  originalPrice: item.originalPrice ?? item.price ?? 0,
+  unit: item.sellUnit ?? "Each",
+  shippingCost: item.shippingCharge ?? 0,
+  deliveryDays:
+    item.rawProduct?.delivery_days ??
+    item.rawProduct?.suppliers?.[0]?.delivery_days ??
+    "",
+  shipBy:
+    item.rawProduct?.suppliers?.[0]?.delivery_days ??
+    item.rawProduct?.delivery_days ??
+    "",
+  qty: item.quantity ?? 1,
+  minQty: item.minQty ?? 1,
+  isFixed: item.isFixed ?? false,
+  currencySymbol:
+    item.currencySymbol ?? item.rawProduct?.currency?.symbol ?? "$",
+  selectedAccessories: item.selectedAccessories ?? [],
+  inWishlist: false,
 });
+
+// ── Map API save-for-later product → SavedItem ────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const apiToSavedItem = (p: any): SavedItem => {
+  const listPrice = parseFloat(p.price ?? 0);
+  const salePrice = parseFloat(p.sale_price ?? 0);
+  return {
+    id: p.id,
+    name: resolveStr(p.name),
+    brand: "",
+    modelNo: p.sku ?? "",
+    image: p.images?.en?.[0] ?? p.images?.ar?.[0] ?? p.image ?? "",
+    price: salePrice > 0 ? salePrice : listPrice,
+    salePrice: salePrice > 0 ? salePrice : undefined,
+    originalPrice: listPrice,
+    unit: resolveStr(p.selling_type?.attribute_value_unit) || "Each",
+    rating: p.avg_rating ?? 0,
+    reviews: p.total_reviews ?? 0,
+    deliveryDays: p.suppliers?.[0]?.delivery_days ?? "",
+    freeShipping: !!p.suppliers?.[0]?.free_shipping,
+    qty: p.quantity ?? 1,
+    url: p.url ?? "#",
+    inWishlist: p.in_wishlist ?? false,
+    currencySymbol: p.currency?.symbol ?? p.currencySymbol ?? "$",
+    vendorId: p.suppliers?.[0]?.vendor_id,
+    returnPolicy: p.suppliers?.[0]?.return_policy ?? "",
+    categoryUrl: p.category_url_resolved ?? "",
+    parentCategoryUrl: p.parent_category_url_resolved ?? "",
+    minQty: p.suppliers?.[0]?.min_quantity ?? 1,
+    isFixed: !!p.suppliers?.[0]?.is_fixed,
+    altTags: Array.isArray(p.alt_tags) && p.alt_tags.length > 0 ? p.alt_tags : undefined,
+  };
+};
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CartPage() {
-  const dispatch    = useAppDispatch();
+  const dispatch = useAppDispatch();
   const rawProducts = useAppSelector((s) => s.cart.rawProducts);
-  const apiStatus   = useAppSelector((s) => s.cart.apiStatus);
+  const reduxGuestItems = useAppSelector((s) => s.cart.items);
+  const apiStatus = useAppSelector((s) => s.cart.apiStatus);
+  const sflApiEntries = useAppSelector((s) => s.saveForLater.apiEntries);
+  const sflGuestItems = useAppSelector((s) => s.saveForLater.guestItems);
 
-  const [isLoggedIn,   setIsLoggedIn]   = useState(false);
-  const [guestItems,   setGuestItems]   = useState<CartItem[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [shipmentOpen, setShipmentOpen] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [sflKey, setSflKey] = useState(0);
   const fetchedRef = useRef(false);
 
   // ── Load cart on mount ────────────────────────────────────────────────────
@@ -118,41 +171,43 @@ export default function CartPage() {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    const token    = getToken();
+    const token = getToken();
     const location = getLocationData();
-    const shipping = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
 
     if (token) {
       setIsLoggedIn(true);
       const countryName = location?.country ?? "";
       dispatch(resetApiStatus());
       dispatch(fetchCart(countryName));
+      dispatch(fetchSaveForLater());
     } else {
       setIsLoggedIn(false);
-      try {
-        const raw  = localStorage.getItem("horeca_cart");
-        const list = raw ? JSON.parse(raw) : [];
-        setGuestItems(
-          list.map((item: Parameters<typeof localItemToCartItem>[0]) => ({
-            ...localItemToCartItem(item),
-            shippingCost: shipping,
-          })),
-        );
-      } catch { /* empty */ }
+      dispatch(hydrateCart());
+      dispatch(hydrateGuestSaveItems());
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Derive display items from Redux (logged-in) or local state (guest)
-  const location   = getLocationData();
-  const shipping   = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
+  const location = getLocationData();
+  const shipping = getShippingCharge(
+    location?.city ?? "",
+    location?.regionName ?? "",
+  );
   const cartItems: CartItem[] = isLoggedIn
-    ? rawProducts.map((cp) => ({ ...apiProductToCartItem(cp), shippingCost: shipping }))
-    : guestItems;
+    ? rawProducts.map((cp) => ({
+        ...apiProductToCartItem(cp),
+        shippingCost: shipping,
+      }))
+    : reduxGuestItems.map((item) => ({
+        ...localItemToCartItem(item),
+        shippingCost: shipping,
+      }));
 
-  const loading  = isLoggedIn ? (apiStatus === "idle" || apiStatus === "loading") : false;
+  const loading = !initialized || (isLoggedIn && (apiStatus === "idle" || apiStatus === "loading"));
   const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
-  const subtotal   = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
+  const subtotal = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleQty = (id: number, qty: number) => {
@@ -163,10 +218,11 @@ export default function CartPage() {
           method: "PUT",
           data: { quantity: qty },
         }).catch(() => {});
-        dispatch(updateApiEntryQty({ cartItemId: item.cartItemId, quantity: qty }));
+        dispatch(
+          updateApiEntryQty({ cartItemId: item.cartItemId, quantity: qty }),
+        );
       }
     } else {
-      setGuestItems((prev) => prev.map((c) => (c.id === id ? { ...c, qty } : c)));
       dispatch(updateQuantity({ productId: id, quantity: qty }));
     }
   };
@@ -175,17 +231,57 @@ export default function CartPage() {
     if (isLoggedIn) {
       const item = cartItems.find((c) => c.id === id);
       if (item?.cartItemId) {
-        makeApiRequest(apiUrls.CART_REMOVE(item.cartItemId), { method: "DELETE" }).catch(() => {});
+        makeApiRequest(apiUrls.CART_REMOVE(item.cartItemId), {
+          method: "DELETE",
+        }).catch(() => {});
         dispatch(removeApiEntry(item.cartItemId));
       }
     } else {
-      setGuestItems((prev) => prev.filter((c) => c.id !== id));
       dispatch(removeItem(id));
     }
   };
 
-  // Wishlist state comes from Redux (cart-item-row reads s.wishlist.ids directly)
-  const handleWishlist = () => {};
+  // Called after save-for-later POST succeeds.
+  // Backend already removes the item from cart — no DELETE needed.
+  const handleWishlist = (id: number) => {
+    if (isLoggedIn) {
+      // Remove from Redux cart state immediately (no DELETE API call)
+      const item = cartItems.find((c) => c.id === id);
+      if (item?.cartItemId) dispatch(removeApiEntry(item.cartItemId));
+      // Refresh both lists from server
+      dispatch(fetchSaveForLater());
+      dispatch(fetchCart(location?.country ?? ""));
+    } else {
+      // Guest: remove from local state only
+      handleRemove(id);
+    }
+  };
+
+  // ── Saved-for-later items ─────────────────────────────────────────────────
+  const savedItems: SavedItem[] = isLoggedIn
+    ? sflApiEntries.map(apiToSavedItem)
+    : sflGuestItems.map((g) => apiToSavedItem(g.rawProduct));
+
+  const handleAddSavedToCart = (_id: number) => {
+    // TODO: wire to add-to-cart flow
+  };
+
+  const handleRemoveSaved = async (id: number) => {
+    if (isLoggedIn) {
+      await dispatch(removeSaveForLater({ productId: id }));
+      await dispatch(fetchSaveForLater());
+      setSflKey((k) => k + 1);
+    } else {
+      dispatch(
+        toggleGuestSaveItem({
+          productId: id,
+          quantity: 1,
+          vendorId: 1,
+          rawProduct: null,
+        }),
+      );
+    }
+  };
 
   // ── Loading skeleton ─────────────────────────────────────────────────────
   if (loading) {
@@ -269,26 +365,49 @@ export default function CartPage() {
         <CartBreadcrumb />
         <main className="min-h-screen bg-gray-50/60">
           <div className="global-container py-6 sm:py-8">
-            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm py-24 text-center px-6">
-              <div className="w-20 h-20 rounded-full bg-[#f0f9f4] flex items-center justify-center mx-auto mb-5">
-                <ShoppingCart
-                  size={34}
-                  className="text-[#186737]"
-                  strokeWidth={1.5}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_308px] xl:grid-cols-[1fr_400px] gap-6 items-start">
+              <div className="space-y-5">
+                {/* Empty cart card */}
+                <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm py-20 text-center px-6">
+                  <div className="w-20 h-20 rounded-full bg-[#f0f9f4] flex items-center justify-center mx-auto mb-5">
+                    <ShoppingCart
+                      size={34}
+                      className="text-[#186737]"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    Your cart is empty
+                  </h2>
+                  <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed mb-8">
+                    Add items to your cart to see them here.
+                  </p>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 bg-[#186737] hover:bg-[#145c30] text-white font-semibold px-6 py-3 rounded-[7px] transition-colors duration-200"
+                  >
+                    Start Shopping <ArrowRight size={16} />
+                  </Link>
+                </div>
+
+                {/* Saved for Later — still show even when cart is empty */}
+                <SavedForLaterSection
+                  key={sflKey}
+                  items={savedItems}
+                  onAddToCart={handleAddSavedToCart}
+                  onRemove={handleRemoveSaved}
+                  isLoggedIn={isLoggedIn}
+                  onAfterAddToCart={() => {
+                    if (isLoggedIn) dispatch(fetchCart(location?.country ?? ""));
+                    setSflKey((k) => k + 1);
+                  }}
                 />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Your cart is empty
-              </h2>
-              <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed mb-8">
-                Add items to your cart to see them here.
-              </p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-[#186737] hover:bg-[#145c30] text-white font-semibold px-6 py-3 rounded-[7px] transition-colors duration-200"
-              >
-                Start Shopping <ArrowRight size={16} />
-              </Link>
+
+              {/* RIGHT — summary (hidden when cart empty) */}
+              <div className="hidden md:block">
+                <CartSummary cartItems={[]} />
+              </div>
             </div>
           </div>
         </main>
@@ -312,8 +431,7 @@ export default function CartPage() {
               .then(() => dispatch(fetchCart(location?.country ?? "")))
               .catch(() => {});
           } else {
-            setGuestItems([]);
-            localStorage.removeItem("horeca_cart");
+            dispatch(clearCart());
           }
         }}
       >
@@ -337,11 +455,13 @@ export default function CartPage() {
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                     Shopping Cart
                   </h1>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    isLoggedIn
-                      ? "bg-[#186737] text-white"
-                      : "bg-gray-200 text-gray-600"
-                  }`}>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isLoggedIn
+                        ? "bg-[#186737] text-white"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
                     {isLoggedIn ? "My Account" : "Guest"}
                   </span>
                 </div>
@@ -415,19 +535,119 @@ export default function CartPage() {
                 </div> */}
               </section>
 
-              <div className="md:hidden block">
-                <CartSummary cartItems={cartItems} />
-              </div>
+              {/* Saved for Later */}
+              <SavedForLaterSection
+                key={sflKey}
+                items={savedItems}
+                onAddToCart={handleAddSavedToCart}
+                onRemove={handleRemoveSaved}
+                isLoggedIn={isLoggedIn}
+                onAfterAddToCart={() => {
+                  if (isLoggedIn) dispatch(fetchCart(location?.country ?? ""));
+                  setSflKey((k) => k + 1);
+                }}
+              />
+
+             
+                <div className="md:hidden block">
+                  <CartSummary cartItems={cartItems} />
+                </div>
+           
             </div>
 
             {/* RIGHT */}
-            <div className="md:block hidden">
-              <CartSummary cartItems={cartItems} />
-            </div>
+        
+              <div className="md:block hidden">
+                <CartSummary cartItems={cartItems} />
+              </div>
+         
           </div>
         </div>
       </main>
     </>
+  );
+}
+
+// ── Saved for Later section ───────────────────────────────────────────────────
+function SavedForLaterSection({
+  items,
+  onAddToCart,
+  onRemove,
+  onAfterAddToCart,
+  isLoggedIn = true,
+}: {
+  items: SavedItem[];
+  onAddToCart: (id: number) => void;
+  onRemove: (id: number) => Promise<void>;
+  onAfterAddToCart?: () => void;
+  isLoggedIn?: boolean;
+}) {
+  const PER_PAGE = 4;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(items.length / PER_PAGE);
+  const safePage = Math.min(page, Math.max(1, totalPages));
+  const visible = items.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-5 pt-4 pb-3 border-b border-gray-100">
+        <span className="inline-block text-sm font-semibold text-gray-900 border-b-2 border-[#186737] pb-1">
+          Saved for Later{" "}
+          <span className="text-gray-500 font-normal">
+            ({items.length} Item{items.length !== 1 ? "s" : ""})
+          </span>
+        </span>
+      </div>
+
+      <div className="p-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+          {visible.map((item) => (
+            <SavedProductCard
+              key={item.id}
+              item={item}
+              onAddToCart={onAddToCart}
+              onRemove={onRemove}
+              onAfterAddToCart={onAfterAddToCart}
+              isLoggedIn={isLoggedIn}
+            />
+          ))}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-5">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-8 h-8 rounded-full text-xs font-semibold transition-all border ${
+                  p === safePage
+                    ? "bg-[#186737] text-white border-[#186737]"
+                    : "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737]"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

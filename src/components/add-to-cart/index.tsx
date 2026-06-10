@@ -74,6 +74,8 @@ export const AddToCartWidget = ({
   showCounter: showCounterProp,
   accessoryItemIds = [],
   isWishlist = false,
+  onBeforeAdd,
+  onAddSuccess,
   onAddedToCart,
   iconShow = true,
 }: AddToCartWidgetProps) => {
@@ -108,8 +110,8 @@ export const AddToCartWidget = ({
     if (Array.isArray(raw)) return (raw as string[])[0] ?? "";
     const typed = raw as { en?: string[]; ar?: string[] };
     return locale === "ar"
-      ? ((typed.ar ?? typed.en ?? [])[0] ?? "")
-      : ((typed.en ?? typed.ar ?? [])[0] ?? "");
+      ? ((typed?.ar ?? typed?.en ?? [])[0] ?? "")
+      : ((typed?.en ?? typed?.ar ?? [])[0] ?? "");
   })();
 
   const originalPrice = product.original_price ?? product.price ?? 0;
@@ -221,6 +223,7 @@ export const AddToCartWidget = ({
     if (token) {
       setLoading(true);
       try {
+        await onBeforeAdd?.();
         await makeApiRequest(apiUrls.CART_ADD, {
           method: "POST",
           data: {
@@ -233,13 +236,18 @@ export const AddToCartWidget = ({
           },
         });
         // Refresh Redux cart so count in header stays accurate
-        if (country?.name) dispatch(fetchCart(country.name));
+        const fetchCName = country?.name ?? location?.country ?? "";
+        if (fetchCName) dispatch(fetchCart(fetchCName));
+        // Notify parent immediately after successful add (before flash)
+        onAddSuccess?.();
       } catch {
         // silent
       } finally {
         setLoading(false);
+        
       }
     } else {
+      await onBeforeAdd?.();
       const rawAcc = (product as RawApiProduct).accessories ?? [];
       const selectedAccessories = rawAcc
         .flatMap((acc) => acc.accessory_item ?? [])
@@ -274,6 +282,7 @@ export const AddToCartWidget = ({
         selectedAccessories,
         rawProduct: product,
       } as Parameters<typeof addItem>[0]));
+      onAddSuccess?.();
     }
 
     setAddedSuccess(true);
@@ -284,14 +293,13 @@ export const AddToCartWidget = ({
     if (isWishlist) {
       const token = getToken();
       if (token) {
-        // toggleWishlistItem thunk handles the API call internally — no direct makeApiRequest here
         dispatch(toggleWishlistItem({ productId: product.id, currentlyInWishlist: true }));
       } else {
         dispatch(toggleGuestWishlistItem({ productId: product.id, rawProduct: product }));
       }
-      // After "Added!" flash, notify parent to remove card from UI
-      setTimeout(() => onAddedToCart?.(product.id), 900);
     }
+    // Always notify parent after successful add (after "Added!" flash)
+    setTimeout(() => onAddedToCart?.(product.id), 900);
   };
 
   // ── Mobile handlers ───────────────────────────────────────────────────────
@@ -305,6 +313,7 @@ export const AddToCartWidget = ({
     if (token) {
       const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
       try {
+        await onBeforeAdd?.();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const res = await makeApiRequest<any>(apiUrls.CART_ADD, {
           method: "POST",
@@ -336,6 +345,7 @@ export const AddToCartWidget = ({
         // silent
       }
     } else {
+      await onBeforeAdd?.();
       const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
       const subTotal   = activePrice * minQty;
       const totalPrice = subTotal + shippingCharge;
@@ -373,9 +383,11 @@ export const AddToCartWidget = ({
         selectedAccessories,
         rawProduct: product,
       } as Parameters<typeof addItem>[0]));
+      onAddSuccess?.();
     }
 
     setMobileLoading(false);
+    setTimeout(() => onAddedToCart?.(product.id), 900);
   };
 
   const handleMobileIncrement = async (e: React.MouseEvent) => {

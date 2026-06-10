@@ -1,15 +1,16 @@
 "use client";
 
-import { Bookmark, Calendar, Heart, Minus, Plus, Trash2, Truck } from "lucide-react";
+import { Bookmark, Calendar, Minus, Plus, Trash2, Truck } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 import { CartItem, fmtPrice } from "./cart-types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  toggleWishlistItem,
-  toggleGuestWishlistItem,
-  hydrateGuestWishlist,
-} from "@/store/slices/wishlist/wishlistSlice";
+  hydrateGuestSaveItems,
+  toggleGuestSaveItem,
+  addSaveForLater,
+  removeSaveForLater,
+} from "@/store/slices/save-for-later/saveForLaterSlice";
 
 export default function CartItemRow({
   item,
@@ -22,31 +23,48 @@ export default function CartItemRow({
   onRemove: (id: number) => void;
   onWishlist: (id: number) => void;
 }) {
-  const dispatch   = useAppDispatch();
-  const inWishlist = useAppSelector((s) => s.wishlist.ids.includes(item.id));
-  const isToggling = useAppSelector((s) => s.wishlist.toggling.includes(item.id));
+  const dispatch       = useAppDispatch();
+  const isSaved        = useAppSelector((s) => s.saveForLater.ids.includes(item.id));
+  const isSaving       = useAppSelector((s) => s.saveForLater.toggling.includes(item.id));
 
-  // Hydrate guest wishlist from localStorage (must be in useEffect, not render)
+  // Hydrate guest save-for-later from localStorage on mount
   useEffect(() => {
-    dispatch(hydrateGuestWishlist());
+    dispatch(hydrateGuestSaveItems());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSaveForLater = async () => {
+    if (isSaving) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (token) {
+      if (isSaved) {
+        await dispatch(removeSaveForLater({ productId: item.id }));
+      } else {
+        await dispatch(addSaveForLater({
+          productId: item.id,
+          quantity:  item.qty,
+          vendorId:  item.vendorId ?? 1,
+        }));
+      }
+    } else {
+      dispatch(toggleGuestSaveItem({
+        productId:  item.id,
+        quantity:   item.qty,
+        vendorId:   item.vendorId ?? 1,
+        rawProduct: item,
+      }));
+    }
+    onWishlist(item.id);
+  };
+
+  const accessoriesTotal = (item.selectedAccessories ?? []).reduce((s, a) => s + a.price, 0);
+  const unitPrice = item.price + accessoriesTotal;
 
   const hasSale = item.originalPrice > item.price;
   const discountPct = hasSale
     ? ((item.originalPrice - item.price) / item.originalPrice) * 100
     : 0;
 
-  const handleWishlistClick = () => {
-    if (isToggling) return;
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (token) {
-      dispatch(toggleWishlistItem({ productId: item.id, currentlyInWishlist: inWishlist }));
-    } else {
-      dispatch(toggleGuestWishlistItem({ productId: item.id, rawProduct: item }));
-    }
-    onWishlist(item.id);
-  };
 
   return (
     <div className="flex gap-3 sm:gap-4 group">
@@ -90,7 +108,7 @@ export default function CartItemRow({
           {/* Price – desktop */}
           <div className="hidden sm:block text-right shrink-0 ml-4">
             <p className="text-base font-bold text-gray-900">
-              {item.currencySymbol ?? "$"}{fmtPrice(item.price * item.qty)}
+              {item.currencySymbol ?? "$"}{fmtPrice(unitPrice * item.qty)}
             </p>
             {hasSale && (
               <p className="text-xs text-gray-400 line-through">
@@ -134,7 +152,7 @@ export default function CartItemRow({
         {/* Mobile price */}
         <div className="sm:hidden mt-2">
           <p className="text-sm font-bold text-gray-900">
-            {item.currencySymbol ?? "$"}{fmtPrice(item.price * item.qty)}
+            {item.currencySymbol ?? "$"}{fmtPrice(unitPrice * item.qty)}
           </p>
           {hasSale && (
             <p className="text-xs text-gray-400 line-through">
@@ -181,14 +199,18 @@ export default function CartItemRow({
             );
           })()}
 
-          {/* Save for Later / Wishlist */}
+          {/* Save for Later */}
           <button
-            disabled={isToggling}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 disabled:opacity-60 border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737] hover:bg-[#f0f9f4]"
+            onClick={handleSaveForLater}
+            disabled={isSaving}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-[7px] border transition-all duration-200 disabled:opacity-60 ${
+              isSaved
+                ? "border-[#186737] text-[#186737] bg-[#f0f9f4]"
+                : "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737] hover:bg-[#f0f9f4]"
             }`}
           >
-            <Bookmark  size={13} className={""} />
-           Save for Later
+            <Bookmark size={13} className={isSaved ? "fill-[#186737]" : ""} />
+            {isSaved ? "Saved" : "Save for Later"}
           </button>
 
           {/* Remove */}

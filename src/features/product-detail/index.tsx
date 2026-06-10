@@ -27,9 +27,18 @@ interface Props {
 }
 
 const slugToLabel = (slug: string) =>
-  slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 
-const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similarProductsGuest = [],alternateProducts = [] }: Props) => {
+const ProductDetailPage = ({
+  productData,
+  categorySlug,
+  subCategorySlug,
+  similarProductsGuest = [],
+  alternateProducts = [],
+}: Props) => {
   console.log("ProductDetailPage render", productData);
   const name = productData.name ?? "";
   const images = productData.images ?? [];
@@ -38,17 +47,25 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
   const state = useLocationData();
 
   const supplier = productData.suppliers?.[0] ?? null;
-  const activePrice = productData.sale_price > 0 ? productData.sale_price : productData.price;
+  const activePrice =
+    productData.sale_price > 0 ? productData.sale_price : productData.price;
   const unit = productData.selling_type?.attribute_value_unit ?? "Each";
   const currencySymbol = productData.currency?.symbol ?? "";
-  const brand = productData.attributes?.find((a) => a.attribute_name === "Manufacturer")?.attribute_value ?? "";
+  const brand =
+    productData.attributes?.find((a) => a.attribute_name === "Manufacturer")
+      ?.attribute_value ?? "";
 
   const allSpecs = (productData.attributes ?? []).map((a) => ({
     attribute_name: a.attribute_name,
-    attribute_value: a.measurement_unit ? `${a.attribute_value} ${a.measurement_unit}` : a.attribute_value,
+    attribute_value: a.measurement_unit
+      ? `${a.attribute_value} ${a.measurement_unit}`
+      : a.attribute_value,
   }));
   const mid = Math.ceil(allSpecs.length / 2);
-  const specifications = { left: allSpecs.slice(0, mid), right: allSpecs.slice(mid) };
+  const specifications = {
+    left: allSpecs.slice(0, mid),
+    right: allSpecs.slice(mid),
+  };
 
   const overview = description.join("");
   const qaItems = (productData.faqs ?? []).map((f) => ({
@@ -76,7 +93,9 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
     count: reviews.filter((r) => r.rating === stars).length,
   }));
 
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, VariantItem>>({});
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, VariantItem>
+  >({});
   const [openOverview, setOpenOverview] = useState(false);
   const [openReviews, setOpenReviews] = useState(false);
   const [openFaq, setOpenFaq] = useState(false);
@@ -85,18 +104,23 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
     setSelectedVariants((prev) => ({ ...prev, [label]: variant }));
   };
 
-
   const crumbs =
     productData.breadcrumbs && productData.breadcrumbs.length > 0
       ? [
           { label: "Home", href: "/" },
-          ...productData.breadcrumbs.map((b) => ({ label: b.name, href: b.url })),
+          ...productData.breadcrumbs.map((b) => ({
+            label: b.name,
+            href: b.url,
+          })),
           { label: name, href: null },
         ]
       : [
           { label: "Home", href: "/" },
           { label: slugToLabel(categorySlug), href: `/${categorySlug}` },
-          { label: slugToLabel(subCategorySlug), href: `/${categorySlug}/${subCategorySlug}` },
+          {
+            label: slugToLabel(subCategorySlug),
+            href: `/${categorySlug}/${subCategorySlug}`,
+          },
           { label: name, href: null },
         ];
 
@@ -117,8 +141,8 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
               />
             </div>
           </div>
- 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[36%_38%_26%] gap-4 items-start md:mt-11 mt-11 xl:mt-0">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[35%_36%_26%] 2xl:grid-cols-[36%_38%_26%] gap-4 items-start md:mt-11 mt-11 xl:mt-0">
             <div className="relative lg:sticky lg:top-4 hidden xl:block">
               <ProductGallery
                 images={images}
@@ -155,7 +179,11 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
               currency={productData.currency?.symbol}
               freeShipping={supplier?.free_shipping ?? false}
               deliveryDays={supplier?.delivery_days ?? ""}
-              shipTo={supplier ? `${supplier.vendor.city}, ${supplier.vendor.country}` : ""}
+              shipTo={
+                supplier
+                  ? `${supplier.vendor.city}, ${supplier.vendor.country}`
+                  : ""
+              }
               returnPolicy={supplier?.return_policy ?? ""}
               accessories={productData.accessories ?? []}
               phone=""
@@ -166,11 +194,16 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
             />
           </div>
 
-          <AlternateAiProducts similarProductsGuest={similarProductsGuest} alternateProducts={alternateProducts} />
+          <AlternateAiProducts
+            similarProductsGuest={similarProductsGuest}
+            alternateProducts={alternateProducts}
+          />
 
           <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-300">
-              <h2 className="heading-font-size font-bold text-gray-900">Key Specification</h2>
+              <h2 className="heading-font-size font-bold text-gray-900">
+                Key Specification
+              </h2>
             </div>
             <div className="p-6">
               <SpecificationsSection specifications={specifications} />
@@ -184,7 +217,9 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
                 className="md:hidden w-full flex items-center justify-between px-6 py-4 text-left"
                 onClick={() => setOpenOverview((v) => !v)}
               >
-                <h2 className="heading-font-size font-bold text-gray-900">Product Overview</h2>
+                <h2 className="heading-font-size font-bold text-gray-900">
+                  Product Overview
+                </h2>
                 {openOverview ? (
                   <ChevronUp size={18} className="text-gray-500 shrink-0" />
                 ) : (
@@ -193,9 +228,13 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
               </button>
               {/* Desktop: static header */}
               <div className="hidden md:block px-6 py-4 border-b border-gray-300">
-                <h2 className="heading-font-size font-bold text-gray-900">Product Overview</h2>
+                <h2 className="heading-font-size font-bold text-gray-900">
+                  Product Overview
+                </h2>
               </div>
-              <div className={`px-6 py-5 ${openOverview ? "block" : "hidden"} md:block`}>
+              <div
+                className={`px-6 py-5 ${openOverview ? "block" : "hidden"} md:block`}
+              >
                 <OverviewSection overview={overview} />
               </div>
             </div>
@@ -208,7 +247,9 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
                 className="md:hidden w-full flex items-center justify-between px-6 py-4 text-left"
                 onClick={() => setOpenReviews((v) => !v)}
               >
-                <h2 className="heading-font-size font-bold text-gray-900">Customer Ratings &amp; Reviews</h2>
+                <h2 className="heading-font-size font-bold text-gray-900">
+                  Customer Ratings &amp; Reviews
+                </h2>
                 {openReviews ? (
                   <ChevronUp size={18} className="text-gray-500 shrink-0" />
                 ) : (
@@ -222,7 +263,8 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
                     Customer Ratings &amp; Reviews
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Real reviews from hotels, restaurants, and chefs who&apos;ve used this product.
+                    Real reviews from hotels, restaurants, and chefs who&apos;ve
+                    used this product.
                   </p>
                 </div>
                 <button className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2">
@@ -230,8 +272,14 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
                   Leave a Review
                 </button>
               </div>
-              <div className={`p-6 ${openReviews ? "block" : "hidden"} md:block`}>
-                <ReviewsSection avgRating={avgRating} reviews={reviews} ratingDist={ratingDist} />
+              <div
+                className={`p-6 ${openReviews ? "block" : "hidden"} md:block`}
+              >
+                <ReviewsSection
+                  avgRating={avgRating}
+                  reviews={reviews}
+                  ratingDist={ratingDist}
+                />
               </div>
             </div>
           )}
@@ -243,7 +291,9 @@ const ProductDetailPage = ({ productData, categorySlug, subCategorySlug, similar
                 className="md:hidden w-full flex items-center justify-between px-6 py-4 text-left"
                 onClick={() => setOpenFaq((v) => !v)}
               >
-                <h2 className="heading-font-size font-bold text-gray-900">Questions from buyers like you</h2>
+                <h2 className="heading-font-size font-bold text-gray-900">
+                  Questions from buyers like you
+                </h2>
                 {openFaq ? (
                   <ChevronUp size={18} className="text-gray-500 shrink-0" />
                 ) : (

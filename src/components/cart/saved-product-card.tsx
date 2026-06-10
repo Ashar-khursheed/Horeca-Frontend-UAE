@@ -1,71 +1,127 @@
 "use client";
 
 import ProductCard, { ApiProduct } from "@/components/product-card";
-import { Trash2 } from "lucide-react";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchCart } from "@/store/slices/cart/cartSlice";
+import { fetchSaveForLater, removeSaveForLater, toggleGuestSaveItem } from "@/store/slices/save-for-later/saveForLaterSlice";
+import { getLocationData } from "@/utils/locationStorage";
+import { Loader2, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { SavedItem } from "./cart-types";
 
-// Map SavedItem → ApiProduct so ProductCard renders correctly
 function toApiProduct(item: SavedItem): ApiProduct {
   return {
     id: item.id,
     name: item.name,
     url: item.url,
     sku: item.modelNo,
-    category_url: "",
-    parent_category_url: "",
-    price: item.price,
-    sale_price: item.price < item.originalPrice ? item.price : 0,
+    category_url: item.categoryUrl ?? "",
+    parent_category_url: item.parentCategoryUrl ?? "",
+    price: item.originalPrice,
+    sale_price: item.salePrice ?? 0,
     original_price: item.originalPrice,
-    front_sale_price: item.price,
+    front_sale_price: item.salePrice ?? item.price,
     best_price: item.price,
     avg_rating: item.rating > 0 ? item.rating : null,
     total_reviews: item.reviews,
     delivery_days: item.deliveryDays,
-    currency: "$",
+    currency: item.currencySymbol ?? "$",
     images: [item.image],
-    alt_tags: [item.name],
-    in_wishlist: true,
-    min_quantity: item.qty,
-    is_fixed: 0,
+    alt_tags: item.altTags?.length ? item.altTags : [item.name],
+    in_wishlist: false,
+    min_quantity: item.minQty ?? 1,
+    is_fixed: item.isFixed ? 1 : 0,
     quote_available: null,
     selling_type: {
       attribute_value: item.unit,
       attribute_value_unit: item.unit,
     },
     free_shipping: item.freeShipping ? 1 : 0,
-    return_policy: "",
+    return_policy: item.returnPolicy ?? "",
     isRequired: false,
+    suppliers: [
+      {
+        vendor_id: item.vendorId ?? 0,
+        delivery_days: item.deliveryDays,
+        free_shipping: item.freeShipping ? 1 : 0,
+        min_quantity: item.minQty ?? 1,
+        is_fixed: item.isFixed ? 1 : 0,
+      },
+    ],
   };
 }
 
 export default function SavedProductCard({
   item,
-  onAddToCart,
+  onAddToCart: _onAddToCart,
   onRemove,
+  onAfterAddToCart,
+  isLoggedIn = true,
 }: {
   item: SavedItem;
   onAddToCart: (id: number) => void;
-  onRemove: (id: number) => void;
+  onRemove: (id: number) => Promise<void>;
+  onAfterAddToCart?: () => void;
+  isLoggedIn?: boolean;
 }) {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const [isRemoving, setIsRemoving] = useState(false);
   const product = toApiProduct(item);
+
+  const handleBeforeAdd = async () => {
+    if (isLoggedIn) {
+      await dispatch(removeSaveForLater({ productId: item.id }));
+      dispatch(fetchSaveForLater());
+    } else {
+      dispatch(toggleGuestSaveItem({ productId: item.id, quantity: item.qty, vendorId: item.vendorId ?? 0, rawProduct: null }));
+    }
+  };
+
+  const handleAddSuccess = () => {
+    if (isLoggedIn) {
+      const countryName = getLocationData()?.country ?? "";
+      dispatch(fetchSaveForLater());
+      dispatch(fetchCart(countryName));
+    }
+    onAfterAddToCart?.();
+  };
+
+  const handleAddedToCart = () => {
+    if (isLoggedIn) {
+      router.refresh();
+      window.location.reload()
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Existing ProductCard — full behaviour intact */}
       <div className="flex-1">
         <ProductCard
           product={product}
           onWishlistToggle={() => {}}
+          onBeforeAdd={handleBeforeAdd}
+          onAddSuccess={handleAddSuccess}
+          onAddedToCart={handleAddedToCart}
         />
       </div>
 
-      {/* Remove from Saved — sits flush below the card */}
       <button
-        onClick={() => onRemove(item.id)}
-        className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-1.5 rounded-[7px] border border-gray-100 text-[11px] font-semibold text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all duration-200"
+        disabled={isRemoving}
+        onClick={async () => {
+          setIsRemoving(true);
+          await onRemove(item.id);
+          setIsRemoving(false);
+        }}
+        className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-1.5 rounded-[7px] border border-gray-100 text-[11px] font-semibold text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
       >
-        <Trash2 size={11} />
-        Remove from Saved
+        {isRemoving ? (
+          <Loader2 size={11} className="animate-spin" />
+        ) : (
+          <Trash2 size={11} />
+        )}
+        {isRemoving ? "Removing…" : "Remove from Saved"}
       </button>
     </div>
   );

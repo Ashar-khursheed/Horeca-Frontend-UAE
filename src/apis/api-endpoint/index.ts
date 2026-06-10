@@ -56,6 +56,14 @@ export const apiUrls = {
   WISHLIST_REMOVE: "frontend/wishlist/remove",
   WISHLIST_ADD_MULTIPLE: "frontend/wishlist/add-multiple",
 
+  // Save for Later
+  SAVE_FOR_LATER: "frontend/save-for-later",
+  SAVE_FOR_LATER_REMOVE: "frontend/remove-from-save-for-later",
+//   // SAVE_FOR_LATER_REMOVE: "frontend/save-for-later/remove",
+//   https://test-us.thehorecastore.co/api/frontend/remove-from-save-for-later/123
+// // 
+
+
   // Customer Address
   GET_CUSTOMER_ADDRESS: "frontend/customer-address",
   ADD_CUSTOMER_ADDRESS: "frontend/customer-address",

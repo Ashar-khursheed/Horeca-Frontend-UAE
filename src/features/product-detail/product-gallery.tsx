@@ -1,7 +1,9 @@
 "use client";
 
+import React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Heart, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { ShareModal } from "@/components/share-modal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   seedWishlistIds,
@@ -19,8 +21,7 @@ type ProductGalleryProps = {
   rawProduct?: any;
 };
 
-const VISIBLE = 6;
-const MOBILE_VISIBLE = 5;
+const MOBILE_visibleCount = 5;
 
 export const ProductGallery = ({
   images,
@@ -33,9 +34,18 @@ export const ProductGallery = ({
   const inWishlist  = useAppSelector((s) => s.wishlist.ids.includes(productId));
   const isToggling  = useAppSelector((s) => s.wishlist.toggling.includes(productId));
 
+  const [shareOpen,    setShareOpen]    = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
   const [activeImg,    setActiveImg]    = useState(0);
   const [thumbOffset,  setThumbOffset]  = useState(0);
   const [mobileOffset, setMobileOffset] = useState(0);
+
+  useEffect(() => {
+    const update = () => setVisibleCount(window.innerWidth >= 1536 ? 6 : 5);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPos,  setZoomPos]  = useState({ x: 50, y: 50 });
@@ -67,17 +77,17 @@ export const ProductGallery = ({
   const nextImg = () => setActiveImg((p) => (p === images.length - 1 ? 0 : p + 1));
 
   const canScrollUp   = thumbOffset > 0;
-  const canScrollDown = thumbOffset + VISIBLE < images.length;
+  const canScrollDown = thumbOffset + visibleCount < images.length;
   const scrollUp      = () => setThumbOffset((o) => Math.max(0, o - 1));
-  const scrollDown    = () => setThumbOffset((o) => Math.min(images.length - VISIBLE, o + 1));
+  const scrollDown    = () => setThumbOffset((o) => Math.min(images.length - visibleCount, o + 1));
 
   const canScrollLeft  = mobileOffset > 0;
-  const canScrollRight = mobileOffset + MOBILE_VISIBLE < images.length;
+  const canScrollRight = mobileOffset + MOBILE_visibleCount < images.length;
   const scrollLeft     = () => setMobileOffset((o) => Math.max(0, o - 1));
-  const scrollRight    = () => setMobileOffset((o) => Math.min(images.length - MOBILE_VISIBLE, o + 1));
+  const scrollRight    = () => setMobileOffset((o) => Math.min(images.length - MOBILE_visibleCount, o + 1));
 
-  const visibleThumbs = images.slice(thumbOffset, thumbOffset + VISIBLE);
-  const mobileThumbs  = images.slice(mobileOffset, mobileOffset + MOBILE_VISIBLE);
+  const visibleThumbs = images.slice(thumbOffset, thumbOffset + visibleCount);
+  const mobileThumbs  = images.slice(mobileOffset, mobileOffset + MOBILE_visibleCount);
 
   const handleMouseEnter = () => {
     if (window.innerWidth < 1280) return;
@@ -216,6 +226,7 @@ export const ProductGallery = ({
 
           {/* Share */}
           <button
+            onClick={() => setShareOpen(true)}
             className={`absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
               showZoom ? "opacity-0" : "opacity-100"
             }`}
@@ -273,6 +284,13 @@ export const ProductGallery = ({
 
         </div>
       </div>
+
+      <ShareModal
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+        title={productName}
+      />
 
       {/* Zoom Panel */}
       {showZoom && zoomRect && (

@@ -54,6 +54,13 @@ export interface ApiProduct {
   free_shipping: number;
   return_policy: string;
   isRequired: boolean;
+  suppliers?: {
+    vendor_id?: number;
+    delivery_days?: string;
+    free_shipping?: boolean | number;
+    min_quantity?: number;
+    is_fixed?: boolean | number;
+  }[];
 }
 
 export interface RawApiProduct {
@@ -117,6 +124,9 @@ interface ProductCardProps {
   newUrl?: string;
   aboveFold?: boolean;
   onWishlistToggle?: (product: ApiProduct | RawApiProduct, inWishlist: boolean) => void;
+  onBeforeAdd?: () => Promise<void>;
+  onAddSuccess?: () => void;
+  onAddedToCart?: (productId: number) => void;
 }
 
 
@@ -229,7 +239,11 @@ export const ProductCard = ({
   newUrl = "products",
   aboveFold = false,
   onWishlistToggle,
+  onBeforeAdd,
+  onAddSuccess,
+  onAddedToCart,
 }: ProductCardProps) => {
+  console.log("product",product)
   const locale = useLocale();
   const dispatch = useAppDispatch();
   // ── Country from Redux (client-side currency conversion) ─────────────
@@ -391,7 +405,11 @@ export const ProductCard = ({
 
         {/* Product images */}
         <Link href={productLink}>
-          <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+          <div
+            className="relative w-full aspect-square overflow-hidden bg-gray-50"
+            onMouseEnter={startSlide}
+            onMouseLeave={stopSlide}
+          >
             {visibleImages.length === 0 ? (
               <Image
                 src=""
@@ -639,6 +657,9 @@ export const ProductCard = ({
               accessoryItemIds={selectedAccessoryIds}
               wrapperClassName="flex gap-2 items-center w-full mt-2"
               buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${(product as RawApiProduct).quote_available ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"}`}
+              onBeforeAdd={onBeforeAdd}
+              onAddSuccess={onAddSuccess}
+              onAddedToCart={onAddedToCart}
             />
           </div>
         </Modal>
@@ -656,6 +677,8 @@ export const ProductCard = ({
             product={product}
             accessoryItemIds={selectedAccessoryIds}
             wrapperClassName="flex gap-2 items-center w-full mt-2"
+            onBeforeAdd={onBeforeAdd}
+            onAddedToCart={onAddedToCart}
           />
         </div>
       </div>

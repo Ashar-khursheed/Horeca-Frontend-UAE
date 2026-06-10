@@ -118,6 +118,8 @@ export interface AddToCartWidgetProps {
   showCounter?: boolean;
   accessoryItemIds?: number[];
   isWishlist?: boolean;
+  onBeforeAdd?: () => Promise<void>;
+  onAddSuccess?: () => void;
   onAddedToCart?: (productId: number) => void;
   iconShow?: boolean;
 }

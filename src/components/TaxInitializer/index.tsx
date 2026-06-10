@@ -7,6 +7,35 @@ import { setTaxRate, TAX_STORAGE_KEY, type TaxRateData } from "@/store/slices/ta
 import type { AppDispatch } from "@/store/store";
 
 const TAX_API_BASE = "https://pim.thehorecastore.co/api/frontend/tax/rate";
+const DEFAULT_ADDRESS_KEY = "hc_default_address";
+
+interface DefaultAddress {
+  id: number;
+  customer_id: number;
+  type: string;
+  address: string;
+  city: string;
+  zip_code: string;
+  country: string;
+  state: string;
+  is_default: boolean;
+  related_country?: { id: number; name: string };
+}
+
+// Returns parsed address only if all required fields are present
+function getDefaultAddress(): DefaultAddress | null {
+  try {
+    const raw = localStorage.getItem(DEFAULT_ADDRESS_KEY);
+    if (!raw) return null;
+    const addr = JSON.parse(raw) as Partial<DefaultAddress>;
+    if (addr.id && addr.city && addr.zip_code && addr.country && addr.state) {
+      return addr as DefaultAddress;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export default function TaxInitializer() {
   const dispatch = useDispatch<AppDispatch>();
@@ -17,7 +46,12 @@ export default function TaxInitializer() {
     // Only run for US locations
     if (!location || location.countryCode !== "US") return;
 
-    const { city, zip } = location;
+    // Require hc_default_address with all required fields before calling tax API
+    const defaultAddress = getDefaultAddress();
+    if (!defaultAddress) return;
+
+    const zip  = defaultAddress.zip_code;
+    const city = defaultAddress.city;
 
     // Check localStorage — reuse if zip matches (same location, no re-fetch needed)
     const cached = localStorage.getItem(TAX_STORAGE_KEY);
