@@ -36,6 +36,7 @@ import {
   Package,
   ShoppingCart
 } from "lucide-react";
+import { usePerPage } from "@/hooks/usePerPage";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -156,6 +157,7 @@ export default function CartPage() {
   const rawProducts = useAppSelector((s) => s.cart.rawProducts);
   const reduxGuestItems = useAppSelector((s) => s.cart.items);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
+  const lastAddedAt = useAppSelector((s) => s.cart.lastAddedAt);
   const sflApiEntries = useAppSelector((s) => s.saveForLater.apiEntries);
   const sflGuestItems = useAppSelector((s) => s.saveForLater.guestItems);
 
@@ -188,6 +190,15 @@ export default function CartPage() {
     setInitialized(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-fetch whenever a product is added to cart while this page is already mounted
+  useEffect(() => {
+    if (!initialized || !isLoggedIn || lastAddedAt === 0) return;
+    const location = getLocationData();
+    dispatch(resetApiStatus());
+    dispatch(fetchCart(location?.country ?? ""));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastAddedAt]);
 
   // Derive display items from Redux (logged-in) or local state (guest)
   const defaultAddr = getDefaultAddressCache();
@@ -569,7 +580,26 @@ export default function CartPage() {
   );
 }
 
-// ── Saved for Later section ───────────────────────────────────────────────────
+// ── Saved for Later visible count hook ───────────────────────────────────────
+function useSflVisibleCount() {
+  const [count, setCount] = useState(4);
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w >= 1920) setCount(5);
+      else if (w >= 1536) setCount(4);
+      else if (w >= 1280) setCount(3);
+      else if (w >= 768)  setCount(2);
+      else                setCount(1);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return count;
+}
+
+// ── Saved for Later section (slider) ─────────────────────────────────────────
 function SavedForLaterSection({
   items,
   onAddToCart,
@@ -583,94 +613,66 @@ function SavedForLaterSection({
   onAfterAddToCart?: () => void;
   isLoggedIn?: boolean;
 }) {
-  const [perPage, setPerPage] = useState(4);
-  const [page, setPage] = useState(1);
-  const [is2xl, setIs2xl] = useState(false);
+  const visibleCount = useSflVisibleCount();
+  const [index, setIndex] = useState(0);
+  const max = Math.max(0, items.length - visibleCount);
 
-  useEffect(() => {
-    const check = () => setIs2xl(window.innerWidth >= 1536);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+  useEffect(() => { setIndex(0); }, [visibleCount]);
 
-  useEffect(() => {
-    const update = () => {
-      if (window.innerWidth >= 1820) setPerPage(5);
-      else if (window.innerWidth >= 1536) setPerPage(5);
-      else if (window.innerWidth >= 1280) setPerPage(4);
-      else if (window.innerWidth >= 768) setPerPage(3);
-      else setPerPage(2);
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  useEffect(() => { setPage(1); }, [perPage]);
-
-  const totalPages = Math.ceil(items.length / perPage);
-  const safePage = Math.min(page, Math.max(1, totalPages));
-  const visible = items.slice((safePage - 1) * perPage, safePage * perPage);
+  const cardWidth = 100 / visibleCount;
 
   if (items.length === 0) return null;
 
   return (
     <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-5 pt-4 pb-3 border-b border-gray-100">
+      <div className="px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
         <span className="inline-block text-sm font-semibold text-gray-900 border-b-2 border-[#186737] pb-1">
           Saved for Later{" "}
           <span className="text-gray-500 font-normal">
             ({items.length} Item{items.length !== 1 ? "s" : ""})
           </span>
         </span>
-      </div>
-
-      <div className="p-5">
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-          {visible.map((item) => (
-            <SavedProductCard
-              key={item.id}
-              item={item}
-              onAddToCart={onAddToCart}
-              onRemove={onRemove}
-              onAfterAddToCart={onAfterAddToCart}
-              isLoggedIn={isLoggedIn}
-            />
-          ))}
-        </div>
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-5">
+        {items.length > visibleCount && (
+          <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={safePage === 1}
-              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              onClick={() => setIndex((i) => Math.max(0, i - 1))}
+              disabled={index === 0}
+              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
             >
               <ChevronLeft size={14} />
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`w-8 h-8 rounded-full text-xs font-semibold transition-all border ${
-                  p === safePage
-                    ? "bg-[#186737] text-white border-[#186737]"
-                    : "border-gray-200 text-gray-500 hover:border-[#186737] hover:text-[#186737]"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={safePage === totalPages}
-              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              onClick={() => setIndex((i) => Math.min(max, i + 1))}
+              disabled={index >= max}
+              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
             >
               <ChevronRight size={14} />
             </button>
           </div>
         )}
+      </div>
+
+      <div className="px-5 py-5 overflow-hidden">
+        <div
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${index * cardWidth}%)` }}
+        >
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="shrink-0 px-2"
+              style={{ width: `${cardWidth}%` }}
+            >
+              <SavedProductCard
+                item={item}
+                onAddToCart={onAddToCart}
+                onRemove={onRemove}
+                onAfterAddToCart={onAfterAddToCart}
+                isLoggedIn={isLoggedIn}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

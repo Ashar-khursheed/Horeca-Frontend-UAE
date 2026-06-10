@@ -239,7 +239,8 @@ export const AddToCartWidget = ({
       setLoading(true);
       try {
         await onBeforeAdd?.();
-        await makeApiRequest(apiUrls.CART_ADD, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const res = await makeApiRequest<any>(apiUrls.CART_ADD, {
           method: "POST",
           data: {
             country: country?.name ?? "",
@@ -250,9 +251,15 @@ export const AddToCartWidget = ({
             accessory_item_ids: accessoryItemIds,
           },
         });
-        // Refresh Redux cart so count in header stays accurate
-        const fetchCName = country?.name ?? location?.country ?? "";
-        if (fetchCName) dispatch(fetchCart(fetchCName));
+        const itemId: number =
+          res?.data?.id ??
+          res?.data?.cart_product?.id ??
+          res?.data?.cart_item?.id ??
+          res?.id ??
+          0;
+        // Update apiEntries (header count) and bump lastAddedAt (triggers cart page re-fetch)
+        dispatch(addApiEntry({ cartItemId: itemId, productId: product.id, quantity: count }));
+        if (!itemId) resolveCartItemId().catch(() => {});
         // Notify parent immediately after successful add (before flash)
         onAddSuccess?.();
       } catch {

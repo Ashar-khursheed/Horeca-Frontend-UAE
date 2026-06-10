@@ -2,11 +2,8 @@
 
 import ProductCard, { ApiProduct } from "@/components/product-card";
 import { useAppDispatch } from "@/store/hooks";
-import { fetchCart } from "@/store/slices/cart/cartSlice";
 import { fetchSaveForLater, removeSaveForLater, toggleGuestSaveItem } from "@/store/slices/save-for-later/saveForLaterSlice";
-import { getLocationData } from "@/utils/locationStorage";
 import { Loader2, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SavedItem } from "./cart-types";
 
@@ -66,7 +63,6 @@ export default function SavedProductCard({
   isLoggedIn?: boolean;
 }) {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const [isRemoving, setIsRemoving] = useState(false);
   const product = toApiProduct(item);
 
@@ -81,19 +77,12 @@ export default function SavedProductCard({
 
   const handleAddSuccess = () => {
     if (isLoggedIn) {
-      const countryName = getLocationData()?.country ?? "";
       dispatch(fetchSaveForLater());
-      dispatch(fetchCart(countryName));
     }
     onAfterAddToCart?.();
   };
 
-  const handleAddedToCart = () => {
-    if (isLoggedIn) {
-      router.refresh();
-      window.location.reload()
-    }
-  };
+  const handleAddedToCart = () => {};
 
   return (
     <div className="flex flex-col h-full">

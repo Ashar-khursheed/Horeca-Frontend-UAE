@@ -44,6 +44,7 @@ interface CartState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawProducts: any[];          // full API products for cart page display
   apiStatus: ApiStatus;
+  lastAddedAt: number;         // bumped on every addApiEntry — cart page watches this to re-fetch
 }
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
@@ -99,6 +100,7 @@ const initialState: CartState = {
   apiEntries: [],
   rawProducts: [],
   apiStatus: "idle",
+  lastAddedAt: 0,
 };
 
 const cartSlice = createSlice({
@@ -151,6 +153,7 @@ const cartSlice = createSlice({
       } else {
         state.apiEntries.push(action.payload);
       }
+      state.lastAddedAt = Date.now();
     },
 
     // Optimistic update after CART_UPDATE_QTY
