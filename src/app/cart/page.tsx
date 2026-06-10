@@ -582,11 +582,28 @@ function SavedForLaterSection({
   onAfterAddToCart?: () => void;
   isLoggedIn?: boolean;
 }) {
-  const PER_PAGE = 4;
+  const [perPage, setPerPage] = useState(4);
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(items.length / PER_PAGE);
+
+  useEffect(() => {
+    const update = () => {
+      if (window.innerWidth >= 1820) setPerPage(4);
+      else if (window.innerWidth >= 1480) setPerPage(4);
+      else if (window.innerWidth >= 1280) setPerPage(3);
+      else if (window.innerWidth >= 1024) setPerPage(2);
+      else if (window.innerWidth >= 768) setPerPage(3);
+      else setPerPage(2);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  useEffect(() => { setPage(1); }, [perPage]);
+
+  const totalPages = Math.ceil(items.length / perPage);
   const safePage = Math.min(page, Math.max(1, totalPages));
-  const visible = items.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+  const visible = items.slice((safePage - 1) * perPage, safePage * perPage);
 
   if (items.length === 0) return null;
 
@@ -602,7 +619,7 @@ function SavedForLaterSection({
       </div>
 
       <div className="p-5">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {visible.map((item) => (
             <SavedProductCard
               key={item.id}

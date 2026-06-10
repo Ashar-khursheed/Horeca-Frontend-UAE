@@ -141,7 +141,7 @@ export default function BrandsPage() {
               <h1 className="text-[12px] md:text-2xl lg:text-[30px] font-bold text-yellow-400 leading-tight">
                 Get to Know Why Leading<br />Brands Choose Us as Their<br />Trusted Dealer
               </h1>
-              <h2 className="text-white text-[8px] md:text-[12px] lg:text-[16px] mt-1.25 md:mt-3 lg:mt-4">
+              <h2 className="text-white text-[8px] md:text-[12px] lg:text-[16px] mt-1.25 md:mt-3 lg:mt-4 md:block hidden">
                 Everything you need in one B2B integrated platform.<br />It&apos;s easier with Horecastore.
               </h2>
               <button type="button" className="bg-white text-red-600 font-semibold px-2 pt-0.5 pb-0.5 md:px-2 md:py-3 md:text-[12px] lg:text-lg text-[8px] rounded hover:bg-gray-100 transition">

@@ -35,7 +35,7 @@ const getName = (name: CategoryName | string, locale: string): string => {
 
 // ── getCategoryPath helper ─────────────────────────────────────────────────────
 const getCategoryPath = (cat: Category): string => {
-  if (cat.slug === "shop-by-brands") return "/all-brands";
+  if (cat.slug === "shop-by-brands") return "/brands";
   if (cat.slug === "sale") return "/sale";
   return `/${cat.slug}`;
 };
@@ -276,6 +276,7 @@ function DropdownPanel({
 // HeaderMenu
 // ══════════════════════════════════════════════════════════════════════════════
 const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
+  console.log("navItemDatanavItemDatanavItemData", navItemData);
   const locale = useLocale();
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -391,108 +392,104 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
 
   return (
     <>
-    <style>{`.nav-scroll::-webkit-scrollbar{display:none}`}</style>
-    <div
-      ref={menuRef}
-      className="relative w-full bg-green-700 py-2.5 border-b border-green-800 hidden xl:block"
-      onMouseEnter={cancelClose}
-      onMouseLeave={handleCloseDropdown}
-    >
-      <div className="global-container">
-        <div className="grid xl:grid-cols-[80%_20%] 2xl:grid-cols-[83%_17%] md:grid-cols-[80%_20%]">
-          {/* ── LEFT: scrollable category links ── */}
-          <div className="relative flex items-center">
-            {/* Left arrow */}
-            {/* {showLeftArrow && ( */}
-              <button
-                onClick={doScrollLeft}
-                className="absolute left-[-28px] z-10 flex items-center justify-center w-6 h-6 bg-green-700 text-white hover:bg-green-600 transition-colors duration-150 rounded-full shadow-md 2xl:hidden  "
+      <style>{`.nav-scroll::-webkit-scrollbar{display:none}`}</style>
+      <div
+        ref={menuRef}
+        className="relative w-full bg-green-700 py-2.5 border-b border-green-800 hidden xl:block"
+        onMouseEnter={cancelClose}
+        onMouseLeave={handleCloseDropdown}
+      >
+        <div className="global-container">
+          <div className="grid xl:grid-cols-[80%_20%] 2xl:grid-cols-[80%_20%] md:grid-cols-[80%_20%]">
+            {/* ── LEFT: scrollable category links ── */}
+            <div className="flex items-center gap-1 min-w-0">
+              {/* Left arrow */}
+              {showLeftArrow && (
+                <button
+                  onClick={doScrollLeft}
+                  className="flex-shrink-0 z-10 flex items-center justify-center w-6 h-6 bg-green-600 text-white hover:bg-green-500 transition-colors duration-150 rounded-full shadow-md"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              )}
+              <div
+                ref={scrollRef}
+                className="nav-scroll flex space-x-4 items-center overflow-x-auto scroll-smooth flex-1 min-w-0"
+                style={
+                  {
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                  } as React.CSSProperties
+                }
               >
-                <ChevronLeft size={16} />
-              </button>
-            {/* // )} */}
-            <div
-              ref={scrollRef}
-              className={`nav-scroll flex space-x-4 items-center overflow-x-auto scroll-smooth ${showLeftArrow ? "pl-7" : ""} ${showRightArrow ? "pr-7" : ""}`}
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-            >
-              {navItemData.map((category: any) => (
-                <Link
-                  key={category.id}
-                  href={getCategoryPath(category)}
-                  onMouseEnter={() => handleMouseEnter(category)}
-                  onClick={closeNow}
-                  className={`
+                {navItemData.map((category: any) => (
+                  <Link
+                    key={category.id}
+                    href={getCategoryPath(category)}
+                    onMouseEnter={() => handleMouseEnter(category)}
+                    onClick={closeNow}
+                    className={`
                     text-white transition-colors duration-200
-                    cursor-pointer relative group flex items-center gap-1
+                    cursor-pointer relative group flex items-center gap-1 shrink-0
                     md:text-[15px] lg:text-[14px] text-xs whitespace-nowrap
                     ${activeCategory?.id === category.id && isDropdownOpen ? "font-normal" : "font-normal"}
                     hover:font-bold
                   `}
+                  >
+                    {getName(category.name, locale)}
+                    {category.slug !== "shop-by-brands" && (
+                      <ChevronDown
+                        size={15}
+                        className="text-white opacity-80"
+                      />
+                    )}
+                  </Link>
+                ))}
+              </div>
+              {/* Right arrow */}
+              {showRightArrow && (
+                <button
+                  onClick={doScrollRight}
+                  className="flex-shrink-0 z-10 flex items-center justify-center w-6 h-6 bg-green-600 text-white hover:bg-green-500 transition-colors duration-150 rounded-full shadow-md"
                 >
-                  {getName(category.name, locale)}
-                  {category.slug !== "shop-by-brands" && (
-                    <ChevronDown size={15} className="text-white opacity-80" />
-                  )}
-                </Link>
-              ))}
-              <Link
-                href={"/brands"}
-                className={`
-                    text-white transition-colors duration-200
-                    cursor-pointer relative group flex items-center gap-1
-                    md:text-[15px] lg:text-[14px] text-xs whitespace-nowrap
-                 
-                    hover:font-bold
-                  `}
-              >
-                Shop by Brands
-              </Link>
-            </div>
-            {/* Right arrow */}
-            {/* {showRightArrow && ( */}
-              <button
-                onClick={doScrollRight}
-                className="absolute right-[-51px] z-10 flex items-center justify-center w-6 h-6 bg-green-700 text-white hover:bg-green-600 transition-colors duration-150 rounded-full shadow-md 2xl:hidden"
-              >
-                <ChevronRight size={16} />
-              </button>
-            {/* )} */}
-          </div>
-
-          {/* ── RIGHT: phone · financing · sale ── */}
-          <div>
-            {" "}
-            <div className="flex gap-3 items-center justify-end text-white font-normal ">
-              {/* Financing */}
-              <Link href="/mega-sale" style={{ textDecoration: "none" }}>
-                <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
-                  <span className="relative z-10">Mega Sale</span>
-
-                  {/* animated border ring */}
-                  <span className="confetti-ring"></span>
+                  <ChevronRight size={16} />
                 </button>
-              </Link>
+              )}
+            </div>
+
+            {/* ── RIGHT: phone · financing · sale ── */}
+            <div>
+              {" "}
+              <div className="flex gap-3 items-center justify-end text-white font-normal ">
+                {/* Financing */}
+                <Link href="/mega-sale" style={{ textDecoration: "none" }}>
+                  <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
+                    <span className="relative z-10">Mega Sale</span>
+
+                    {/* animated border ring */}
+                    <span className="confetti-ring"></span>
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {activeCategory &&
-        activeCategory.slug !== "shop-by-brands" &&
-        isDropdownOpen && (
-          <DropdownPanel
-            key={activeCategory.id}
-            category={activeCategory}
-            locale={locale}
-            setChildCategory={setChildCategory}
-            setGrandChildCategory={setGrandChildCategory}
-            onClose={closeNow}
-            onPanelMouseEnter={cancelClose}
-            onPanelMouseLeave={handleCloseDropdown}
-          />
-        )}
-    </div>
+        {activeCategory &&
+          activeCategory.slug !== "shop-by-brands" &&
+          isDropdownOpen && (
+            <DropdownPanel
+              key={activeCategory.id}
+              category={activeCategory}
+              locale={locale}
+              setChildCategory={setChildCategory}
+              setGrandChildCategory={setGrandChildCategory}
+              onClose={closeNow}
+              onPanelMouseEnter={cancelClose}
+              onPanelMouseLeave={handleCloseDropdown}
+            />
+          )}
+      </div>
     </>
   );
 };

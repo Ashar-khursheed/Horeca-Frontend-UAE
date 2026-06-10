@@ -313,8 +313,9 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                           wrapperClassName="flex items-center flex-row gap-2 mt-2"
                           counterClassName="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white w-[80px] shrink-0"
                           counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 2xl:hover:text-[#186737] hover:bg-gray-50 transition-colors"
-                          buttonClassName="flex-1 h-7 rounded-lg 2xl:bg-[#e8f5ee] text-[#186737] text-xs font-semibold 2xl:hover:text-white transition-all whitespace-nowrap"
+                          buttonClassName="flex-1 h-7 rounded-lg 2xl:bg-[#e8f5ee] text-[#186737] text-xs font-semibold 2xl:hover:text-[#186737] transition-all whitespace-nowrap"
                           iconShow={false}
+                          isSearchbar={true}
                         />
                       </div>
                     </li>

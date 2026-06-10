@@ -527,12 +527,12 @@ export default function NavigationStatic({
                                       )}
                       </>
                     ))}
-                    <Link
+                    {/* <Link
                                           href={"/brands"}
                                         className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors "text-gray-900"}` }
                                         >
                                        Shop by Brands
-                                        </Link>
+                                        </Link> */}
                     {/* {NAV_LINKS.map((link) => (
                       <Link
                         key={link.href}

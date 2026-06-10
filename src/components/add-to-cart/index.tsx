@@ -74,6 +74,7 @@ export const AddToCartWidget = ({
   showCounter: showCounterProp,
   accessoryItemIds = [],
   isWishlist = false,
+  isSearchbar = false,
   onBeforeAdd,
   onAddSuccess,
   onAddedToCart,
@@ -82,21 +83,22 @@ export const AddToCartWidget = ({
   const dispatch = useAppDispatch();
   const locale = useLocale();
 
-  const country    = useAppSelector((s) => s.country.data);
-  const cartItems  = useAppSelector((s) => s.cart.items);
+  const country = useAppSelector((s) => s.country.data);
+  const cartItems = useAppSelector((s) => s.cart.items);
   const apiEntries = useAppSelector((s) => s.cart.apiEntries);
-  const apiStatus  = useAppSelector((s) => s.cart.apiStatus);
-  const location   = useLocationData();
+  const apiStatus = useAppSelector((s) => s.cart.apiStatus);
+  const location = useLocationData();
 
   // ── Normalise product fields ─────────────────────────────────────────────
   const supplier0 = (product as RawApiProduct).suppliers?.[0];
-  const minQty    = product.min_quantity ?? supplier0?.min_quantity ?? 1;
-  const isFixed   = product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
-  const isQuote   = !!product.quote_available;
-  const vendorId  = supplier0?.vendor_id ?? 0;
+  const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
+  const isFixed =
+    product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
+  const isQuote = !!product.quote_available;
+  const vendorId = supplier0?.vendor_id ?? 0;
   const showCounter = showCounterProp ?? !isQuote;
 
-  const name           = resolveStr(product.name as LS, locale);
+  const name = resolveStr(product.name as LS, locale);
   const currencySymbol = resolveCurrencySymbol(
     product.currency as string | { name?: string; symbol?: string } | undefined,
   );
@@ -115,32 +117,36 @@ export const AddToCartWidget = ({
   })();
 
   const originalPrice = product.original_price ?? product.price ?? 0;
-  const hasSale       = product.sale_price > 0 && product.sale_price !== originalPrice;
-  const activePrice   = hasSale ? product.sale_price : originalPrice;
+  const hasSale =
+    product.sale_price > 0 && product.sale_price !== originalPrice;
+  const activePrice = hasSale ? product.sale_price : originalPrice;
 
   // ── Redux-derived cart state ──────────────────────────────────────────────
   // For logged-in: read from Redux apiEntries
-  const myApiEntry      = apiEntries.find((e) => e.productId === product.id);
+  const myApiEntry = apiEntries.find((e) => e.productId === product.id);
   // cartItemId > 0 means it's a confirmed server ID; 0 = optimistic placeholder
-  const apiCartItemId   = myApiEntry && myApiEntry.cartItemId > 0 ? myApiEntry.cartItemId : null;
-  const apiInCart       = !!myApiEntry;
-  const apiQty          = myApiEntry?.quantity ?? minQty;
+  const apiCartItemId =
+    myApiEntry && myApiEntry.cartItemId > 0 ? myApiEntry.cartItemId : null;
+  const apiInCart = !!myApiEntry;
+  const apiQty = myApiEntry?.quantity ?? minQty;
 
   // For guest: read from local Redux items
-  const guestCartItem   = cartItems.find((i) => i.productId === product.id);
+  const guestCartItem = cartItems.find((i) => i.productId === product.id);
 
   // ── Local UI state ────────────────────────────────────────────────────────
-  const [count,        setCount]        = useState(minQty);   // desktop qty selector
-  const [addedSuccess, setAddedSuccess] = useState(false);    // desktop flash
-  const [loading,      setLoading]      = useState(false);    // desktop button
-  const [isMobile,     setIsMobile]     = useState(false);
-  const [isLoggedIn,   setIsLoggedIn]   = useState(false);
-  const [mobileLoading,setMobileLoading]= useState(false);
+  const [count, setCount] = useState(minQty); // desktop qty selector
+  const [addedSuccess, setAddedSuccess] = useState(false); // desktop flash
+  const [loading, setLoading] = useState(false); // desktop button
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mobileLoading, setMobileLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derived mobile display values
   const effectiveMobileInCart = isLoggedIn ? apiInCart : !!guestCartItem;
-  const currentMobileQty      = isLoggedIn ? apiQty : (guestCartItem?.quantity ?? minQty);
+  const currentMobileQty = isLoggedIn
+    ? apiQty
+    : (guestCartItem?.quantity ?? minQty);
 
   // ── Init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -167,7 +173,7 @@ export const AddToCartWidget = ({
     if (apiStatus === "idle" || apiStatus === "failed") {
       dispatch(fetchCart(country.name));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, country?.name]);
 
   // ── Resolve cartItemId (uses Redux first, falls back to CART_GET) ─────────
@@ -183,7 +189,13 @@ export const AddToCartWidget = ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const found = products.find((cp: any) => cp.product_id === product.id);
       if (found?.id) {
-        dispatch(addApiEntry({ cartItemId: found.id, productId: product.id, quantity: found.quantity }));
+        dispatch(
+          addApiEntry({
+            cartItemId: found.id,
+            productId: product.id,
+            quantity: found.quantity,
+          }),
+        );
         return found.id;
       }
     } catch {}
@@ -215,10 +227,13 @@ export const AddToCartWidget = ({
     e.preventDefault();
     e.stopPropagation();
 
-    const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
-    const subTotal   = activePrice * count;
+    const shippingCharge = getShippingCharge(
+      location?.city ?? "",
+      location?.regionName ?? "",
+    );
+    const subTotal = activePrice * count;
     const totalPrice = subTotal + shippingCharge;
-    const token      = getToken();
+    const token = getToken();
 
     if (token) {
       setLoading(true);
@@ -244,7 +259,6 @@ export const AddToCartWidget = ({
         // silent
       } finally {
         setLoading(false);
-        
       }
     } else {
       await onBeforeAdd?.();
@@ -258,30 +272,32 @@ export const AddToCartWidget = ({
           price: item.price,
         }));
 
-      dispatch(addItem({
-        productId: product.id,
-        name,
-        url: product.url ?? "",
-        parentCategoryUrl: product.parent_category_url ?? "",
-        image,
-        price: activePrice,
-        originalPrice,
-        hasSale,
-        currencySymbol,
-        quantity: count,
-        minQty,
-        isFixed,
-        isQuote,
-        sellUnit,
-        sku: product.sku ?? "",
-        vendorId,
-        shippingCharge,
-        subTotal,
-        totalPrice,
-        accessoryItemIds,
-        selectedAccessories,
-        rawProduct: product,
-      } as Parameters<typeof addItem>[0]));
+      dispatch(
+        addItem({
+          productId: product.id,
+          name,
+          url: product.url ?? "",
+          parentCategoryUrl: product.parent_category_url ?? "",
+          image,
+          price: activePrice,
+          originalPrice,
+          hasSale,
+          currencySymbol,
+          quantity: count,
+          minQty,
+          isFixed,
+          isQuote,
+          sellUnit,
+          sku: product.sku ?? "",
+          vendorId,
+          shippingCharge,
+          subTotal,
+          totalPrice,
+          accessoryItemIds,
+          selectedAccessories,
+          rawProduct: product,
+        } as Parameters<typeof addItem>[0]),
+      );
       onAddSuccess?.();
     }
 
@@ -293,9 +309,19 @@ export const AddToCartWidget = ({
     if (isWishlist) {
       const token = getToken();
       if (token) {
-        dispatch(toggleWishlistItem({ productId: product.id, currentlyInWishlist: true }));
+        dispatch(
+          toggleWishlistItem({
+            productId: product.id,
+            currentlyInWishlist: true,
+          }),
+        );
       } else {
-        dispatch(toggleGuestWishlistItem({ productId: product.id, rawProduct: product }));
+        dispatch(
+          toggleGuestWishlistItem({
+            productId: product.id,
+            rawProduct: product,
+          }),
+        );
       }
     }
     // Always notify parent after successful add (after "Added!" flash)
@@ -311,7 +337,10 @@ export const AddToCartWidget = ({
 
     const token = getToken();
     if (token) {
-      const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
+      const shippingCharge = getShippingCharge(
+        location?.city ?? "",
+        location?.regionName ?? "",
+      );
       try {
         await onBeforeAdd?.();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -336,20 +365,28 @@ export const AddToCartWidget = ({
           0; // 0 = placeholder, resolveCartItemId will fix it
 
         // Optimistically add to Redux → shows counter immediately
-        dispatch(addApiEntry({ cartItemId: itemId, productId: product.id, quantity: minQty }));
+        dispatch(
+          addApiEntry({
+            cartItemId: itemId,
+            productId: product.id,
+            quantity: minQty,
+          }),
+        );
 
         // If no real ID yet, resolve in background
         if (!itemId) resolveCartItemId().catch(() => {});
-
       } catch {
         // silent
       }
     } else {
       await onBeforeAdd?.();
-      const shippingCharge = getShippingCharge(location?.city ?? "", location?.regionName ?? "");
-      const subTotal   = activePrice * minQty;
+      const shippingCharge = getShippingCharge(
+        location?.city ?? "",
+        location?.regionName ?? "",
+      );
+      const subTotal = activePrice * minQty;
       const totalPrice = subTotal + shippingCharge;
-      const rawAcc     = (product as RawApiProduct).accessories ?? [];
+      const rawAcc = (product as RawApiProduct).accessories ?? [];
       const selectedAccessories = rawAcc
         .flatMap((acc) => acc.accessory_item ?? [])
         .filter((item) => accessoryItemIds.includes(item.id))
@@ -359,30 +396,32 @@ export const AddToCartWidget = ({
           price: item.price,
         }));
 
-      dispatch(addItem({
-        productId: product.id,
-        name,
-        url: product.url ?? "",
-        parentCategoryUrl: product.parent_category_url ?? "",
-        image,
-        price: activePrice,
-        originalPrice,
-        hasSale,
-        currencySymbol,
-        quantity: minQty,
-        minQty,
-        isFixed,
-        isQuote,
-        sellUnit,
-        sku: product.sku ?? "",
-        vendorId,
-        shippingCharge,
-        subTotal,
-        totalPrice,
-        accessoryItemIds,
-        selectedAccessories,
-        rawProduct: product,
-      } as Parameters<typeof addItem>[0]));
+      dispatch(
+        addItem({
+          productId: product.id,
+          name,
+          url: product.url ?? "",
+          parentCategoryUrl: product.parent_category_url ?? "",
+          image,
+          price: activePrice,
+          originalPrice,
+          hasSale,
+          currencySymbol,
+          quantity: minQty,
+          minQty,
+          isFixed,
+          isQuote,
+          sellUnit,
+          sku: product.sku ?? "",
+          vendorId,
+          shippingCharge,
+          subTotal,
+          totalPrice,
+          accessoryItemIds,
+          selectedAccessories,
+          rawProduct: product,
+        } as Parameters<typeof addItem>[0]),
+      );
       onAddSuccess?.();
     }
 
@@ -456,7 +495,9 @@ export const AddToCartWidget = ({
       try {
         const cartId = await resolveCartItemId();
         if (cartId) {
-          await makeApiRequest(apiUrls.CART_REMOVE(cartId), { method: "DELETE" });
+          await makeApiRequest(apiUrls.CART_REMOVE(cartId), {
+            method: "DELETE",
+          });
           dispatch(removeApiEntry(cartId));
         } else {
           // No valid cartId — remove by productId from Redux
@@ -474,7 +515,7 @@ export const AddToCartWidget = ({
 
   // ── Desktop button class ──────────────────────────────────────────────────
   const variant = isQuote ? "quote" : "cart";
-  const label   = isQuote ? "Request a Quote" : "Add To Cart";
+  const label = isQuote ? "Request a Quote" : "Add To Cart";
 
   const computedButtonClass = buttonClassName
     ? `${buttonClassName} flex items-center justify-center gap-2 transition-colors duration-200${addedSuccess ? " !bg-emerald-600 !text-white" : ""}`
@@ -544,118 +585,152 @@ export const AddToCartWidget = ({
   // ── Desktop layout ────────────────────────────────────────────────────────
   return (
     <>
-      <div className="md:block hidden"> <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
-      {/* Quantity Counter */}
-      {showCounter && (
-        <div
-          className={
-            counterClassName ??
-            "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]"
-          }
-        >
-          <button
-            onClick={handleDecrement}
-            disabled={count <= minQty || loading}
-            className={counterButtonClassName ?? "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"}
-          >
-            <Minus size={counterButtonClassName ? 10 : 15} className="text-[#4B5563]" strokeWidth={2} />
-          </button>
-          <input
-            type="text"
-            value={count}
-            disabled={isFixed || loading}
-            onChange={(e) => {
-              const v = parseInt(e.target.value);
-              if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
-            }}
-            className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed "
-          />
-          <button
-            onClick={handleIncrement}
-            disabled={count >= 99 || loading}
-            className={counterButtonClassName ?? "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"}
-          >
-            <Plus size={counterButtonClassName ? 10 : 15} className="text-[#4B5563]" strokeWidth={2} />
-          </button>
-        </div>
-      )}
-
-      {/* Add To Cart / Request Quote Button */}
-      <button
-        onClick={handleAddToCart}
-        disabled={loading}
-        className={computedButtonClass}
-      >
-        {addedSuccess ? (
-       <>  {iconShow &&  <CheckCircle size={16} strokeWidth={2} />}</>
-        ) : variant !== "quote" ? (
-    <>{iconShow && <ShoppingCart size={13} strokeWidth={2} />}</>
-        ) : null}
-        {loading ? (
-          <> <Loader /></>
-        ) : addedSuccess ? (
-          "Added!"
-        ) : (
-          label
-        )}
-      </button>
-    </div></div>
-      <div className="md:hidden block"> <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
-        {effectiveMobileInCart && !isQuote && showCounter ? (
-          /* Mobile counter */
-          <div className="flex items-center bg-green-800 rounded-[6px] overflow-hidden flex-1 h-8.5">
-            {/* Left: trash (at minQty) or minus (above minQty) */}
-            <button
-              onClick={currentMobileQty <= minQty ? handleMobileDelete : handleMobileDecrement}
-              disabled={mobileLoading}
-              className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {currentMobileQty <= minQty
-                ? <Trash2 size={14} strokeWidth={2} />
-                : <Minus size={14} strokeWidth={2} />
+      <div className="md:block hidden">
+        {" "}
+        <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
+          {/* Quantity Counter */}
+          {showCounter && !isSearchbar && (
+            <div
+              className={
+                counterClassName ??
+                "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]"
               }
-            </button>
-
-            {/* Count */}
-            <span className="flex-1 text-center text-white text-[13px] font-semibold select-none">
-              {mobileLoading ? <Loader /> : currentMobileQty}
-            </span>
-
-            {/* Plus */}
-            <button
-              onClick={handleMobileIncrement}
-              disabled={mobileLoading || currentMobileQty >= 99}
-              className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              <Plus size={14} strokeWidth={2} />
-            </button>
-          </div>
-        ) : isQuote ? (
-          /* Mobile Request a Quote button */
+              <button
+                onClick={handleDecrement}
+                disabled={count <= minQty || loading}
+                className={
+                  counterButtonClassName ??
+                  "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+                }
+              >
+                <Minus
+                  size={counterButtonClassName ? 10 : 15}
+                  className="text-[#4B5563]"
+                  strokeWidth={2}
+                />
+              </button>
+              <input
+                type="text"
+                value={count}
+                disabled={isFixed || loading}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value);
+                  if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
+                }}
+                className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed "
+              />
+              <button
+                onClick={handleIncrement}
+                disabled={count >= 99 || loading}
+                className={
+                  counterButtonClassName ??
+                  "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+                }
+              >
+                <Plus
+                  size={counterButtonClassName ? 10 : 15}
+                  className="text-[#4B5563]"
+                  strokeWidth={2}
+                />
+              </button>
+            </div>
+          )}
+
+          {/* Add To Cart / Request Quote Button */}
           <button
-            // onClick={handleAddToCart}
+            onClick={handleAddToCart}
             disabled={loading}
-            className="flex-1 h-8.5 rounded-lg bg-[#A6131D] hover:bg-[#8b1018] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            className={computedButtonClass}
           >
-            Request a Quote
-          </button>
-        ) : (
-          /* Mobile Add To Cart button */
-          <button
-            onClick={handleMobileAddToCart}
-            disabled={mobileLoading}
-            className="flex-1 h-8.5 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:bg-gray-400 disabled:cursor-wait"
-          >
-            {mobileLoading ? (
-              <><Loader /></>
+            {addedSuccess ? (
+              <> {iconShow && <CheckCircle size={16} strokeWidth={2} />}</>
+            ) : variant !== "quote" ? (
+              <>{iconShow && <ShoppingCart size={13} strokeWidth={2} />}</>
+            ) : null}
+            {loading ? (
+              <>
+                {" "}
+                <Loader />
+              </>
+            ) : addedSuccess ? (
+              "Added!"
             ) : (
-              <>{iconShow && <ShoppingCart size={13} strokeWidth={2} /> } Add To Cart</>
+              label
             )}
           </button>
-        )}
-      </div></div>
+        </div>
+      </div>
+      <div className="md:hidden block">
+        {" "}
+        <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
+          {effectiveMobileInCart && !isQuote && showCounter ? (
+            /* Mobile counter */
+            <div className="flex items-center bg-green-800 rounded-[6px] overflow-hidden flex-1 h-8.5">
+              {/* Left: trash (at minQty) or minus (above minQty) */}
+              <button
+                onClick={
+                  currentMobileQty <= minQty
+                    ? handleMobileDelete
+                    : handleMobileDecrement
+                }
+                disabled={mobileLoading}
+                className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {currentMobileQty <= minQty ? (
+                  <Trash2 size={14} strokeWidth={2} />
+                ) : (
+                  <Minus size={14} strokeWidth={2} />
+                )}
+              </button>
+
+              {/* Count */}
+              <span className="flex-1 text-center text-white text-[13px] font-semibold select-none">
+                {mobileLoading ? <Loader /> : currentMobileQty}
+              </span>
+
+              {/* Plus */}
+              <button
+                onClick={handleMobileIncrement}
+                disabled={mobileLoading || currentMobileQty >= 99}
+                className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                <Plus size={14} strokeWidth={2} />
+              </button>
+            </div>
+          ) : isQuote ? (
+            /* Mobile Request a Quote button */
+            <button
+              // onClick={handleAddToCart}
+              disabled={loading}
+              className="flex-1 h-8.5 rounded-lg bg-[#A6131D] hover:bg-[#8b1018] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            >
+              Request a Quote
+            </button>
+          ) : (
+            /* Mobile Add To Cart button */
+            <button
+              onClick={handleMobileAddToCart}
+              disabled={mobileLoading}
+              className={`flex-1  rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:bg-gray-400 disabled:cursor-wait ${isWishlist ? "h-10 px-3" : "h-8.5"} `}
+            >
+              {mobileLoading ? (
+                <>
+                  <Loader />
+                </>
+              ) : (
+                <>
+                  {iconShow && !isWishlist && (
+                    <ShoppingCart size={13} strokeWidth={2} />
+                  )}{" "}
+                  Add To Cart
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
     </>
-   
   );
 };
 

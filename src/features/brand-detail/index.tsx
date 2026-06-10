@@ -295,11 +295,19 @@ export default function BrandDetailFeature({ data }: { data: BrandDetailResponse
               <p className="text-gray-400 text-sm">No products found for this brand.</p>
             </div>
           ) : (
+         <>
             <div className={generateDynamicCSSProductCard}>
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+               <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
+                      {products.map((product) => (
+                        <div key={product.id} className="shrink-0 w-[175px]">
+                          <ProductCard product={product as any} />
+                        </div>
+                      ))}
+                    </div></>
           )}
 
           <PaginationBar pagination={pagination} onPage={fetchPage} />
