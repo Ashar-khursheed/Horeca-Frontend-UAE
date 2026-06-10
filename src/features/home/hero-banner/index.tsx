@@ -157,10 +157,26 @@ export const HeroBanner = ({
             >
               {activeSlides.map((banner, index) => (
                 <SwiperSlide key={banner.id}>
-                  <Link
-                    href={banner.link}
-                    className="block w-full h-full outline-none"
-                  >
+                  {banner.link ? (
+                    <Link
+                      href={banner.link}
+                      className="block w-full h-full outline-none"
+                    >
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={banner.image}
+                          alt={banner.title ?? "Banner"}
+                          fill
+                          className="object-cover"
+                          priority={index === 0}
+                          loading={index === 0 ? "eager" : "lazy"}
+                          sizes="(max-width: 1024px) 100vw, 70vw"
+                          quality={85}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                      </div>
+                    </Link>
+                  ) : (
                     <div className="relative w-full h-full">
                       <Image
                         src={banner.image}
@@ -174,7 +190,7 @@ export const HeroBanner = ({
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     </div>
-                  </Link>
+                  )}
                 </SwiperSlide>
               ))}
             </Swiper>
