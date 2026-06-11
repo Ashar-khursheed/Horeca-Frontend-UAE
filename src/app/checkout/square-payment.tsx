@@ -40,7 +40,7 @@ function loadSquareScript(): Promise<void> {
       resolve(); return
     }
     const s = document.createElement('script')
-    s.src = 'https://web.squarecdn.com/v1/square.js'
+    s.src = 'https://sandbox.web.squarecdn.com/v1/square.js'
     s.onload  = () => resolve()
     s.onerror = () => {
       _scriptPromise = null
