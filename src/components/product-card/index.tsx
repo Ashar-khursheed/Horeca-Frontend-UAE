@@ -243,7 +243,6 @@ export const ProductCard = ({
   onAddSuccess,
   onAddedToCart,
 }: ProductCardProps) => {
-  console.log("product",product)
   const locale = useLocale();
   const dispatch = useAppDispatch();
   // ── Country from Redux (client-side currency conversion) ─────────────

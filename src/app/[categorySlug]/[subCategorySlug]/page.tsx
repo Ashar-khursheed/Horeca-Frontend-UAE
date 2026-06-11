@@ -126,7 +126,6 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     });
   }
 
-  // console.log("[RAW PARAMS]", { minParam, maxParam, rfParam, ffParam, brandsParam });
 
   const priceRange: { min_price?: string; max_price?: string } = {};
   if (minParam) priceRange.min_price = minParam;
@@ -149,21 +148,28 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     applied_fixed_filters,
     locale: "en",
   };
-  console.log("[PRODUCTS API PAYLOAD]", JSON.stringify(productsBody, null, 2));
+
+  const filtersBody = {
+    category_url: subCategorySlug,
+    applied_filters: appliedFilters,
+    applied_range_filters,
+    applied_fixed_filters,
+    locale: "en",
+  };
 
   const [navigationRes, subCategoryPageRes, productsRes] = await Promise.all([
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { slug: categorySlug, with_parent: false },
-      { revalidate: 3600, withAuth: isLoggedIn },
+      { revalidate: revalidate, withAuth: isLoggedIn },
     ),
     makeApiCallSSR<InnerCategoryPageResponse>(
       apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
-      {  withAuth: isLoggedIn },
+      { withAuth: isLoggedIn },
       {
-        revalidate: 3600,
+        revalidate: revalidate,
         method: "POST",
-        body: buildFilterBody(subCategorySlug),
+        body: filtersBody,
       },
     ),
     makeApiCallSSR<ProductsListingResponse>(
@@ -180,9 +186,9 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
   const subCategories = navigationRes?.data ?? []
   const subCategoryPage = subCategoryPageRes ?? null
 
-  console.log("API Payload:", productsBody)
-  console.log("Products API Response:", productsRes)
-  // console.log("Sub Category Page Response:", subCategoryPageRes)
+  console.log("payload body filter", filtersBody)
+  console.log("payload body product", productsBody)
+
 
   return (
     <div>

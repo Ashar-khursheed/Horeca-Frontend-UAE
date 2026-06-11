@@ -25,10 +25,12 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 import { useLocale } from "next-intl";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useRef, useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -117,6 +119,11 @@ const SORT_OPTIONS = [
 
 const SHOW_OPTIONS = [20, 50, 100];
 
+const SORT_MAP_CLIENT: Record<string, { sort_by: string; sort_dir: string }> = {
+  "Price: Low to High": { sort_by: "price", sort_dir: "asc" },
+  "Price: High to Low": { sort_by: "price", sort_dir: "desc" },
+};
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SubCategoryPage({
@@ -137,9 +144,7 @@ export default function SubCategoryPage({
   currentPage?: number;
 }) {
   const locale = useLocale();
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
   const filterAPIData = subCategoryPage?.filters;
   const rangeFiltersData = subCategoryPage?.rangeFilters;
   const fixedFiltersData = subCategoryPage?.fixedFilters;
@@ -152,10 +157,6 @@ export default function SubCategoryPage({
       .filter((f) => f.unit_id != null)
       .map((f) => [f.attribute_id, f.unit_id as number]),
   );
-  const products = productsData?.products ?? [];
-  const totalProducts = productsData?.total_records ?? products.length;
-  const totalPages =
-    (productsData?.total_pages ?? Math.ceil(totalProducts / 20)) || 1;
 
   // Children of the currently active subcategory shown in the swiper
   const activeSubCategory = subCategories.find(
@@ -231,11 +232,18 @@ export default function SubCategoryPage({
   const [searchQuery, setSearchQuery] = useState("");
   const swiperRef = useRef<SwiperType | null>(null);
 
-  // ── Sync filters → URL ───────────────────────────────────────────────────────
-  // Build URL purely from state — no searchParams base so there's no stale closure risk.
-  // parentSlug is preserved from the prop (stable across re-renders).
+  // ── Client-side products state (initialized from SSR) ────────────────────────
+  const [displayProducts, setDisplayProducts] = useState(productsData?.products ?? []);
+  const [displayTotal, setDisplayTotal]       = useState(productsData?.total_records ?? productsData?.products?.length ?? 0);
+  const [displayTotalPages, setDisplayTotalPages] = useState(
+    productsData?.total_pages ?? (Math.ceil((productsData?.total_records ?? 0) / 20) || 1),
+  );
+  const [displayPage, setDisplayPage]   = useState(currentPage);
+  const [isFetching, setIsFetching]     = useState(false);
+
+  // ── Sync filters → URL + fetch products client-side ──────────────────────────
   const pushURL = useCallback(
-    (overrides: {
+    async (overrides: {
       brands?: { id: number; name: string }[];
       min?: number;
       max?: number;
@@ -246,13 +254,13 @@ export default function SubCategoryPage({
       ff?: Record<number, string[]>;
     }) => {
       const brands = overrides.brands ?? selectedBrands;
-      const min = overrides.min ?? priceRange.min;
-      const max = overrides.max ?? priceRange.max;
-      const sort = overrides.sort ?? sortBy;
-      const show = overrides.show ?? showCount;
-      const page = overrides.page ?? 1;
-      const rf = overrides.rf ?? selectedRangeFilters;
-      const ff = overrides.ff ?? selectedFixedFilters;
+      const min    = overrides.min    ?? priceRange.min;
+      const max    = overrides.max    ?? priceRange.max;
+      const sort   = overrides.sort   ?? sortBy;
+      const show   = overrides.show   ?? showCount;
+      const page   = overrides.page   ?? 1;
+      const rf     = overrides.rf     ?? selectedRangeFilters;
+      const ff     = overrides.ff     ?? selectedFixedFilters;
 
       const parts: string[] = [];
       const priceActive = min !== apiPriceMin || max !== apiPriceMax;
@@ -275,9 +283,56 @@ export default function SubCategoryPage({
 
       const qs = parts.join("&");
       window.scrollTo({ top: 0, behavior: "smooth" });
-      startTransition(() => {
-        router.replace(qs ? `?${qs}` : location.pathname, { scroll: false });
-      });
+
+      // Update URL without triggering Next.js SSR re-render
+      window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+
+      // Build API body
+      const appliedFilters = {
+        ...(brands.length ? { brand_ids: brands.map((b) => b.id) } : {}),
+        ...(priceActive ? { priceRange: { min_price: String(min), max_price: String(max) } } : {}),
+      };
+      const applied_range_filters = Object.entries(rf).flatMap(([attrId, ranges]) =>
+        ranges.map((range) => {
+          const id  = Number(attrId);
+          const uid = unitMap[id];
+          const item: Record<string, unknown> = { attribute_id: id, ranges: range };
+          if (uid) item.unit_id = uid;
+          return item;
+        }),
+      );
+      const applied_fixed_filters = Object.entries(ff).flatMap(([attrId, values]) =>
+        values.map((v) => ({ attribute_id: Number(attrId), value: v })),
+      );
+      const { sort_by, sort_dir } = SORT_MAP_CLIENT[sort] ?? { sort_by: "price", sort_dir: "asc" };
+
+      const body = {
+        category_url:          subCategorySlug,
+        page,
+        length:                show,
+        sort_by,
+        sort_dir,
+        applied_filters:       appliedFilters,
+        applied_range_filters: applied_range_filters.length ? applied_range_filters : [{}],
+        applied_fixed_filters: applied_fixed_filters.length ? applied_fixed_filters : [{}],
+        locale:                "en",
+      };
+
+      setIsFetching(true);
+      try {
+        const res = await makeApiRequest<ProductsListingResponse>(
+          apiUrls.PRODUCTS_LISTING,
+          { method: "POST", data: body },
+        );
+        setDisplayProducts(res?.products ?? []);
+        setDisplayTotal(res?.total_records ?? res?.products?.length ?? 0);
+        setDisplayTotalPages(res?.total_pages ?? (Math.ceil((res?.total_records ?? 0) / show) || 1));
+        setDisplayPage(page);
+      } catch {
+        // keep existing products on error
+      } finally {
+        setIsFetching(false);
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -290,6 +345,8 @@ export default function SubCategoryPage({
       parentSlug,
       selectedRangeFilters,
       selectedFixedFilters,
+      subCategorySlug,
+      unitMap,
     ],
   );
 
@@ -559,11 +616,11 @@ export default function SubCategoryPage({
                 <span className="text-[12px] text-gray-400 hidden sm:block">
                   Showing{" "}
                   <span className="font-semibold text-gray-700">
-                    {products.length}
+                    {displayProducts.length}
                   </span>{" "}
                   of{" "}
                   <span className="font-semibold text-gray-700">
-                    {totalProducts}
+                    {displayTotal}
                   </span>{" "}
                   products
                 </span>
@@ -645,11 +702,11 @@ export default function SubCategoryPage({
 
             {/* Product Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-3">
-              {isPending
+              {isFetching
                 ? Array.from({ length: showCount }).map((_, i) => (
                     <ProductCardSkeleton key={i} />
                   ))
-                : products.map((product: any, index: number) => (
+                : displayProducts.map((product: any, index: number) => (
                     <ProductCard
                       key={product.id}
                       product={product}
@@ -658,14 +715,13 @@ export default function SubCategoryPage({
                   ))}
             </div>
 
-            {totalPages > 1 && (
+            {displayTotalPages > 1 && (
               <Pagination
-                key={currentPage}
-                totalPages={totalPages}
-                initialPage={currentPage}
+                key={displayPage}
+                totalPages={displayTotalPages}
+                initialPage={displayPage}
                 onPageChange={(page) => {
                   pushURL({ page });
-                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 showFirstLast={true}
                 showPageInfo={true}
