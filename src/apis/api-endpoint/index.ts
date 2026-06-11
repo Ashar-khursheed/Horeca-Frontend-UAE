@@ -91,4 +91,10 @@ export const apiUrls = {
   STATES: "frontend/states",
   CITIES: "frontend/cities",
   SLIDER: (id: number) => `frontend/sliders/${id}`,
+
+
+  SQUARE_PAYMENT:"frontend/payment-square",
+  PLACE_ORDER:"frontend/orders",
+  PAYMENT_HISTORY:"frontend/payments",
+  SCREEN_TRANSACTION:"screen-transaction",
 };

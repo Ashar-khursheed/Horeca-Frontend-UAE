@@ -24,6 +24,7 @@ import {
   removeSaveForLater,
   toggleGuestSaveItem,
 } from "@/store/slices/save-for-later/saveForLaterSlice";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import { getDefaultAddressCache, getLocationData } from "@/utils/locationStorage";
 import { getShippingCharge } from "@/utils/shipping";
 import {
@@ -230,7 +231,9 @@ export default function CartPage() {
         makeApiRequest(apiUrls.CART_UPDATE_QTY(item.cartItemId), {
           method: "PUT",
           data: { quantity: qty },
-        }).catch(() => {});
+        })
+          .then(() => dispatch(fetchCounts() as any))
+          .catch(() => {});
         dispatch(
           updateApiEntryQty({ cartItemId: item.cartItemId, quantity: qty }),
         );
@@ -246,7 +249,9 @@ export default function CartPage() {
       if (item?.cartItemId) {
         makeApiRequest(apiUrls.CART_REMOVE(item.cartItemId), {
           method: "DELETE",
-        }).catch(() => {});
+        })
+          .then(() => dispatch(fetchCounts() as any))
+          .catch(() => {});
         dispatch(removeApiEntry(item.cartItemId));
       }
     } else {
@@ -442,7 +447,10 @@ export default function CartPage() {
             dispatch(resetApiStatus());
             makeApiRequest(apiUrls.CART_EMPTY, { method: "DELETE" })
               .then(() => dispatch(fetchCart(location?.country ?? "")))
-              .catch(() => {});
+              .catch(() => {})
+                .then(() => dispatch(fetchCounts() as any))
+          .catch(() => {});
+              
           } else {
             dispatch(clearCart());
           }

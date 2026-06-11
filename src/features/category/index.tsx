@@ -1,7 +1,7 @@
 "use client";
 import BrandsSection, { ApiBrand } from "@/components/brands-section";
 import Breadcrumb from "@/components/breadcum";
-import ProductCard from "@/components/product-card";
+import ProductCard, { RawApiProduct } from "@/components/product-card";
 import {
   Accordion,
   AccordionContent,
@@ -11,6 +11,7 @@ import {
 import { FEATURED_DATA, ItemsAccordion } from "@/data";
 import SeoContent from "@/seo/seo-content";
 import SEOMainContent from "@/seo/seo-main-content";
+import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
 import { ApiCategory, ApiCategoryName, ApiCategoryPage } from "@/utils/types";
 import { ChevronLeft, ChevronRight, ChevronUp, MoveRight } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -142,7 +143,7 @@ export default function CategoriesPage({
   // category data page
 
   const APIDATA = categoryPage?.category_page;
-
+  const randomProducts = categoryPage?.random_products ?? [];
   const crumbs = [
     { label: "Home", href: "/" },
     { label: "Categories", href: "/categories" },
@@ -279,23 +280,74 @@ export default function CategoriesPage({
               }}
               className="pb-2!"
             >
-              {FEATURED_DATA.flatMap((category) =>
-                category.featured_products.map((product) => (
+              {randomProducts.map((product: any) => (
+                <SwiperSlide key={product.id} className="h-auto!">
+                  <ProductCard key={product.id} product={product as any} />
+                </SwiperSlide>
+              ))}
+              {/* {randomProducts.flatMap((category) =>
+                (category.featured_products ?? []).map((product) => (
                   <SwiperSlide key={product.id} className="h-auto!">
                     <ProductCard
                       product={{
                         ...product,
-                        images: [...product.images],
-                        alt_tags: [...product.alt_tags],
-                      }}
-                      onWishlistToggle={(p, w) =>
-                        console.log("Wishlist:", p.name, w)
-                      }
+                        category_url:        product.category_url_resolved,
+                        parent_category_url: product.parent_category_url_resolved,
+                      } as RawApiProduct}
                     />
                   </SwiperSlide>
                 )),
-              )}
+              )} */}
             </Swiper>
+            {/* 
+            {randomProducts.flatMap((category) =>
+              (category.featured_products ?? []).map((product) => (
+                <div key={product.id} className="h-auto!">
+                  <ProductCard
+                    product={
+                      {
+                        ...product,
+                        category_url: product.category_url_resolved,
+                        parent_category_url:
+                          product.parent_category_url_resolved,
+                      } as RawApiProduct
+                    }
+                  />
+                </div>
+              )),
+            )} */}
+
+            {/* {randomProducts.map((product) => (
+                <div key={product.id} className="h-auto!">
+                  <ProductCard
+                    product={
+                      {
+                        ...product,
+                        category_url: product.category_url_resolved,
+                        parent_category_url:
+                          product.parent_category_url_resolved,
+                      } as RawApiProduct
+                    }
+                  />
+                </div>
+              ))}
+              */}
+
+            {/* MOBILE — horizontal scroll */}
+            {/* <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
+                        {randomProducts.map((product:any) => (
+                          <div key={product.id} className="shrink-0 w-[175px]">
+                            <ProductCard product={product as any} />
+                          </div>
+                        ))}
+                      </div> */}
+
+            {/* TABLET + DESKTOP — grid */}
+            {/* <div className={generateDynamicCSSProductCard}>
+                        {randomProducts.map((product:any) => (
+                          <ProductCard key={product.id} product={product as any} />
+                        ))}
+                      </div> */}
           </div>
         </section>
         <section className="md:py-7 py-3">

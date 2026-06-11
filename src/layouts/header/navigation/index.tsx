@@ -276,7 +276,6 @@ function DropdownPanel({
 // HeaderMenu
 // ══════════════════════════════════════════════════════════════════════════════
 const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
-  console.log("navItemDatanavItemDatanavItemData", navItemData);
   const locale = useLocale();
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

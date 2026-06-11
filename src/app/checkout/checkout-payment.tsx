@@ -15,6 +15,8 @@ export interface CheckoutPaymentHandle {
    * Throws if tokenization fails.
    */
   getPaymentToken(): Promise<string | null>
+  /** Returns card details stored after last successful tokenize */
+  getCardDetails(): { brand?: string; last4?: string; expMonth?: number; expYear?: number } | null
   selectedMethod: PaymentMethod
 }
 
@@ -50,6 +52,10 @@ export default function CheckoutPayment({
       }
       return null
     },
+    getCardDetails() {
+      if (selected === 'square') return squareRef.current?.getCardDetails() ?? null
+      return null
+    },
   })
 
   // Sync selected into handle
@@ -65,6 +71,7 @@ export default function CheckoutPayment({
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
+    // <div className="mt-5 rounded-xl border-2 border-[#E2E8F0]">
     <div className="mt-5 rounded-xl border-2 border-[#E2E8F0]">
 
       {/* Header */}

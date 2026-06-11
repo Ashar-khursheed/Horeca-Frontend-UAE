@@ -21,6 +21,7 @@ import {
   toggleWishlistItem,
   toggleGuestWishlistItem,
 } from "@/store/slices/wishlist/wishlistSlice";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import { getShippingCharge } from "@/utils/shipping";
 import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
@@ -259,6 +260,7 @@ export const AddToCartWidget = ({
           0;
         // Update apiEntries (header count) and bump lastAddedAt (triggers cart page re-fetch)
         dispatch(addApiEntry({ cartItemId: itemId, productId: product.id, quantity: count }));
+        dispatch(fetchCounts() as any);
         if (!itemId) resolveCartItemId().catch(() => {});
         // Notify parent immediately after successful add (before flash)
         onAddSuccess?.();
@@ -379,6 +381,7 @@ export const AddToCartWidget = ({
             quantity: minQty,
           }),
         );
+        dispatch(fetchCounts() as any);
 
         // If no real ID yet, resolve in background
         if (!itemId) resolveCartItemId().catch(() => {});
@@ -453,6 +456,7 @@ export const AddToCartWidget = ({
             data: { quantity: newQty },
           });
           dispatch(updateApiEntryQty({ cartItemId: cartId, quantity: newQty }));
+          dispatch(fetchCounts() as any);
         }
       } catch {
         // silent
@@ -481,6 +485,7 @@ export const AddToCartWidget = ({
             data: { quantity: newQty },
           });
           dispatch(updateApiEntryQty({ cartItemId: cartId, quantity: newQty }));
+          dispatch(fetchCounts() as any);
         }
       } catch {
         // silent
@@ -506,6 +511,7 @@ export const AddToCartWidget = ({
             method: "DELETE",
           });
           dispatch(removeApiEntry(cartId));
+          dispatch(fetchCounts() as any);
         } else {
           // No valid cartId — remove by productId from Redux
           dispatch(removeApiEntry(myApiEntry?.cartItemId ?? 0));

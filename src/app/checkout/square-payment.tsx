@@ -14,6 +14,8 @@ import {
 export interface SquarePaymentHandle {
   /** Tokenizes the card. Returns token string or throws on failure. */
   tokenize(): Promise<string>
+  /** Returns card details from the last successful tokenize call */
+  getCardDetails(): { brand?: string; last4?: string; expMonth?: number; expYear?: number } | null
   /** True once the card form is mounted and ready */
   isReady: boolean
 }
@@ -60,8 +62,9 @@ const SquarePayment = forwardRef<SquarePaymentHandle, Props>(function SquarePaym
   const [status, setStatus] = useState<Status>('idle')
   const [errMsg, setErrMsg] = useState('')
 
-  const cardRef    = useRef<any>(null)
-  const initingRef = useRef(false)
+  const cardRef        = useRef<any>(null)
+  const initingRef     = useRef(false)
+  const lastCardDetails = useRef<{ brand?: string; last4?: string; expMonth?: number; expYear?: number } | null>(null)
 
   // ── Expose handle to parent ─────────────────────────────────────────────────
   useImperativeHandle(ref, () => ({
@@ -70,8 +73,15 @@ const SquarePayment = forwardRef<SquarePaymentHandle, Props>(function SquarePaym
     async tokenize(): Promise<string> {
       if (!cardRef.current) throw new Error('Square card not initialized')
       const result = await cardRef.current.tokenize()
-      if (result.status === 'OK') return result.token as string
+      if (result.status === 'OK') {
+        lastCardDetails.current = result.details?.card ?? null
+        return result.token as string
+      }
       throw new Error(result.errors?.[0]?.message ?? 'Card tokenization failed')
+    },
+
+    getCardDetails() {
+      return lastCardDetails.current
     },
   }), [status])
 

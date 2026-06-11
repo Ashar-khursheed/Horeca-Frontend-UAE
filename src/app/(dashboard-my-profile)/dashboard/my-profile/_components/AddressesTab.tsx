@@ -258,11 +258,15 @@ const AddressForm = ({
 };
 
 // ── Addresses Tab ──────────────────────────────────────────────────────────────
-export const AddressesTab = () => {
+export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { addresses, loading, deletingId } = useSelector(
     (s: RootState) => s.customerAddress
   );
+
+  const visibleAddresses = checkoutMode
+    ? addresses.filter((a) => a.is_default)
+    : addresses;
 
   const [modalOpen, setModalOpen]       = useState(false);
   const [editTarget, setEditTarget]     = useState<CustomerAddress | null>(null);
@@ -312,15 +316,19 @@ export const AddressesTab = () => {
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-gray-900">Address Management</h2>
-            <p className="text-xs text-[#186737] mt-0.5">Manage your saved addresses</p>
+            <h2 className="text-base font-bold text-gray-900">
+              {checkoutMode ? "Shipping address" : "Address Management"}
+            </h2>
+            {!checkoutMode && (
+              <p className="text-xs text-[#186737] mt-0.5">Manage your saved addresses</p>
+            )}
           </div>
           <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors shrink-0 shadow-sm shadow-[#186737]/20"
           >
             <Plus size={14} />
-            Add Address
+            {checkoutMode ? "Add Address" : "Add Address"}
           </button>
         </div>
 
@@ -337,8 +345,8 @@ export const AddressesTab = () => {
           <div className="px-5 py-3.5 border-b border-gray-100">
             <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
               <MapPin size={14} className="text-[#186737]" />
-              Saved Addresses
-              {!loading && (
+              {checkoutMode ? "Default address" : "Saved Addresses"}
+              {!loading && !checkoutMode && (
                 <span className="text-xs font-normal text-gray-400">({addresses.length})</span>
               )}
             </h3>
@@ -363,10 +371,12 @@ export const AddressesTab = () => {
                 </div>
               ))}
             </div>
-          ) : addresses.length === 0 ? (
+          ) : visibleAddresses.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
               <MapPin size={32} className="mb-2 opacity-30" />
-              <p className="text-sm font-medium">No addresses saved yet</p>
+              <p className="text-sm font-medium">
+                {checkoutMode ? "No default address set" : "No addresses saved yet"}
+              </p>
               <button
                 onClick={handleOpenAdd}
                 className="mt-3 text-xs font-semibold text-[#186737] hover:underline flex items-center gap-1"
@@ -376,7 +386,7 @@ export const AddressesTab = () => {
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {addresses.map((addr) => (
+              {visibleAddresses.map((addr) => (
                 <div
                   key={addr.id}
                   className="px-5 py-4 flex items-start justify-between gap-4 hover:bg-gray-50/50 transition-colors"
@@ -404,7 +414,7 @@ export const AddressesTab = () => {
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {!addr.is_default && (
+                    {!addr.is_default && !checkoutMode && (
                       <button
                         onClick={() => handleSetDefault(addr)}
                         className="text-[11px] font-semibold text-gray-400 hover:text-[#186737] transition-colors whitespace-nowrap hidden sm:block"
@@ -418,17 +428,19 @@ export const AddressesTab = () => {
                     >
                       <Pencil size={13} />
                     </button>
-                    <button
-                      onClick={() => handleDelete(addr)}
-                      disabled={deletingId === addr.id}
-                      className="p-1.5 rounded-[7px] border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors disabled:opacity-50"
-                    >
-                      {deletingId === addr.id ? (
-                        <Loader2 size={13} className="animate-spin" />
-                      ) : (
-                        <Trash2 size={13} />
-                      )}
-                    </button>
+                    {!checkoutMode && (
+                      <button
+                        onClick={() => handleDelete(addr)}
+                        disabled={deletingId === addr.id}
+                        className="p-1.5 rounded-[7px] border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors disabled:opacity-50"
+                      >
+                        {deletingId === addr.id ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={13} />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

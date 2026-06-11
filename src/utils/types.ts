@@ -157,6 +157,26 @@ interface ProductsListingResponse {
 
 interface LocaleField { en?: string | null; ar?: string | null; }
 
+interface RandomCategoryProduct {
+  id: number;
+  sku: string;
+  name: { en: string; ar?: string | null };
+  images: { en: string[]; ar?: string[] | null };
+  url: string;
+  category_url_resolved: string;
+  parent_category_url_resolved: string;
+  price: number;
+  sale_price: number;
+  avg_rating: number | null;
+  total_reviews: number;
+  currency: { symbol: string; title: string };
+  alt_tags: string[];
+  in_wishlist: boolean;
+  quote_available: boolean | null;
+  isRequired: boolean;
+  suppliers?: { delivery_days?: string; free_shipping?: boolean; min_quantity?: number }[];
+}
+
 interface ApiCategoryPage {
   seo: {
     id: number;
@@ -187,7 +207,9 @@ interface ApiCategoryPage {
     explore_section_image_details: CategoryPageImageDetail[];
     brand_section_title: string | null;
     brand_section_description: string | null;
-    faqs: { question: string; answer: string }[];  } | null;
+    faqs: { question: string; answer: string }[];
+  } | null;
+  random_products?: { featured_products: RandomCategoryProduct[] }[];
 }
 
 interface LocalizedName {
