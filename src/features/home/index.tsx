@@ -93,6 +93,7 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCountryByName, resetCountry } from "@/store/slices/country/countrySlice";
+import TaxInitializer from "@/components/TaxInitializer";
 
 // ── Component ──────────────────────────────────────────────────────────────────
 export const Home = ({
@@ -165,6 +166,7 @@ export const Home = ({
 
   return (
     <>
+     <TaxInitializer />
       <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
       <SEOMainContent
         categorySlug="horeca-store"

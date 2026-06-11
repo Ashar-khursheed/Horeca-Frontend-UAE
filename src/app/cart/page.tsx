@@ -39,6 +39,7 @@ import {
 import { usePerPage } from "@/hooks/usePerPage";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import TaxInitializer from "@/components/TaxInitializer";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -452,7 +453,7 @@ export default function CartPage() {
           cannot be undone.
         </p>
       </Modal>
-
+ {/* <TaxInitializer /> */}
       <CartBreadcrumb />
       <main className="min-h-screen bg-gray-50/60">
         <div className="global-container py-6 sm:py-8">
