@@ -12,11 +12,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { CartItem, fmtPrice } from "./cart-types";
-import { calculateTax } from "@/utils/taxCalculator";
+import { getTaxRateData } from "@/utils/taxCalculator";
+
+const CART_SUMMARY_KEY = "hc_cart_summary";
 
 export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
+  const router = useRouter();
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(false);
@@ -36,16 +40,57 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     );
     return s + (c.price + accessoriesTotal) * c.qty;
   }, 0);
+  // Total shipping = sum of (shippingCost × qty) per item — matches what each item row shows
   const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
-  const { totalTax, ratePercent } = calculateTax(
-    taxable,
-    shippingTotal,
-    taxData,
-  );
+  // Fall back to localStorage when Redux taxData is null (e.g. on refresh)
+  const effectiveTaxData = taxData ?? getTaxRateData() ?? undefined;
+  const taxRate    = effectiveTaxData ? (parseFloat(effectiveTaxData.combined_rate) || 0) : 0;
+  const ratePercent = taxRate > 0 ? parseFloat((taxRate * 100).toFixed(4)) : 0;
+  const taxOnProducts = taxable * taxRate;
+  const taxOnShipping = shippingTotal * taxRate;
+  const totalTax   = taxOnProducts + taxOnShipping;
   const grandTotal = taxable + shippingTotal + totalTax;
   const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
+
+  // ── Build summary object ───────────────────────────────────────────────────
+  const buildSummary = () => ({
+    subTotal:                subtotal,
+    discountAmount:          promoDiscount,
+    discountedSubtotal:      taxable,
+    checkPaymentDiscount:    0,
+    finalDiscountedSubtotal: taxable,
+    shipping:                0,               // API-level shipping (usually 0)
+    totalShippingCharges:    shippingTotal,    // flat rate: $99 / $199 / $299
+    liftGateFee:             0,
+    residentialFee:          0,
+    insideDeliveryFee:       0,
+    additionalCharge:        0,
+    additionalFees:          0,
+    taxableAmount:           taxable + shippingTotal,
+    taxAmount:               totalTax,
+    total:                   grandTotal,
+    taxRatePercentage:       ratePercent,
+    isCouponApplied:         promoApplied,
+  });
+
+  // ── Auto-save whenever cart items or promo changes ─────────────────────────
+  useEffect(() => {
+    if (cartItems.length === 0) return;
+    try {
+      localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(buildSummary()));
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems, promoApplied, subtotal, shippingTotal, totalTax, grandTotal, ratePercent]);
+
+  // ── Save + navigate on "Confirm & Pay" ────────────────────────────────────
+  const handleConfirm = () => {
+    try {
+      localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(buildSummary()));
+    } catch { /* ignore */ }
+    router.push(isLoggedIn ? "/checkout" : "/loginOrder");
+  };
 
   const handlePromo = () => {
     if (promoCode.toUpperCase() === "HORECA10") {
@@ -74,13 +119,8 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                   value={`${currencySymbol}${fmtPrice(subtotal)}`}
                 />
                 <SummaryRow
-                  label={`Shipping & Handling (${cartItems.length} item${cartItems.length !== 1 ? "s" : ""})`}
-                  value={
-                    shippingTotal === 0
-                      ? "Free"
-                      : `${currencySymbol}${fmtPrice(shippingTotal)}`
-                  }
-                  green={shippingTotal === 0}
+                  label="Shipping & Handling"
+                  value={`${currencySymbol}${fmtPrice(shippingTotal)}`}
                 />
                 {promoApplied && (
                   <SummaryRow
@@ -90,10 +130,12 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                     icon={<Tag size={12} />}
                   />
                 )}
-                <SummaryRow
-                  label={ratePercent > 0 ? `Tax (${ratePercent}%)` : "Tax"}
-                  value={`${currencySymbol}${fmtPrice(totalTax)}`}
-                />
+                {ratePercent > 0 && (
+                  <SummaryRow
+                    label={`Tax (${ratePercent}%)`}
+                    value={`${currencySymbol}${fmtPrice(totalTax)}`}
+                  />
+                )}
               </div>
 
               <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
@@ -141,12 +183,13 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                 )}
               </div>
 
-              <Link
-                href={isLoggedIn ? "/checkout" : "/loginOrder"}
+              <button
+                type="button"
+                onClick={handleConfirm}
                 className="w-full py-3 rounded-[7px] bg-[#186737] hover:bg-[#145c30] text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors duration-200"
               >
                 Confirm &amp; Pay <ArrowRight size={16} />
-              </Link>
+              </button>
 
               <p className="text-[10px] text-gray-400 text-center leading-relaxed">
                 By placing your order, you agree to HorecaStore&apos;s{" "}

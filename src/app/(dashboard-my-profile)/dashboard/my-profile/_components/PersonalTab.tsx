@@ -7,19 +7,67 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 import { CustomerProfile, updateProfile } from "@/store/slices/my-profile/profileSlice";
+import { useAppSelector } from "@/store/hooks";
 import { AppDispatch } from "@/store/store";
 import { updateProfileSchema } from "@/validation/schema";
 import { useFormik } from "formik";
-import { Building2, CheckCircle, Mail, Phone, Shield, User } from "lucide-react";
-import { useState } from "react";
+import { Building2, CheckCircle, ChevronDown, Mail, Phone, Search, Shield, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Field, inputCls } from "./shared";
 
+interface CountryOption {
+  id: number;
+  name: string;
+  phone_code: string;
+  icon: string | null;
+}
+
 export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch      = useDispatch<AppDispatch>();
+  const detectedCountry = useAppSelector((s) => s.country.data);
   const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error">("idle");
   const [apiMessage, setApiMessage] = useState("");
+
+  // ── Country code dropdown state ──────────────────────────────────────────
+  const [countries, setCountries]     = useState<CountryOption[]>([]);
+  const [codeOpen, setCodeOpen]       = useState(false);
+  const [codeSearch, setCodeSearch]   = useState("");
+  const dropdownRef                   = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    makeApiRequest<{ success: boolean; data: CountryOption[] }>(apiUrls.COUNTRIES)
+      .then((res) => setCountries(res.data ?? []))
+      .catch(() => {});
+  }, []);
+
+  // Pre-set country_code from Redux detected country when customer has none saved
+  useEffect(() => {
+    if (!detectedCountry?.phone_code) return;
+    if (formik.values.country_code) return;          // already set — don't overwrite
+    formik.setFieldValue("country_code", detectedCountry.phone_code);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detectedCountry]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setCodeOpen(false);
+        setCodeSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filteredCountries = countries.filter((c) =>
+    c.name.toLowerCase().includes(codeSearch.toLowerCase()) ||
+    c.phone_code.includes(codeSearch)
+  );
 
   const initials = customer?.name?.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
@@ -166,15 +214,66 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
               )}
 
               <Field label="Country Code" icon={Phone}>
-                <input
-                  name="country_code"
-                  value={formik.values.country_code}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder={formik.values.country_code ? undefined : "+971"}
-                  disabled
-                  className={`${inputCls} cursor-not-allowed ${hasErr("country_code") ? "border-red-400 focus:ring-red-100" : ""}`}
-                />
+                <div ref={dropdownRef} className="relative">
+                  {/* Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => { setCodeOpen((o) => !o); setCodeSearch(""); }}
+                    className={`${inputCls} flex items-center justify-between gap-2 text-left ${
+                      hasErr("country_code") ? "border-red-400 focus:ring-red-100" : ""
+                    }`}
+                    disabled
+                  >
+                    <span className={formik.values.country_code ? "text-gray-900" : "text-gray-400"}>
+                      {formik.values.country_code
+                        ? `${formik.values.country_code} (${countries.find((c) => c.phone_code === formik.values.country_code)?.name ?? ""})`
+                        : "Select country code"}
+                    </span>
+                    <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform ${codeOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {/* Dropdown */}
+                  {codeOpen && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-[7px] shadow-lg overflow-hidden">
+                      {/* Search */}
+                      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100">
+                        <Search size={13} className="text-gray-400 shrink-0" />
+                        <input
+                          autoFocus
+                          value={codeSearch}
+                          onChange={(e) => setCodeSearch(e.target.value)}
+                          placeholder="Search country..."
+                          className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-400"
+                        />
+                      </div>
+                      {/* List */}
+                      <ul className="max-h-52 overflow-y-auto">
+                        {filteredCountries.length === 0 ? (
+                          <li className="px-3 py-2 text-xs text-gray-400 text-center">No results</li>
+                        ) : (
+                          filteredCountries.map((c) => (
+                            <li key={c.id}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  formik.setFieldValue("country_code", c.phone_code);
+                                  setCodeOpen(false);
+                                  setCodeSearch("");
+                                }}
+                                className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center justify-between gap-2 ${
+                                  formik.values.country_code === c.phone_code ? "bg-emerald-50 text-[#186737] font-semibold" : "text-gray-700"
+                                }`}
+                              >
+                                <span>{c.name}</span>
+                                <span className="text-xs text-gray-400 shrink-0 font-mono">{c.phone_code}</span>
+                              </button>
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
                 {hasErr("country_code") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.country_code}</p>}
               </Field>
 

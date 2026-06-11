@@ -57,6 +57,9 @@ export const updateProfile = createAsyncThunk(
         { method: "POST", data: payload }
       );
       dispatch(setProfile(res.customer));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user", JSON.stringify(res.customer));
+      }
       return res.message;
     } catch (err: unknown) {
       const msg =

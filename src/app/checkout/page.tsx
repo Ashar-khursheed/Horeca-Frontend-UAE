@@ -534,10 +534,22 @@
 
 import { ChevronRight, Tag, Truck } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { useAppSelector } from '@/store/hooks'
-import { calculateTax } from '@/utils/taxCalculator'
+import { useEffect, useRef, useState } from 'react'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { fetchCart, hydrateCart, resetApiStatus } from '@/store/slices/cart/cartSlice'
+import { getDefaultAddressCache, getLocationData } from '@/utils/locationStorage'
 import Breadcrumb from '@/components/breadcum'
+import CheckoutPayment, { CheckoutPaymentHandle } from './checkout-payment'
+
+const CART_SUMMARY_KEY = 'hc_cart_summary'
+
+interface CartSummaryCache {
+  subTotal: number
+  discountAmount: number
+  totalShippingCharges: number
+  taxRatePercentage: number
+  isCouponApplied: boolean
+}
 
 const usd = (n: number) =>
   n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -548,70 +560,174 @@ const resolveStr = (v: { en?: string; ar?: string } | string | null | undefined)
   return v.en ?? v.ar ?? ''
 }
 
-export default function CheckoutPage() {
-  const taxData     = useAppSelector((s) => s.tax.data)
-  const rawProducts = useAppSelector((s) => s.cart.rawProducts)
+const getToken = (): string | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const t = localStorage.getItem('token')
+    return t ? t.trim().replace(/^["']|["']$/g, '') : null
+  } catch { return null }
+}
 
-  const [email, setEmail]           = useState('')
-  const [newsletter, setNewsletter] = useState(false)
-  const [firstName, setFirstName]   = useState('')
-  const [lastName, setLastName]     = useState('')
-  const [company, setCompany]       = useState('')
-  const [address, setAddress]       = useState('')
-  const [apt, setApt]               = useState('')
-  const [city, setCity]             = useState('')
-  const [country, setCountry]       = useState('United States')
-  const [stateName, setStateName]   = useState('')
-  const [zip, setZip]               = useState('')
-  const [phone, setPhone]           = useState('')
-  const [code, setCode]             = useState('')
-  const [codeApplied, setCodeApplied] = useState(false)
-  const [codeError, setCodeError]     = useState(false)
-  const [discount, setDiscount]       = useState(0)
-  const [liftGate, setLiftGate]             = useState(false)
-  const [residential, setResidential]       = useState(false)
+export default function CheckoutPage() {
+  const dispatch    = useAppDispatch()
+  const rawProducts = useAppSelector((s) => s.cart.rawProducts)
+  const guestItems  = useAppSelector((s) => s.cart.items)
+  const apiStatus   = useAppSelector((s) => s.cart.apiStatus)
+const paymentHandleRef = useRef<CheckoutPaymentHandle | null>(null)
+  const [isLoggedIn, setIsLoggedIn]       = useState(false)
+  const [cartSummary, setCartSummary]     = useState<CartSummaryCache | null>(null)
+  const [email, setEmail]                 = useState('')
+  const [newsletter, setNewsletter]       = useState(false)
+  const [firstName, setFirstName]         = useState('')
+  const [lastName, setLastName]           = useState('')
+  const [company, setCompany]             = useState('')
+  const [address, setAddress]             = useState('')
+  const [apt, setApt]                     = useState('')
+  const [city, setCity]                   = useState('')
+  const [country, setCountry]             = useState('United States')
+  const [stateName, setStateName]         = useState('')
+  const [zip, setZip]                     = useState('')
+  const [phone, setPhone]                 = useState('')
+  const [code, setCode]                   = useState('')
+  const [codeApplied, setCodeApplied]     = useState(false)
+  const [codeError, setCodeError]         = useState(false)
+  const [discount, setDiscount]           = useState(0)
+  const [liftGate, setLiftGate]           = useState(false)
+  const [residential, setResidential]     = useState(false)
   const [insideDelivery, setInsideDelivery] = useState(false)
 
+  const fetchedRef = useRef(false)
+
   useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+
+    // Read saved cart summary for pricing
     try {
-      const raw = localStorage.getItem('hc_default_address')
-      if (!raw) return
-      const addr = JSON.parse(raw)
-      setAddress(addr.address ?? '')
-      setCity(addr.city ?? '')
-      setStateName(addr.state ?? '')
-      setZip(addr.zip_code ?? '')
-      setCountry(addr.related_country?.name ?? 'United States')
+      const raw = localStorage.getItem(CART_SUMMARY_KEY)
+      if (raw) {
+        const saved: CartSummaryCache = JSON.parse(raw)
+        setCartSummary(saved)
+        if (saved.isCouponApplied) {
+          setCodeApplied(true)
+          setDiscount(saved.discountAmount)
+        }
+      }
     } catch { /* ignore */ }
+
+    // Pre-fill user info from localStorage
+    try {
+      const raw = localStorage.getItem('user')
+      if (raw) {
+        const user = JSON.parse(raw)
+        setEmail(user.email ?? '')
+        const code = user.country_code ?? ''
+        const mobile = user.mobile_number ?? ''
+        setPhone(code ? `${code}${mobile}` : mobile)
+        const parts = (user.name ?? '').trim().split(/\s+/)
+        setFirstName(parts[0] ?? '')
+        setLastName(parts.slice(1).join(' '))
+      }
+    } catch { /* ignore */ }
+
+    // Pre-fill shipping address from localStorage
+    const addr = getDefaultAddressCache()
+    if (addr) {
+      setAddress(addr.address ?? '')
+      setApt(addr.address2 ?? '')
+      setCity(addr.related_city?.name ?? addr.city ?? '')
+      setStateName(addr.related_state?.name ?? (addr.state ?? ''))
+      setZip(addr.zip_code ?? '')
+      setCountry(addr.related_country?.name ?? addr.country ?? 'United States')
+    }
+
+    // Fetch cart from API (logged-in) or hydrate from localStorage (guest)
+    const token = getToken()
+    setIsLoggedIn(!!token)
+    const location = getLocationData()
+    if (token) {
+      dispatch(resetApiStatus())
+      dispatch(fetchCart(location?.country ?? ''))
+    } else {
+      dispatch(hydrateCart())
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cartItems = rawProducts.map((cp: any) => ({
+  const apiCartItems = rawProducts.map((cp: any) => ({
     id:          cp.id as number,
     name:        resolveStr(cp.product?.name),
     image:       cp.product?.images?.en?.[0] ?? cp.product?.images?.ar?.[0] ?? '',
     qty:         cp.quantity as number,
     price:       parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
     shipping:    parseFloat(cp.shipping_charge ?? 0),
-    accessories: (cp.accessory_charges ?? []).reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (s: number, a: any) => s + parseFloat(a.accessory_item_price ?? 0), 0
-    ),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    accessories: (cp.accessory_charges ?? []).reduce((s: number, a: any) => s + parseFloat(a.accessory_item_price ?? 0), 0),
   }))
 
-  const subtotal      = cartItems.reduce((s, c) => s + (c.price + c.accessories) * c.qty, 0)
-  const shippingTotal = cartItems.reduce((s, c) => s + c.shipping, 0)
-  const liftFee       = liftGate      ? 75  : 0
-  const resFee        = residential   ? 199 : 0
-  const insideFee     = insideDelivery ? 249 : 0
-  const taxable       = subtotal - discount
-  const { totalTax, ratePercent } = calculateTax(taxable, shippingTotal, taxData)
-  const grandTotal    = taxable + shippingTotal + liftFee + resFee + insideFee + totalTax
-  const totalItems    = cartItems.reduce((s, c) => s + c.qty, 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const guestCartItems = guestItems.map((item: any) => ({
+    id:          item.productId as number,
+    name:        item.name ?? '',
+    image:       item.image ?? '',
+    qty:         item.quantity as number,
+    price:       item.price ?? 0,
+    shipping:    item.shippingCharge ?? 0,
+    accessories: (item.selectedAccessories ?? []).reduce((s: number, a: { price: number }) => s + a.price, 0),
+  }))
+
+  const cartItems = isLoggedIn ? apiCartItems : guestCartItems
+
+  // ── Pricing from saved cart summary (localStorage) ────────────────────────
+  const baseSubtotal  = cartSummary?.subTotal             ?? 0
+  const baseShipping  = cartSummary?.totalShippingCharges ?? 0
+  const ratePercent   = cartSummary?.taxRatePercentage    ?? 0
+  const taxRate       = ratePercent / 100
+
+  const taxable       = baseSubtotal - discount
+
+  // Service fees (added on checkout) — each taxed at same rate
+  const liftFee   = liftGate       ? 75  : 0
+  const resFee    = residential    ? 199 : 0
+  const insideFee = insideDelivery ? 249 : 0
+
+  const taxOnBase = (taxable + baseShipping) * taxRate
+  const taxOnFees = (liftFee + resFee + insideFee) * taxRate
+  const totalTax  = taxOnBase + taxOnFees
+
+  const grandTotal = taxable + baseShipping + liftFee + resFee + insideFee + totalTax
+  const totalItems = cartItems.reduce((s, c) => s + c.qty, 0)
+
+  const isCartLoading = isLoggedIn && (apiStatus === 'idle' || apiStatus === 'loading')
+
+  // ── Sync updated summary back to localStorage whenever fees / discount change ─
+  useEffect(() => {
+    if (!cartSummary) return
+    try {
+      const additionalFees = liftFee + resFee + insideFee
+      const updated = {
+        ...cartSummary,
+        discountAmount:          discount,
+        discountedSubtotal:      taxable,
+        finalDiscountedSubtotal: taxable,
+        liftGateFee:             liftFee,
+        residentialFee:          resFee,
+        insideDeliveryFee:       insideFee,
+        additionalFees,
+        taxableAmount:           taxable + baseShipping + additionalFees,
+        taxAmount:               totalTax,
+        total:                   grandTotal,
+        isCouponApplied:         codeApplied,
+      }
+      localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated))
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liftGate, residential, insideDelivery, discount, codeApplied, grandTotal])
 
   const handleApplyCode = () => {
     if (code.toUpperCase() === 'HORECA10') {
-      setDiscount(subtotal * 0.1)
+      setDiscount(baseSubtotal * 0.1)
       setCodeApplied(true)
       setCodeError(false)
     } else {
@@ -639,7 +755,7 @@ export default function CheckoutPage() {
 
           {/* Express Checkout */}
           <div className="border border-gray-200 rounded-lg p-4 mb-6">
-            <p className="text-center text-xs text-gray-500 font-medium mb-3">Express checkout</p>
+            {/* <p className="text-center text-xs text-gray-500 font-medium mb-3">Express checkout</p>
             <div className="grid grid-cols-3 gap-2">
               <button className="h-11 rounded-md bg-[#5a31f4] hover:opacity-90 transition-opacity flex items-center justify-center">
                 <span className="text-white font-bold text-sm">shop<span className="font-black">pay</span></span>
@@ -653,7 +769,13 @@ export default function CheckoutPage() {
                 </svg>
                 <span className="text-white font-semibold text-sm">Pay</span>
               </button>
-            </div>
+            </div> */}
+
+<CheckoutPayment
+  squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
+  squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
+  onHandleReady={(h) => { paymentHandleRef.current = h }}
+/>
           </div>
 
           {/* Divider */}
@@ -755,12 +877,12 @@ export default function CheckoutPage() {
               Continue to shipping
             </button>
           </div>
-
+{/* 
           <div className="flex flex-wrap gap-4 mt-8 text-xs text-[#186737]">
             <Link href="/pages/return-policy"  className="hover:underline">Refund policy</Link>
             <Link href="/pages/privacy-policy" className="hover:underline">Privacy policy</Link>
             <Link href="/pages/terms"          className="hover:underline">Terms of service</Link>
-          </div>
+          </div> */}
         </div>
 
         {/* ── RIGHT — Order Summary ─────────────────────────────────────────── */}
@@ -768,7 +890,20 @@ export default function CheckoutPage() {
 
           {/* Items */}
           <div className="space-y-4 mb-6">
-            {cartItems.length === 0 ? (
+            {isCartLoading ? (
+              <div className="space-y-4 py-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-start gap-3 animate-pulse">
+                    <div className="w-16 h-16 rounded-md bg-gray-200 shrink-0" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="h-3 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded w-14 shrink-0 mt-1" />
+                  </div>
+                ))}
+              </div>
+            ) : cartItems.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-8">Your cart is empty.</p>
             ) : (
               cartItems.map((item) => (
@@ -829,30 +964,66 @@ export default function CheckoutPage() {
 
           <div className="h-px bg-gray-200 my-4" />
 
-          {/* Price rows */}
-          <div className="space-y-2 text-sm mb-4">
-            <PriceRow label={`Subtotal (${totalItems} item${totalItems !== 1 ? 's' : ''})`} value={`$${usd(subtotal)}`} />
-            {codeApplied && <PriceRow label="Discount (HORECA10)" value={`-$${usd(discount)}`} green />}
-            <PriceRow
-              label="Shipping & Handling"
-              value={shippingTotal === 0 ? 'Free' : `$${usd(shippingTotal)}`}
-              green={shippingTotal === 0}
-            />
-            {liftGate      && <PriceRow label="Lift Gate Service"    value={`$${usd(liftFee)}`} />}
-            {residential   && <PriceRow label="Residential Address"  value={`$${usd(resFee)}`} />}
-            {insideDelivery && <PriceRow label="Inside Delivery"     value={`$${usd(insideFee)}`} />}
-            {ratePercent > 0 && (
-              <PriceRow label={`Tax (${ratePercent}%)`} value={`$${usd(totalTax)}`} />
-            )}
-          </div>
+          {isCartLoading ? (
+            /* ── Price skeleton (matches cart item skeleton duration) ── */
+            <div className="space-y-3 animate-pulse mb-4">
+              {[80, 64, 56, 48].map((w) => (
+                <div key={w} className="flex justify-between items-center">
+                  <div className={`h-3 bg-gray-200 rounded`} style={{ width: `${w}%` }} />
+                  <div className="h-3 bg-gray-200 rounded w-16" />
+                </div>
+              ))}
+              <div className="h-px bg-gray-200 my-3" />
+              <div className="flex justify-between items-center pt-1">
+                <div className="h-4 bg-gray-200 rounded w-28" />
+                <div className="h-5 bg-gray-200 rounded w-24" />
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Price rows */}
+              <div className="space-y-2 text-sm mb-4">
+                <PriceRow label={`Subtotal (${totalItems} item${totalItems !== 1 ? 's' : ''})`} value={`$${usd(baseSubtotal)}`} />
+                {codeApplied && <PriceRow label="Discount (HORECA10)" value={`-$${usd(discount)}`} green />}
 
-          <div className="h-px bg-gray-200 mb-4" />
+                <PriceRow
+                  label={`Shipping & Handling${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ''}`}
+                  value={`$${usd(baseShipping)}`}
+                />
 
-          {/* Total */}
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-900 text-base">Total Amount</span>
-            <span className="font-bold text-gray-900 text-xl">${usd(grandTotal)}</span>
-          </div>
+                {liftGate && (
+                  <PriceRow
+                    label={`Lift Gate Service${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ''}`}
+                    value={`$${usd(liftFee)}`}
+                  />
+                )}
+                {residential && (
+                  <PriceRow
+                    label={`Residential Address${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ''}`}
+                    value={`$${usd(resFee)}`}
+                  />
+                )}
+                {insideDelivery && (
+                  <PriceRow
+                    label={`Inside Delivery${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ''}`}
+                    value={`$${usd(insideFee)}`}
+                  />
+                )}
+
+                {ratePercent > 0 && (
+                  <PriceRow label={`Tax (${ratePercent}%)`} value={`$${usd(totalTax)}`} />
+                )}
+              </div>
+
+              <div className="h-px bg-gray-200 mb-4" />
+
+              {/* Total */}
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-gray-900 text-base">Total Amount</span>
+                <span className="font-bold text-gray-900 text-xl">${usd(grandTotal)}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
