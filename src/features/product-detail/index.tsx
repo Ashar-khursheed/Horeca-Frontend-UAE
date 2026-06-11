@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 import AlternateAiProducts from "./alternate-ai-products";
+import RecommendedProducts from "./recommended-products";
 import { OverviewSection } from "./overview-section";
 import { ProductGallery } from "./product-gallery";
 import { ProductInfo } from "./product-info";
@@ -297,7 +298,7 @@ const ProductDetailPage = ({
           )}
 
           {qaItems.length > 0 && (
-            <div className="mt-3 mb-8 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+            <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
               {/* Mobile: accordion header */}
               <button
                 className="md:hidden w-full flex items-center justify-between px-6 py-4 text-left"
@@ -326,6 +327,10 @@ const ProductDetailPage = ({
               </div>
             </div>
           )}
+
+          <RecommendedProducts
+            productSlug={productData.url.split("/").pop() ?? ""}
+          />
         </div>
       </main>
     </div>

@@ -35,6 +35,8 @@ export const apiUrls = {
     `frontend/products/${slug}/alternates`,
   SIMILAR_PRODUCTS_FOR_GUEST_USERS: (slug: string) =>
     `frontend/products/${slug}/similar`,
+  RECOMMENDED_PRODUCTS: (slug: string) =>
+    `frontend/products/${slug}/recommended-product`,
   // SIMILAR_PRODUCTS_FOR_GUEST_USERS: (slug: string) => `frontend/guest/products/${slug}/similar`,
   // https://test-us.thehorecastore.co/api/frontend/products/berjaya-electric-griddle-1-plate/similar
   BRANDS: "frontend/brands",
