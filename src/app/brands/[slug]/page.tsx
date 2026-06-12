@@ -39,7 +39,7 @@ export default async function BrandDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const data = await makeApiCallSSR<BrandDetailResponse>(
     apiUrls.BRAND_BY_SLUG(slug),
-    {},
+    { page: 1 },
     { revalidate: productDetailRevalidate },
   );
 

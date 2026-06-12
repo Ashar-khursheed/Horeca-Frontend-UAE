@@ -144,6 +144,7 @@ export interface BrandDetailResponse {
     current_translation: SeoTranslation;
   };
   categories?: BrandCategory[];
+  products?: RawApiProduct[];
   data?: RawApiProduct[];
   pagination?: Pagination;
 }
@@ -269,7 +270,7 @@ export default function BrandDetailFeature({
     brand,
     seo,
     categories = [],
-    data: initialProducts = [],
+    products: initialProducts = [],
     pagination: initialPagination,
   } = data;
 
@@ -312,8 +313,8 @@ export default function BrandDetailFeature({
           apiUrls.BRAND_BY_SLUG(brand.slug),
           { params: { page } },
         );
-        if (res?.data) {
-          setProducts(res.data);
+        if (res?.products) {
+          setProducts(res.products);
           if (res.pagination) setPagination(res.pagination);
         }
       }

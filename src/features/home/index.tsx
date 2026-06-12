@@ -169,12 +169,12 @@ export const Home = ({
      <TaxInitializer />
       <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
       <SEOMainContent
-        categorySlug="horeca-store"
+        categorySlug="Restaurant Supply Store for Commercial Kitchen Equipment & Supplies"
         APIDATA={{
           title:
-            "Your One-Stop Shop for Professional Kitchen & Hospitality Equipment",
+            "Shop Professional Restaurant Equipment, Foodservice Supplies, and Refrigeration Solutions",
           description:
-            "HorecaStore is the UAE's leading B2B marketplace for hotels, restaurants, and cafes. Browse thousands of NSF & UL certified products — from commercial cooking equipment and refrigeration to smallwares and supplies. Get competitive pricing, fast delivery, and dedicated support for all your hospitality needs.",
+            "HorecaStore is a leading restaurant supply store offering commercial kitchen equipment and foodservice supplies for restaurants, hotels, cafes, and catering businesses. Our extensive product range includes commercial refrigeration, cooking equipment, prep tables, cookware, cleaning supplies, and essential restaurant tools built for daily professional use. We focus on quality, performance, and long-term reliability to meet the demands of modern commercial kitchens. Whether you're launching a new restaurant or upgrading existing operations, HorecaStore provides cost-effective solutions backed by trusted brands and dependable delivery. Shop with confidence and equip your foodservice business with durable, industry-approved equipment designed to improve efficiency and productivity.",
         }}
       />
       <ShopByCategories categories={featuredCategories} />

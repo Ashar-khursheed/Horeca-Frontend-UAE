@@ -83,7 +83,7 @@ interface MobileNavItemProps {
 function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
   const [open, setOpen] = useState(false);
   const hasChildren = (item.children?.length ?? 0) > 0;
-  const href = item.slug === "shop-by-brands" ? "/all-brands" : `/${item.slug}`;
+  const href = item.slug === "shop-by-brands" ? "/brands" : `/${item.slug}`;
 
   const rowPadLeft =
     depth === 0 ? "px-5" : depth === 1 ? "pl-7 pr-5" : "pl-10 pr-5";
