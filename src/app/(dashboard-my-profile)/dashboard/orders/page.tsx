@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { makeApiRequest } from "@/apis/axios-instance";
 import {
   AlertCircle,
   CalendarDays,
@@ -24,95 +25,169 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface Order {
-  id: string;
-  date: string;
-  status: "Delivered" | "In Transit" | "Processing" | "Cancelled";
-  paymentStatus: "Paid" | "Pending" | "Refunded";
-  total: string;
-  deliveryFrom: string;
-  deliveryTo: string;
-  product: string;
+
+interface ApiProduct {
+  name: string;
+  sku: string;
+  brand_name: string;
+  images: string[];
+  image_urls: string[];
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_ORDERS: Order[] = [
-  { id: "11384", date: "Apr 08 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$108.25",    deliveryFrom: "April 15",    deliveryTo: "April 17",    product: 'Turbo Air TBC-36SB-N6 36" Bottle Cooler' },
-  { id: "11383", date: "Apr 08 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$108.25",    deliveryFrom: "April 15",    deliveryTo: "April 17",    product: 'True TUC-27F-HC 27" Undercounter Freezer' },
-  { id: "11368", date: "Apr 01 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$11,510.00", deliveryFrom: "April 2",     deliveryTo: "April 10",    product: 'FrostLine 27" Reach-In Refrigerator' },
-  { id: "11314", date: "Feb 20 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$16,569.54", deliveryFrom: "February 27", deliveryTo: "March 3",     product: 'Medal Equipment 54" Merchandiser Refrigerator' },
-  { id: "11312", date: "Feb 20 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$16,569.54", deliveryFrom: "February 27", deliveryTo: "March 3",     product: 'Beverage Air MT49-1-W 52" Mega Top' },
-  { id: "11311", date: "Feb 20 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$10,222.36", deliveryFrom: "February 27", deliveryTo: "March 3",     product: 'Atosa MBF8503GR 54" Reach-In Freezer' },
-  { id: "11308", date: "Feb 20 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$241.40",    deliveryFrom: "February 27", deliveryTo: "March 3",     product: 'True TSSU-27-08 27" Sandwich/Salad Unit' },
-  { id: "11271", date: "Feb 09 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$5,576.56",  deliveryFrom: "February 16", deliveryTo: "February 18", product: 'Nor-Lake NLRI74 74" Reach-In Refrigerator' },
-  { id: "11267", date: "Feb 09 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$15,479.72", deliveryFrom: "February 16", deliveryTo: "February 18", product: 'Traulsen G22010 48" Reach-In Refrigerator' },
-  { id: "11255", date: "Feb 04 2026", status: "Cancelled",  paymentStatus: "Refunded", total: "$610.00",    deliveryFrom: "February 11", deliveryTo: "February 13", product: 'Hoshizaki F-1501MWH 1,631 Lb Ice Machine' },
-  { id: "11240", date: "Jan 28 2026", status: "Delivered",  paymentStatus: "Paid",     total: "$2,395.26",  deliveryFrom: "February 3",  deliveryTo: "February 5",  product: 'Victory VCLM-1-PT-HC 28" Merchandiser' },
-  { id: "11235", date: "Jan 25 2026", status: "In Transit", paymentStatus: "Paid",     total: "$1,299.00",  deliveryFrom: "January 30",  deliveryTo: "February 1",  product: 'Manitowoc UDF0140A 26" Undercounter Ice Machine' },
-  { id: "11220", date: "Jan 18 2026", status: "Processing", paymentStatus: "Pending",  total: "$4,520.00",  deliveryFrom: "January 25",  deliveryTo: "January 28",  product: 'Perlick HC24BS46L 24" Back Bar Cooler' },
-  { id: "11200", date: "Jan 10 2026", status: "Delivered",  paymentStatus: "Paid",     total: "$899.00",    deliveryFrom: "January 15",  deliveryTo: "January 17",  product: 'Welbilt MD-5 Microdrum Soft-Serve Machine' },
-  { id: "11185", date: "Jan 05 2026", status: "Delivered",  paymentStatus: "Paid",     total: "$3,150.00",  deliveryFrom: "January 10",  deliveryTo: "January 12",  product: 'Vollrath 40756 48" Sandwich/Salad Prep Table' },
-  { id: "11170", date: "Dec 28 2025", status: "Delivered",  paymentStatus: "Paid",     total: "$6,200.00",  deliveryFrom: "January 4",   deliveryTo: "January 6",   product: 'Delfield GARR-44P 44" Refrigerated Prep Table' },
-  { id: "11155", date: "Dec 20 2025", status: "In Transit", paymentStatus: "Paid",     total: "$780.00",    deliveryFrom: "December 27", deliveryTo: "December 29", product: 'Scotsman HID312A-1 Ice Dispenser' },
-  { id: "11140", date: "Dec 15 2025", status: "Processing", paymentStatus: "Pending",  total: "$2,100.00",  deliveryFrom: "December 22", deliveryTo: "December 24", product: 'True TD-50-12 50" Draft Beer Cooler' },
-  { id: "11125", date: "Dec 08 2025", status: "Delivered",  paymentStatus: "Paid",     total: "$4,875.00",  deliveryFrom: "December 15", deliveryTo: "December 17", product: 'Continental Refrigerator LF132SSS 132" Reach-In' },
-  { id: "11110", date: "Dec 01 2025", status: "Cancelled",  paymentStatus: "Refunded", total: "$320.00",    deliveryFrom: "December 8",  deliveryTo: "December 10", product: 'Turbo Air M3F47-1-N 48" Three Section Freezer' },
-  { id: "11095", date: "Nov 22 2025", status: "Delivered",  paymentStatus: "Paid",     total: "$1,640.00",  deliveryFrom: "November 29", deliveryTo: "December 1",  product: 'Beverage Air WD48HC-1-B 48" Wine Display' },
-  { id: "11080", date: "Nov 15 2025", status: "Delivered",  paymentStatus: "Paid",     total: "$5,320.00",  deliveryFrom: "November 22", deliveryTo: "November 24", product: 'Hoshizaki KMD-410MAH 390 Lb Ice Machine' },
-  { id: "11065", date: "Nov 08 2025", status: "Processing", paymentStatus: "Pending",  total: "$970.00",    deliveryFrom: "November 15", deliveryTo: "November 17", product: 'True TWT-27F-HC 27" Worktop Freezer' },
-  { id: "11050", date: "Nov 01 2025", status: "Delivered",  paymentStatus: "Paid",     total: "$2,850.00",  deliveryFrom: "November 8",  deliveryTo: "November 10", product: 'Nor-Lake NSSF132WWG/0 132" Reach-In Freezer' },
-];
+interface ApiOrderProduct {
+  id: number;
+  quantity: number;
+  unit_price: string;
+  shipping_charge: number;
+  status: string;
+  product: ApiProduct;
+}
+
+interface ApiCustomerAddress {
+  address: string;
+  city: string;
+  state: string | null;
+  country: { name: string } | null;
+  related_city?: { name: string } | null;
+}
+
+interface ApiOrder {
+  id: number;
+  order_number: string;
+  status: string;
+  total_amount: string;
+  is_paid: number;
+  paid_amount: string;
+  payment_mode: string | null;
+  total_products: number;
+  created_at: string;
+  customer_address: ApiCustomerAddress | null;
+  order_products: ApiOrderProduct[];
+}
+
+interface OrdersApiResponse {
+  success: boolean;
+  message: string;
+  data: ApiOrder[];
+  total_pages?: number;
+  total_records?: number;
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const PER_PAGE = 10;
 
-// ── Status config ─────────────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<Order["status"], { bg: string; text: string; icon: React.ElementType }> = {
-  Delivered:   { bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle },
-  "In Transit":{ bg: "bg-blue-50",    text: "text-blue-700",   icon: Truck },
-  Processing:  { bg: "bg-amber-50",   text: "text-amber-700",  icon: Clock },
-  Cancelled:   { bg: "bg-red-50",     text: "text-red-700",    icon: AlertCircle },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; Icon: React.ElementType }> = {
+  Delivered:    { bg: "bg-emerald-50", text: "text-emerald-700", Icon: CheckCircle },
+  "In Transit": { bg: "bg-blue-50",   text: "text-blue-700",   Icon: Truck },
+  Shipped:      { bg: "bg-blue-50",   text: "text-blue-700",   Icon: Truck },
+  Processing:   { bg: "bg-amber-50",  text: "text-amber-700",  Icon: Clock },
+  Pending:      { bg: "bg-amber-50",  text: "text-amber-700",  Icon: Clock },
+  Cancelled:    { bg: "bg-red-50",    text: "text-red-700",    Icon: AlertCircle },
 };
 
-const PAYMENT_CONFIG: Record<Order["paymentStatus"], { bg: string; text: string }> = {
-  Paid:     { bg: "bg-emerald-50", text: "text-emerald-700" },
-  Pending:  { bg: "bg-amber-50",   text: "text-amber-700" },
-  Refunded: { bg: "bg-gray-100",   text: "text-gray-600" },
-};
+const DEFAULT_STATUS = { bg: "bg-gray-100", text: "text-gray-600", Icon: Package };
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatDate(str: string) {
+  return new Date(str).toLocaleDateString("en-US", {
+    month: "short", day: "2-digit", year: "numeric",
+  });
+}
+
+function formatAddress(addr: ApiCustomerAddress | null) {
+  if (!addr) return null;
+  const city = addr.related_city?.name || addr.city;
+  return [city, addr.country?.name].filter(Boolean).join(", ");
+}
+
+function getPaymentBadge(order: ApiOrder) {
+  if (order.is_paid === 1)
+    return { label: "Paid", bg: "bg-emerald-50", text: "text-emerald-700" };
+  if (order.status === "Cancelled" && Number(order.paid_amount) > 0)
+    return { label: "Refunded", bg: "bg-gray-100", text: "text-gray-600" };
+  return { label: "Pending", bg: "bg-amber-50", text: "text-amber-700" };
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
 export default function MyOrdersPage() {
-  const [search, setSearch] = useState("");
+  const [orders, setOrders]       = useState<ApiOrder[]>([]);
+  const [total, setTotal]         = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
+
+  const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("All Orders");
   const [paymentFilter, setPaymentFilter] = useState("All");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [page, setPage] = useState(1);
+  const [fromDate, setFromDate]         = useState("");
+  const [toDate, setToDate]             = useState("");
+  const [page, setPage]                 = useState(1);
   const [paginationKey, setPaginationKey] = useState(0);
 
-  const filtered = useMemo(() => {
-    return MOCK_ORDERS.filter((o) => {
-      if (
-        search &&
-        !o.id.includes(search) &&
-        !o.product.toLowerCase().includes(search.toLowerCase())
-      )
-        return false;
-      if (statusFilter !== "All Orders" && o.status !== statusFilter) return false;
-      if (paymentFilter !== "All" && o.paymentStatus !== paymentFilter) return false;
-      return true;
-    });
-  }, [search, statusFilter, paymentFilter]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const fetchOrders = useCallback(
+    async (opts: {
+      page: number; search: string; status: string;
+      payment: string; from: string; to: string;
+    }) => {
+      setLoading(true);
+      setError(false);
+      try {
+        const params: Record<string, string | number> = {
+          page: opts.page,
+          length: PER_PAGE,
+          sort_dir: "desc",
+        };
+        if (opts.search)                           params.global = opts.search;
+        if (opts.status !== "All Orders")          params.status = opts.status;
+        if (opts.payment !== "All")                params.payment_status = opts.payment;
+        if (opts.from)                             params.from_date = opts.from;
+        if (opts.to)                               params.to_date = opts.to;
+
+        const res = await makeApiRequest<OrdersApiResponse>(
+          "frontend/orders",
+          { params }
+        );
+
+        if (res.success) {
+          setOrders(res.data ?? []);
+          setTotalPages(res.total_pages ?? 1);
+          setTotal(res.total_records ?? res.data?.length ?? 0);
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Debounce search; immediate for other filters
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchOrders({ page, search, status: statusFilter, payment: paymentFilter, from: fromDate, to: toDate });
+    }, search ? 400 : 0);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search, statusFilter, paymentFilter, fromDate, toDate]);
 
   const resetPagination = () => {
     setPage(1);
     setPaginationKey((k) => k + 1);
   };
+
+  const hasFilters = search || statusFilter !== "All Orders" || paymentFilter !== "All" || fromDate || toDate;
 
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-[1400px]">
@@ -138,19 +213,17 @@ export default function MyOrdersPage() {
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
         <div className="flex flex-wrap gap-3">
 
-          {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Order ID, Invoice, Product..."
+              placeholder="Order ID, Product..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); resetPagination(); }}
               className="w-full h-9 pl-8 pr-3 rounded-[7px] border border-gray-200 text-sm text-gray-800 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all placeholder:text-gray-400 bg-white"
             />
           </div>
 
-          {/* Status */}
           <div className="min-w-[155px]">
             <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); resetPagination(); }}>
               <SelectTrigger className="h-9 w-full rounded-[7px] border-gray-200 text-sm text-gray-700 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 bg-white cursor-pointer">
@@ -161,6 +234,7 @@ export default function MyOrdersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All Orders">All Orders</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="Processing">Processing</SelectItem>
                 <SelectItem value="In Transit">In Transit</SelectItem>
                 <SelectItem value="Delivered">Delivered</SelectItem>
@@ -169,7 +243,6 @@ export default function MyOrdersPage() {
             </Select>
           </div>
 
-          {/* Payment Status */}
           <div className="min-w-[145px]">
             <Select value={paymentFilter} onValueChange={(val) => { setPaymentFilter(val); resetPagination(); }}>
               <SelectTrigger className="h-9 w-full rounded-[7px] border-gray-200 text-sm text-gray-700 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 bg-white cursor-pointer">
@@ -184,7 +257,6 @@ export default function MyOrdersPage() {
             </Select>
           </div>
 
-          {/* From date */}
           <div className="relative min-w-[130px]">
             <CalendarDays size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
@@ -195,7 +267,6 @@ export default function MyOrdersPage() {
             />
           </div>
 
-          {/* To date */}
           <div className="relative min-w-[130px]">
             <CalendarDays size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
@@ -207,12 +278,14 @@ export default function MyOrdersPage() {
           </div>
         </div>
 
-        {/* Active filters + count */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
           <p className="text-xs text-gray-400">
-            Showing <span className="font-semibold text-gray-700">{filtered.length}</span> order{filtered.length !== 1 ? "s" : ""}
+            {loading
+              ? "Loading orders…"
+              : <>Showing <span className="font-semibold text-gray-700">{total}</span> order{total !== 1 ? "s" : ""}</>
+            }
           </p>
-          {(search || statusFilter !== "All Orders" || paymentFilter !== "All" || fromDate || toDate) && (
+          {hasFilters && (
             <button
               onClick={() => {
                 setSearch(""); setStatusFilter("All Orders"); setPaymentFilter("All");
@@ -229,156 +302,211 @@ export default function MyOrdersPage() {
       {/* ── Table ───────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
 
+        {/* Loading skeleton rows */}
+        {loading && (
+          <div className="divide-y divide-gray-50">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-48" />
+                </div>
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-20 hidden md:block" />
+                <div className="h-6 bg-gray-200 rounded-full animate-pulse w-20 hidden md:block" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-16 hidden md:block" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-28 hidden lg:block" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-24 hidden md:block" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error state */}
+        {!loading && error && (
+          <div className="py-16 text-center">
+            <AlertCircle size={36} className="mx-auto text-red-200 mb-3" />
+            <p className="text-sm font-semibold text-gray-400">Failed to load orders</p>
+            <button
+              onClick={() => fetchOrders({ page, search, status: statusFilter, payment: paymentFilter, from: fromDate, to: toDate })}
+              className="mt-3 text-xs text-[#186737] hover:underline font-medium"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* Desktop table */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                {["Order ID", "Date", "Status", "Total", "Delivery", "Actions"].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 whitespace-nowrap"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {paged.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-5 py-16 text-center">
-                    <Package size={40} className="mx-auto text-gray-200 mb-3" />
-                    <p className="text-sm font-semibold text-gray-400">No orders found</p>
-                    <p className="text-xs text-gray-300 mt-1">Try adjusting your filters</p>
-                  </td>
+        {!loading && !error && (
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  {["Order ID", "Date", "Status", "Items", "Total", "Address", "Actions"].map((h) => (
+                    <th key={h} className="text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                paged.map((order) => {
-                  const sc = STATUS_CONFIG[order.status];
-                  const pc = PAYMENT_CONFIG[order.paymentStatus];
-                  const StatusIcon = sc.icon;
-                  return (
-                    <tr key={order.id} className="hover:bg-gray-50/60 transition-colors group">
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {orders.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-16 text-center">
+                      <Package size={40} className="mx-auto text-gray-200 mb-3" />
+                      <p className="text-sm font-semibold text-gray-400">No orders found</p>
+                      <p className="text-xs text-gray-300 mt-1">Try adjusting your filters</p>
+                    </td>
+                  </tr>
+                ) : (
+                  orders.map((order) => {
+                    const sc = STATUS_CONFIG[order.status] ?? DEFAULT_STATUS;
+                    const { Icon: StatusIcon } = sc;
+                    const pay = getPaymentBadge(order);
+                    const firstProduct = order.order_products[0]?.product?.name;
+                    const addr = formatAddress(order.customer_address);
 
-                      {/* ID */}
-                      <td className="px-5 py-4">
-                        <div>
-                          <span className="text-sm font-bold text-[#186737]">#{order.id}</span>
-                          <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1 max-w-[160px]">{order.product}</p>
-                        </div>
-                      </td>
+                    return (
+                      <tr key={order.id} className="hover:bg-gray-50/60 transition-colors group">
 
-                      {/* Date */}
-                      <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">{order.date}</td>
+                        <td className="px-5 py-4">
+                          <span className="text-sm font-bold text-[#186737]">#{order.order_number}</span>
+                          {firstProduct && (
+                            <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1 max-w-40">{firstProduct}</p>
+                          )}
+                        </td>
 
-                      {/* Status */}
-                      <td className="px-5 py-4">
-                        <div className="space-y-1.5">
-                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>
-                            <StatusIcon size={10} />
-                            {order.status}
-                          </span>
-                          {/* <div>
-                            <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${pc.bg} ${pc.text}`}>
-                              {order.paymentStatus}
+                        <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
+                          {formatDate(order.created_at)}
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <div className="space-y-1.5">
+                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>
+                              <StatusIcon size={10} />
+                              {order.status}
                             </span>
-                          </div> */}
-                        </div>
-                      </td>
+                            <div>
+                              <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${pay.bg} ${pay.text}`}>
+                                {pay.label}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
 
-                      {/* Total */}
-                      <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">{order.total}</td>
+                        <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
+                          {order.total_products} item{order.total_products !== 1 ? "s" : ""}
+                        </td>
 
-                      {/* Delivery */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-1.5 text-sm text-[#186737] font-medium whitespace-nowrap">
-                          <MapPin size={12} className="shrink-0" />
-                          {order.deliveryFrom} – {order.deliveryTo}
-                        </div>
-                      </td>
+                        <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">
+                          ${Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
 
-                      {/* Actions */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3 text-xs font-semibold whitespace-nowrap">
-                          <button className="flex items-center gap-1 text-[#186737] hover:underline">
-                            <MapPin size={11} /> Track
-                          </button>
-                          <Link href={`/dashboard/orders/cancel-order/${order.id}`} className="text-red-400 hover:text-red-600 hover:underline transition-colors">Cancel</Link>
-                     <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 hover:underline transition-colors">
-                            <RotateCcw size={10} /> Return
-                          </Link>
-                          <Link href={`/dashboard/orders/${order.id}`} className="flex items-center gap-1 text-[#186737] hover:underline">
-                            <Eye size={11} /> View
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                        <td className="px-5 py-4">
+                          {addr ? (
+                            <div className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
+                              <MapPin size={11} className="text-[#186737] shrink-0" />
+                              {addr}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-300">—</span>
+                          )}
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3 text-xs font-semibold whitespace-nowrap">
+                            <Link href={`/dashboard/orders/cancel-order/${order.id}`} className="text-red-400 hover:text-red-600 hover:underline transition-colors">
+                              Cancel
+                            </Link>
+                            <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 hover:underline transition-colors">
+                              <RotateCcw size={10} /> Return
+                            </Link>
+                            <Link href={`/dashboard/orders/${order.id}`} className="flex items-center gap-1 text-[#186737] hover:underline">
+                              <Eye size={11} /> View
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Mobile cards */}
-        <div className="md:hidden divide-y divide-gray-100">
-          {paged.length === 0 ? (
-            <div className="py-16 text-center">
-              <Package size={36} className="mx-auto text-gray-200 mb-3" />
-              <p className="text-sm font-semibold text-gray-400">No orders found</p>
-            </div>
-          ) : (
-            paged.map((order) => {
-              const sc = STATUS_CONFIG[order.status];
-              const pc = PAYMENT_CONFIG[order.paymentStatus];
-              const StatusIcon = sc.icon;
-              return (
-                <div key={order.id} className="px-4 py-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <span className="text-sm font-bold text-[#186737]">#{order.id}</span>
-                      <p className="text-[11px] text-gray-400 mt-0.5">{order.date}</p>
+        {!loading && !error && (
+          <div className="md:hidden divide-y divide-gray-100">
+            {orders.length === 0 ? (
+              <div className="py-16 text-center">
+                <Package size={36} className="mx-auto text-gray-200 mb-3" />
+                <p className="text-sm font-semibold text-gray-400">No orders found</p>
+              </div>
+            ) : (
+              orders.map((order) => {
+                const sc = STATUS_CONFIG[order.status] ?? DEFAULT_STATUS;
+                const { Icon: StatusIcon } = sc;
+                const pay = getPaymentBadge(order);
+                const firstProduct = order.order_products[0]?.product?.name;
+                const addr = formatAddress(order.customer_address);
+
+                return (
+                  <div key={order.id} className="px-4 py-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <span className="text-sm font-bold text-[#186737]">#{order.order_number}</span>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{formatDate(order.created_at)}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
+                          <StatusIcon size={10} />
+                          {order.status}
+                        </span>
+                        <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${pay.bg} ${pay.text}`}>
+                          {pay.label}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
-                        <StatusIcon size={10} />
-                        {order.status}
-                      </span>
-                      <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${pc.bg} ${pc.text}`}>
-                        {order.paymentStatus}
-                      </span>
+
+                    {firstProduct && (
+                      <p className="text-[13px] text-gray-700 font-medium line-clamp-1 mb-2">{firstProduct}</p>
+                    )}
+
+                    <div className="flex items-center justify-between mb-3">
+                      {addr ? (
+                        <div className="flex items-center gap-1 text-xs text-[#186737] font-medium">
+                          <MapPin size={11} />
+                          {addr}
+                        </div>
+                      ) : <span />}
+                      <p className="text-sm font-bold text-gray-900">
+                        ${Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs font-semibold border-t border-gray-50 pt-3">
+                      <Link href={`/dashboard/orders/cancel-order/${order.id}`} className="text-red-400 hover:text-red-600">Cancel</Link>
+                      <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
+                        <RotateCcw size={10} /> Return
+                      </Link>
+                      <Link href={`/dashboard/orders/${order.id}`} className="flex items-center gap-1 text-[#186737] ml-auto">
+                        <Eye size={11} /> View
+                      </Link>
                     </div>
                   </div>
-
-                  <p className="text-[13px] text-gray-700 font-medium line-clamp-1 mb-2">{order.product}</p>
-
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1 text-xs text-[#186737] font-medium">
-                      <MapPin size={11} />
-                      {order.deliveryFrom} – {order.deliveryTo}
-                    </div>
-                    <p className="text-sm font-bold text-gray-900">{order.total}</p>
-                  </div>
-
-                  <div className="flex items-center gap-4 text-xs font-semibold border-t border-gray-50 pt-3">
-                    <button className="flex items-center gap-1 text-[#186737]"><MapPin size={11} />Track</button>
-                    <Link href={`/dashboard/orders/cancel-order/${order.id}`} className="text-red-400 hover:text-red-600">Cancel</Link>
-                    <button className="flex items-center gap-1 text-gray-400 hover:text-gray-600"><RotateCcw size={10} />Return</button>
-                    <Link href={`/dashboard/orders/${order.id}`} className="flex items-center gap-1 text-[#186737] ml-auto"><Eye size={11} />View</Link>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Pagination ───────────────────────────────────────────────────── */}
       {totalPages > 1 && (
-        <div className="py-4">
+        <div className={`py-4 transition-opacity duration-200 ${loading ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
           <Pagination
             key={paginationKey}
+            initialPage={page}
             totalPages={totalPages}
             onPageChange={(p) => setPage(p)}
             showFirstLast

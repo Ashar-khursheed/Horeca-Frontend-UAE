@@ -23,7 +23,8 @@ const getAuthToken = (): string | null => {
   }
 };
 
-const AUTH_MAX_AGE = 60 * 60 * 24; // 24 hours in seconds
+// const AUTH_MAX_AGE = 60 * 60 * 24; // 24 hours in seconds
+const AUTH_MAX_AGE = 259200; // 72 hours
 const AUTH_MAX_MS = AUTH_MAX_AGE * 1000;
 
 export const setAuthToken = (token: string): void => {

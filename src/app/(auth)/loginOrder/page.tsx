@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -167,6 +168,7 @@ function LoginPanel() {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
+              await dispatch(fetchCounts())
         const redirect = searchParams.get("redirect") ?? "/checkout";
         router.push(redirect);
       } catch (err: unknown) {
@@ -373,7 +375,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
-
+      await dispatch(fetchCounts())
         onSuccess();
         router.push("/cart");
       } catch (err: unknown) {

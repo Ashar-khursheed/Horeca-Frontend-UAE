@@ -29,8 +29,8 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { useLocale } from "next-intl";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -144,6 +144,7 @@ export default function SubCategoryPage({
   currentPage?: number;
 }) {
   const locale = useLocale();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const filterAPIData = subCategoryPage?.filters;
   const rangeFiltersData = subCategoryPage?.rangeFilters;
@@ -241,6 +242,17 @@ export default function SubCategoryPage({
   const [displayPage, setDisplayPage]   = useState(currentPage);
   const [isFetching, setIsFetching]     = useState(false);
 
+  // When SSR re-renders (triggered by router.replace), sync new productsData into display state
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (productsData?.products) {
+      setDisplayProducts(productsData.products);
+      setDisplayTotal(productsData.total_records ?? productsData.products.length ?? 0);
+      setDisplayTotalPages(productsData.total_pages ?? (Math.ceil((productsData.total_records ?? 0) / 20) || 1));
+    }
+  }, [productsData]);
+
   // ── Sync filters → URL + fetch products client-side ──────────────────────────
   const pushURL = useCallback(
     async (overrides: {
@@ -284,8 +296,8 @@ export default function SubCategoryPage({
       const qs = parts.join("&");
       window.scrollTo({ top: 0, behavior: "smooth" });
 
-      // Update URL without triggering Next.js SSR re-render
-      window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+      // Update URL via Next.js router so router cache stays in sync (fixes filter state on back navigation)
+      router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
 
       // Build API body
       const appliedFilters = {
@@ -347,6 +359,7 @@ export default function SubCategoryPage({
       selectedFixedFilters,
       subCategorySlug,
       unitMap,
+      router,
     ],
   );
 

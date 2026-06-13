@@ -10,6 +10,7 @@ export interface BrandsParams {
 export const apiUrls = {
   // Authentication
   LOGIN: "frontend/login",
+  GOOGLE_AUTH: "frontend/auth/google",
   REGISTER: "frontend/customer/register",
   LOGOUT: "frontend/logout",
   GETMYPROFILE: "frontend/customer/get-profile",
@@ -95,6 +96,7 @@ export const apiUrls = {
 
   SQUARE_PAYMENT:"frontend/payment-square",
   PLACE_ORDER:"frontend/orders",
+  ORDER_DETAIL: (id: number) => `frontend/orders/${id}`,
   PAYMENT_HISTORY:"frontend/payments",
   SCREEN_TRANSACTION:"screen-transaction",
 };

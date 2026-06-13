@@ -599,7 +599,7 @@ function useSflVisibleCount() {
       else if (w >= 1536) setCount(4);
       else if (w >= 1280) setCount(3);
       else if (w >= 768)  setCount(2);
-      else                setCount(1);
+      else                setCount(2);
     };
     update();
     window.addEventListener("resize", update);

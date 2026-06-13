@@ -1,5 +1,3 @@
-"use client";
-
 import {
   CheckCircle2,
   ChevronRight,
@@ -15,118 +13,103 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
+import { makeApiCallSSR } from "@/apis/ssr-fetch";
+import { ShareButtons } from "./_components/share-buttons";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
 interface OrderProduct {
   id: number;
-  name: string;
-  sku: string;
-  image: string;
-  qty: number;
-  price: number;
-  originalPrice: number;
-  deliveryDays: string;
-  shipping: number;
-  brand: string;
-  currency: string;
+  quantity: number;
+  unit_price: string;
+  shipping_charge: number;
+  expectedShippingDate: string;
+  product_supplier: {
+    delivery_days: string;
+  };
+  product: {
+    name: string;
+    sku: string;
+    brand_name: string;
+    images: string[];
+    image_urls: string[];
+  };
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const ORDER_NUMBER = "HS-20260518-4821";
-
-const USER = {
-  name: "John Mitchell",
-  email: "john.mitchell@example.com",
-  phone: "+1 (310) 555-0192",
-};
-
-const DELIVERY_ADDRESS = {
-  line1: "0000 Los Angeles Memorial Lewis & Blvd",
-  city: "Los Angeles",
-  state: "California",
-  zip: "90015",
-  country: "United States",
-};
-
-const ORDER_PRODUCTS: OrderProduct[] = [
-  {
-    id: 1,
-    name: 'Turbo Air TBC-36SB-N6 36" Super Deluxe Bottle Cooler, 8.5 cu. Ft.',
-    sku: "TBC-36SB-N6",
-    image:
-      "https://d1p9kdrbe10xzz.cloudfront.net/production/products/TBC-36SB-N6_6bb5506e-9c7b-45cb-8134-5944faa67a1a.webp",
-    qty: 1,
-    price: 1916.21,
-    originalPrice: 2395.26,
-    deliveryDays: "5 to 7 Days",
-    shipping: 195.0,
-    brand: "Turbo Air",
-    currency: "$",
-  },
-  {
-    id: 2,
-    name: "BakeMax BMPM080 80 Qt. Planetary Mixer, Floor Model",
-    sku: "BMPM080",
-    image:
-      "https://d1p9kdrbe10xzz.cloudfront.net/production/products/BMPM080_7JiqdDIooIC58z6kKhvJ.webp",
-    qty: 1,
-    price: 19990.26,
-    originalPrice: 22423.0,
-    deliveryDays: "5 to 7 Days",
-    shipping: 350.0,
-    brand: "BakeMax",
-    currency: "$",
-  },
-  {
-    id: 3,
-    name: 'Turbo Air TBC-24SB-N6 24" Super Deluxe Bottle Cooler, 3.6 cu. Ft.',
-    sku: "TBC-24SB-N6",
-    image:
-      "https://d1p9kdrbe10xzz.cloudfront.net/production/products/TBC-24SB-N6_196b76cb-f68f-4bb2-a05e-e3da2f0b30b4.webp",
-    qty: 2,
-    price: 1941.3,
-    originalPrice: 2426.63,
-    deliveryDays: "5 to 7 Days",
-    shipping: 0,
-    brand: "Turbo Air",
-    currency: "$",
-  },
-];
+interface OrderData {
+  order_number: string;
+  amount: string;
+  shipping_charge: number;
+  tax_percentage: string;
+  tax_amount: string;
+  total_amount: string;
+  customer_address: string;
+  customer: {
+    email: string;
+    country_code: string;
+    mobile_number: string;
+  };
+  order_products: OrderProduct[];
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const usd = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const subtotal = ORDER_PRODUCTS.reduce((s, i) => s + i.price * i.qty, 0);
-const shippingTotal = ORDER_PRODUCTS.reduce((s, i) => s + i.shipping, 0);
-const taxRate = 0.0825;
-const taxAmount = subtotal * taxRate;
-const total = subtotal + shippingTotal + taxAmount;
+function parseAddress(raw: string) {
+  const parts = raw.split("\n");
+  return {
+    line1: parts[0]?.trim() ?? "",
+    line2: parts[1]?.trim() ?? "",
+  };
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function PaymentSuccessPage() {
-  const handleWhatsApp = () => {
-    const message = ORDER_PRODUCTS.map(
-      (p) =>
-        `Product: ${p.name}\nSKU: ${p.sku}\nQty: ${p.qty}\nPrice: ${p.currency}${usd(p.price)}\n---`
-    ).join("\n");
-    const encoded = encodeURIComponent(
-      `Order #${ORDER_NUMBER} placed successfully!\n\n${message}`
-    );
-    window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
-  };
 
-  const handleEmail = () => {
-    const body = ORDER_PRODUCTS.map(
-      (p) =>
-        `Product: ${p.name}\nSKU: ${p.sku}\nQty: ${p.qty}\nPrice: ${p.currency}${usd(p.price)}`
-    ).join("\n\n---\n\n");
-    const subject = encodeURIComponent(`Order #${ORDER_NUMBER} — Placed Successfully`);
-    const encodedBody = encodeURIComponent(
-      `Hi,\n\nYour order #${ORDER_NUMBER} has been placed!\n\n${body}\n\nTotal: $${usd(total)}`
+export default async function PaymentSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ orderID?: string }>;
+}) {
+  const { orderID } = await searchParams;
+
+  const res = orderID
+    ? await makeApiCallSSR<{ success: boolean; data: OrderData }>(
+        `/frontend/orders/${orderID}`,
+        undefined,
+        { withAuth: true, revalidate: 0 }
+      )
+    : null;
+
+  const order = res?.success ? res.data : null;
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-[#E2E8F066] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 text-sm mb-4">
+            Unable to load order details. Please check your Orders page.
+          </p>
+          <Link
+            href="/dashboard/orders"
+            className="inline-flex items-center gap-2 bg-[#186737] text-white text-sm font-semibold px-5 py-2.5 rounded-[7px]"
+          >
+            <Package size={15} />
+            View My Orders
+          </Link>
+        </div>
+      </div>
     );
-    window.open(`mailto:${USER.email}?subject=${subject}&body=${encodedBody}`, "_blank");
-  };
+  }
+
+  const subtotal = Number(order.amount);
+  const shippingTotal = order.shipping_charge;
+  const taxAmount = Number(order.tax_amount);
+  const taxRate = Number(order.tax_percentage) / 100;
+  const total = Number(order.total_amount);
+  const address = parseAddress(order.customer_address);
+  const phone = `${order.customer.country_code} ${order.customer.mobile_number}`;
 
   return (
     <div className="min-h-screen bg-[#E2E8F066]">
@@ -169,7 +152,7 @@ export default function PaymentSuccessPage() {
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">
                     Order Number:{" "}
-                    <span className="text-[#186737] font-bold">#{ORDER_NUMBER}</span>
+                    <span className="text-[#186737] font-bold">#{order.order_number}</span>
                   </p>
                 </div>
               </div>
@@ -182,14 +165,14 @@ export default function PaymentSuccessPage() {
                   <Mail size={15} className="text-[#186737] mt-1 shrink-0" />
                   <p className="text-sm text-gray-600 font-medium leading-relaxed">
                     Confirmation will be sent to your email at{" "}
-                    <span className="text-[#186737] font-bold break-alls">{USER.email}</span>
+                    <span className="text-[#186737] font-bold break-all">{order.customer.email}</span>
                   </p>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Phone size={15} className="text-[#186737] mt-1 shrink-0" />
                   <p className="text-sm text-gray-600 font-medium leading-relaxed">
                     Our representative will call you at{" "}
-                    <span className="text-[#186737] font-bold whitespace-nowrap">{USER.phone}</span>
+                    <span className="text-[#186737] font-bold whitespace-nowrap">{phone}</span>
                     . Kindly ensure the number is correct to avoid delivery delays.
                   </p>
                 </div>
@@ -198,9 +181,7 @@ export default function PaymentSuccessPage() {
                   <p className="text-sm text-gray-600 font-medium leading-relaxed">
                     Being delivered to{" "}
                     <span className="text-gray-800 font-semibold">
-                      {DELIVERY_ADDRESS.line1}, {DELIVERY_ADDRESS.city},{" "}
-                      {DELIVERY_ADDRESS.state} {DELIVERY_ADDRESS.zip},{" "}
-                      {DELIVERY_ADDRESS.country}
+                      {address.line1}{address.line2 ? `, ${address.line2}` : ""}
                     </span>
                   </p>
                 </div>
@@ -215,59 +196,62 @@ export default function PaymentSuccessPage() {
               </h2>
 
               <div className="space-y-0 divide-y divide-gray-50 border border-gray-100 rounded-[7px] overflow-hidden">
-                {ORDER_PRODUCTS.map((item) => (
-                  <div key={item.id} className="p-4 bg-white hover:bg-gray-50/50 transition-colors">
-                    <p className="text-[#B12704] text-xs font-semibold mb-3 flex items-center gap-1.5">
-                      <Truck size={12} />
-                      Estimated delivery: {item.deliveryDays}
-                    </p>
-                    <div className="flex gap-4">
-                      <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-[7px] border border-gray-100 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-contain p-1"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug mb-1">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-gray-400 mb-0.5">
-                          Brand: <span className="font-medium text-gray-600">{item.brand}</span>
-                        </p>
-                        <p className="text-xs text-gray-400 mb-0.5">
-                          Model No: <span className="font-medium text-gray-600">{item.sku}</span>
-                        </p>
-                        <p className="text-xs text-gray-400 mb-2">
-                          Qty: <span className="font-semibold text-gray-700">{item.qty}</span>
-                        </p>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-base font-bold text-[#186737]">
-                            {item.currency}{usd(item.price)}
-                          </span>
-                          {item.originalPrice > item.price && (
-                            <span className="text-xs text-gray-400 line-through">
-                              {item.currency}{usd(item.originalPrice)}
-                            </span>
+                {order.order_products.map((item) => {
+                  const img = item.product.images?.[0] ?? item.product.image_urls?.[0] ?? "";
+                  const price = Number(item.unit_price);
+                  const deliveryLabel = item.expectedShippingDate || item.product_supplier.delivery_days;
+
+                  return (
+                    <div key={item.id} className="p-4 bg-white hover:bg-gray-50/50 transition-colors">
+                      <p className="text-[#B12704] text-xs font-semibold mb-3 flex items-center gap-1.5">
+                        <Truck size={12} />
+                        Estimated delivery: {deliveryLabel}
+                      </p>
+                      <div className="flex gap-4">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-[7px] border border-gray-100 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
+                          {img && (
+                            <img
+                              src={img}
+                              alt={item.product.name}
+                              className="w-full h-full object-contain p-1"
+                            />
                           )}
-                          <span className="text-xs text-gray-400">/ Each</span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                          <Truck size={11} className="text-[#186737]" />
-                          {item.shipping === 0 ? (
-                            <span className="text-[#186737] font-semibold">Free Shipping</span>
-                          ) : (
-                            `Shipping: $${usd(item.shipping)}`
-                          )}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug mb-1">
+                            {item.product.name}
+                          </p>
+                          <p className="text-xs text-gray-400 mb-0.5">
+                            Brand:{" "}
+                            <span className="font-medium text-gray-600">{item.product.brand_name}</span>
+                          </p>
+                          <p className="text-xs text-gray-400 mb-0.5">
+                            Model No:{" "}
+                            <span className="font-medium text-gray-600">{item.product.sku}</span>
+                          </p>
+                          <p className="text-xs text-gray-400 mb-2">
+                            Qty:{" "}
+                            <span className="font-semibold text-gray-700">{item.quantity}</span>
+                          </p>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-base font-bold text-[#186737]">
+                              ${usd(price)}
+                            </span>
+                            <span className="text-xs text-gray-400">/ Each</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                            <Truck size={11} className="text-[#186737]" />
+                            {item.shipping_charge === 0 ? (
+                              <span className="text-[#186737] font-semibold">Free Shipping</span>
+                            ) : (
+                              `Shipping: $${usd(item.shipping_charge)}`
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="h-px bg-gray-100 my-5" />
@@ -280,47 +264,40 @@ export default function PaymentSuccessPage() {
                     Share order details via:
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleWhatsApp}
-                    className="flex items-center gap-2 px-4 py-2 rounded-[7px] border border-gray-200 hover:border-[#25D366] hover:bg-green-50 transition-all text-sm font-medium text-gray-600 hover:text-[#25D366]"
-                  >
-                    <svg viewBox="0 0 32 32" className="w-5 h-5 fill-[#25D366]">
-                      <path d="M16.004 0C7.164 0 0 7.163 0 16.004c0 2.82.738 5.47 2.027 7.775L0 32l8.45-2.008A15.93 15.93 0 0016.004 32C24.836 32 32 24.836 32 16.004 32 7.163 24.836 0 16.004 0zm0 29.23a13.19 13.19 0 01-6.73-1.843l-.483-.288-4.997 1.188 1.21-4.867-.316-.5A13.19 13.19 0 012.77 16.004c0-7.297 5.938-13.234 13.234-13.234s13.234 5.937 13.234 13.234-5.937 13.226-13.234 13.226zm7.264-9.903c-.397-.2-2.352-1.16-2.717-1.29-.364-.132-.63-.198-.895.199-.265.397-1.028 1.29-1.26 1.555-.232.265-.464.298-.861.1-.397-.2-1.677-.618-3.194-1.97-1.18-1.053-1.977-2.353-2.21-2.75-.232-.397-.025-.61.175-.808.18-.177.397-.464.596-.695.198-.232.264-.398.397-.663.133-.265.066-.497-.033-.696-.1-.199-.895-2.155-1.226-2.95-.323-.773-.651-.668-.895-.68l-.762-.013c-.265 0-.696.1-1.06.497-.364.397-1.39 1.358-1.39 3.313s1.423 3.843 1.622 4.107c.198.265 2.8 4.275 6.784 5.996.948.41 1.688.654 2.265.838.952.303 1.819.26 2.504.158.764-.114 2.352-.961 2.684-1.889.332-.928.332-1.722.232-1.888-.1-.166-.365-.265-.763-.464z" />
-                    </svg>
-                    WhatsApp
-                  </button>
-                  <button
-                    onClick={handleEmail}
-                    className="flex items-center gap-2 px-4 py-2 rounded-[7px] border border-gray-200 hover:border-[#186737] hover:bg-green-50 transition-all text-sm font-medium text-gray-600 hover:text-[#186737]"
-                  >
-                    <Mail size={16} className="text-[#186737]" />
-                    Email
-                  </button>
-                </div>
+                <ShareButtons
+                  orderNumber={order.order_number}
+                  email={order.customer.email}
+                  total={total}
+                  products={order.order_products.map((p) => ({
+                    name: p.product.name,
+                    sku: p.product.sku,
+                    quantity: p.quantity,
+                    unit_price: p.unit_price,
+                  }))}
+                />
               </div>
 
               <div className="h-px bg-gray-100 my-5" />
 
               {/* CTA buttons */}
-              <div className="flex gap-3 w-full justify-between ">
-              <div>
+              <div className="flex gap-3 w-full justify-between">
+                <div>
                   <Link
-                  href="/dashboard/orders"
-                  className="inline-flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145a2d] text-white text-sm font-semibold px-5 py-2.5 rounded-[7px] transition-colors w-full xs:w-auto"
-                >
-                  <Package size={15} />
-                  View My Orders
-                </Link>
-              </div>
-              <div>
+                    href="/dashboard/orders"
+                    className="inline-flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145a2d] text-white text-sm font-semibold px-5 py-2.5 rounded-[7px] transition-colors w-full xs:w-auto"
+                  >
+                    <Package size={15} />
+                    View My Orders
+                  </Link>
+                </div>
+                <div>
                   <Link
-                  href="/"
-                  className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-[#186737] text-gray-600 hover:text-[#186737] text-sm font-semibold px-5 py-2.5 rounded-[7px] transition-colors w-full xs:w-auto"
-                >
-                  Continue Shopping
-                </Link>
-              </div>
+                    href="/"
+                    className="inline-flex items-center justify-center gap-2 border border-gray-200 hover:border-[#186737] text-gray-600 hover:text-[#186737] text-sm font-semibold px-5 py-2.5 rounded-[7px] transition-colors w-full xs:w-auto"
+                  >
+                    Continue Shopping
+                  </Link>
+                </div>
               </div>
             </div>
 
@@ -338,7 +315,7 @@ export default function PaymentSuccessPage() {
                 </p>
                 <div className="mt-4 bg-white rounded-[7px] border border-green-200 px-4 py-2 w-full">
                   <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Order ID</p>
-                  <p className="text-sm font-black text-[#186737] mt-0.5">#{ORDER_NUMBER}</p>
+                  <p className="text-sm font-black text-[#186737] mt-0.5">#{order.order_number}</p>
                 </div>
               </div>
 
@@ -349,13 +326,19 @@ export default function PaymentSuccessPage() {
                   Order Summary
                 </h3>
                 <div className="space-y-2.5 text-sm">
-                  <Row label={`Subtotal (${ORDER_PRODUCTS.length} items)`} value={`$${usd(subtotal)}`} />
+                  <Row
+                    label={`Subtotal (${order.order_products.length} item${order.order_products.length !== 1 ? "s" : ""})`}
+                    value={`$${usd(subtotal)}`}
+                  />
                   <Row
                     label="Shipping & Handling"
                     value={shippingTotal === 0 ? "Free" : `$${usd(shippingTotal)}`}
                     valueClass={shippingTotal === 0 ? "text-[#186737]" : undefined}
                   />
-                  <Row label={`Tax (${(taxRate * 100).toFixed(2)}%)`} value={`$${usd(taxAmount)}`} />
+                  <Row
+                    label={`Tax (${(taxRate * 100).toFixed(2)}%)`}
+                    value={`$${usd(taxAmount)}`}
+                  />
                   <div className="h-px bg-gray-100" />
                   <div className="flex justify-between items-baseline pt-1">
                     <span className="font-bold text-gray-800">Total Paid</span>

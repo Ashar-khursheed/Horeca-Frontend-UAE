@@ -31,7 +31,8 @@ import {
   Star,
   TrendingUp,
   Truck,
-  User
+  User,
+  History
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -74,6 +75,7 @@ const MOBILE_NAV_ITEMS = [
   // { name: "My Quotes",           href: "/dashboard/quotes",     Icon: FileText },
   { name: "Payments & Invoices", href: "/dashboard/payments",   Icon: CreditCard },
   { name: "My Wishlist",         href: "/wishlist",             Icon: Heart },
+  {    name: "Browsing History",       href: "/dashboard/browsing-history", Icon:History },
   { name: "Saved Docs",          href: "/dashboard/documents",  Icon: FolderOpen },
   { name: "Support Center",      href: "/dashboard/support",    Icon: Headphones },
 ];

@@ -10,6 +10,7 @@ import type { BlogCategory } from "./page";
 
 // ─── Horizontal slider per category ──────────────────────────────────────────
 function CategoryRow({ category }: { category: BlogCategory }) {
+  console.log("dsadasdasdasd",category)
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
@@ -52,12 +53,13 @@ function CategoryRow({ category }: { category: BlogCategory }) {
           </span>
           {category.name}
         </h2>
-        <Link
+        {(category?.blogs?.length ?? 0) > 5 && <Link
           href={`/blog/category/${category.url?.url ?? ""}`}
           className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#186737] text-[#186737] text-sm font-semibold hover:bg-[#186737] hover:text-white transition-all"
         >
           Browse Category <ChevronRight size={14} />
-        </Link>
+        </Link>}
+        
       </div>
 
       {/* Slider */}

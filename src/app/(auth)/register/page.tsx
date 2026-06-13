@@ -1,7 +1,7 @@
 "use client";
 
 import { apiUrls } from "@/apis/api-endpoint";
-import { makeApiRequest } from "@/apis/axios-instance";
+import { makeApiRequest, setAuthToken } from "@/apis/axios-instance";
 import Loader from "@/components/Loader";
 import {
   Select,
@@ -29,6 +29,10 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { useGoogleLogin } from "@react-oauth/google";
+import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -57,15 +61,16 @@ interface RegisterResponse {
 }
 
 export default function RegisterPage() {
+    const router       = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-
+  const searchParams = useSearchParams();
   const locationFromRedux = useLocationData();
   const country = useSelector((s: RootState) => s.country);
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-
+  const [googleLoading, setGoogleLoading] = useState(false);
   // Fetch country details (once) using sessionStorage first, then Redux fallback
   useEffect(() => {
     const cached = locationFromRedux;
@@ -136,6 +141,7 @@ export default function RegisterPage() {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
+              await dispatch(fetchCounts())
         window.location.href = "/";
       } catch (err: unknown) {
         const msg =
@@ -145,6 +151,47 @@ export default function RegisterPage() {
       } finally {
         setLoading(false);
       }
+    },
+  });
+
+
+    const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      console.log("tokenResponse",tokenResponse)
+      try {
+        const res = await makeApiRequest<{
+          success: boolean;
+          token: string;
+          customer: CustomerProfile;
+        }>(apiUrls.GOOGLE_AUTH, {
+          method: "POST",
+          data: { access_token: tokenResponse.access_token },
+        });
+        setAuthToken(res.token);
+        localStorage.setItem("user", JSON.stringify(res.customer));
+        dispatch(setProfile(res.customer));
+           // Sync guest wishlist → server (only if items exist)
+        const guestWishlist = localStorage.getItem("horeca_wishlist");
+        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+          await syncGuestWishlistAfterLogin();
+        }
+        // Sync guest cart → server (only if items exist)
+        const guestCart = localStorage.getItem("horeca_cart");
+        if (guestCart && JSON.parse(guestCart)?.length > 0) {
+          await syncGuestCartAfterLogin();
+        }
+        await dispatch(fetchCounts())
+        const redirect = searchParams.get("redirect") ?? "/";
+        router.push(redirect);
+      } catch {
+        setApiError("Google login failed. Please try again.");
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      setApiError("Google login failed. Please try again.");
+      setGoogleLoading(false);
     },
   });
 
@@ -464,10 +511,22 @@ export default function RegisterPage() {
           </div>
 
           {/* Google */}
-          <button className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200">
+          {/* <button className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200">
             <GoogleIcon />
             Sign in with Google
-          </button>
+          </button> */}
+              {/* Google */}
+                      <button
+                        type="button"
+                        disabled={googleLoading}
+                        onClick={() => {
+                          setGoogleLoading(true);
+                          googleLogin();
+                        }}
+                        className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 disabled:opacity-70"
+                      >
+                        {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
+                      </button>
 
           {/* Login link */}
           <p className="text-center text-xs text-gray-500 mt-6">

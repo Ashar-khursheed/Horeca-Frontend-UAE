@@ -1,30 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import {
-  Heart,
-  Share2,
-  Truck,
-  Star,
-  CheckCircle,
-  Package,
-  ShoppingBag,
-  X,
-  BadgeCheck,
-  RotateCcw,
-} from "lucide-react";
+import AddToCartWidget from "@/components/add-to-cart";
 import Breadcrumb from "@/components/breadcum";
+import { type RawApiProduct } from "@/components/product-card";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import {
   fetchWishlist,
-  resetWishlistFetch,
-  toggleWishlistItem,
-  toggleGuestWishlistItem,
   hydrateGuestWishlist,
+  resetWishlistFetch,
+  toggleGuestWishlistItem,
+  toggleWishlistItem,
 } from "@/store/slices/wishlist/wishlistSlice";
-import AddToCartWidget from "@/components/add-to-cart";
-import { type RawApiProduct } from "@/components/product-card";
+import {
+  BadgeCheck,
+  CheckCircle,
+  Heart,
+  Package,
+  RotateCcw,
+  Share2,
+  ShoppingBag,
+  Star,
+  Truck,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type WishlistItem = {
@@ -72,6 +74,7 @@ const apiEntryToWishlistItem = (entry: any, currencySymbol: string): WishlistIte
   const category = p.categories?.[0];
   const catUrl = category?.seo_url?.url ?? "";
   const prodUrl = p.seo_url?.url ?? String(p.id);
+  const min_quantity = p?.min_quantity
   const url = catUrl ? `/${catUrl}/${prodUrl}` : `/${prodUrl}`;
 
   return {
@@ -92,7 +95,7 @@ const apiEntryToWishlistItem = (entry: any, currencySymbol: string): WishlistIte
     reviews: 0,
     url,
     inStock: supplier ? !!supplier.in_stock : true,
-    minQuantity: supplier?.min_quantity ?? 1,
+    minQuantity:min_quantity,
     isFixed: !!supplier?.is_fixed,
     rawProduct: p,
   };
@@ -219,10 +222,13 @@ const WishlistCard = ({
   const hasSale = item.originalPrice > item.price;
   const discountPct = hasSale ? ((item.originalPrice - item.price) / item.originalPrice) * 100 : 0;
   const [priceInt, priceDec] = fmtPrice(item.price).split(".");
-
+  const dispatch = useDispatch()
   const handleRemove = () => {
     setRemoving(true);
-    setTimeout(() => onRemove(item.id), 280);
+    setTimeout(() => {
+      onRemove(item.id);
+      dispatch(fetchCounts() as any);
+    }, 280);
   };
 
   return (
@@ -447,6 +453,9 @@ export default function WishlistPage() {
   const items: WishlistItem[] = isLoggedIn
     ? apiEntries.map((e) => apiEntryToWishlistItem(e, currencySymbol))
     : guestItems.map((gi) => guestItemToWishlistItem(gi, currencySymbol));
+
+
+    console.log("itemsitemsitemsitemsitemsitems",items)
 
   const loading = isLoggedIn
     ? fetchStatus === "idle" || fetchStatus === "loading"

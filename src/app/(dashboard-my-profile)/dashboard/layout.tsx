@@ -11,7 +11,8 @@ import {
   LayoutDashboard,
   Settings,
   ShoppingBag,
-  X
+  X,
+  History
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +28,7 @@ const NAV = [
   { label: "Account Settings",  href: "/dashboard/my-profile",   icon: Settings },
   // { label: "Saved Docs",        href: "/dashboard/documents",    icon: FolderOpen },
   { label: "Support Center",    href: "/dashboard/support",      icon: Headphones },
+    { label: "Browsing History",          href: "/dashboard/browsing-history", icon:History },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

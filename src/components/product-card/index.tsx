@@ -24,6 +24,7 @@ import AddToCartWidget from "../add-to-cart";
 import TickerBadge from "../ticker-badge";
 import { Modal } from "@/components/ui/modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -359,7 +360,10 @@ export const ProductCard = ({
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) {
       // Logged-in: call API
-      dispatch(toggleWishlistItem({ productId: product.id, currentlyInWishlist: inWishlist }));
+      dispatch(toggleWishlistItem({ productId: product.id, currentlyInWishlist: inWishlist }))
+            .then(() => dispatch(fetchCounts() as any))
+                .catch(() => {});
+      
     } else {
       // Guest: save full product to localStorage
       dispatch(toggleGuestWishlistItem({ productId: product.id, rawProduct: product }));

@@ -1309,6 +1309,7 @@ import { AddressesTab } from "@/app/(dashboard-my-profile)/dashboard/my-profile/
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
 import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
 
@@ -1349,6 +1350,7 @@ const getToken = (): string | null => {
 // ─── API base URL ─────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const rawProducts = useAppSelector((s) => s.cart.rawProducts);
   const guestItems = useAppSelector((s) => s.cart.items);
@@ -1374,6 +1376,9 @@ export default function CheckoutPage() {
   // ── Derived state ────────────────────────────────────────────────────────────
   const hasAddress =
     addresses.some((a) => a.is_default) || !!getDefaultAddressCache();
+
+  // Mobile step (1 = Contact + Address, 2 = Cart + Payment)
+  const [mobileStep, setMobileStep] = useState(1);
 
   // Place Order button loading
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -1726,39 +1731,86 @@ export default function CheckoutPage() {
         };
       });
 
+      // // ── STEP 8: Place Order API ──────────────────────────────────────────────
+      // const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
+      //   data: {
+      //     customer_id: user?.id,
+      //     customer_address_id: defaultAddr?.id,
+      //     tax_percentage: taxPercent,
+      //     ship_all_at_once: 1,
+      //     is_lift_gate: liftGate ? 1 : 0,
+      //     is_residential_address: residential ? 1 : 0,
+      //     is_inside_delivery: insideDelivery ? 1 : 0,
+      //     separate_deliveries: 0,
+      //     products,
+      //     utm_id: sessionId,
+      //     coupon_id: couponId,
+      //     discount: discountVal,
+      //     is_reserved: 0,
+      //     pay_with_cheque: 0,
+      //     payment_mode: "Square",
+      //     // square_payment_id:    squarePaymentId,
+      //   },
+      //   method: "POST",
+      // })) as any;
+
+      // if (!orderRes?.success) {
+      //   throw new Error(
+      //     orderRes?.message ??
+      //       "Order could not be placed. Please contact support.",
+      //   );
+      // }
+
+      // const orderData = orderRes?.data;
+      // console.log("✅ Order placed:", orderData?.id, orderData?.order_number);
+      // localStorage.removeItem(CART_SUMMARY_KEY);
+
       // ── STEP 8: Place Order API ──────────────────────────────────────────────
-      const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
-        data: {
-          customer_id: user?.id,
-          customer_address_id: defaultAddr?.id,
-          tax_percentage: taxPercent,
-          ship_all_at_once: 1,
-          is_lift_gate: liftGate ? 1 : 0,
-          is_residential_address: residential ? 1 : 0,
-          is_inside_delivery: insideDelivery ? 1 : 0,
-          separate_deliveries: 0,
-          products,
-          utm_id: sessionId,
-          coupon_id: couponId,
-          discount: discountVal,
-          is_reserved: 0,
-          pay_with_cheque: 0,
-          payment_mode: "Square",
-          // square_payment_id:    squarePaymentId,
-        },
-        method: "POST",
-      })) as any;
+const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
+  data: {
+    customer_id: user?.id,
+    customer_address_id: defaultAddr?.id,
+    tax_percentage: taxPercent,
+    ship_all_at_once: 1,
+    is_lift_gate: liftGate ? 1 : 0,
+    is_residential_address: residential ? 1 : 0,
+    is_inside_delivery: insideDelivery ? 1 : 0,
+    separate_deliveries: 0,
+    products,
+    utm_id: sessionId,
+    coupon_id: couponId,
+    discount: discountVal,
+    is_reserved: 0,
+    pay_with_cheque: 0,
+    payment_mode: "Square",
+  },
+  method: "POST",
+})) as any;
 
-      if (!orderRes?.success) {
-        throw new Error(
-          orderRes?.message ??
-            "Order could not be placed. Please contact support.",
-        );
-      }
+if (!orderRes?.success) {
+  throw new Error(
+    orderRes?.message ?? "Order could not be placed. Please contact support.",
+  );
+}
 
-      const orderData = orderRes?.data;
-      console.log("✅ Order placed:", orderData?.id, orderData?.order_number);
-      localStorage.removeItem(CART_SUMMARY_KEY);
+const orderId = orderRes?.data?.id;
+console.log("✅ Order placed, ID:", orderId);
+localStorage.removeItem(CART_SUMMARY_KEY);
+
+// ── STEP 8.5: Full order details fetch (place order ke turant baad) ───────
+let orderData: any = orderRes?.data; // fallback
+try {
+  const detailRes = (await makeApiRequest(
+    apiUrls.ORDER_DETAIL(orderId),
+    { method: "GET" },
+  )) as any;
+  if (detailRes?.success && detailRes?.data) {
+    orderData = detailRes.data;
+    console.log("✅ Order detail fetched:", orderData?.order_number);
+  }
+} catch (detailErr) {
+  console.warn("⚠️ Order detail fetch failed (non-blocking):", detailErr);
+}
 
       // ── STEP 9: Payment History API ─────────────────────────────────────────
       try {
@@ -1820,7 +1872,7 @@ export default function CheckoutPage() {
 
         await makeApiRequest(apiUrls?.SCREEN_TRANSACTION, {
           data: {
-            order_id: orderData?.id ?? orderData?.id,
+            order_id: String(orderData?.id) ?? String(orderData?.id),
             amount,
             billing_first_name: billingFirst,
             billing_last_name: billingLast,
@@ -1850,12 +1902,21 @@ export default function CheckoutPage() {
         console.warn("⚠️ Screen transaction failed (non-blocking):", screenErr);
       }
 
-      // ── STEP 11: Success — recentOrder save karo aur redirect karo ──────────
-      localStorage.setItem("recentOrder", JSON.stringify(orderData));
-
-      // TODO: apna success page route yahan daalo
-      // router.push(`/payment/success/${orderData?.id}`)
-      console.log("🎉 All done! Order ID:", orderData?.id);
+      // ── STEP 11: Full order details GET karo, save karo, redirect ──────────
+      let fullOrder = orderData;
+      try {
+        const detailRes = (await makeApiRequest(
+          apiUrls.ORDER_DETAIL(orderData?.id),
+          { method: "GET" },
+        )) as any;
+        if (detailRes?.success && detailRes?.data) {
+          fullOrder = detailRes.data;
+        }
+      } catch {
+        // GET fail hone pe orderData hi use karo
+      }
+      localStorage.setItem("recentOrder", JSON.stringify(fullOrder));
+      router.push(`/payment-success?orderID=${orderData?.id}`);
     } catch (err: any) {
       console.error("❌ Place order error:", err);
       setOrderError(err?.message ?? "Something went wrong. Please try again.");
@@ -1870,376 +1931,384 @@ export default function CheckoutPage() {
     { label: "Checkout", href: null },
   ];
 
+  // ── Shared blocks (used in both mobile & desktop) ──────────────────────────
+  const contactBlock = (
+    <div className="mb-7">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-base font-semibold text-gray-900">Contact information</h2>
+        <Link
+          href="/dashboard/my-profile"
+          className="text-xs font-semibold text-green-700 flex gap-1.5 items-center"
+        >
+          Edit Info <Pencil className="w-3" />
+        </Link>
+      </div>
+      <div className="space-y-3">
+        <Field value={email} onChange={setEmail} type="email" placeholder="Email" disable />
+        <div className="grid grid-cols-2 gap-3">
+          <Field value={`${firstName} ${lastName}`} onChange={setFirstName} placeholder="Full name" disable />
+          <Field value={phone} onChange={setPhone} type="tel" placeholder="Phone" disable />
+        </div>
+      </div>
+    </div>
+  );
+
+  const addressBlock = (
+    <div className="mb-8" id="shipping-address-section">
+      <AddressesTab checkoutMode />
+    </div>
+  );
+
+  const cartBlock = (
+    <div className="space-y-4 mb-6">
+      {isCartLoading ? (
+        <div className="space-y-4 py-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex items-start gap-3 animate-pulse">
+              <div className="w-16 h-16 rounded-md bg-gray-200 shrink-0" />
+              <div className="flex-1 space-y-2 pt-1">
+                <div className="h-3 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-14 shrink-0 mt-1" />
+            </div>
+          ))}
+        </div>
+      ) : cartItems.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-8">Your cart is empty.</p>
+      ) : (
+        cartItems.map((item) => (
+          <div key={item.id} className="flex items-start gap-3">
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 rounded-md border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+                ) : (
+                  <div className="w-full h-full bg-gray-100" />
+                )}
+              </div>
+              <span className="absolute -top-2 -right-2 w-5 h-5 bg-gray-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {item.qty}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-gray-800 font-medium leading-snug line-clamp-2">{item.name}</p>
+              {item.accessories > 0 && (
+                <p className="text-[11px] text-gray-400 mt-0.5">+{currencySymbol}{usd(item.accessories)} accessories</p>
+              )}
+              {item.shipping > 0 && (
+                <div className="flex items-center gap-1 mt-0.5 text-[11px] text-gray-400">
+                  <Truck size={10} /> {currencySymbol}{usd(item.shipping)} shipping
+                </div>
+              )}
+            </div>
+            <span className="text-sm font-semibold text-gray-800 shrink-0">
+              {currencySymbol}{usd((item.price + item.accessories) * item.qty)}
+            </span>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const discountBlock = (
+    <>
+      <div className="flex gap-2 mb-2">
+        <div className="relative flex-1">
+          <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => { setCode(e.target.value.toUpperCase()); setCodeError(false); }}
+            placeholder="Gift card or discount code"
+            disabled={codeApplied}
+            className="w-full h-10 pl-9 pr-3 border border-gray-300 rounded-md text-sm outline-none focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/20 bg-white disabled:bg-gray-50 disabled:text-gray-400"
+          />
+        </div>
+        <button
+          onClick={handleApplyCode}
+          disabled={codeApplied || !code}
+          className="h-10 px-4 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-700 text-sm font-medium transition-colors"
+        >
+          Apply
+        </button>
+      </div>
+      {codeError && <p className="text-[11px] text-red-500 mb-4">Invalid code.</p>}
+      {codeApplied && <p className="text-[11px] text-[#186737] mb-4">HORECA10 — 10% off applied</p>}
+    </>
+  );
+
+  const deliveryBlock = (
+    <div className="mb-6 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <h2 className="text-sm font-semibold text-gray-900">Lift Gate or Residential Address</h2>
+      </div>
+      <div className="divide-y divide-gray-100">
+        {[
+          { label: "Lift Gate Service",       desc: "Required for deliveries without loading dock", fee: 75,  state: liftGate,       toggle: () => setLiftGate(!liftGate) },
+          { label: "Residential Address",     desc: "Delivery to home or residential location",    fee: 199, state: residential,    toggle: () => setResidential(!residential) },
+          { label: "Inside Delivery Address", desc: "Delivery inside the building",                fee: 249, state: insideDelivery, toggle: () => setInsideDelivery(!insideDelivery) },
+        ].map(({ label, desc, fee, state, toggle }) => (
+          <div key={label} className="flex items-center justify-between px-4 py-3.5">
+            <div>
+              <p className="text-sm font-medium text-gray-800">{label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+              {state && <p className="text-xs text-[#186737] font-semibold mt-1">+${fee}.00 fee will be added</p>}
+            </div>
+            <button
+              type="button"
+              onClick={toggle}
+              className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${state ? "bg-[#186737]" : "bg-gray-300"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${state ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const pricingBlock = isCartLoading ? (
+    <div className="space-y-3 animate-pulse mb-4">
+      {[80, 64, 56, 48].map((w) => (
+        <div key={w} className="flex justify-between items-center">
+          <div className="h-3 bg-gray-200 rounded" style={{ width: `${w}%` }} />
+          <div className="h-3 bg-gray-200 rounded w-16" />
+        </div>
+      ))}
+      <div className="h-px bg-gray-200 my-3" />
+      <div className="flex justify-between items-center pt-1">
+        <div className="h-4 bg-gray-200 rounded w-28" />
+        <div className="h-5 bg-gray-200 rounded w-24" />
+      </div>
+    </div>
+  ) : (
+    <>
+      <div className="space-y-2 text-sm mb-4">
+        <PriceRow label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`} value={`${currencySymbol}${usd(baseSubtotal)}`} />
+        {codeApplied && <PriceRow label="Discount (HORECA10)" value={`-${currencySymbol}${usd(discount)}`} green />}
+        <PriceRow label={`Shipping & Handling${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`} value={`${currencySymbol}${usd(baseShipping)}`} />
+        {liftGate    && <PriceRow label={`Lift Gate Service${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}      value={`${currencySymbol}${usd(liftFee)}`} />}
+        {residential && <PriceRow label={`Residential Address${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}   value={`${currencySymbol}${usd(resFee)}`} />}
+        {insideDelivery && <PriceRow label={`Inside Delivery${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}    value={`${currencySymbol}${usd(insideFee)}`} />}
+        {ratePercent > 0 && <PriceRow label={`Tax (${ratePercent}%)`} value={`${currencySymbol}${usd(totalTax)}`} />}
+      </div>
+      <div className="h-px bg-gray-200 mb-4" />
+      <div className="flex items-center justify-between mb-4">
+        <span className="font-bold text-gray-900 text-base">Total Amount</span>
+        <span className="font-bold text-gray-900 text-xl">{currencySymbol}{usd(grandTotal)}</span>
+      </div>
+    </>
+  );
+
+  const placeOrderBtn = (
+    <>
+      {orderError && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3">
+          <svg className="mt-0.5 h-4 w-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-sm text-red-700">{orderError}</p>
+        </div>
+      )}
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-4">
+        <Link href="/cart" className="flex items-center gap-1 text-[#186737] text-sm hover:underline font-medium">
+          <ChevronRight size={14} className="rotate-180" /> Return to cart
+        </Link>
+        <button
+          type="button"
+          disabled={isPlacingOrder}
+          className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold px-8 py-3 rounded-md text-sm transition-colors"
+        >
+          {isPlacingOrder ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Processing...
+            </>
+          ) : (
+            "Place Order"
+          )}
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <>
       <Breadcrumb crumbs={crumbs} />
-      <div className="global-container bg-white">
+
+      {/* ══════════════ MOBILE LAYOUT — step-based (hidden on lg+) ══════════════ */}
+      <div className="lg:hidden min-h-screen bg-gray-50">
+
+        {/* ── Step indicator bar ─────────────────────────────────────────────── */}
+        <div className="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-20 shadow-sm">
+          <div className="flex items-center gap-0 max-w-sm mx-auto">
+            {/* Step 1 */}
+            <button
+              onClick={() => setMobileStep(1)}
+              className="flex items-center gap-2 flex-1"
+            >
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${mobileStep >= 1 ? "bg-[#186737] text-white" : "bg-gray-200 text-gray-500"}`}>
+                {mobileStep > 1 ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : "1"}
+              </div>
+              <span className={`text-xs font-semibold ${mobileStep === 1 ? "text-[#186737]" : "text-gray-400"}`}>
+                Info &amp; Address
+              </span>
+            </button>
+
+            {/* Connector */}
+            <div className="flex-1 flex items-center px-1">
+              <div className={`h-0.5 w-full transition-colors ${mobileStep > 1 ? "bg-[#186737]" : "bg-gray-200"}`} />
+              <ChevronRight size={14} className={`shrink-0 -ml-1 ${mobileStep > 1 ? "text-[#186737]" : "text-gray-300"}`} />
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${mobileStep === 2 ? "bg-[#186737] text-white" : "bg-gray-200 text-gray-500"}`}>
+                2
+              </div>
+              <span className={`text-xs font-semibold ${mobileStep === 2 ? "text-[#186737]" : "text-gray-400"}`}>
+                Cart &amp; Payment
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── STEP 1: Contact + Address ─────────────────────────────────────── */}
+        {mobileStep === 1 && (
+          <div className="px-4 py-5 space-y-1 pb-28">
+            {/* Contact card */}
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+              {contactBlock}
+            </div>
+
+            {/* Address card */}
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+              {addressBlock}
+            </div>
+
+            {/* Fixed bottom CTA */}
+            <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
+              <button
+                type="button"
+                onClick={() => setMobileStep(2)}
+                className="w-full flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145c30] active:scale-[0.98] text-white font-semibold py-3.5 rounded-[7px] text-sm transition-all"
+              >
+                Continue to Cart &amp; Payment
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 2: Cart + Payment ────────────────────────────────────────── */}
+        {mobileStep === 2 && (
+          <div className="px-4 py-5 pb-36 space-y-4">
+
+            {/* Cart items card */}
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+              <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#186737] text-white text-[10px] font-bold flex items-center justify-center">{totalItems}</span>
+                Order Items
+              </h2>
+              {cartBlock}
+              <div className="h-px bg-gray-100 my-4" />
+              {discountBlock}
+            </div>
+
+            {/* Delivery options card */}
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+              {deliveryBlock}
+            </div>
+
+            {/* Payment form card */}
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+              <h2 className="text-sm font-bold text-gray-800 mb-4">Payment Details</h2>
+              <CheckoutPayment
+                squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
+                squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
+                onHandleReady={(h) => { paymentHandleRef.current = h; }}
+              />
+            </div>
+
+            {/* Price summary card */}
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+              {pricingBlock}
+            </div>
+
+            {/* Fixed bottom Place Order CTA */}
+            <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
+              {orderError && (
+                <div className="mb-2 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-xs text-red-700">{orderError}</p>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMobileStep(1)}
+                  className="flex items-center gap-1.5 px-4 py-3.5 rounded-[7px] border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors shrink-0"
+                >
+                  <ChevronRight size={15} className="rotate-180" />
+                  Back
+                </button>
+                <button
+                  type="button"
+                  disabled={isPlacingOrder}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98] text-white font-semibold py-3.5 rounded-[7px] text-sm transition-all"
+                >
+                  {isPlacingOrder ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    <>Place Order · {currencySymbol}{usd(grandTotal)}</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════ DESKTOP LAYOUT — 2-column (hidden on mobile) ══════════════ */}
+      <div className="hidden lg:block global-container bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] max-w-7xl mx-auto">
           {/* ── LEFT ──────────────────────────────────────────────────────── */}
           <div className="px-6 md:px-12 xl:px-20 py-10 pt-0 border-r border-gray-100">
-            {/* Payment */}
             <CheckoutPayment
               squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
               squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
-              onHandleReady={(h) => {
-                paymentHandleRef.current = h;
-              }}
+              onHandleReady={(h) => { paymentHandleRef.current = h; }}
             />
-
             <div className="flex items-center gap-3 mb-6" />
-
-            {/* Contact */}
-            <div className="mb-7">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex justify-between items-center w-full">
-                  <h2 className="text-base font-semibold text-gray-900">
-                    Contact information
-                  </h2>
-                  <Link
-                    href="/dashboard/my-profile"
-                    className="text-xs font-semibold text-green-700 cursor-pointer flex gap-1.5 items-center"
-                  >
-                    Edit Info <Pencil className="w-3" />
-                  </Link>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <Field
-                  value={email}
-                  onChange={setEmail}
-                  type="email"
-                  placeholder="Email"
-                  disable
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <Field
-                    value={`${firstName} ${lastName}`}
-                    onChange={setFirstName}
-                    placeholder="Full name"
-                    disable
-                  />
-                  <Field
-                    value={phone}
-                    onChange={setPhone}
-                    type="tel"
-                    placeholder="Phone"
-                    disable
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Shipping Address */}
-            <div className="mb-8" id="shipping-address-section">
-              <AddressesTab checkoutMode />
-            </div>
+            {contactBlock}
+            {addressBlock}
           </div>
 
           {/* ── RIGHT — Order Summary ──────────────────────────────────────── */}
           <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10">
-            {/* Items */}
-            <div className="space-y-4 mb-6">
-              {isCartLoading ? (
-                <div className="space-y-4 py-2">
-                  {[1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-3 animate-pulse"
-                    >
-                      <div className="w-16 h-16 rounded-md bg-gray-200 shrink-0" />
-                      <div className="flex-1 space-y-2 pt-1">
-                        <div className="h-3 bg-gray-200 rounded w-3/4" />
-                        <div className="h-3 bg-gray-200 rounded w-1/2" />
-                      </div>
-                      <div className="h-4 bg-gray-200 rounded w-14 shrink-0 mt-1" />
-                    </div>
-                  ))}
-                </div>
-              ) : cartItems.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">
-                  Your cart is empty.
-                </p>
-              ) : (
-                cartItems.map((item) => (
-                  <div key={item.id} className="flex items-start gap-3">
-                    <div className="relative shrink-0">
-                      <div className="w-16 h-16 rounded-md border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-contain p-1"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100" />
-                        )}
-                      </div>
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-gray-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                        {item.qty}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-800 font-medium leading-snug line-clamp-2">
-                        {item.name}
-                      </p>
-                      {item.accessories > 0 && (
-                        <p className="text-[11px] text-gray-400 mt-0.5">
-                          +{currencySymbol}{usd(item.accessories)} accessories
-                        </p>
-                      )}
-                      {item.shipping > 0 && (
-                        <div className="flex items-center gap-1 mt-0.5 text-[11px] text-gray-400">
-                          <Truck size={10} /> {currencySymbol}{usd(item.shipping)} shipping
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-sm font-semibold text-gray-800 shrink-0">
-                      {currencySymbol}{usd((item.price + item.accessories) * item.qty)}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Discount code */}
-            <div className="flex gap-2 mb-2">
-              <div className="relative flex-1">
-                <Tag
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => {
-                    setCode(e.target.value.toUpperCase());
-                    setCodeError(false);
-                  }}
-                  placeholder="Gift card or discount code"
-                  disabled={codeApplied}
-                  className="w-full h-10 pl-9 pr-3 border border-gray-300 rounded-md text-sm outline-none focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/20 bg-white disabled:bg-gray-50 disabled:text-gray-400"
-                />
-              </div>
-              <button
-                onClick={handleApplyCode}
-                disabled={codeApplied || !code}
-                className="h-10 px-4 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-700 text-sm font-medium transition-colors"
-              >
-                Apply
-              </button>
-            </div>
-            {codeError && (
-              <p className="text-[11px] text-red-500 mb-4">Invalid code.</p>
-            )}
-            {codeApplied && (
-              <p className="text-[11px] text-[#186737] mb-4">
-                HORECA10 — 10% off applied
-              </p>
-            )}
-
+            {cartBlock}
+            {discountBlock}
             <div className="h-px bg-gray-200 my-4" />
-
-            {/* Delivery Options */}
-            <div className="mb-8 border border-gray-200 rounded-lg overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <h2 className="text-sm font-semibold text-gray-900">
-                  Lift Gate or Residential Address
-                </h2>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {[
-                  {
-                    label: "Lift Gate Service",
-                    desc: "Required for deliveries without loading dock",
-                    fee: 75,
-                    state: liftGate,
-                    toggle: () => setLiftGate(!liftGate),
-                  },
-                  {
-                    label: "Residential Address",
-                    desc: "Delivery to home or residential location",
-                    fee: 199,
-                    state: residential,
-                    toggle: () => setResidential(!residential),
-                  },
-                  {
-                    label: "Inside Delivery Address",
-                    desc: "Delivery inside the building",
-                    fee: 249,
-                    state: insideDelivery,
-                    toggle: () => setInsideDelivery(!insideDelivery),
-                  },
-                ].map(({ label, desc, fee, state, toggle }) => (
-                  <div
-                    key={label}
-                    className="flex items-center justify-between px-4 py-3.5"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">
-                        {label}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-                      {state && (
-                        <p className="text-xs text-[#186737] font-semibold mt-1">
-                          +${fee}.00 fee will be added
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={toggle}
-                      className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${state ? "bg-[#186737]" : "bg-gray-300"}`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${state ? "translate-x-5" : "translate-x-0"}`}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+            {deliveryBlock}
             <div className="h-px bg-gray-200 my-4" />
-
-            {isCartLoading ? (
-              <div className="space-y-3 animate-pulse mb-4">
-                {[80, 64, 56, 48].map((w) => (
-                  <div key={w} className="flex justify-between items-center">
-                    <div
-                      className="h-3 bg-gray-200 rounded"
-                      style={{ width: `${w}%` }}
-                    />
-                    <div className="h-3 bg-gray-200 rounded w-16" />
-                  </div>
-                ))}
-                <div className="h-px bg-gray-200 my-3" />
-                <div className="flex justify-between items-center pt-1">
-                  <div className="h-4 bg-gray-200 rounded w-28" />
-                  <div className="h-5 bg-gray-200 rounded w-24" />
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2 text-sm mb-4">
-                  <PriceRow
-                    label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
-                    value={`${currencySymbol}${usd(baseSubtotal)}`}
-                  />
-                  {codeApplied && (
-                    <PriceRow
-                      label="Discount (HORECA10)"
-                      value={`-${currencySymbol}${usd(discount)}`}
-                      green
-                    />
-                  )}
-                  <PriceRow
-                    label={`Shipping & Handling${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}
-                    value={`${currencySymbol}${usd(baseShipping)}`}
-                  />
-                  {liftGate && (
-                    <PriceRow
-                      label={`Lift Gate Service${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}
-                      value={`${currencySymbol}${usd(liftFee)}`}
-                    />
-                  )}
-                  {residential && (
-                    <PriceRow
-                      label={`Residential Address${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}
-                      value={`${currencySymbol}${usd(resFee)}`}
-                    />
-                  )}
-                  {insideDelivery && (
-                    <PriceRow
-                      label={`Inside Delivery${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}
-                      value={`${currencySymbol}${usd(insideFee)}`}
-                    />
-                  )}
-                  {ratePercent > 0 && (
-                    <PriceRow
-                      label={`Tax (${ratePercent}%)`}
-                      value={`${currencySymbol}${usd(totalTax)}`}
-                    />
-                  )}
-                </div>
-
-                <div className="h-px bg-gray-200 mb-4" />
-
-                <div className="flex items-center justify-between mb-6">
-                  <span className="font-bold text-gray-900 text-base">
-                    Total Amount
-                  </span>
-                  <span className="font-bold text-gray-900 text-xl">
-                    {currencySymbol}{usd(grandTotal)}
-                  </span>
-                </div>
-
-                {/* ── Error message ── */}
-                {orderError && (
-                  <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3">
-                    <svg
-                      className="mt-0.5 h-4 w-4 shrink-0 text-red-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <p className="text-sm text-red-700">{orderError}</p>
-                  </div>
-                )}
-
-                {/* ── Footer actions ── */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-4">
-                  <Link
-                    href="/cart"
-                    className="flex items-center gap-1 text-[#186737] text-sm hover:underline font-medium"
-                  >
-                    <ChevronRight size={14} className="rotate-180" /> Return to
-                    cart
-                  </Link>
-
-                  {/* Place Order button with loader */}
-                  <button
-                    type="button"
-                    onClick={handlePlaceOrder}
-                    disabled={isPlacingOrder}
-                    className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold px-8 py-3 rounded-md text-sm transition-colors"
-                  >
-                    {isPlacingOrder ? (
-                      <>
-                        <svg
-                          className="h-4 w-4 animate-spin"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                          />
-                        </svg>
-                        Processing...
-                      </>
-                    ) : (
-                      "Place Order"
-                    )}
-                  </button>
-                </div>
-              </>
-            )}
+            {pricingBlock}
+            {placeOrderBtn}
           </div>
         </div>
       </div>

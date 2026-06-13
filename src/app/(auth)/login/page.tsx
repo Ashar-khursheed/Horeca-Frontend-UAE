@@ -21,7 +21,12 @@ import { AppDispatch } from "@/store/store";
 import { loginUser } from "@/store/slices/auth/authSlice";
 import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
 import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
-
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
+import { makeApiRequest, setAuthToken } from "@/apis/axios-instance";
+import { setProfile } from "@/store/slices/my-profile/profileSlice";
+import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
+import { apiUrls } from "@/apis/api-endpoint";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -66,13 +71,54 @@ const TrustBadge = ({
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
-export default function LoginPage() {
-  const router      = useRouter();
+function LoginPageInner() {
+  const router       = useRouter();
   const searchParams = useSearchParams();
-  const dispatch = useDispatch<AppDispatch>();
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState("");
+  const dispatch     = useDispatch<AppDispatch>();
+  const [showPass, setShowPass]           = useState(false);
+  const [loading, setLoading]             = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [apiError, setApiError]           = useState("");
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      console.log("tokenResponse",tokenResponse)
+      try {
+        const res = await makeApiRequest<{
+          success: boolean;
+          token: string;
+          customer: CustomerProfile;
+        }>(apiUrls.GOOGLE_AUTH, {
+          method: "POST",
+          data: { access_token: tokenResponse.access_token },
+        });
+        setAuthToken(res.token);
+        localStorage.setItem("user", JSON.stringify(res.customer));
+        dispatch(setProfile(res.customer));
+           // Sync guest wishlist → server (only if items exist)
+        const guestWishlist = localStorage.getItem("horeca_wishlist");
+        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+          await syncGuestWishlistAfterLogin();
+        }
+        // Sync guest cart → server (only if items exist)
+        const guestCart = localStorage.getItem("horeca_cart");
+        if (guestCart && JSON.parse(guestCart)?.length > 0) {
+          await syncGuestCartAfterLogin();
+        }
+        await dispatch(fetchCounts())
+        const redirect = searchParams.get("redirect") ?? "/";
+        router.push(redirect);
+      } catch {
+        setApiError("Google login failed. Please try again.");
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      setApiError("Google login failed. Please try again.");
+      setGoogleLoading(false);
+    },
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -100,8 +146,10 @@ export default function LoginPage() {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
+        await dispatch(fetchCounts())
         const redirect = searchParams.get("redirect") ?? "/";
         router.push(redirect);
+
       } catch (err: unknown) {
         const msg =
           typeof err === "string"
@@ -358,9 +406,16 @@ export default function LoginPage() {
             </div>
 
             {/* Google */}
-            <button className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200">
-              <GoogleIcon />
-              Sign in with Google
+            <button
+              type="button"
+              disabled={googleLoading}
+              onClick={() => {
+                setGoogleLoading(true);
+                googleLogin();
+              }}
+              className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 disabled:opacity-70"
+            >
+              {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
             </button>
 
             {/* Register link */}
@@ -378,5 +433,13 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <GoogleOAuthProvider clientId="96165540519-5abr44463l214dog6teceibk8nmqlfm1.apps.googleusercontent.com">
+      <LoginPageInner />
+    </GoogleOAuthProvider>
   );
 }
