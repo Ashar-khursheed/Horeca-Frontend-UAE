@@ -102,7 +102,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
       <div>
         <form
           id="contactForm"
-          className="bg-[#F5F5F5] p-6 rounded-md shadow-md space-y-4 2xl:h-[600px] h-[400px] overflow-y-scroll"
+          className="bg-[#fff] p-3 pt-0 rounded-md  space-y-4 2xl:h-[600px] h-[400px] overflow-y-scroll"
         >
           {/* Full Name Field */}
           <div>
@@ -307,7 +307,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
           <div>
             <button
               type="submit"
-              className="bg-[#186737] text-white font-semibold rounded-md text-base h-[55px] w-full hover:bg-[#155a2e] transition-colors flex items-center justify-center gap-2"
+              className="bg-[#186737] text-white font-semibold rounded-md text-sm h-[50px] w-full hover:bg-[#155a2e] transition-colors flex items-center justify-center gap-2"
             >
               Let&apos;s Open Together
             </button>

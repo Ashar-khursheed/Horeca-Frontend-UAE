@@ -178,7 +178,7 @@ function CategoryCard({
           <span className="text-3xl">📦</span>
         )}
       </div>
-      <p className="text-[12px] lg:text-[13px] w-full bg-white font-semibold text-black group-hover:text-[#186737] text-center leading-snug px-2 py-2.5 transition-colors duration-200 line-clamp-2">
+      <p className="text-[12px] lg:text-[13px] w-full bg-white font-semibold text-black group-hover:text-[#186737] text-center leading-snug px-2 py-2.5 transition-colors duration-200 ">
         {name}
         {/* {cat.product_count > 0 && (
           <span className="block text-[10px] text-gray-400 font-normal mt-0.5">

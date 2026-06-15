@@ -372,9 +372,9 @@ const EmptyState = () => (
     </p>
     <Link
       href="/"
-      className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c30] text-white font-semibold px-6 py-3 rounded-[7px] transition-colors duration-200"
+      className="bg-[#186737] relative top-2.5 p-2.5 text-white 2xl:px-4 px-2.5 2xl:py-3 py-1.5 rounded  2xl:text-[14px] text-[12px] flex items-center gap-2"
     >
-      <ShoppingBag size={17} /> Start Shopping
+      <ShoppingBag size={15} /> Start Shopping
     </Link>
   </div>
 );

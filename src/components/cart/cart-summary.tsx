@@ -118,10 +118,12 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                   label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
                   value={`${currencySymbol}${fmtPrice(subtotal)}`}
                 />
-                <SummaryRow
-                  label="Shipping & Handling"
-                  value={`${currencySymbol}${fmtPrice(shippingTotal)}`}
-                />
+                {shippingTotal > 0 && (
+                  <SummaryRow
+                    label="Shipping & Handling"
+                    value={`${currencySymbol}${fmtPrice(shippingTotal)}`}
+                  />
+                )}
                 {promoApplied && (
                   <SummaryRow
                     label="Promo (HORECA10)"

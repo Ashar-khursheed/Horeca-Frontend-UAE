@@ -1709,6 +1709,7 @@ export default function CheckoutPage() {
       const deliveryCharge = getShippingCharge(
         defaultAddr?.city ?? location?.city ?? "",
         defaultAddr?.state ?? location?.regionName ?? "",
+        defaultAddr?.country ?? location?.countryCode ?? location?.country ?? "",
       );
 
       const products = rawProducts.map((cp: any) => {
@@ -1717,7 +1718,7 @@ export default function CheckoutPage() {
         const shippingCharge =
           productShipping > 0
             ? productShipping * quantity
-            : deliveryCharge * quantity;
+            : (deliveryCharge ?? 0) * quantity;
 
         return {
           product_id: cp.product_id ?? cp.id,
@@ -2119,6 +2120,7 @@ try {
           type="button"
           disabled={isPlacingOrder}
           className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold px-8 py-3 rounded-md text-sm transition-colors"
+          onClick={handlePlaceOrder}
         >
           {isPlacingOrder ? (
             <>

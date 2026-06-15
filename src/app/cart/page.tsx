@@ -208,15 +208,16 @@ export default function CartPage() {
   const shipping = getShippingCharge(
     defaultAddr?.city    ?? location?.city       ?? "",
     defaultAddr?.state   ?? location?.regionName ?? "",
+    defaultAddr?.country ?? location?.countryCode ?? location?.country ?? "",
   );
   const cartItems: CartItem[] = isLoggedIn
     ? rawProducts.map((cp) => ({
         ...apiProductToCartItem(cp),
-        shippingCost: shipping,
+        shippingCost: shipping ?? 0,
       }))
     : reduxGuestItems.map((item) => ({
         ...localItemToCartItem(item),
-        shippingCost: shipping,
+        shippingCost: shipping ?? 0,
       }));
 
   const loading = !initialized || (isLoggedIn && (apiStatus === "idle" || apiStatus === "loading"));
@@ -555,7 +556,9 @@ export default function CartPage() {
                   </p>
                 </div> */}
               </section>
-
+<div className="md:hidden block">
+                  <CartSummary cartItems={cartItems} />
+                </div>
               {/* Saved for Later */}
               <SavedForLaterSection
                 key={sflKey}
@@ -570,9 +573,9 @@ export default function CartPage() {
               />
 
              
-                <div className="md:hidden block">
+                {/* <div className="md:hidden block">
                   <CartSummary cartItems={cartItems} />
-                </div>
+                </div> */}
            
             </div>
 
@@ -628,9 +631,9 @@ function SavedForLaterSection({
 
   useEffect(() => { setIndex(0); }, [visibleCount]);
 
-  const cardWidth = 100 / visibleCount;
-
   if (items.length === 0) return null;
+
+  const visibleItems = items.slice(index, index + visibleCount);
 
   return (
     <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
@@ -661,25 +664,20 @@ function SavedForLaterSection({
         )}
       </div>
 
-      <div className="px-5 py-5 overflow-hidden">
+      <div className="px-0 py-5">
         <div
-          className="flex transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${index * cardWidth}%)` }}
+          className="grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${visibleCount}, 1fr)` }}
         >
-          {items.map((item) => (
-            <div
+          {visibleItems.map((item) => (
+            <SavedProductCard
               key={item.id}
-              className="shrink-0 px-2"
-              style={{ width: `${cardWidth}%` }}
-            >
-              <SavedProductCard
-                item={item}
-                onAddToCart={onAddToCart}
-                onRemove={onRemove}
-                onAfterAddToCart={onAfterAddToCart}
-                isLoggedIn={isLoggedIn}
-              />
-            </div>
+              item={item}
+              onAddToCart={onAddToCart}
+              onRemove={onRemove}
+              onAfterAddToCart={onAfterAddToCart}
+              isLoggedIn={isLoggedIn}
+            />
           ))}
         </div>
       </div>

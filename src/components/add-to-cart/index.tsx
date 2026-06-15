@@ -231,9 +231,10 @@ export const AddToCartWidget = ({
     const shippingCharge = getShippingCharge(
       location?.city ?? "",
       location?.regionName ?? "",
+      location?.countryCode ?? location?.country ?? "",
     );
     const subTotal = activePrice * count;
-    const totalPrice = subTotal + shippingCharge;
+    const totalPrice = subTotal + (shippingCharge ?? 0);
     const token = getToken();
 
     if (token) {
@@ -349,6 +350,7 @@ export const AddToCartWidget = ({
       const shippingCharge = getShippingCharge(
         location?.city ?? "",
         location?.regionName ?? "",
+        location?.countryCode ?? location?.country ?? "",
       );
       try {
         await onBeforeAdd?.();
@@ -393,9 +395,10 @@ export const AddToCartWidget = ({
       const shippingCharge = getShippingCharge(
         location?.city ?? "",
         location?.regionName ?? "",
+        location?.countryCode ?? location?.country ?? "",
       );
       const subTotal = activePrice * minQty;
-      const totalPrice = subTotal + shippingCharge;
+      const totalPrice = subTotal + (shippingCharge ?? 0);
       const rawAcc = (product as RawApiProduct).accessories ?? [];
       const selectedAccessories = rawAcc
         .flatMap((acc) => acc.accessory_item ?? [])
