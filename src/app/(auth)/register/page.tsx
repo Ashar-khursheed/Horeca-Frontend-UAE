@@ -60,6 +60,21 @@ interface RegisterResponse {
   customer: Record<string, unknown>;
 }
 
+// ── Helper to clear Google State Cookie ──────────────────────────────────────
+const clearGoogleStateCookie = () => {
+  try {
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    const parts = window.location.hostname.split('.');
+    if (parts.length > 2) {
+      const parentDomain = parts.slice(1).join('.');
+      document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + parentDomain;
+    }
+  } catch (e) {
+    console.error("Failed to clear Google state cookie", e);
+  }
+};
+
 function RegisterPageInner() {
     const router       = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -71,6 +86,11 @@ function RegisterPageInner() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleKey, setGoogleKey] = useState(0);
+
+  useEffect(() => {
+    clearGoogleStateCookie();
+  }, []);
   // Fetch country details (once) using sessionStorage first, then Redux fallback
   useEffect(() => {
     const cached = locationFromRedux;
@@ -525,11 +545,14 @@ function RegisterPageInner() {
               {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
             </button>
             {!googleLoading && (
-              <div className="absolute inset-0 opacity-0 cursor-pointer overflow-hidden [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:cursor-pointer [&_iframe]:opacity-0">
+              <div className="absolute inset-0 opacity-0 cursor-pointer overflow-hidden [&>*]:!w-full [&>*]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!min-w-full [&_iframe]:!min-h-full [&_iframe]:!opacity-0 [&_iframe]:!cursor-pointer">
                 <GoogleLogin
+                  key={googleKey}
                   onSuccess={handleGoogleSuccess}
                   onError={() => {
                     setApiError("Google login failed. Please try again.");
+                    clearGoogleStateCookie();
+                    setGoogleKey((v) => v + 1);
                   }}
                   width="100%"
                 />

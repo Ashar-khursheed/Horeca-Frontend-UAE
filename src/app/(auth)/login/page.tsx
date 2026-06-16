@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -71,6 +71,21 @@ const TrustBadge = ({
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
+// ── Helper to clear Google State Cookie ──────────────────────────────────────
+const clearGoogleStateCookie = () => {
+  try {
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    const parts = window.location.hostname.split('.');
+    if (parts.length > 2) {
+      const parentDomain = parts.slice(1).join('.');
+      document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + parentDomain;
+    }
+  } catch (e) {
+    console.error("Failed to clear Google state cookie", e);
+  }
+};
+
 function LoginPageInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
@@ -78,7 +93,12 @@ function LoginPageInner() {
   const [showPass, setShowPass]           = useState(false);
   const [loading, setLoading]             = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleKey, setGoogleKey]         = useState(0);
   const [apiError, setApiError]           = useState("");
+
+  useEffect(() => {
+    clearGoogleStateCookie();
+  }, []);
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (!credentialResponse.credential) {
@@ -419,11 +439,14 @@ function LoginPageInner() {
                 {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
               </button>
               {!googleLoading && (
-                <div className="absolute inset-0 opacity-0 cursor-pointer overflow-hidden [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:cursor-pointer [&_iframe]:opacity-0">
+                <div className="absolute inset-0 opacity-0 cursor-pointer overflow-hidden [&>*]:!w-full [&>*]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!min-w-full [&_iframe]:!min-h-full [&_iframe]:!opacity-0 [&_iframe]:!cursor-pointer">
                   <GoogleLogin
+                    key={googleKey}
                     onSuccess={handleGoogleSuccess}
                     onError={() => {
                       setApiError("Google login failed. Please try again.");
+                      clearGoogleStateCookie();
+                      setGoogleKey((v) => v + 1);
                     }}
                     width="100%"
                   />
