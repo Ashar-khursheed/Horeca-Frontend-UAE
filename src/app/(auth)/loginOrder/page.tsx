@@ -136,10 +136,9 @@ const FieldError = ({ msg }: { msg?: string }) =>
 
 // ── Input class helper ────────────────────────────────────────────────────────
 const inputCls = (hasError: boolean) =>
-  `w-full h-11 rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-400 bg-white ${
-    hasError
-      ? "border-red-400 focus:ring-2 focus:ring-red-100"
-      : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+  `w-full h-11 rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-400 bg-white ${hasError
+    ? "border-red-400 focus:ring-2 focus:ring-red-100"
+    : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
   }`;
 
 // ── Helper to clear Google State Cookie ──────────────────────────────────────
@@ -234,7 +233,7 @@ function LoginPanel() {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
-              await dispatch(fetchCounts())
+        await dispatch(fetchCounts())
         const redirect = searchParams.get("redirect") ?? "/checkout";
         router.push(redirect);
       } catch (err: unknown) {
@@ -242,7 +241,7 @@ function LoginPanel() {
           typeof err === "string"
             ? err
             : ((err as { message?: string })?.message ??
-                "Invalid email or password."),
+              "Invalid email or password."),
         );
       } finally {
         setLoading(false);
@@ -358,7 +357,8 @@ function LoginPanel() {
             <Loader />
           </div>
         ) : (
-          <div className="w-full flex justify-center [&>div]:!w-full [&_iframe]:!w-full [&_iframe]:!min-w-full">
+          // <div className="w-full flex justify-center [&>div]:!w-full [&_iframe]:!w-full [&_iframe]:!min-w-full">
+          <div className="google-auth-btn">
             <GoogleLogin
               key={googleKey}
               onSuccess={handleGoogleSuccess}
@@ -460,7 +460,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
-      await dispatch(fetchCounts())
+        await dispatch(fetchCounts())
         onSuccess();
         router.push("/cart");
       } catch (err: unknown) {
@@ -554,11 +554,10 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         {/* Phone — auto-detected country code (no dropdown) */}
         <div>
           <div
-            className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${
-              phoneErr
-                ? "border-red-400 ring-2 ring-red-100"
-                : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
-            }`}
+            className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${phoneErr
+              ? "border-red-400 ring-2 ring-red-100"
+              : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
+              }`}
           >
             {/* Auto-detected flag + dial code */}
             <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 shrink-0">
