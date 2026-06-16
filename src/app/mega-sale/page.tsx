@@ -337,13 +337,13 @@ export default function MegaSalePage() {
 
             {/* Products grid */}
             {loadingProducts ? (
-              <div className={generateDynamicCSSProductCard}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                 {Array.from({ length: 8 }).map((_, idx) => (
                   <ProductCardSkeleton key={`product-skeleton-${idx}`} />
                 ))}
               </div>
             ) : products.length > 0 ? (
-              <div className={generateDynamicCSSProductCard}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                 {products.map((product) => (
                   <ProductCard
                     key={product.id + "-" + product.sku}
