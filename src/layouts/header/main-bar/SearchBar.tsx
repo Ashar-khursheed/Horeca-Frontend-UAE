@@ -158,10 +158,10 @@ export default function SearchBar({ searchData }: SearchBarProps) {
 
           <div className="flex">
             {/* ── Left col ── */}
-            <div className="w-full xl:w-[55%] bg-[#f8fafc] xl:border-r border-gray-100 flex flex-col">
+            <div className="search-left-col bg-[#f8fafc] flex flex-col">
               {/* Product Suggestions */}
               <div className="px-3.5 pt-3.5 pb-3">
-                <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
+                <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
                   Product Suggestions
                 </p>
                 {loading ? (
@@ -187,7 +187,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                             size={12}
                             className="text-gray-300 shrink-0 group-hover:text-[#186737] transition-colors"
                           />
-                          <span className="text-[13px] text-gray-500 line-clamp-1 group-hover:text-[#186737] transition-colors">
+                          <span className="text-[11px] xl:text-[12px] 2xl:text-[13px] text-gray-500 line-clamp-1 group-hover:text-[#186737] transition-colors">
                             {p.name.en}
                           </span>
                         </Link>
@@ -205,7 +205,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
 
               {/* Categories */}
               <div className="px-5 py-3">
-                <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
+                <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
                   Categories
                 </p>
                 {loading ? (
@@ -227,7 +227,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                         //   router.push(`/${c.super_parent_url}/${c.url}`)
                         // }
                           onClick={() => { setSearchFocused(false);  router.push(`/${c.super_parent_url}/${c.url}`)}}
-                        className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
+                        className="text-[10.5px] xl:text-[11px] 2xl:text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1 xl:px-3 xl:py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
                       >
                         {c.name.en}
                       </Link>
@@ -242,7 +242,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
 
               {/* Brands */}
               <div className="px-5 py-3">
-                <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
+                <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
                   Brands
                 </p>
                 {loading ? (
@@ -261,7 +261,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                         key={i}
                         href={`/brands/${b.slug}`}
                         onClick={() => { setSearchFocused(false); router.push(`/brands/${b.slug}`); }}
-                        className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
+                        className="text-[10.5px] xl:text-[11px] 2xl:text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1 xl:px-3 xl:py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
                       >
                         {b.name.en}
                       </Link>
@@ -278,16 +278,16 @@ export default function SearchBar({ searchData }: SearchBarProps) {
               <div className="px-3.5 py-3 mt-auto">
                 <button
                   onMouseDown={() => goToSearch()}
-                  className="w-full h-9 rounded-xl bg-[#186737] text-white text-[13px] font-semibold hover:bg-[#145c2e] transition-colors flex items-center justify-center gap-2"
+                  className="w-full h-8 xl:h-8.5 2xl:h-9 rounded-xl bg-[#186737] text-white text-[11px] xl:text-[12px] 2xl:text-[13px] font-semibold hover:bg-[#145c2e] transition-colors flex items-center justify-center gap-2"
                 >
                   <Search size={13} /> View all results
                 </button>
               </div>
             </div>
 
-            {/* ── Right col — Trending Products (xl+) ── */}
-            <div className="flex-1 xl:block hidden p-3.5 overflow-y-auto max-h-115">
-              <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-4">
+            {/* ── Right col — Trending Products ── */}
+            <div className="search-right-col p-3.5 overflow-y-auto max-h-115">
+              <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-4">
                 Trending Products
               </p>
               {loading ? (
@@ -325,7 +325,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                         <p
-                          className="text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors"
+                          className="text-[11px] xl:text-[11.5px] 2xl:text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors"
                           onClick={() => { setSearchFocused(false); router.push(p.url); }}
                         >
                           {p.name.en}
@@ -337,12 +337,9 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                             parent_category_url: p.parent_category_url_resolved,
                             images: { en: p.images.en ?? [], ar: p.images.ar ?? [] },
                           } as unknown as RawApiProduct}
-                          wrapperClassName="flex items-center flex-row gap-2 mt-2"
-                          counterClassName="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white w-[80px] shrink-0"
-                          counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 2xl:hover:text-[#186737] hover:bg-gray-50 transition-colors"
-                          buttonClassName="flex-1 h-7 rounded-lg 2xl:bg-[#e8f5ee] text-[#186737] text-xs font-semibold 2xl:hover:text-[#186737] transition-all whitespace-nowrap"
-                          iconShow={false}
+                          wrapperClassName="flex items-center flex-row gap-2 mt-2 w-full"
                           isSearchbar={is2xl}
+                          inDropdown={true}
                         />
                       </div>
                     </li>

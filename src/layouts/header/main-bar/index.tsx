@@ -283,7 +283,7 @@ export default function NavigationStatic({
         {/* ── Main Nav ──────────────────────────────────────────────────────── */}
         <div className="md:bg-white bg-gray-50 nav-shadows sticky top-0 z-40">
           <div className="global-container mx-auto px-4 lg:px-6">
-            <div className="flex items-center justify-between gap-3 lg:gap-5 h-[68px]">
+            <div className="flex items-center justify-between gap-3 lg:gap-4 xl:gap-3 2xl:gap-5 h-[68px]">
               {/* ── Logo ── */}
               <div className="flex-shrink-0">
                 <Link href="/">
@@ -296,7 +296,7 @@ export default function NavigationStatic({
               <div className="relative hidden xl:block shrink-0" >
                 <Link
                   href={"/dashboard/my-profile#addresses"}                  
-                  className={`flex items-center gap-2 border rounded-full px-3 h-10 transition-colors group min-w-42.5 ${addressShow ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
+                  className={`flex items-center gap-1.5 border rounded-full px-2 xl:px-2.5 2xl:px-3 h-10 transition-colors group min-w-[150px] xl:min-w-[150px] 2xl:min-w-[170px] ${addressShow ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
                 >
                   <MapPin size={15} className="text-[#186737] shrink-0" />
                   <div className="flex flex-col items-start overflow-hidden">
@@ -421,7 +421,7 @@ export default function NavigationStatic({
                 <button
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => setShowContact((v) => !v)}
-                  className={`flex items-center gap-2 border rounded-full px-3 h-10 transition-colors group ${showContact ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
+                  className={`flex items-center gap-1 xl:gap-1.5 border rounded-full px-2 xl:px-2.5 2xl:px-3 h-10 transition-colors group ${showContact ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
                 >
                   <div className="w-6 h-6 rounded-full bg-[#186737]/10 flex items-center justify-center shrink-0">
                     <Phone size={12} className="text-[#186737]" />
@@ -430,7 +430,7 @@ export default function NavigationStatic({
                     <span className="text-[10px] text-gray-400 leading-none">
                       Call Us
                     </span>
-                    <span className="text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">
+                    <span className="text-[10px] xl:text-[11px] 2xl:text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">
                       +1 (866) 446-7322
                     </span>
                   </div>

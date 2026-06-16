@@ -30,7 +30,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -60,7 +60,7 @@ interface RegisterResponse {
   customer: Record<string, unknown>;
 }
 
-export default function RegisterPage() {
+function RegisterPageInner() {
     const router       = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
@@ -131,17 +131,20 @@ export default function RegisterPage() {
         await dispatch(
           loginUser({ email: values.email.trim(), password: values.password })
         ).unwrap();
-        // Sync guest wishlist → server (only if items exist)
+        // Sync guest wishlist & cart in parallel for maximum speed
+        const syncPromises = [];
         const guestWishlist = localStorage.getItem("horeca_wishlist");
         if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
-          await syncGuestWishlistAfterLogin();
+          syncPromises.push(syncGuestWishlistAfterLogin());
         }
-        // Sync guest cart → server (only if items exist)
         const guestCart = localStorage.getItem("horeca_cart");
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
-          await syncGuestCartAfterLogin();
+          syncPromises.push(syncGuestCartAfterLogin());
         }
-              await dispatch(fetchCounts())
+        if (syncPromises.length > 0) {
+          await Promise.all(syncPromises);
+        }
+
         window.location.href = "/";
       } catch (err: unknown) {
         const msg =
@@ -155,45 +158,47 @@ export default function RegisterPage() {
   });
 
 
-    const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      console.log("tokenResponse",tokenResponse)
-      try {
-        const res = await makeApiRequest<{
-          success: boolean;
-          token: string;
-          customer: CustomerProfile;
-        }>(apiUrls.GOOGLE_AUTH, {
-          method: "POST",
-          data: { access_token: tokenResponse.access_token },
-        });
-        setAuthToken(res.token);
-        localStorage.setItem("user", JSON.stringify(res.customer));
-        dispatch(setProfile(res.customer));
-           // Sync guest wishlist → server (only if items exist)
-        const guestWishlist = localStorage.getItem("horeca_wishlist");
-        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
-          await syncGuestWishlistAfterLogin();
-        }
-        // Sync guest cart → server (only if items exist)
-        const guestCart = localStorage.getItem("horeca_cart");
-        if (guestCart && JSON.parse(guestCart)?.length > 0) {
-          await syncGuestCartAfterLogin();
-        }
-        await dispatch(fetchCounts())
-        const redirect = searchParams.get("redirect") ?? "/";
-        router.push(redirect);
-      } catch {
-        setApiError("Google login failed. Please try again.");
-      } finally {
-        setGoogleLoading(false);
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse.credential) {
+      setApiError("Google login failed. No credential received.");
+      return;
+    }
+    setGoogleLoading(true);
+    setApiError("");
+    try {
+      const res = await makeApiRequest<{
+        success: boolean;
+        token: string;
+        customer: CustomerProfile;
+      }>(apiUrls.GOOGLE_AUTH, {
+        method: "POST",
+        data: { credential: credentialResponse.credential },
+      });
+      setAuthToken(res.token);
+      localStorage.setItem("user", JSON.stringify(res.customer));
+      dispatch(setProfile(res.customer));
+
+      // Sync guest wishlist & cart in parallel for maximum speed
+      const syncPromises = [];
+      const guestWishlist = localStorage.getItem("horeca_wishlist");
+      if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+        syncPromises.push(syncGuestWishlistAfterLogin());
       }
-    },
-    onError: () => {
+      const guestCart = localStorage.getItem("horeca_cart");
+      if (guestCart && JSON.parse(guestCart)?.length > 0) {
+        syncPromises.push(syncGuestCartAfterLogin());
+      }
+      if (syncPromises.length > 0) {
+        await Promise.all(syncPromises);
+      }
+
+      const redirect = searchParams.get("redirect") ?? "/";
+      window.location.href = redirect;
+    } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
-    },
-  });
+    }
+  };
 
   const err = (field: string): string | undefined => {
     const touched = formik.touched[field as keyof typeof formik.touched];
@@ -511,22 +516,26 @@ export default function RegisterPage() {
           </div>
 
           {/* Google */}
-          {/* <button className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200">
-            <GoogleIcon />
-            Sign in with Google
-          </button> */}
-              {/* Google */}
-                      <button
-                        type="button"
-                        disabled={googleLoading}
-                        onClick={() => {
-                          setGoogleLoading(true);
-                          googleLogin();
-                        }}
-                        className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 disabled:opacity-70"
-                      >
-                        {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
-                      </button>
+          <div className="relative w-full h-11">
+            <button
+              type="button"
+              disabled={googleLoading}
+              className="w-full h-full rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 disabled:opacity-70"
+            >
+              {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
+            </button>
+            {!googleLoading && (
+              <div className="absolute inset-0 opacity-0 cursor-pointer overflow-hidden [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:cursor-pointer [&_iframe]:opacity-0">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => {
+                    setApiError("Google login failed. Please try again.");
+                  }}
+                  width="100%"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Login link */}
           <p className="text-center text-xs text-gray-500 mt-6">
@@ -538,5 +547,13 @@ export default function RegisterPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <GoogleOAuthProvider clientId="96165540519-5abr44463l214dog6teceibk8nmqlfm1.apps.googleusercontent.com">
+      <RegisterPageInner />
+    </GoogleOAuthProvider>
   );
 }

@@ -48,6 +48,7 @@ export interface ApiProduct {
   images: string[];
   alt_tags: string[];
   in_wishlist: boolean;
+  in_cart?: boolean;
   min_quantity: number;
   is_fixed: number;
   quote_available: number | null;
@@ -84,6 +85,7 @@ export interface RawApiProduct {
   images: string[] | { en?: string[]; ar?: string[] };
   alt_tags?: string[];
   in_wishlist?: boolean;
+  in_cart?: boolean;
   min_quantity?: number;
   is_fixed?: number | boolean;
   quote_available?: number | boolean | null;
@@ -219,7 +221,7 @@ export const AddToCartButton = ({
       "flex-1 3xl:h-[44px] 2xl:h-[36px] md:h-[34px] rounded-[4px]  3xl:text-[14px] 2xl:text-[12px]   text-[10px] font-semibold ",
       "flex items-center justify-center gap-2 transition-colors duration-200",
       success
-        ? "bg-emerald-600 text-white"
+        ? "bg-[#186737] hover:bg-[#145c30] text-white"
         : variant === "quote"
         ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
         : "bg-[#186737] hover:bg-[#145c30] text-white",

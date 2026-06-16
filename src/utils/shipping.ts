@@ -3,16 +3,16 @@
  *  Houston city  → $99
  *  Texas state   → $199
  *  Anywhere else → $299
- *  Non-US        → null (no shipping charge)
+ *  Non-US        → 0 (no shipping charge)
  */
 export const getShippingCharge = (
   city: string,
   regionName: string,
   countryCode: string,
-): number | null => {
+): number => {
   const co = (countryCode ?? "").toLowerCase().trim();
   const isUS = co === "us" || co === "united states";
-  if (!isUS) return null;
+  if (!isUS) return 0;
 
   const c = (city ?? "").toLowerCase().trim();
   const r = (regionName ?? "").toLowerCase().trim();
