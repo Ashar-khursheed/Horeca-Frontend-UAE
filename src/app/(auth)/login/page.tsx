@@ -430,16 +430,13 @@ function LoginPageInner() {
             </div>
 
             {/* Google */}
-            <div className="relative w-full h-11">
-              <button
-                type="button"
-                disabled={googleLoading}
-                className="w-full h-full rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 disabled:opacity-70"
-              >
-                {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
-              </button>
-              {!googleLoading && (
-                <div className="absolute inset-0 opacity-0 cursor-pointer overflow-hidden [&>*]:!w-full [&>*]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full [&_iframe]:!min-w-full [&_iframe]:!min-h-full [&_iframe]:!opacity-0 [&_iframe]:!cursor-pointer">
+            <div className="w-full flex justify-center min-h-[40px]">
+              {googleLoading ? (
+                <div className="w-full h-10 border border-gray-200 rounded-[9px] flex items-center justify-center bg-gray-50">
+                  <Loader />
+                </div>
+              ) : (
+                <div className="w-full flex justify-center [&>div]:!w-full [&_iframe]:!w-full [&_iframe]:!min-w-full">
                   <GoogleLogin
                     key={googleKey}
                     onSuccess={handleGoogleSuccess}
@@ -448,6 +445,9 @@ function LoginPageInner() {
                       clearGoogleStateCookie();
                       setGoogleKey((v) => v + 1);
                     }}
+                    theme="outline"
+                    size="large"
+                    shape="rectangular"
                     width="100%"
                   />
                 </div>
