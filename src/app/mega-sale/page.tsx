@@ -229,7 +229,7 @@ export default function MegaSalePage() {
     selectedFixedFilters: {} as Record<number, string[]>,
     onFixedFilterToggle: () => {},
     onClearFixedFilter: () => {},
-    currency: "$",
+    currency: filtersData?.price_range?.symbol ?? "$",
   };
 
   return (
