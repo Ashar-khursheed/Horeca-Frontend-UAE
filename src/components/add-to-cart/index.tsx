@@ -575,7 +575,6 @@ export const AddToCartWidget = ({
                   <button
                     onClick={handleDecrement}
                     disabled={count <= minQty || loading}
-                    aria-label="Decrease quantity"
                     className={
                       counterButtonClassName ??
                       "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
@@ -600,7 +599,6 @@ export const AddToCartWidget = ({
                   <button
                     onClick={handleIncrement}
                     disabled={count >= 99 || loading}
-                    aria-label="Increase quantity"
                     className={
                       counterButtonClassName ??
                       "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
@@ -684,7 +682,6 @@ export const AddToCartWidget = ({
                     : handleMobileDecrement
                 }
                 disabled={mobileLoading}
-                aria-label={currentMobileQty <= minQty ? "Delete item from cart" : "Decrease quantity"}
                 className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {currentMobileQty <= minQty ? (
@@ -703,7 +700,6 @@ export const AddToCartWidget = ({
               <button
                 onClick={handleMobileIncrement}
                 disabled={mobileLoading || currentMobileQty >= 99}
-                aria-label="Increase quantity"
                 className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 <Plus size={14} strokeWidth={2} />

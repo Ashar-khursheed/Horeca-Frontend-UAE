@@ -16,10 +16,6 @@ type Options = {
   withAuth?: boolean;
 };
 
-// Custom in-memory caching to bypass Next.js 2MB response cache size limits
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const memoryCache = new Map<string, { value: any; expiresAt: number }>();
-
 export async function makeApiCallSSR<T = unknown>(
   path: string,
   params?: Params,
@@ -51,19 +47,8 @@ export async function makeApiCallSSR<T = unknown>(
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url  = qs.toString() ? `${base}?${qs.toString()}` : base;
 
-    const method = options?.method ?? (options?.body ? "POST" : "GET");
-    const revalidateVal = options?.revalidate ?? 60;
-    
-    // Check custom cache if GET request and caching is enabled
-    const isCacheable = method === "GET" && typeof revalidateVal === "number" && revalidateVal > 0;
-    const cacheKey = `${url}::${options?.withAuth ? 'auth' : 'guest'}`;
-
-    if (isCacheable) {
-      const cached = memoryCache.get(cacheKey);
-      if (cached && cached.expiresAt > Date.now()) {
-        return cached.value as T;
-      }
-    }
+    // console.log("[SSR API]", url);
+    // console.log("[SSR API] force_country:", countryCode);
 
     // Auth token from cookie (only when withAuth: true)
     let authHeader: Record<string, string> = {};
@@ -75,10 +60,11 @@ export async function makeApiCallSSR<T = unknown>(
       }
     }
 
+    const method = options?.method ?? (options?.body ? "POST" : "GET");
     const res = await fetch(url, {
       method,
       next: {
-        revalidate: revalidateVal,
+        revalidate: options?.revalidate ?? 60,
         ...(options?.tags?.length ? { tags: options.tags } : {}),
       },
       headers: {
@@ -91,18 +77,8 @@ export async function makeApiCallSSR<T = unknown>(
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const data = (await res.json()) as T;
-
-    if (isCacheable) {
-      memoryCache.set(cacheKey, {
-        value: data,
-        expiresAt: Date.now() + revalidateVal * 1000,
-      });
-    }
-
-    return data;
+    return (await res.json()) as T;
   } catch {
     return null;
   }
 }
-

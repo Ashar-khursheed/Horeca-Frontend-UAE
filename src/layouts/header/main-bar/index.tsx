@@ -571,7 +571,6 @@ export default function NavigationStatic({
                 {/* Wishlist */}
                 <Link
                   href="/wishlist"
-                  aria-label="Wishlist"
                   className="relative w-10 h-10 flex items-center justify-center rounded-[7px] hover:bg-gray-50 transition-colors group"
                 >
                   <Heart
@@ -604,8 +603,8 @@ export default function NavigationStatic({
               {/* ── Mobile Right (hamburger) ── */}
               <div className="flex xl:hidden items-center gap-1">
                 {/* Mobile cart icon */}
-                <Link href={"/cart"} aria-label="Shopping Cart">
-                  <button aria-label="Shopping Cart" className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
+                <Link href={"/cart"}>
+                  <button className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
                     <ShoppingCart size={20} />
                     {cartCount > 0 && (
                       <span className="absolute top-0.5 right-0.5 min-w-4 h-4 bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
@@ -614,8 +613,8 @@ export default function NavigationStatic({
                     )}
                   </button>
                 </Link>
-                <Link href={"/wishlist"} aria-label="Wishlist">
-                  <button aria-label="Wishlist" className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
+                <Link href={"/wishlist"}>
+                  <button className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors">
                     <Heart size={20} />
                     {wishlistCount > 0 && (
                       <span className="absolute top-0.5 right-0.5 min-w-4 h-4 bg-[#186737] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
@@ -626,7 +625,6 @@ export default function NavigationStatic({
                 </Link>
                 <button
                   onClick={() => router.push("/search")}
-                  aria-label="Search"
                   className="relative w-9 h-9 flex lg:hidden items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
                 >
                   <Search size={20} />
@@ -637,7 +635,6 @@ export default function NavigationStatic({
                   <button
                     className="w-9 h-9 flex items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
                     onClick={() => setSheetOpen(true)}
-                    aria-label="Open Menu"
                   >
                     <Menu size={20} />
                   </button>
@@ -650,7 +647,7 @@ export default function NavigationStatic({
                     <SheetHeader className="flex flex-row items-center justify-between px-5 py-4 border-b border-gray-100">
                       <Image src={Logo} alt="HorecaStore" className="w-28" />
                       <SheetClose asChild>
-                        <button aria-label="Close Menu" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
                           <X size={18} className="text-gray-500" />
                         </button>
                       </SheetClose>

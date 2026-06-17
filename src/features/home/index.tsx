@@ -80,7 +80,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BlogsCard } from "@/components/blog-card";
 import SEOMainContent from "@/seo/seo-main-content";
+import FeaturedProducts from "./feature-product";
+import FeaturedBrands from "./features-brand";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
 import type { ApiCategory, FeaturedCategory } from "@/utils/types";
@@ -91,17 +94,6 @@ import { apiUrls } from "@/apis/api-endpoint";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCountryByName, resetCountry } from "@/store/slices/country/countrySlice";
 import TaxInitializer from "@/components/TaxInitializer";
-import dynamic from "next/dynamic";
-
-const FeaturedProducts = dynamic(() => import("./feature-product"), {
-  ssr: true,
-});
-const FeaturedBrands = dynamic(() => import("./features-brand"), {
-  ssr: true,
-});
-const BlogsCard = dynamic(() => import("@/components/blog-card").then((m) => m.BlogsCard), {
-  ssr: true,
-});
 
 // ── Component ──────────────────────────────────────────────────────────────────
 export const Home = ({
