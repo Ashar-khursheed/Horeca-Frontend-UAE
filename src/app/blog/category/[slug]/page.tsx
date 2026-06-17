@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiBlog } from "@/components/blog-card";
 import type { BlogCategory } from "@/app/blog/page";
-import Link from "next/link";
 import CategoryPageClient from "./CategoryPageClient";
 
 export const revalidate = 3600;
@@ -84,22 +84,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     { revalidate: 3600 }
   );
 
-  if (!res?.category) {
-    return (
-      <div className="global-container py-24 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Category not found</h1>
-        <p className="text-gray-500 mb-6">
-          No category found for <strong>{slug}</strong>.
-        </p>
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#186737] text-white rounded-[7px] hover:bg-[#145c2e] transition-colors"
-        >
-          ← Back to Blog
-        </Link>
-      </div>
-    );
-  }
+  if (!res?.category) notFound();
 
   return (
     <CategoryPageClient

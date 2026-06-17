@@ -145,6 +145,17 @@ export default function SearchFeature({
   const [selectedBrands, setSelectedBrands] = useState<{ id: number; name: string }[]>(initBrands);
   const [selectedCategories, setSelectedCategories] = useState<{ id: number; name: string }[]>(initCategories);
 
+  // Re-sync filter state with the URL whenever it changes (new search, pagination,
+  // back/forward nav) — without this, filters from a previous query/result set stick
+  // around since useState above only seeds the initial value on mount.
+  const searchParamsKey = searchParams.toString();
+  useEffect(() => {
+    setPriceRange({ min: initMin, max: initMax });
+    setSelectedBrands(initBrands);
+    setSelectedCategories(initCategories);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParamsKey, apiPriceMin, apiPriceMax]);
+
   // ── URL push (SSR re-fetch) ─────────────────────────────────────────────────
   const pushURL = useCallback((overrides: {
     brands?: { id: number; name: string }[];
@@ -345,7 +356,7 @@ export default function SearchFeature({
                 key={initialPage}
                 initialPage={initialPage}
                 totalPages={totalPages}
-                onPageChange={(p) => goToSearch(query, p)}
+                onPageChange={(p) => pushURL({ page: p })}
                 showFirstLast
                 showPageInfo
               />
@@ -493,7 +504,7 @@ export default function SearchFeature({
                     key={initialPage}
                     initialPage={initialPage}
                     totalPages={totalPages}
-                    onPageChange={(p) => { goToSearch(query, p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    onPageChange={(p) => pushURL({ page: p })}
                     showFirstLast
                     showPageInfo
                   />

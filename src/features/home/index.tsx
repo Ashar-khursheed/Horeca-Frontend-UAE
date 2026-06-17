@@ -102,19 +102,27 @@ export const Home = ({
   featuredCategories = [],
   featuredProducts = [],
   featuredBrandProducts = [],
-  blogs = [],
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
   featuredCategories?: ApiCategory[];
   featuredProducts?: FeaturedCategory[];
   featuredBrandProducts?: FeaturedCategory[];
-  blogs?: any[];
 }) => {
   const router   = useRouter();
   const dispatch = useAppDispatch();
   const [products,      setProducts]      = useState<FeaturedCategory[]>(featuredProducts);
   const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>(featuredBrandProducts);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [blogs, setBlogs] = useState<any[]>([]);
+  console.log("blogsblogsblogsblogs",blogs)
+  useEffect(() => {
+    makeApiRequest<{ data: typeof blogs }>(apiUrls.BLOGS, {
+      params: { per_page: 10, lang: "en", page: 1 },
+    })
+      .then((res) => setBlogs(res?.data ?? []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const DETECT_KEY = "hc_detect_time";

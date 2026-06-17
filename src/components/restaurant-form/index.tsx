@@ -102,7 +102,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
       <div>
         <form
           id="contactForm"
-          className="bg-[#fff] p-3 pt-0 rounded-md  space-y-4 2xl:h-[600px] h-[400px] overflow-y-scroll"
+          className="bg-[#fff] p-3 pt-0 rounded-md space-y-4"
         >
           {/* Full Name Field */}
           <div>
@@ -117,7 +117,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
               id="full_name"
               name="full_name"
               placeholder="Jhon Smith"
-              className="w-full border border-[#D1D5DB] py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
+              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
             />
           </div>
 
@@ -135,7 +135,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
                 id="phone"
                 name="phone"
                 placeholder="(234) 567-8900"
-                className="w-full border border-[#D1D5DB] py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
+                className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
               />
             </div>
 
@@ -152,7 +152,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
                 id="email"
                 name="email"
                 placeholder="you@example.com"
-                className="w-full border border-[#D1D5DB] py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
+                className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
               />
             </div>
           </div>
@@ -171,7 +171,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
                 id="company_name"
                 name="company_name"
                 placeholder={getCompanyPlaceholder()}
-                className="w-full border border-[#D1D5DB] py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
+                className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
               />
             </div>
 
@@ -186,7 +186,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
               <select
                 id="restaurant_type"
                 name="restaurant_type"
-                className="w-full border border-[#D1D5DB] py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
+                className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
               >
                 {typeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -206,7 +206,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
               Upload Files (Optional)
             </label>
 
-            <div className="flex items-center w-full border border-[#D1D5DB] py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 bg-white overflow-hidden">
+            <div className="flex items-center w-full border border-gray-200 transition-all focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10 py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 bg-white overflow-hidden">
               {/* Hidden Input */}
               <input
                 type="file"
@@ -221,7 +221,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
               {/* Button */}
               <label
                 htmlFor="files"
-                className="cursor-pointer px-3 py-1 bg-gray-100 text-[#2D2D2D] font-medium text-sm border-r border-[#D1D5DB]"
+                className="cursor-pointer px-3 py-1 bg-gray-100 text-[#2D2D2D] font-medium text-sm border-r border-gray-200"
               >
                 Choose Files
               </label>
@@ -250,7 +250,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
               name="notes"
               rows={4}
               placeholder="Your message..."
-              className="w-full border border-[#D1D5DB] py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
+              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 py-2 px-3 2xl:py-3 2xl:px-2 rounded-md mt-2 placeholder:text-sm 2xl:placeholder:text-base"
             ></textarea>
           </div>
 
@@ -292,8 +292,8 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
 
           {/* reCAPTCHA placeholder */}
           <div className="mt-4">
-            <div className="flex items-center gap-3 border border-[#D1D5DB] rounded-md p-3 bg-white w-fit">
-              <div className="w-5 h-5 border-2 border-[#D1D5DB] rounded flex-shrink-0" />
+            <div className="flex items-center gap-3 border border-gray-200 rounded-md p-3 bg-white w-fit">
+              <div className="w-5 h-5 border-2 border-gray-200 rounded flex-shrink-0" />
               <span className="text-sm text-gray-500">I&apos;m not a robot</span>
               <div className="ml-4 w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
                 <span className="text-[10px] text-gray-400 text-center leading-tight">

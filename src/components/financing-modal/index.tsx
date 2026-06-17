@@ -16,6 +16,7 @@ const FinancingModal = ({ isOpen, onClose, title }: FinancingModalProps) => {
       showFooter={false}
       width="max-w-2xl"
       footerBtnText="Save Address"
+      
     >
       <RestaurantForm onClose={onClose} type="Business" />
     </Modal>

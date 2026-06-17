@@ -1,9 +1,9 @@
 "use client";
 
 import type { ApiCategory, ApiCategoryName } from "@/utils/types";
-import Link from "next/link";
 import { useLocale } from "next-intl";
 import Image from "next/image";
+import Link from "next/link";
 
 const getName = (name: ApiCategoryName | string, locale: string): string => {
   if (typeof name === "string") return name;
@@ -70,7 +70,7 @@ export default function CategoryCard({ categories = [] }: { categories?: ApiCate
                 sizes="(max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12vw"
               />
             </div>
-            <p className="w-full bg-white text-[12px] font-semibold text-gray-800 group-hover:text-[#186737] text-center leading-snug px-2 py-2.5 transition-colors duration-200 line-clamp-2">
+            <p className="w-full bg-white text-[12px] font-semibold text-gray-800 group-hover:text-[#186737] text-center leading-snug px-2 py-2.5 transition-colors duration-200 line-clamp-2z">
               {getName(cat.name, locale)}
             </p>
           </Link>

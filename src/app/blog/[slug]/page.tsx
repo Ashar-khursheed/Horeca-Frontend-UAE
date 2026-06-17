@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
-import Link from "next/link";
 
 // ISR — revalidate every hour
 export const revalidate = 3600;
@@ -123,24 +123,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
   const initialComments = commentsRes?.data?.comments ?? [];
 
-  if (!blog) {
-    return (
-      <div className="global-container py-24 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Blog not found
-        </h1>
-        <p className="text-gray-500 mb-6">
-          No article found for <strong>{slug}</strong>.
-        </p>
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#186737] text-white rounded-[7px] hover:bg-[#145c2e] transition-colors"
-        >
-          ← Back to Blog
-        </Link>
-      </div>
-    );
-  }
+  if (!blog) notFound();
 
   return (
     <>

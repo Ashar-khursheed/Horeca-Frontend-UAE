@@ -433,7 +433,8 @@ const ReviewSlider = ({
 
   return (
     <div className="relative">
-      {/* Prev Arrow */}
+    <div className="absolutes top-0s left-0 right-0 bottom-0">
+        {/* Prev Arrow */}
       <button
         onClick={prev}
         disabled={current === 0}
@@ -459,8 +460,9 @@ const ReviewSlider = ({
         <ChevronRight size={16} strokeWidth={2} />
       </button>
 
+    </div>
       {/* Track */}
-      <div className="overflow-hidden grid ">
+      <div className="overflow-hidden md:grid ">
         <div
           className="flex transition-transform duration-300 ease-in-out"
           style={{
@@ -635,7 +637,7 @@ export const ReviewsSection = ({
           </div>
         </div>
 
-        <div className="px-5">
+        <div className="md:px-5">
           {filtered.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">
               No reviews for this rating.

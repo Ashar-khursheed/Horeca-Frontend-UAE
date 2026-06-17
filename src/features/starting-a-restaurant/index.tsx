@@ -1907,7 +1907,7 @@ function RestaurantADS() {
       <div className="w-full py-12">
         <div className="global-container">
           <div className="grid lg:grid-cols-2 md:grid-cols-1 gap-4 items-center justify-center h-full mt-4">
-            <div className="lg:text-left text-center max-w-xl mx-auto">
+            <div className="lg:text-left text-center md:max-w-xl md:mx-auto">
               <h2 className="text-xl md:text-3xl text-black font-bold mb-3">
                 Your Dream Deserves a Strong Start
               </h2>

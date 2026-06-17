@@ -53,7 +53,7 @@ function CategoryRow({ category }: { category: BlogCategory }) {
           </span>
           {category.name}
         </h2>
-        {(category?.blogs?.length ?? 0) > 5 && <Link
+        {(category?.blogs?.length ?? 0) > 4 && <Link
           href={`/blog/category/${category.url?.url ?? ""}`}
           className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#186737] text-[#186737] text-sm font-semibold hover:bg-[#186737] hover:text-white transition-all"
         >

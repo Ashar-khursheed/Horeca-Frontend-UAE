@@ -390,6 +390,7 @@ export const HeroBanner = ({
         isOpen={quoteModalOpen}
         onClose={() => setQuoteModalOpen(false)}
         title="Opening a Restaurant"
+        
       />
     </>
   );

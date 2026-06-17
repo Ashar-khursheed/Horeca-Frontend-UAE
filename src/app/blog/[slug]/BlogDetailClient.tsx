@@ -344,7 +344,7 @@ export default function BlogDetailClient({
 
             {/* ── Sidebar ── */}
             <aside className="lg:col-span-4 min-w-0">
-              <div className="lg:sticky lg:top-24 space-y-5">
+              <div className=" space-y-5">
 
                 {/* TOC — desktop */}
                 {toc.length > 0 && (

@@ -30,9 +30,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -60,12 +61,13 @@ interface RegisterResponse {
   customer: Record<string, unknown>;
 }
 
-export default function RegisterPage() {
+function RegisterPageInner() {
     const router       = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const locationFromRedux = useLocationData();
   const country = useSelector((s: RootState) => s.country);
+  console.log("locationFromRedux",country?.data?.icon)
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -89,7 +91,7 @@ export default function RegisterPage() {
   // Derived display values from Redux country + location
   const dialCode = country.data?.phone_code ?? "";
   const isoCode = locationFromRedux?.countryCode ?? "";
-  const flagEmoji = isoCode ? getFlagEmoji(isoCode) : "🌍";
+  const flagEmoji = isoCode ? getFlagEmoji(isoCode) : country?.data?.icon;
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
 
   const formik = useFormik({
@@ -344,9 +346,10 @@ export default function RegisterPage() {
                       <span className="text-xs text-gray-400 animate-pulse">...</span>
                     ) : (
                       <>
-                        <span className="text-base leading-none">{flagEmoji}</span>
+                        <img src={country?.data?.icon ?? undefined} alt="Country Image" className="w-5 h-5" />
+                        {/* <span className="text-base leading-none">{flagEmoji || }</span> */}
                         <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                          {dialCode}
+                          {dialCode || country?.data?.phone_code}
                         </span>
                       </>
                     )}
@@ -538,5 +541,13 @@ export default function RegisterPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <GoogleOAuthProvider clientId="96165540519-5abr44463l214dog6teceibk8nmqlfm1.apps.googleusercontent.com">
+      <RegisterPageInner />
+    </GoogleOAuthProvider>
   );
 }

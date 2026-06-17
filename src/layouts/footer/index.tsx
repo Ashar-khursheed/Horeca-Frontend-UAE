@@ -81,7 +81,7 @@ const CategoryAccordion = ({ category, locale }: { category: ApiCategory; locale
           {category.children?.map((child) => (
             <Link
               key={child.id}
-              href={`/${child.slug}`}
+              href={`/${category.slug}/${child.slug}`}
               className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
             >
               {getName(child.name, locale)}

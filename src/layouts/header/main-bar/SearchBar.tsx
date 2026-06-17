@@ -275,18 +275,18 @@ export default function SearchBar({ searchData }: SearchBarProps) {
               <div className="mx-5 border-t border-gray-200" />
 
               {/* View all */}
-              <div className="px-3.5 py-3 mt-auto">
+              {/* <div className="px-3.5 py-3 mt-auto">
                 <button
                   onMouseDown={() => goToSearch()}
                   className="w-full h-9 rounded-xl bg-[#186737] text-white text-[13px] font-semibold hover:bg-[#145c2e] transition-colors flex items-center justify-center gap-2"
                 >
                   <Search size={13} /> View all results
                 </button>
-              </div>
+              </div> */}
             </div>
 
             {/* ── Right col — Trending Products (xl+) ── */}
-            <div className="flex-1 xl:block hidden p-3.5 overflow-y-auto max-h-115">
+            <div className="flex-1 lg:block hidden p-3.5 overflow-y-auto max-h-115">
               <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-4">
                 Trending Products
               </p>
@@ -339,8 +339,8 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                           } as unknown as RawApiProduct}
                           wrapperClassName="flex items-center flex-row gap-2 mt-2"
                           counterClassName="flex items-center border border-gray-200 rounded-lg h-7 overflow-hidden bg-white w-[80px] shrink-0"
-                          counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 2xl:hover:text-[#186737] hover:bg-gray-50 transition-colors"
-                          buttonClassName="flex-1 h-7 rounded-lg 2xl:bg-[#e8f5ee] text-[#186737] text-xs font-semibold 2xl:hover:text-[#186737] transition-all whitespace-nowrap"
+                          counterButtonClassName="w-7 h-full flex items-center justify-center text-gray-400 2xl:hover:text-[#186737] hover:bg-[#186737] transition-colors"
+                          buttonClassName="flex-1 h-7 rounded-[7px] bg-[#186737] text-[#fff] text-xs font-semibold 2xl:hover:text-[#fff] transition-all whitespace-nowrap"
                           iconShow={false}
                           isSearchbar={is2xl}
                         />

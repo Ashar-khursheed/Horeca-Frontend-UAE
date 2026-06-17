@@ -1424,7 +1424,7 @@ export const CATEGORIES = [
 export const NAV_LINKS = [
 //   { label: "Home", href: "/",isModal: false },
 //   { label: "About", href: "/about", isModal: false },
-  { label: "Contact", href: "/contact", isModal: false },
+  { label: "Contact", href: "/pages/contact-us", isModal: false },
   { label: "Track Your Order", href: "/track-order", isModal: false },
 //   { label: "Financing", href: "#", isModal: true },
   { label: "Mega Sale", href: "/mega-sale", isModal: false },

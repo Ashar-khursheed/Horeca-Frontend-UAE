@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useLocationData } from "@/utils/locationStorage";
+import { useLocationData, getDefaultAddressCache } from "@/utils/locationStorage";
 import {
   addItem,
   hydrateCart,
@@ -22,7 +22,7 @@ import {
   toggleGuestWishlistItem,
 } from "@/store/slices/wishlist/wishlistSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { getShippingCharge } from "@/utils/shipping";
+import { getShippingCharge, getShippingChargeFromAddress } from "@/utils/shipping";
 import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
 import { AddToCartWidgetProps } from "@/features/product-detail/types";
@@ -228,14 +228,13 @@ export const AddToCartWidget = ({
     e.preventDefault();
     e.stopPropagation();
 
-    const shippingCharge = getShippingCharge(
-      location?.city ?? "",
-      location?.regionName ?? "",
-      location?.countryCode ?? location?.country ?? "",
-    );
-    const subTotal = activePrice * count;
-    const totalPrice = subTotal + (shippingCharge ?? 0);
     const token = getToken();
+    const defaultAddr = token ? getDefaultAddressCache() : null;
+    const shippingCharge = defaultAddr
+      ? getShippingChargeFromAddress(defaultAddr)
+      : getShippingCharge(location?.city ?? "", location?.regionName ?? "", location?.countryCode ?? location?.country ?? "");
+    const subTotal = activePrice * count;
+    const totalPrice = subTotal + shippingCharge;
 
     if (token) {
       setLoading(true);
@@ -347,11 +346,10 @@ export const AddToCartWidget = ({
 
     const token = getToken();
     if (token) {
-      const shippingCharge = getShippingCharge(
-        location?.city ?? "",
-        location?.regionName ?? "",
-        location?.countryCode ?? location?.country ?? "",
-      );
+      const defaultAddr = getDefaultAddressCache();
+      const shippingCharge = defaultAddr
+        ? getShippingChargeFromAddress(defaultAddr)
+        : getShippingCharge(location?.city ?? "", location?.regionName ?? "", location?.countryCode ?? location?.country ?? "");
       try {
         await onBeforeAdd?.();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -398,7 +396,7 @@ export const AddToCartWidget = ({
         location?.countryCode ?? location?.country ?? "",
       );
       const subTotal = activePrice * minQty;
-      const totalPrice = subTotal + (shippingCharge ?? 0);
+      const totalPrice = subTotal + shippingCharge;
       const rawAcc = (product as RawApiProduct).accessories ?? [];
       const selectedAccessories = rawAcc
         .flatMap((acc) => acc.accessory_item ?? [])

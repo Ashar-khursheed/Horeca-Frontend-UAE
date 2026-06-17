@@ -30,7 +30,7 @@ export default async function Page() {
   const cookieStore = await cookies();
   const isLoggedIn  = !!cookieStore.get("token")?.value;
 
-  const [slider1, slider2, categoryRes, featuredCategoriesRes, featuredProductsRes,featuredBrandProductsRes,blogsRes] = await Promise.all([
+  const [slider1, slider2, categoryRes, featuredCategoriesRes, featuredProductsRes,featuredBrandProductsRes] = await Promise.all([
     makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: revalidate }),
     makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: revalidate }),
     makeApiCallSSR<{ data: ApiCategory[] }>(
@@ -53,11 +53,6 @@ export default async function Page() {
       {},
       { revalidate: revalidate, withAuth: isLoggedIn },
     ),
-    makeApiCallSSR<{ data: FeaturedCategory[] }>(
-      apiUrls.BLOGS,
-      { per_page: 10, lang: "en", page: 1 },
-      { revalidate: revalidate },
-    ),
   ]);
 
   const sliderItems      = slider1?.items ?? [];
@@ -65,11 +60,7 @@ export default async function Page() {
   const featuredCategories = featuredCategoriesRes?.data ?? [];
   const featuredProducts = featuredProductsRes?.data ?? [];
   const featuredBrandProducts = featuredBrandProductsRes?.data ?? [];
-  const blogs = blogsRes?.data ?? [];
 
-
-  console.log("Home page data:", featuredProducts);
-  
   const homeSchema = {
     "@context": "https://schema.org",
     "@graph": [
@@ -158,7 +149,7 @@ export default async function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeSchema) }}
       />
       <main>
-        <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} featuredProducts={featuredProducts} featuredBrandProducts={featuredBrandProducts} blogs={blogs} />
+        <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} featuredProducts={featuredProducts} featuredBrandProducts={featuredBrandProducts} />
       </main>
     </>
   );

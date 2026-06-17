@@ -362,7 +362,7 @@ export const BlogCard: React.FC<{ item: ApiBlog }> = ({ item }) => {
     <ShareModal
       isOpen={shareModalOpen}
       onClose={() => setShareModalOpen(false)}
-      url={`https://www.horecastore.ae${blogHref}`}
+      url={typeof window !== "undefined" ? `${window.location.origin}${blogHref}` : blogHref}
       title={item.title}
     />
     </>

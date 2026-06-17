@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import SubCategoryPage from '@/features/category/sub-category'
 import { makeApiCallSSR } from '@/apis/ssr-fetch'
 import { apiUrls } from '@/apis/api-endpoint'
@@ -186,8 +187,7 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
   const subCategories = navigationRes?.data ?? []
   const subCategoryPage = subCategoryPageRes ?? null
 
-  console.log("payload body filter", filtersBody)
-  console.log("payload body product", productsBody)
+  if (!subCategoryPageRes?.success) notFound()
 
 
   return (

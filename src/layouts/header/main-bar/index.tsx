@@ -283,7 +283,7 @@ export default function NavigationStatic({
         {/* ── Main Nav ──────────────────────────────────────────────────────── */}
         <div className="md:bg-white bg-gray-50 nav-shadows sticky top-0 z-40">
           <div className="global-container mx-auto px-4 lg:px-6">
-            <div className="flex items-center justify-between gap-3 lg:gap-5 h-[68px]">
+            <div className="flex items-center justify-between gap-3 xl:gap-1 2xl:gap-5 h-[68px]">
               {/* ── Logo ── */}
               <div className="flex-shrink-0">
                 <Link href="/">

@@ -509,7 +509,7 @@ export default function CartPage() {
                   <div className="flex items-center gap-2">
                     <Package size={15} className="text-[#186737]" />
                     <h2 className="font-bold text-gray-900 text-sm">
-                      Shipment <span className="text-[#186737]">1</span>
+                      Cart <span className="text-[#186737] hidden">1</span>
                     </h2>
                     <span className="text-xs text-gray-400 font-medium">
                       ({cartItems.length} item

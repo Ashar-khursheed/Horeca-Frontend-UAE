@@ -11,6 +11,7 @@ import {
   addSaveForLater,
   removeSaveForLater,
 } from "@/store/slices/save-for-later/saveForLaterSlice";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 
 export default function CartItemRow({
   item,
@@ -45,6 +46,7 @@ export default function CartItemRow({
           quantity:  item.qty,
           vendorId:  item.vendorId ?? 1,
         }));
+             dispatch(fetchCounts() as any);
       }
     } else {
       dispatch(toggleGuestSaveItem({
