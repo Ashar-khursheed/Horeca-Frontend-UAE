@@ -563,3 +563,23 @@ button{
   height: 100%;
 }
 
+/* Search suggestion dropdown responsive layout */
+.search-left-col {
+  width: 100%;
+}
+.search-right-col {
+  display: none;
+}
+
+@media (min-width: 1300px) {
+  .search-left-col {
+    width: 55%;
+    border-right: 1px solid #f3f4f6;
+  }
+  .search-right-col {
+    display: block;
+    flex: 1 1 0%;
+  }
+}
+
+

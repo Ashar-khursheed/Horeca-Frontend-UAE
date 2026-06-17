@@ -1,5 +1,8 @@
 "use client";
 
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { setAuthToken } from "@/apis/axios-instance";
+import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import Loader from "@/components/Loader";
@@ -133,11 +136,25 @@ const FieldError = ({ msg }: { msg?: string }) =>
 
 // ── Input class helper ────────────────────────────────────────────────────────
 const inputCls = (hasError: boolean) =>
-  `w-full h-11 rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-400 bg-white ${
-    hasError
-      ? "border-red-400 focus:ring-2 focus:ring-red-100"
-      : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+  `w-full h-11 rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-400 bg-white ${hasError
+    ? "border-red-400 focus:ring-2 focus:ring-red-100"
+    : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
   }`;
+
+// ── Helper to clear Google State Cookie ──────────────────────────────────────
+const clearGoogleStateCookie = () => {
+  try {
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    const parts = window.location.hostname.split('.');
+    if (parts.length > 2) {
+      const parentDomain = parts.slice(1).join('.');
+      document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + parentDomain;
+    }
+  } catch (e) {
+    console.error("Failed to clear Google state cookie", e);
+  }
+};
 
 // ── Login Panel ───────────────────────────────────────────────────────────────
 function LoginPanel() {
@@ -146,7 +163,55 @@ function LoginPanel() {
   const dispatch = useDispatch<AppDispatch>();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleKey, setGoogleKey] = useState(0);
   const [apiError, setApiError] = useState("");
+
+  useEffect(() => {
+    clearGoogleStateCookie();
+  }, []);
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse.credential) {
+      setApiError("Google login failed. No credential received.");
+      return;
+    }
+    setGoogleLoading(true);
+    setApiError("");
+    try {
+      const res = await makeApiRequest<{
+        success: boolean;
+        token: string;
+        customer: CustomerProfile;
+      }>(apiUrls.GOOGLE_AUTH, {
+        method: "POST",
+        data: { credential: credentialResponse.credential },
+      });
+      setAuthToken(res.token);
+      localStorage.setItem("user", JSON.stringify(res.customer));
+      dispatch(setProfile(res.customer));
+
+      // Sync guest wishlist & cart in parallel for maximum speed
+      const syncPromises = [];
+      const guestWishlist = localStorage.getItem("horeca_wishlist");
+      if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+        syncPromises.push(syncGuestWishlistAfterLogin());
+      }
+      const guestCart = localStorage.getItem("horeca_cart");
+      if (guestCart && JSON.parse(guestCart)?.length > 0) {
+        syncPromises.push(syncGuestCartAfterLogin());
+      }
+      if (syncPromises.length > 0) {
+        await Promise.all(syncPromises);
+      }
+      await dispatch(fetchCounts());
+      const redirect = searchParams.get("redirect") ?? "/checkout";
+      router.push(redirect);
+    } catch {
+      setApiError("Google login failed. Please try again.");
+      setGoogleLoading(false);
+    }
+  };
 
   const formik = useFormik({
     initialValues: { email: "", password: "", consent: false },
@@ -168,7 +233,7 @@ function LoginPanel() {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
-              await dispatch(fetchCounts())
+        await dispatch(fetchCounts())
         const redirect = searchParams.get("redirect") ?? "/checkout";
         router.push(redirect);
       } catch (err: unknown) {
@@ -176,7 +241,7 @@ function LoginPanel() {
           typeof err === "string"
             ? err
             : ((err as { message?: string })?.message ??
-                "Invalid email or password."),
+              "Invalid email or password."),
         );
       } finally {
         setLoading(false);
@@ -286,10 +351,30 @@ function LoginPanel() {
       </div>
 
       {/* Google */}
-      <button className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all">
-        <GoogleIcon />
-        Sign in with Google
-      </button>
+      <div className="w-full flex justify-center min-h-[40px]">
+        {googleLoading ? (
+          <div className="w-full h-10 border border-gray-200 rounded-[9px] flex items-center justify-center bg-gray-50">
+            <Loader />
+          </div>
+        ) : (
+          // <div className="w-full flex justify-center [&>div]:!w-full [&_iframe]:!w-full [&_iframe]:!min-w-full">
+          <div className="google-auth-btn">
+            <GoogleLogin
+              key={googleKey}
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                setApiError("Google login failed. Please try again.");
+                clearGoogleStateCookie();
+                setGoogleKey((v) => v + 1);
+              }}
+              theme="outline"
+              size="large"
+              shape="rectangular"
+              width="100%"
+            />
+          </div>
+        )}
+      </div>
 
       <p className="text-center text-[11px] text-gray-500 mt-5 leading-relaxed">
         By registering you agree to the user{" "}
@@ -375,7 +460,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
-      await dispatch(fetchCounts())
+        await dispatch(fetchCounts())
         onSuccess();
         router.push("/cart");
       } catch (err: unknown) {
@@ -469,11 +554,10 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         {/* Phone — auto-detected country code (no dropdown) */}
         <div>
           <div
-            className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${
-              phoneErr
-                ? "border-red-400 ring-2 ring-red-100"
-                : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
-            }`}
+            className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${phoneErr
+              ? "border-red-400 ring-2 ring-red-100"
+              : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
+              }`}
           >
             {/* Auto-detected flag + dial code */}
             <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 shrink-0">
@@ -553,38 +637,40 @@ export default function LoginOrderPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screens bg-gray-50 flex items-center justify-center py-8 px-4">
-      <div className="w-full max-w-4xl">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[560px]">
-            {/* ── Left: Login ── */}
-            <div className="border-b lg:border-b-0 lg:border-r border-gray-100">
-              <LoginPanel />
-            </div>
+    <GoogleOAuthProvider clientId="96165540519-5abr44463l214dog6teceibk8nmqlfm1.apps.googleusercontent.com">
+      <div className="min-h-screens bg-gray-50 flex items-center justify-center py-8 px-4">
+        <div className="w-full max-w-4xl">
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[560px]">
+              {/* ── Left: Login ── */}
+              <div className="border-b lg:border-b-0 lg:border-r border-gray-100">
+                <LoginPanel />
+              </div>
 
-            {/* ── Divider (mobile) ── */}
-            <div className="flex lg:hidden items-center gap-3 px-6 py-1">
-              <div className="flex-1 h-px bg-gray-100" />
-              <span className="text-xs text-gray-400 font-medium bg-white px-2">
-                Or
-              </span>
-              <div className="flex-1 h-px bg-gray-100" />
-            </div>
-
-            {/* ── Right: Guest ── */}
-            <div className="relative">
-              {/* Desktop vertical "Or" label */}
-              <div className="hidden lg:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10">
-                <span className="bg-white border border-gray-100 rounded-full w-9 h-9 flex items-center justify-center text-xs font-semibold text-gray-400 shadow-sm">
+              {/* ── Divider (mobile) ── */}
+              <div className="flex lg:hidden items-center gap-3 px-6 py-1">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-400 font-medium bg-white px-2">
                   Or
                 </span>
+                <div className="flex-1 h-px bg-gray-100" />
               </div>
-              <GuestPanel onSuccess={() => router.push("/checkout")} />
+
+              {/* ── Right: Guest ── */}
+              <div className="relative">
+                {/* Desktop vertical "Or" label */}
+                <div className="hidden lg:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10">
+                  <span className="bg-white border border-gray-100 rounded-full w-9 h-9 flex items-center justify-center text-xs font-semibold text-gray-400 shadow-sm">
+                    Or
+                  </span>
+                </div>
+                <GuestPanel onSuccess={() => router.push("/checkout")} />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </GoogleOAuthProvider>
   );
 }

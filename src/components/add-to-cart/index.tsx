@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useLocationData, getDefaultAddressCache } from "@/utils/locationStorage";
@@ -80,7 +81,8 @@ export const AddToCartWidget = ({
   onAddSuccess,
   onAddedToCart,
   iconShow = true,
-}: AddToCartWidgetProps) => {
+  inDropdown = false,
+}: AddToCartWidgetProps & { inDropdown?: boolean }) => {
   const dispatch = useAppDispatch();
   const locale = useLocale();
 
@@ -141,10 +143,16 @@ export const AddToCartWidget = ({
   const [isMobile, setIsMobile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileLoading, setMobileLoading] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Source of truth inCart status checking Redux store or falling back to product.in_cart (cached/SSR)
+  const inCart = isLoggedIn
+    ? (apiStatus === "succeeded" ? apiInCart : (apiInCart || !!product.in_cart))
+    : (isHydrated ? !!guestCartItem : (!!guestCartItem || !!product.in_cart));
+
   // Derived mobile display values
-  const effectiveMobileInCart = isLoggedIn ? apiInCart : !!guestCartItem;
+  const effectiveMobileInCart = inCart;
   const currentMobileQty = isLoggedIn
     ? apiQty
     : (guestCartItem?.quantity ?? minQty);
@@ -155,6 +163,7 @@ export const AddToCartWidget = ({
       cartHydrated = true;
       dispatch(hydrateCart());
     }
+    setIsHydrated(true);
     setIsLoggedIn(!!getToken());
 
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -199,7 +208,7 @@ export const AddToCartWidget = ({
         );
         return found.id;
       }
-    } catch {}
+    } catch { }
     return null;
   };
 
@@ -261,7 +270,7 @@ export const AddToCartWidget = ({
         // Update apiEntries (header count) and bump lastAddedAt (triggers cart page re-fetch)
         dispatch(addApiEntry({ cartItemId: itemId, productId: product.id, quantity: count }));
         dispatch(fetchCounts() as any);
-        if (!itemId) resolveCartItemId().catch(() => {});
+        if (!itemId) resolveCartItemId().catch(() => { });
         // Notify parent immediately after successful add (before flash)
         onAddSuccess?.();
       } catch {
@@ -384,7 +393,7 @@ export const AddToCartWidget = ({
         dispatch(fetchCounts() as any);
 
         // If no real ID yet, resolve in background
-        if (!itemId) resolveCartItemId().catch(() => {});
+        if (!itemId) resolveCartItemId().catch(() => { });
       } catch {
         // silent
       }
@@ -532,156 +541,137 @@ export const AddToCartWidget = ({
   const label = isQuote ? "Request a Quote" : "Add To Cart";
 
   const computedButtonClass = buttonClassName
-    ? `${buttonClassName} flex items-center justify-center gap-2 transition-colors duration-200${addedSuccess ? " !bg-emerald-600 !text-white" : ""}`
+    ? `${buttonClassName} flex items-center justify-center gap-2 transition-colors duration-200${(addedSuccess || (inCart && variant !== "quote")) ? " !bg-[#186737] !text-white" : ""}`
     : [
-        "flex-1 3xl:h-[44px] 2xl:h-[36px] md:h-[34px] rounded-[4px] 3xl:text-[14px] 2xl:text-[12px] text-[10px] font-semibold",
-        "flex items-center justify-center gap-2 transition-colors duration-200",
-        addedSuccess
-          ? "bg-emerald-600 text-white"
-          : loading
-            ? "bg-gray-400 text-white cursor-wait"
-            : variant === "quote"
-              ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
-              : "bg-[#186737] hover:bg-[#145c30] text-white",
-      ].join(" ");
+      "flex-1 3xl:h-[44px] 2xl:h-[36px] md:h-[34px] rounded-[4px] 3xl:text-[14px] 2xl:text-[12px] text-[10px] font-semibold",
+      "flex items-center justify-center gap-2 transition-colors duration-200",
+      (addedSuccess || (inCart && variant !== "quote"))
+        ? "bg-[#186737] hover:bg-[#145c30] text-white"
+        : loading
+          ? "bg-gray-400 text-white cursor-wait"
+          : variant === "quote"
+            ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
+            : "bg-[#186737] hover:bg-[#145c30] text-white",
+    ].join(" ");
 
-  // ── Mobile layout (non-quote only) ───────────────────────────────────────
-  // if (isMobile && !isQuote) {
-  //   return (
-  //     <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
-  //       {effectiveMobileInCart ? (
-  //         /* Mobile counter */
-  //         <div className="flex items-center bg-[#2563EB] rounded-[6px] overflow-hidden flex-1 h-8.5">
-  //           {/* Left: trash (at minQty) or minus (above minQty) */}
-  //           <button
-  //             onClick={currentMobileQty <= minQty ? handleMobileDelete : handleMobileDecrement}
-  //             disabled={mobileLoading}
-  //             className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-  //           >
-  //             {currentMobileQty <= minQty
-  //               ? <Trash2 size={14} strokeWidth={2} />
-  //               : <Minus size={14} strokeWidth={2} />
-  //             }
-  //           </button>
+  const isAddedState = addedSuccess || (inCart && variant !== "quote");
 
-  //           {/* Count */}
-  //           <span className="flex-1 text-center text-white text-[13px] font-semibold select-none">
-  //             {mobileLoading ? <Loader /> : currentMobileQty}
-  //           </span>
-
-  //           {/* Plus */}
-  //           <button
-  //             onClick={handleMobileIncrement}
-  //             disabled={mobileLoading || currentMobileQty >= 99}
-  //             className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-  //           >
-  //             <Plus size={14} strokeWidth={2} />
-  //           </button>
-  //         </div>
-  //       ) : (
-  //         /* Mobile Add To Cart button */
-  //         <button
-  //           onClick={handleMobileAddToCart}
-  //           disabled={mobileLoading}
-  //           className="flex-1 h-8.5 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:bg-gray-400 disabled:cursor-wait"
-  //         >
-  //           {mobileLoading ? (
-  //             <>Adding <Loader /></>
-  //           ) : (
-  //             <><ShoppingCart size={13} strokeWidth={2} /> Add To Cart</>
-  //           )}
-  //         </button>
-  //       )}
-  //     </div>
-  //   );
-  // }
-
-  // ── Desktop layout ────────────────────────────────────────────────────────
+  // ── Layout ──────────────────────────────────────────────────────────────────
   return (
-    <>
+    <div className="flex flex-col w-full">
       <div className="md:block hidden">
         {" "}
         <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
           {/* Quantity Counter */}
-          {showCounter && isSearchbar && (
-          <>
-          <div className="">
-              <div
-              className={
-                counterClassName ??
-                "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]  "
-              }
-            >
-              <button
-                onClick={handleDecrement}
-                disabled={count <= minQty || loading}
-                className={
-                  counterButtonClassName ??
-                  "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
-                }
-              >
-                <Minus
-                  size={counterButtonClassName ? 10 : 15}
-                  className="text-[#4B5563]"
-                  strokeWidth={2}
-                />
-              </button>
-              <input
-                type="text"
-                value={count}
-                disabled={isFixed || loading}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
-                }}
-                className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed "
-              />
-              <button
-                onClick={handleIncrement}
-                disabled={count >= 99 || loading}
-                className={
-                  counterButtonClassName ??
-                  "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
-                }
-              >
-                <Plus
-                  size={counterButtonClassName ? 10 : 15}
-                  className="text-[#4B5563]"
-                  strokeWidth={2}
-                />
-              </button>
-            </div>
-            </div></>
+          {showCounter && isSearchbar && !isAddedState && (
+            <>
+              <div className="">
+                <div
+                  className={
+                    counterClassName ??
+                    "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]  "
+                  }
+                >
+                  <button
+                    onClick={handleDecrement}
+                    disabled={count <= minQty || loading}
+                    className={
+                      counterButtonClassName ??
+                      "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+                    }
+                  >
+                    <Minus
+                      size={counterButtonClassName ? 10 : 15}
+                      className="text-[#4B5563]"
+                      strokeWidth={2}
+                    />
+                  </button>
+                  <input
+                    type="text"
+                    value={count}
+                    disabled={isFixed || loading}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
+                    }}
+                    className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed "
+                  />
+                  <button
+                    onClick={handleIncrement}
+                    disabled={count >= 99 || loading}
+                    className={
+                      counterButtonClassName ??
+                      "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+                    }
+                  >
+                    <Plus
+                      size={counterButtonClassName ? 10 : 15}
+                      className="text-[#4B5563]"
+                      strokeWidth={2}
+                    />
+                  </button>
+                </div>
+              </div></>
           )}
 
           {/* Add To Cart / Request Quote Button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={loading}
-            className={computedButtonClass}
-          >
-            {addedSuccess ? (
-              <> {iconShow && <CheckCircle size={16} strokeWidth={2} />}</>
-            ) : variant !== "quote" ? (
-              <>{iconShow && <ShoppingCart size={13} strokeWidth={2} />}</>
-            ) : null}
-            {loading ? (
-              <>
-                {" "}
-                <Loader />
-              </>
-            ) : addedSuccess ? (
-              "Added!"
-            ) : (
-              label
-            )}
-          </button>
+          {isAddedState ? (
+            <Link
+              href="/cart"
+              className={`${computedButtonClass} w-full flex items-center justify-center gap-1.5 group`}
+            >
+              {iconShow && <CheckCircle size={13} strokeWidth={2} />}
+              <span className="whitespace-nowrap">
+                {inDropdown && !isSearchbar ? (
+                  "Added!"
+                ) : (
+                  <>
+                    Added!{" "}
+                    <span className="underline ml-1 font-bold inline-flex items-center gap-0.5">
+                      View Cart <ArrowRight size={10} className="transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </>
+                )}
+              </span>
+            </Link>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={loading}
+              className={computedButtonClass}
+            >
+              {variant !== "quote" ? (
+                <>{iconShow && <ShoppingCart size={13} strokeWidth={2} />}</>
+              ) : null}
+              {loading ? (
+                <>
+                  {" "}
+                  <Loader />
+                </>
+              ) : (
+                label
+              )}
+            </button>
+          )}
         </div>
       </div>
       <div className="md:hidden block">
         {" "}
         <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
-          {effectiveMobileInCart && !isQuote && showCounter ? (
+          {isAddedState && !isQuote ? (
+            <Link
+              href="/cart"
+              className={`flex-1 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors group ${isWishlist ? "h-10 px-3" : "h-8.5"} `}
+            >
+              {iconShow && <CheckCircle size={13} strokeWidth={2} />}
+              <span>
+                Added!{" "}
+                <span className="underline ml-1 font-bold inline-flex items-center gap-0.5">
+                  View Cart <ArrowRight size={9} className="transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </span>
+            </Link>
+          ) : effectiveMobileInCart && !isQuote && showCounter ? (
             /* Mobile counter */
             <div className="flex items-center bg-green-800 rounded-[6px] overflow-hidden flex-1 h-8.5">
               {/* Left: trash (at minQty) or minus (above minQty) */}
@@ -740,14 +730,14 @@ export const AddToCartWidget = ({
                   {iconShow && !isWishlist && (
                     <ShoppingCart size={13} strokeWidth={2} />
                   )}{" "}
-                  Add To Cart
+                  {label}
                 </>
               )}
             </button>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

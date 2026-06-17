@@ -95,14 +95,12 @@ export default function CartItemRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <Link href="/">
-              <h3 className="text-sm font-semibold text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
-                {/* {item.name} */}
-                <Link href={item.url} className="text-[#186737] hover:underline">
-                  {item.name}
-                </Link>
-              </h3>
-            </Link>
+            <h3 className="text-sm font-semibold text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
+              {/* {item.name} */}
+              <Link href={item.url} className="text-[#186737] hover:underline">
+                {item.name}
+              </Link>
+            </h3>
             <p className="text-xs text-[#186737] font-semibold mt-1">{item.brand}</p>
             <p className="text-xs text-gray-400 mt-0.5">Model: {item.modelNo}</p>
           </div>

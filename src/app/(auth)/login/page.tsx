@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -21,7 +21,7 @@ import { AppDispatch } from "@/store/store";
 import { loginUser } from "@/store/slices/auth/authSlice";
 import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
 import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
-import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { makeApiRequest, setAuthToken } from "@/apis/axios-instance";
 import { setProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
@@ -71,6 +71,21 @@ const TrustBadge = ({
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
+// ── Helper to clear Google State Cookie ──────────────────────────────────────
+const clearGoogleStateCookie = () => {
+  try {
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    const parts = window.location.hostname.split('.');
+    if (parts.length > 2) {
+      const parentDomain = parts.slice(1).join('.');
+      document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + parentDomain;
+    }
+  } catch (e) {
+    console.error("Failed to clear Google state cookie", e);
+  }
+};
+
 function LoginPageInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
@@ -78,47 +93,54 @@ function LoginPageInner() {
   const [showPass, setShowPass]           = useState(false);
   const [loading, setLoading]             = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleKey, setGoogleKey]         = useState(0);
   const [apiError, setApiError]           = useState("");
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      console.log("tokenResponse",tokenResponse)
-      try {
-        const res = await makeApiRequest<{
-          success: boolean;
-          token: string;
-          customer: CustomerProfile;
-        }>(apiUrls.GOOGLE_AUTH, {
-          method: "POST",
-          data: { access_token: tokenResponse.access_token },
-        });
-        setAuthToken(res.token);
-        localStorage.setItem("user", JSON.stringify(res.customer));
-        dispatch(setProfile(res.customer));
-           // Sync guest wishlist → server (only if items exist)
-        const guestWishlist = localStorage.getItem("horeca_wishlist");
-        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
-          await syncGuestWishlistAfterLogin();
-        }
-        // Sync guest cart → server (only if items exist)
-        const guestCart = localStorage.getItem("horeca_cart");
-        if (guestCart && JSON.parse(guestCart)?.length > 0) {
-          await syncGuestCartAfterLogin();
-        }
-        await dispatch(fetchCounts())
-        const redirect = searchParams.get("redirect") ?? "/";
-        router.push(redirect);
-      } catch {
-        setApiError("Google login failed. Please try again.");
-      } finally {
-        setGoogleLoading(false);
+  useEffect(() => {
+    clearGoogleStateCookie();
+  }, []);
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse.credential) {
+      setApiError("Google login failed. No credential received.");
+      return;
+    }
+    setGoogleLoading(true);
+    setApiError("");
+    try {
+      const res = await makeApiRequest<{
+        success: boolean;
+        token: string;
+        customer: CustomerProfile;
+      }>(apiUrls.GOOGLE_AUTH, {
+        method: "POST",
+        data: { credential: credentialResponse.credential },
+      });
+      setAuthToken(res.token);
+      localStorage.setItem("user", JSON.stringify(res.customer));
+      dispatch(setProfile(res.customer));
+
+      // Sync guest wishlist & cart in parallel for maximum speed
+      const syncPromises = [];
+      const guestWishlist = localStorage.getItem("horeca_wishlist");
+      if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+        syncPromises.push(syncGuestWishlistAfterLogin());
       }
-    },
-    onError: () => {
+      const guestCart = localStorage.getItem("horeca_cart");
+      if (guestCart && JSON.parse(guestCart)?.length > 0) {
+        syncPromises.push(syncGuestCartAfterLogin());
+      }
+      if (syncPromises.length > 0) {
+        await Promise.all(syncPromises);
+      }
+
+      const redirect = searchParams.get("redirect") ?? "/";
+      window.location.href = redirect;
+    } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
-    },
-  });
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -136,20 +158,23 @@ function LoginPageInner() {
         await dispatch(
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
-        // Sync guest wishlist → server (only if items exist)
+
+        // Sync guest wishlist & cart in parallel for maximum speed
+        const syncPromises = [];
         const guestWishlist = localStorage.getItem("horeca_wishlist");
         if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
-          await syncGuestWishlistAfterLogin();
+          syncPromises.push(syncGuestWishlistAfterLogin());
         }
-        // Sync guest cart → server (only if items exist)
         const guestCart = localStorage.getItem("horeca_cart");
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
-          await syncGuestCartAfterLogin();
+          syncPromises.push(syncGuestCartAfterLogin());
         }
-        await dispatch(fetchCounts())
-        const redirect = searchParams.get("redirect") ?? "/";
-        router.push(redirect);
+        if (syncPromises.length > 0) {
+          await Promise.all(syncPromises);
+        }
 
+        const redirect = searchParams.get("redirect") ?? "/";
+        window.location.href = redirect;
       } catch (err: unknown) {
         const msg =
           typeof err === "string"
@@ -157,7 +182,6 @@ function LoginPageInner() {
             : ((err as { message?: string })?.message ??
               "Invalid email or password.");
         setApiError(msg);
-      } finally {
         setLoading(false);
       }
     },
@@ -406,17 +430,29 @@ function LoginPageInner() {
             </div>
 
             {/* Google */}
-            <button
-              type="button"
-              disabled={googleLoading}
-              onClick={() => {
-                setGoogleLoading(true);
-                googleLogin();
-              }}
-              className="w-full h-11 rounded-[9px] border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 disabled:opacity-70"
-            >
-              {googleLoading ? <Loader /> : <><GoogleIcon /> Sign in with Google</>}
-            </button>
+            <div className="w-full flex justify-center min-h-[40px]">
+              {googleLoading ? (
+                <div className="w-full h-10 border border-gray-200 rounded-[9px] flex items-center justify-center bg-gray-50">
+                  <Loader />
+                </div>
+              ) : (
+                <div className="w-full flex justify-center [&>div]:!w-full [&_iframe]:!w-full [&_iframe]:!min-w-full">
+                  <GoogleLogin
+                    key={googleKey}
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                      setApiError("Google login failed. Please try again.");
+                      clearGoogleStateCookie();
+                      setGoogleKey((v) => v + 1);
+                    }}
+                    theme="outline"
+                    size="large"
+                    shape="rectangular"
+                    width="100%"
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Register link */}
             <p className="text-center text-xs text-gray-500 mt-6">

@@ -99,4 +99,5 @@ export const apiUrls = {
   ORDER_DETAIL: (id: number) => `frontend/orders/${id}`,
   PAYMENT_HISTORY:"frontend/payments",
   SCREEN_TRANSACTION:"screen-transaction",
+  SALE_CATEGORIES: "frontend/sale-categories",
 };
