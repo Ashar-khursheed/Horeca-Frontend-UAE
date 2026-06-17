@@ -102,34 +102,31 @@ export const Home = ({
   featuredCategories = [],
   featuredProducts = [],
   featuredBrandProducts = [],
-  blogs: initialBlogs = [],
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
   featuredCategories?: ApiCategory[];
   featuredProducts?: FeaturedCategory[];
   featuredBrandProducts?: FeaturedCategory[];
-  blogs?: any[];
 }) => {
   const router   = useRouter();
   const dispatch = useAppDispatch();
   const [products,      setProducts]      = useState<FeaturedCategory[]>(featuredProducts);
   const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>(featuredBrandProducts);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [blogs, setBlogs] = useState<any[]>(initialBlogs);
+  const [blogs, setBlogs] = useState<any[]>([]);
   console.log("blogsblogsblogsblogs",blogs)
   useEffect(() => {
-    if (initialBlogs && initialBlogs.length > 0) return;
     makeApiRequest<{ data: typeof blogs }>(apiUrls.BLOGS, {
       params: { per_page: 10, lang: "en", page: 1 },
     })
       .then((res) => setBlogs(res?.data ?? []))
       .catch(() => {});
-  }, [initialBlogs]);
+  }, []);
 
   useEffect(() => {
     const DETECT_KEY = "hc_detect_time";
-    const DETECT_TTL = 60 * 60 * 1000; // 1 hour
+    const DETECT_TTL = 10 * 1000; // 10 seconds
 
     const currentCookie = document.cookie
       .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];

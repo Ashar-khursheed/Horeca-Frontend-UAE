@@ -31,12 +31,12 @@ const isUS = process.env.NEXT_PUBLIC_REGION === "US";
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<SearchSuggestions>(
       apiUrls.SEARCH,
       { query: "true" , page: 1, length: 5 },
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
   ]);
   const navItemData = navData?.data ?? [];
@@ -56,7 +56,17 @@ const isUS = process.env.NEXT_PUBLIC_REGION === "US";
           crossOrigin="anonymous"
         />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
-
+        <link
+          rel="stylesheet"
+          type="text/css"
+          charSet="UTF-8"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
+        />
+        <link
+          rel="stylesheet"
+          type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
+        />
       </head>
 
       <body suppressHydrationWarning>
