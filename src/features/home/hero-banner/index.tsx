@@ -169,8 +169,8 @@ export const HeroBanner = ({
                           fill
                           className="object-cover"
                           priority={index === 0}
-                          loading={index === 0 ? undefined : "lazy"}
-                          sizes="(max-width: 1024px) 100vw, 1200px"
+                          loading={index === 0 ? "eager" : "lazy"}
+                          sizes="(max-width: 1024px) 100vw, 70vw"
                           quality={85}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -184,8 +184,8 @@ export const HeroBanner = ({
                         fill
                         className="object-cover"
                         priority={index === 0}
-                        loading={index === 0 ? undefined : "lazy"}
-                        sizes="(max-width: 1024px) 100vw, 1200px"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        sizes="(max-width: 1024px) 100vw, 70vw"
                         quality={85}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -238,9 +238,9 @@ export const HeroBanner = ({
                                 alt={item.title ?? "Banner"}
                                 fill
                                 className="object-cover"
-                                sizes="(max-width: 1024px) 50vw, 520px"
+                                sizes="(max-width: 1024px) 50vw, 30vw"
                                 priority={index === 0}
-                                loading={index === 0 ? undefined : "lazy"}
+                                loading={index === 0 ? "eager" : "lazy"}
                               />
                               {isValid && (
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -254,9 +254,9 @@ export const HeroBanner = ({
                               alt={item.title ?? "Banner"}
                               fill
                               className="object-cover"
-                              sizes="(max-width: 1024px) 50vw, 520px"
+                              sizes="(max-width: 1024px) 50vw, 30vw"
                               priority={index === 0}
-                              loading={index === 0 ? undefined : "lazy"}
+                              loading={index === 0 ? "eager" : "lazy"}
                             />
                           </div>
                         )}
