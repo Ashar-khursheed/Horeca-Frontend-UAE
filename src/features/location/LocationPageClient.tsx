@@ -358,7 +358,7 @@ export default function LocationPageClient({
                 </h2>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-7 gap-4 sm:gap-8 mt-5 sm:mt-8">
-                {data.categories.map((category, i) => (
+                {/* {data.categories.map((category, i) => (
                   <Link
                     key={i}
                     href={`/${category.parent_slug ? `${category.parent_slug}/` : ""}${category.slug}`}
@@ -376,7 +376,30 @@ export default function LocationPageClient({
                       {category.name}
                     </p>
                   </Link>
+                ))} */}
+ {data.categories.map((category, i) => (
+                  <Link
+            key={category.id}
+             href={`/${category.parent_slug ? `${category.parent_slug}/` : ""}${category.slug}`}
+            className={`group flex justify-between flex-col items-center bg-gray-50 border border-slate-200 rounded-[7px] overflow-hidden hover:border-[#186737] hover:shadow-md hover:-translate-y-1 transition-all duration-200${i >= 14 ? " hidden 2xl:flex" : i >= 12 ? " hidden xl:flex" : i >= 10 ? " hidden lg:flex" : ""}`}
+          >
+            <div className="w-full aspect-square relative p-3">
+              <Image
+               src={category.image}
+                      alt={category.name}
+                fill
+                loading="lazy"
+                className="object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm p-3"
+                sizes="(max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12vw"
+              />
+            </div>
+            <p className="w-full bg-white text-[12px] font-semibold text-gray-800 group-hover:text-[#186737] text-center leading-snug px-2 py-2.5 transition-colors duration-200 line-clamp-2z">
+        {category.name}
+            </p>
+          </Link>
                 ))}
+
+                   
               </div>
             </div>
           </section>
