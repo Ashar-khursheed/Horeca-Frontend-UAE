@@ -1304,7 +1304,7 @@ import {
   getDefaultAddressCache,
   getLocationData,
 } from "@/utils/locationStorage";
-import { getShippingCharge } from "@/utils/shipping";
+import { getShippingCharge, getShippingChargeFromAddress } from "@/utils/shipping";
 import { AddressesTab } from "@/app/(dashboard-my-profile)/dashboard/my-profile/_components/AddressesTab";
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
@@ -1439,6 +1439,42 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Recalculate shipping & tax when default address changes ──────────────────
+  useEffect(() => {
+    const defaultAddr = addresses.find((a) => a.is_default);
+    if (!defaultAddr) return;
+    const newShipping = getShippingChargeFromAddress(defaultAddr as any);
+
+    const isUS = (defaultAddr as any).country?.toLowerCase().includes("united states")
+      || (defaultAddr as any).related_country?.name?.toLowerCase().includes("united states");
+
+    if (isUS && (defaultAddr as any).zip_code) {
+      const zip  = (defaultAddr as any).zip_code;
+      const city = encodeURIComponent((defaultAddr as any).city ?? "");
+      fetch(`https://pim.thehorecastore.co/api/frontend/tax/rate?zip=${zip}&country=US&city=${city}`)
+        .then((r) => r.json())
+        .then((data) => {
+          const newRate = parseFloat((parseFloat(data.combined_rate ?? "0") * 100).toFixed(4));
+          setCartSummary((prev) => {
+            if (!prev) return prev;
+            return { ...prev, totalShippingCharges: newShipping, taxRatePercentage: newRate };
+          });
+        })
+        .catch(() => {
+          setCartSummary((prev) => {
+            if (!prev) return prev;
+            return { ...prev, totalShippingCharges: newShipping };
+          });
+        });
+    } else {
+      setCartSummary((prev) => {
+        if (!prev) return prev;
+        return { ...prev, totalShippingCharges: newShipping, taxRatePercentage: 0 };
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addresses]);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const apiCartItems = rawProducts.map((cp: any) => ({
     id: cp.id as number,
@@ -1523,6 +1559,7 @@ export default function CheckoutPage() {
     discount,
     codeApplied,
     grandTotal,
+    cartSummary,
   ]);
 
   const handleApplyCode = () => {
