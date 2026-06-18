@@ -74,12 +74,17 @@ const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 // ── Helper to clear Google State Cookie ──────────────────────────────────────
 const clearGoogleStateCookie = () => {
   try {
-    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
-    const parts = window.location.hostname.split('.');
+    document.cookie =
+      "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie =
+      "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" +
+      window.location.hostname;
+    const parts = window.location.hostname.split(".");
     if (parts.length > 2) {
-      const parentDomain = parts.slice(1).join('.');
-      document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + parentDomain;
+      const parentDomain = parts.slice(1).join(".");
+      document.cookie =
+        "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" +
+        parentDomain;
     }
   } catch (e) {
     console.error("Failed to clear Google state cookie", e);
@@ -87,14 +92,14 @@ const clearGoogleStateCookie = () => {
 };
 
 function LoginPageInner() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const dispatch     = useDispatch<AppDispatch>();
-  const [showPass, setShowPass]           = useState(false);
-  const [loading, setLoading]             = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleKey, setGoogleKey]         = useState(0);
-  const [apiError, setApiError]           = useState("");
+  const [googleKey, setGoogleKey] = useState(0);
+  const [apiError, setApiError] = useState("");
 
   useEffect(() => {
     clearGoogleStateCookie();
@@ -464,7 +469,6 @@ function LoginPageInner() {
                 Register now
               </Link>
             </p>
-
           </div>
         </div>
       </main>

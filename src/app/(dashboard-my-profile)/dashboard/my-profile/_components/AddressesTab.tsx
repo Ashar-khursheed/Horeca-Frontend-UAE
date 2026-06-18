@@ -15,7 +15,7 @@ import {
   updateAddress,
 } from "@/store/slices/customer-address/customerAddressSlice";
 import { AppDispatch, RootState } from "@/store/store";
-import { useLocationData } from "@/utils/locationStorage";
+import { useLocationData, DEFAULT_ADDRESS_EVENT } from "@/utils/locationStorage";
 import { useFormik } from "formik";
 import { ArrowLeft, CheckCircle, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -366,10 +366,12 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
   const handleSetDefault = (addr: CustomerAddress) => {
     dispatch(optimisticSetDefault(addr.id));
     dispatch(setDefaultAddress(addr.id));
+    window.dispatchEvent(new CustomEvent(DEFAULT_ADDRESS_EVENT));
   };
 
   return (
     <>
+    
       <div className="space-y-5">
         {/* Back to Checkout button — shown on my-profile when navigated from checkout */}
         {isFromCheckout && !checkoutMode && (
@@ -392,13 +394,15 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
               <p className="text-xs text-[#186737] mt-0.5">Manage your saved addresses</p>
             )}
           </div>
-          <button
+
+          {checkoutMode ? "": <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors shrink-0 shadow-sm shadow-[#186737]/20"
           >
             <Plus size={14} />
             Add Address
-          </button>
+          </button>}
+         
         </div>
 
         {/* Default address delete error banner */}

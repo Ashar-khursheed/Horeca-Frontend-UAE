@@ -21,6 +21,8 @@ export interface LocationData {
 const LOCATION_KEY   = "location";
 const LOCATION_EVENT = "hc_location_updated";
 
+export const DEFAULT_ADDRESS_EVENT = "hc_default_address_updated";
+
 // ── Default customer address cache ─────────────────────────────────────────────
 const DEFAULT_ADDR_KEY = "hc_default_address";
 
