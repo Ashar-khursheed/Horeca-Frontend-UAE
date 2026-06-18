@@ -17,7 +17,7 @@ import {
     Truck,
     UtensilsCrossed,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Accessory, AccessoryItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
 import AddToCartWidget from "@/components/add-to-cart";
@@ -64,7 +64,24 @@ export const PurchasePanel = ({
   // Per-accessory selections: { [accessoryId]: selectedItem | null }
   const [selectedItems, setSelectedItems] = useState<Record<number, AccessoryItem | null>>({});
   const [showErrors, setShowErrors]       = useState(false);
-  const state = useLocationData();
+  const locationState = useLocationData();
+  const [deliverTo, setDeliverTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("hc_default_address");
+      if (raw) {
+        const addr = JSON.parse(raw);
+        if (addr?.city && addr?.country) {
+          setDeliverTo(`${addr.city}, ${addr.country}`);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+    if (locationState?.city && locationState?.country) {
+      setDeliverTo(`${locationState.city}, ${locationState.country}`);
+    }
+  }, [locationState]);
 
   const resolveName = (n: AccessoryItem["name"]): string =>
     typeof n === "string" ? n : n?.en ?? "";
@@ -133,8 +150,7 @@ export const PurchasePanel = ({
           <Package size={16} className="text-[#186737] shrink-0 mt-0.5" />
           <div>
             <p className="text-xs text-gray-500">Delivering to</p>
-            <p className="text-sm font-semibold text-gray-800">   {state ? `${state.city}, ${state.country}` : "Select Location"}</p>
-            {/* <p className="text-sm font-semibold text-gray-800">{shipTo}</p> */}
+            <p className="text-sm font-semibold text-gray-800">{deliverTo ?? "Select Location"}</p>
           </div>
         </div>
 

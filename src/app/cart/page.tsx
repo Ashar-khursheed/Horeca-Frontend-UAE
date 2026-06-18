@@ -163,12 +163,15 @@ export default function CartPage() {
   const sflApiEntries = useAppSelector((s) => s.saveForLater.apiEntries);
   const sflGuestItems = useAppSelector((s) => s.saveForLater.guestItems);
 
+  const cartShippingCharge = useAppSelector((s) => s.cart.cartShippingCharge);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [shipmentOpen, setShipmentOpen] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
   const [sflKey, setSflKey] = useState(0);
   const fetchedRef = useRef(false);
+  const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Load cart on mount ────────────────────────────────────────────────────
   useEffect(() => {
@@ -193,31 +196,36 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-fetch whenever a product is added to cart while this page is already mounted
+  // Re-fetch when items are added — debounced so rapid adds collapse into one call
   useEffect(() => {
     if (!initialized || !isLoggedIn || lastAddedAt === 0) return;
-    const location = getLocationData();
-    dispatch(resetApiStatus());
-    dispatch(fetchCart(location?.country ?? ""));
+    if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current);
+    refetchTimerRef.current = setTimeout(() => {
+      const location = getLocationData();
+      dispatch(fetchCart(location?.country ?? ""));
+    }, 400);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastAddedAt]);
 
   // Derive display items from Redux (logged-in) or local state (guest)
   const defaultAddr = getDefaultAddressCache();
   const location    = getLocationData();
-  const shipping = getShippingCharge(
+  const locationShipping = getShippingCharge(
     defaultAddr?.city    ?? location?.city       ?? "",
     defaultAddr?.state   ?? location?.regionName ?? "",
     defaultAddr?.country ?? location?.countryCode ?? location?.country ?? "",
   );
   const cartItems: CartItem[] = isLoggedIn
-    ? rawProducts.map((cp) => ({
-        ...apiProductToCartItem(cp),
-        shippingCost: shipping ?? 0,
-      }))
+    ? rawProducts.map((cp) => {
+        const apiItemShipping = parseFloat(cp.shipping_charge ?? 0);
+        // If no per-item charge from API, fall back to location tier (0 for non-US)
+        return {
+          ...apiProductToCartItem(cp),
+          shippingCost: apiItemShipping > 0 ? apiItemShipping : (locationShipping ?? 0),
+        };
+      })
     : reduxGuestItems.map((item) => ({
         ...localItemToCartItem(item),
-        shippingCost: shipping ?? 0,
       }));
 
   const loading = !initialized || (isLoggedIn && (apiStatus === "idle" || apiStatus === "loading"));

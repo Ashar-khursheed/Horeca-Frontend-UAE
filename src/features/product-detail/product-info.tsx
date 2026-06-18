@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLocationData } from "@/utils/locationStorage";
+import { useEffect, useState } from "react";
 import {
   CheckCircle,
   ChevronDown,
@@ -20,7 +21,7 @@ import {
   ShoppingCart,
   Truck,
 } from "lucide-react";
-import { useState } from "react";
+import { ProductVariant } from "./product-variant";
 import { RatingStars } from "./rating-stars";
 import type { Accessory, AccessoryItem, VariantItem } from "./types";
 
@@ -45,6 +46,7 @@ type ProductInfoProps = {
   variantGroups: Map<string, VariantItem[]>;
   selectedVariants: Record<string, VariantItem>;
   onSelectVariant: (label: string, variant: VariantItem) => void;
+  variants?: VariantItem[];
   activePrice: number;
   activeOriginal: number;
   unit: string;
@@ -64,6 +66,7 @@ export const ProductInfo = ({
   variantGroups,
   selectedVariants,
   onSelectVariant,
+  variants,
   activePrice,
   activeOriginal,
   unit,
@@ -79,6 +82,23 @@ export const ProductInfo = ({
   const [qty, setQty] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const locationState = useLocationData();
+  const [deliverTo, setDeliverTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("hc_default_address");
+      if (raw) {
+        const addr = JSON.parse(raw);
+        if (addr?.city && addr?.country) {
+          setDeliverTo(`${addr.city}, ${addr.country}`);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+    if (locationState?.city && locationState?.country) {
+      setDeliverTo(`${locationState.city}, ${locationState.country}`);
+    }
+  }, [locationState]);
 
   const hasSale = activeOriginal > activePrice;
   const discountPct = hasSale
@@ -163,11 +183,7 @@ export const ProductInfo = ({
           <Package size={16} className="text-[#186737] shrink-0 mt-0.5" />
           <div>
             <p className="text-xs text-gray-500">Delivering to</p>
-            <p className="text-sm font-semibold text-gray-800">
-              {locationState
-                ? `${locationState.city}, ${locationState.country}`
-                : "Select Location"}
-            </p>
+            <p className="text-sm font-semibold text-gray-800">{deliverTo ?? "Select Location"}</p>
           </div>
         </div>
 
@@ -271,57 +287,46 @@ export const ProductInfo = ({
       </div>
 
       {/* <div className="border-t border-gray-300" /> */}
-
+<div>
+   <ProductVariant variants={variants || []} currency={currency} />
+</div>
       {/* Variant Groups */}
-      {Array.from(variantGroups.entries()).map(([label, items]) => {
-        const selected = selectedVariants[label];
-        return (
-          <div key={label}>
-            <p className="lg:text-sm text-[12px] font-semibold text-gray-800 mb-2">
-              {label}:{" "}
-              <span className="text-[#186737] font-bold">
-                {selected?.attribute_value}
-              </span>
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {items.map((v) => {
-                const isActive =
-                  selected?.product_id === v.product_id &&
-                  selected?.attribute_value === v.attribute_value;
-                return (
-                  <button
-                    key={v.sku + v.attribute_value}
-                    onClick={() => onSelectVariant(label, v)}
-                    className={`flex lg:text-base text-[12px] flex-col items-center justify-center px-3.5 py-2 rounded-[7px] border-2 transition-all duration-150 min-w-20 ${
-                      isActive
-                        ? "border-[#186737] bg-[#f0f9f4] shadow-sm"
-                        : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
-                  >
-                    <span
-                      className={`text-[12px] font-bold leading-tight ${
-                        isActive ? "text-[#186737]" : "text-gray-800"
+      {/* {variants && variants.length > 0 ? (
+        <ProductVariant variants={variants} currency={currency} />
+      ) : (
+        Array.from(variantGroups.entries()).map(([label, items]) => {
+          const sel = selectedVariants[label];
+          return (
+            <div key={label}>
+              <p className="lg:text-sm text-[12px] font-semibold text-gray-800 mb-2">
+                {label}:{" "}
+                <span className="text-[#186737] font-bold">{sel?.attribute_value}</span>
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {items.map((v) => {
+                  const isActive = sel?.product_id === v.product_id && sel?.attribute_value === v.attribute_value;
+                  return (
+                    <button
+                      key={v.sku + v.attribute_value}
+                      onClick={() => onSelectVariant(label, v)}
+                      className={`flex lg:text-base text-[12px] flex-col items-center justify-center px-3.5 py-2 rounded-[7px] border-2 transition-all duration-150 min-w-20 ${
+                        isActive ? "border-[#186737] bg-[#f0f9f4] shadow-sm" : "border-gray-200 hover:border-gray-300 bg-white"
                       }`}
                     >
-                      {v.attribute_value}
-                    </span>
-                    <span
-                      className={`text-xs mt-0.5 ${
-                        isActive ? "text-[#186737]" : "text-gray-500"
-                      }`}
-                    >
-                      {currency}
-                      {v.sale_price.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </button>
-                );
-              })}
+                      <span className={`text-[12px] font-bold leading-tight ${isActive ? "text-[#186737]" : "text-gray-800"}`}>
+                        {v.attribute_value}
+                      </span>
+                      <span className={`text-xs mt-0.5 ${isActive ? "text-[#186737]" : "text-gray-500"}`}>
+                        {currency}{v.sale_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })
+      )} */}
 
       <div className="border-t border-gray-300" />
 

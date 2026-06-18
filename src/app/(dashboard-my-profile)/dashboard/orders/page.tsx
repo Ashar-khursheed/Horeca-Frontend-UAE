@@ -1,6 +1,8 @@
 "use client";
 
+import { makeApiRequest } from "@/apis/axios-instance";
 import Pagination from "@/components/pagination";
+import { Modal } from "@/components/ui/modal";
 import {
   Select,
   SelectContent,
@@ -8,15 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { makeApiRequest } from "@/apis/axios-instance";
 import {
   AlertCircle,
+  Ban,
   CalendarDays,
   CheckCircle,
   ChevronRight,
   Clock,
   Eye,
-  MapPin,
   Package,
   RotateCcw,
   Search,
@@ -29,43 +30,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface ApiProduct {
-  name: string;
-  sku: string;
-  brand_name: string;
-  images: string[];
-  image_urls: string[];
-}
-
-interface ApiOrderProduct {
-  id: number;
-  quantity: number;
-  unit_price: string;
-  shipping_charge: number;
-  status: string;
-  product: ApiProduct;
-}
-
-interface ApiCustomerAddress {
-  address: string;
-  city: string;
-  state: string | null;
-  country: { name: string } | null;
-  related_city?: { name: string } | null;
-}
-
 interface ApiOrder {
   id: number;
   order_number: string;
   status: string;
+  currency_symbol: string;
   total_amount: string;
-  is_paid: number;
-  paid_amount: string;
-  payment_mode: string | null;
-  total_products: number;
-  created_at: string;
-  customer_address: ApiCustomerAddress | null;
-  order_products: ApiOrderProduct[];
+  date: string;
+  delivery: string;
 }
 
 interface OrdersApiResponse {
@@ -74,6 +46,11 @@ interface OrdersApiResponse {
   data: ApiOrder[];
   total_pages?: number;
   total_records?: number;
+}
+
+interface CancelApiResponse {
+  success: boolean;
+  message: string;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -91,44 +68,31 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; Icon: React.Elem
 
 const DEFAULT_STATUS = { bg: "bg-gray-100", text: "text-gray-600", Icon: Package };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatDate(str: string) {
-  return new Date(str).toLocaleDateString("en-US", {
-    month: "short", day: "2-digit", year: "numeric",
-  });
-}
-
-function formatAddress(addr: ApiCustomerAddress | null) {
-  if (!addr) return null;
-  const city = addr.related_city?.name || addr.city;
-  return [city, addr.country?.name].filter(Boolean).join(", ");
-}
-
-function getPaymentBadge(order: ApiOrder) {
-  if (order.is_paid === 1)
-    return { label: "Paid", bg: "bg-emerald-50", text: "text-emerald-700" };
-  if (order.status === "Cancelled" && Number(order.paid_amount) > 0)
-    return { label: "Refunded", bg: "bg-gray-100", text: "text-gray-600" };
-  return { label: "Pending", bg: "bg-amber-50", text: "text-amber-700" };
-}
+const CANCELLABLE = new Set(["Pending"]);
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function MyOrdersPage() {
-  const [orders, setOrders]       = useState<ApiOrder[]>([]);
-  const [total, setTotal]         = useState(0);
+  const [orders, setOrders]         = useState<ApiOrder[]>([]);
+  const [total, setTotal]           = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(false);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(false);
 
-  const [search, setSearch]             = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Orders");
+  const [search, setSearch]               = useState("");
+  const [statusFilter, setStatusFilter]   = useState("All Orders");
   const [paymentFilter, setPaymentFilter] = useState("All");
-  const [fromDate, setFromDate]         = useState("");
-  const [toDate, setToDate]             = useState("");
-  const [page, setPage]                 = useState(1);
+  const [fromDate, setFromDate]           = useState("");
+  const [toDate, setToDate]               = useState("");
+  const [page, setPage]                   = useState(1);
   const [paginationKey, setPaginationKey] = useState(0);
+
+  // Cancel modal
+  const [cancelTarget, setCancelTarget]   = useState<{ id: number; orderNumber: string } | null>(null);
+  const [cancelNotes, setCancelNotes]     = useState("");
+  const [cancelling, setCancelling]       = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [cancelError, setCancelError]     = useState("");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -189,6 +153,48 @@ export default function MyOrdersPage() {
 
   const hasFilters = search || statusFilter !== "All Orders" || paymentFilter !== "All" || fromDate || toDate;
 
+  const openCancelModal = (order: ApiOrder) => {
+    setCancelTarget({ id: order.id, orderNumber: order.order_number });
+    setCancelNotes("");
+    setCancelSuccess(false);
+    setCancelError("");
+  };
+
+  const closeCancelModal = () => {
+    if (cancelling) return;
+    setCancelTarget(null);
+    setCancelNotes("");
+    setCancelSuccess(false);
+    setCancelError("");
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancelTarget) return;
+    if (!cancelNotes.trim()) {
+      setCancelError("Please provide a reason for cancellation.");
+      return;
+    }
+    setCancelling(true);
+    setCancelError("");
+    try {
+      const res = await makeApiRequest<CancelApiResponse>(
+        `frontend/orders/${cancelTarget.id}/status`,
+        { method: "PUT", data: { status: "Cancelled", notes: cancelNotes } }
+      );
+      if (res.success) {
+        setCancelSuccess(true);
+        fetchOrders({ page, search, status: statusFilter, payment: paymentFilter, from: fromDate, to: toDate });
+        setTimeout(() => closeCancelModal(), 1800);
+      } else {
+        setCancelError("Failed to cancel order. Please try again.");
+      }
+    } catch {
+      setCancelError("Something went wrong. Please try again.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-[1400px]">
 
@@ -221,6 +227,7 @@ export default function MyOrdersPage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); resetPagination(); }}
               className="w-full h-9 pl-8 pr-3 rounded-[7px] border border-gray-200 text-sm text-gray-800 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all placeholder:text-gray-400 bg-white"
+              suppressHydrationWarning
             />
           </div>
 
@@ -251,8 +258,8 @@ export default function MyOrdersPage() {
               <SelectContent>
                 <SelectItem value="All">All Payments</SelectItem>
                 <SelectItem value="Paid">Paid</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Refunded">Refunded</SelectItem>
+                <SelectItem value="Unpaid">Un Paid</SelectItem>
+                <SelectItem value="Partially Paid">Partially Paid</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -264,6 +271,7 @@ export default function MyOrdersPage() {
               value={fromDate}
               onChange={(e) => { setFromDate(e.target.value); resetPagination(); }}
               className="w-full h-9 pl-8 pr-2 rounded-[7px] border border-gray-200 text-xs text-gray-700 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all bg-white cursor-pointer"
+              suppressHydrationWarning
             />
           </div>
 
@@ -274,6 +282,7 @@ export default function MyOrdersPage() {
               value={toDate}
               onChange={(e) => { setToDate(e.target.value); resetPagination(); }}
               className="w-full h-9 pl-8 pr-2 rounded-[7px] border border-gray-200 text-xs text-gray-700 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all bg-white cursor-pointer"
+              suppressHydrationWarning
             />
           </div>
         </div>
@@ -341,7 +350,7 @@ export default function MyOrdersPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Order ID", "Date", "Status", "Items", "Total", "Address", "Actions"].map((h) => (
+                  {["Order ID", "Date", "Status", "Delivery", "Total", "Actions"].map((h) => (
                     <th key={h} className="text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 whitespace-nowrap">
                       {h}
                     </th>
@@ -351,7 +360,7 @@ export default function MyOrdersPage() {
               <tbody className="divide-y divide-gray-50">
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-16 text-center">
+                    <td colSpan={6} className="px-5 py-16 text-center">
                       <Package size={40} className="mx-auto text-gray-200 mb-3" />
                       <p className="text-sm font-semibold text-gray-400">No orders found</p>
                       <p className="text-xs text-gray-300 mt-1">Try adjusting your filters</p>
@@ -361,65 +370,64 @@ export default function MyOrdersPage() {
                   orders.map((order) => {
                     const sc = STATUS_CONFIG[order.status] ?? DEFAULT_STATUS;
                     const { Icon: StatusIcon } = sc;
-                    const pay = getPaymentBadge(order);
-                    const firstProduct = order.order_products[0]?.product?.name;
-                    const addr = formatAddress(order.customer_address);
+                    const canCancel = CANCELLABLE.has(order.status);
+                    const canReturn = order.status === "Delivered";
+                    const canTrack  = order.status !== "Cancelled";
 
                     return (
                       <tr key={order.id} className="hover:bg-gray-50/60 transition-colors group">
 
                         <td className="px-5 py-4">
                           <span className="text-sm font-bold text-[#186737]">#{order.order_number}</span>
-                          {firstProduct && (
-                            <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1 max-w-40">{firstProduct}</p>
-                          )}
                         </td>
 
                         <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
-                          {formatDate(order.created_at)}
+                          {order.date}
                         </td>
 
                         <td className="px-5 py-4">
-                          <div className="space-y-1.5">
-                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>
-                              <StatusIcon size={10} />
-                              {order.status}
-                            </span>
-                            <div>
-                              <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${pay.bg} ${pay.text}`}>
-                                {pay.label}
-                              </span>
-                            </div>
-                          </div>
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>
+                            <StatusIcon size={10} />
+                            {order.status}
+                          </span>
                         </td>
 
-                        <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
-                          {order.total_products} item{order.total_products !== 1 ? "s" : ""}
+                        <td className="px-5 py-4 text-xs text-gray-500 whitespace-nowrap">
+                          {order.delivery || "—"}
                         </td>
 
                         <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">
-                          ${Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {order.currency_symbol}{Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
-                        <td className="px-5 py-4">
-                          {addr ? (
-                            <div className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
-                              <MapPin size={11} className="text-[#186737] shrink-0" />
-                              {addr}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-300">—</span>
-                          )}
-                        </td>
 
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3 text-xs font-semibold whitespace-nowrap">
-                            <Link href={`/dashboard/orders/cancel-order/${order.id}`} className="text-red-400 hover:text-red-600 hover:underline transition-colors">
+                            {canTrack ? (
+                              <Link href={`/track-order?order_number=${order.order_number}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 hover:underline transition-colors">
+                                <RotateCcw size={10} /> Track Order
+                              </Link>
+                            ) : (
+                              <span className="flex items-center gap-1 text-gray-300 cursor-not-allowed">
+                                <RotateCcw size={10} /> Track Order
+                              </span>
+                            )}
+                            <button
+                              onClick={() => canCancel && openCancelModal(order)}
+                              disabled={!canCancel}
+                              className={canCancel ? "text-red-400 hover:text-red-600 transition-colors" : "text-gray-300 cursor-not-allowed"}
+                            >
                               Cancel
-                            </Link>
-                            <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 hover:underline transition-colors">
-                              <RotateCcw size={10} /> Return
-                            </Link>
+                            </button>
+                            {canReturn ? (
+                              <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600 hover:underline transition-colors">
+                                <RotateCcw size={10} /> Return
+                              </Link>
+                            ) : (
+                              <span className="flex items-center gap-1 text-gray-300 cursor-not-allowed">
+                                <RotateCcw size={10} /> Return
+                              </span>
+                            )}
                             <Link href={`/dashboard/orders/${order.id}`} className="flex items-center gap-1 text-[#186737] hover:underline">
                               <Eye size={11} /> View
                             </Link>
@@ -446,49 +454,50 @@ export default function MyOrdersPage() {
               orders.map((order) => {
                 const sc = STATUS_CONFIG[order.status] ?? DEFAULT_STATUS;
                 const { Icon: StatusIcon } = sc;
-                const pay = getPaymentBadge(order);
-                const firstProduct = order.order_products[0]?.product?.name;
-                const addr = formatAddress(order.customer_address);
+                const canCancel = CANCELLABLE.has(order.status);
+                const canReturn = order.status === "Delivered";
 
                 return (
                   <div key={order.id} className="px-4 py-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <span className="text-sm font-bold text-[#186737]">#{order.order_number}</span>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{formatDate(order.created_at)}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{order.date}</p>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
-                          <StatusIcon size={10} />
-                          {order.status}
-                        </span>
-                        <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${pay.bg} ${pay.text}`}>
-                          {pay.label}
-                        </span>
-                      </div>
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
+                        <StatusIcon size={10} />
+                        {order.status}
+                      </span>
                     </div>
 
-                    {firstProduct && (
-                      <p className="text-[13px] text-gray-700 font-medium line-clamp-1 mb-2">{firstProduct}</p>
+                    {order.delivery && (
+                      <p className="text-[11px] text-gray-400 mb-2">Delivery: {order.delivery}</p>
                     )}
 
                     <div className="flex items-center justify-between mb-3">
-                      {addr ? (
-                        <div className="flex items-center gap-1 text-xs text-[#186737] font-medium">
-                          <MapPin size={11} />
-                          {addr}
-                        </div>
-                      ) : <span />}
+                      <span />
                       <p className="text-sm font-bold text-gray-900">
-                        ${Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {order.currency_symbol}{Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-4 text-xs font-semibold border-t border-gray-50 pt-3">
-                      <Link href={`/dashboard/orders/cancel-order/${order.id}`} className="text-red-400 hover:text-red-600">Cancel</Link>
-                      <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
-                        <RotateCcw size={10} /> Return
-                      </Link>
+                      <button
+                        onClick={() => canCancel && openCancelModal(order)}
+                        disabled={!canCancel}
+                        className={canCancel ? "text-red-400 hover:text-red-600 transition-colors" : "text-gray-300 cursor-not-allowed"}
+                      >
+                        Cancel
+                      </button>
+                      {canReturn ? (
+                        <Link href={`/dashboard/orders/return-order/${order.id}`} className="flex items-center gap-1 text-gray-400 hover:text-gray-600">
+                          <RotateCcw size={10} /> Return
+                        </Link>
+                      ) : (
+                        <span className="flex items-center gap-1 text-gray-300 cursor-not-allowed">
+                          <RotateCcw size={10} /> Return
+                        </span>
+                      )}
                       <Link href={`/dashboard/orders/${order.id}`} className="flex items-center gap-1 text-[#186737] ml-auto">
                         <Eye size={11} /> View
                       </Link>
@@ -514,6 +523,80 @@ export default function MyOrdersPage() {
           />
         </div>
       )}
+
+      {/* ── Cancel Order Modal ───────────────────────────────────────────── */}
+      <Modal
+        isOpen={!!cancelTarget}
+        onClose={closeCancelModal}
+        title={`Cancel Order${cancelTarget ? ` #${cancelTarget.orderNumber}` : ""}`}
+        width="max-w-md"
+        zIndex={true}
+      >
+        {cancelSuccess ? (
+          <div className="text-center py-6">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle size={22} className="text-emerald-500" />
+            </div>
+            <p className="text-sm font-bold text-gray-900">Order Cancelled</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Order #{cancelTarget?.orderNumber} has been cancelled successfully.
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-gray-500 mb-4">
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Reason <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={cancelNotes}
+                onChange={(e) => { setCancelNotes(e.target.value); if (cancelError) setCancelError(""); }}
+                placeholder="Tell us why you're cancelling..."
+                rows={3}
+                className={`w-full rounded-[7px] border text-sm text-gray-800 px-3 py-2.5 outline-none focus:ring-2 transition-all resize-none placeholder:text-gray-400 ${
+                  cancelError
+                    ? "border-red-400 focus:border-red-400 focus:ring-red-100"
+                    : "border-gray-200 focus:border-[#186737] focus:ring-[#186737]/10"
+                }`}
+              />
+            </div>
+
+            {cancelError && (
+              <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                <AlertCircle size={11} /> {cancelError}
+              </p>
+            )}
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={closeCancelModal}
+                disabled={cancelling}
+                className="flex-1 py-2.5 rounded-[7px] border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
+              >
+                Keep Order
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+                className="flex-1 py-2.5 rounded-[7px] bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {cancelling ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Cancelling…
+                  </>
+                ) : (
+                  "Yes, Cancel Order"
+                )}
+              </button>
+            </div>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

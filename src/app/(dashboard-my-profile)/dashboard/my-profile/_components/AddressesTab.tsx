@@ -1,6 +1,8 @@
 "use client";
 
+import { makeApiRequest } from "@/apis/axios-instance";
 import { Modal } from "@/components/ui/modal";
+import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import {
   AddressPayload,
   CustomerAddress,
@@ -19,11 +21,12 @@ import { CheckCircle, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Field, inputCls } from "./shared";
 
 // ── Validation schema ──────────────────────────────────────────────────────────
 const addressSchema = Yup.object({
-  type:       Yup.string().trim().required("Address label is required"),
+  // type:       Yup.string().trim().required("Address label is required"),
   address:    Yup.string().trim().required("Address is required"),
   country:    Yup.string().required("Country is required"),
   state:      Yup.string().trim().required("State is required"),
@@ -36,6 +39,10 @@ const addressEditSchema = addressSchema.shape({
   is_default: Yup.boolean().oneOf([true], "You must set this as your default address"),
 });
 
+// ── Lookup types ───────────────────────────────────────────────────────────────
+interface LookupItem { id: number; name: string; }
+interface LookupResponse { success: boolean; data: LookupItem[]; }
+
 // ── Add / Edit Form (inside Modal) ─────────────────────────────────────────────
 const AddressForm = ({
   editAddress,
@@ -44,20 +51,25 @@ const AddressForm = ({
   editAddress: CustomerAddress | null;
   onClose: () => void;
 }) => {
-  const dispatch   = useDispatch<AppDispatch>();
-  const locationData = useLocationData();
+  const dispatch      = useDispatch<AppDispatch>();
+  const locationData  = useLocationData();
   const { submitting, error } = useSelector((s: RootState) => s.customerAddress);
+  const country       = useSelector((s: RootState) => s.country);
+  const countryId     = country?.data?.id as number | undefined;
+  const countryName   = (country?.data?.name as string) ?? "";
 
+  const [states, setStates]               = useState<LookupItem[]>([]);
+  const [cities, setCities]               = useState<LookupItem[]>([]);
+  const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
+  const [statesLoading, setStatesLoading] = useState(false);
+  const [citiesLoading, setCitiesLoading] = useState(false);
   const [apiMsg, setApiMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  // Country from localStorage location, or from the address being edited
-  const detectedCountry = locationData?.country ?? "";
 
   const formik = useFormik({
     initialValues: {
       type:       editAddress?.type       ?? "",
       address:    editAddress?.address    ?? "",
-      country:    editAddress?.country    ?? detectedCountry,
+      country:    editAddress?.country    ?? countryName,
       state:      editAddress?.state      ?? "",
       city:       editAddress?.city       ?? "",
       zip_code:   editAddress?.zip_code   ?? "",
@@ -71,13 +83,12 @@ const AddressForm = ({
       const payload: AddressPayload = {
         type:       values.type.trim(),
         address:    values.address.trim(),
-        country:    values.country,
+        country:    countryName || values.country,
         state:      values.state?.trim() ?? "",
         city:       values.city.trim(),
         zip_code:   values.zip_code.trim(),
         is_default: editAddress ? values.is_default : true,
       };
-
       try {
         if (editAddress) {
           const msg = await dispatch(updateAddress({ id: editAddress.id, payload })).unwrap();
@@ -93,17 +104,60 @@ const AddressForm = ({
     },
   });
 
-  // Sync detected country into the form once locationData loads from localStorage (add mode only)
+  // Dispatch fetchCountryByName so s.country gets populated from locationData
   useEffect(() => {
-    if (!editAddress && locationData?.country) {
-      formik.setFieldValue("country", locationData.country);
+    if (locationData?.country) {
+      dispatch(fetchCountryByName(locationData.country));
+    }
+  }, [locationData?.country, dispatch]);
+
+  // Sync countryName into formik (add mode)
+  useEffect(() => {
+    if (countryName && !editAddress) {
+      formik.setFieldValue("country", countryName);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationData?.country]);
+  }, [countryName]);
+
+  // Fetch states when countryId is known
+  useEffect(() => {
+    if (!countryId) return;
+    setStatesLoading(true);
+    setStates([]);
+    setCities([]);
+    setSelectedStateId(null);
+    makeApiRequest<LookupResponse>("frontend/countries/lookup", {
+      params: { country_id: countryId, type: "states" },
+    })
+      .then((res) => setStates(res.data ?? []))
+      .finally(() => setStatesLoading(false));
+  }, [countryId]);
+
+  // In edit mode: once states load, auto-select the matching state ID
+  useEffect(() => {
+    const editState = editAddress?.state;
+    if (!editState || states.length === 0) return;
+    const match = states.find(
+      (s) => s.name.toLowerCase() === editState.toLowerCase()
+    );
+    if (match) setSelectedStateId(match.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [states]);
+
+  // Fetch cities when selectedStateId changes
+  useEffect(() => {
+    if (!selectedStateId) { setCities([]); return; }
+    setCitiesLoading(true);
+    setCities([]);
+    makeApiRequest<LookupResponse>("frontend/countries/lookup", {
+      params: { state_id: selectedStateId, type: "cities" },
+    })
+      .then((res) => setCities(res.data ?? []))
+      .finally(() => setCitiesLoading(false));
+  }, [selectedStateId]);
 
   const err = (field: keyof typeof formik.values) =>
     formik.touched[field] && formik.errors[field] ? formik.errors[field] : null;
-
   const errCls = (field: keyof typeof formik.values) =>
     err(field) ? "border-red-400 focus:ring-red-100" : "";
 
@@ -121,72 +175,29 @@ const AddressForm = ({
         </div>
       )}
 
-      {/* Row 1: Street Address | Zip Code | City */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-        <div className="sm:col-span-1">
-          <Field label="Street Address *">
-            <input
-              name="address"
-              value={formik.values.address}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              placeholder="Business/House"
-              className={`${inputCls} ${errCls("address")}`}
-            />
-            {err("address") && <p className="text-[11px] text-red-500 mt-1">{err("address")}</p>}
-          </Field>
-        </div>
-
-        <div>
-          <Field label="Zip Code *">
-            <input
-              name="zip_code"
-              value={formik.values.zip_code}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              placeholder="12345"
-              className={`${inputCls} ${errCls("zip_code")}`}
-            />
-            {err("zip_code") && <p className="text-[11px] text-red-500 mt-1">{err("zip_code")}</p>}
-          </Field>
-        </div>
-
-        <div>
-          <Field label="City *">
-            <input
-              name="city"
-              value={formik.values.city}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              placeholder="City"
-              className={`${inputCls} ${errCls("city")}`}
-            />
-            {err("city") && <p className="text-[11px] text-red-500 mt-1">{err("city")}</p>}
-          </Field>
-        </div>
+      {/* Street Address — full width */}
+      <div className="mb-4">
+        <Field label="Street Address *">
+          <input
+            name="address"
+            value={formik.values.address}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            placeholder="Business/House No., Street"
+            className={`${inputCls} ${errCls("address")}`}
+          />
+          {err("address") && <p className="text-[11px] text-red-500 mt-1">{err("address")}</p>}
+        </Field>
       </div>
 
-      {/* Row 2: State | Country (disabled) | Address Label */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div>
-          <Field label="State *">
-            <input
-              name="state"
-              value={formik.values.state}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              placeholder="State"
-              className={`${inputCls} ${errCls("state")}`}
-            />
-            {err("state") && <p className="text-[11px] text-red-500 mt-1">{err("state")}</p>}
-          </Field>
-        </div>
+      {/* Country | State | City */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
 
+        {/* Country — read-only */}
         <div>
           <Field label="Country *">
             <input
-              name="country"
-              value={formik.values.country}
+              value={countryName || formik.values.country}
               readOnly
               disabled
               className={`${inputCls} bg-gray-50 text-gray-500 cursor-not-allowed`}
@@ -194,25 +205,66 @@ const AddressForm = ({
           </Field>
         </div>
 
+        {/* State — searchable dropdown */}
         <div>
-          <Field label="Address Label *">
-            <input
-              name="type"
-              value={formik.values.type}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              placeholder="eg: Home, Office"
-              className={`${inputCls} ${errCls("type")}`}
+          <Field label="State *">
+            <SearchableSelect
+              options={states}
+              value={formik.values.state}
+              onChange={(name, id) => {
+                formik.setFieldValue("state", name);
+                formik.setFieldValue("city", "");
+                setSelectedStateId(id);
+              }}
+              placeholder="Select State"
+              searchPlaceholder="Search state…"
+              loading={statesLoading}
+              disabled={!countryId}
+              error={!!err("state")}
             />
-            {err("type") && <p className="text-[11px] text-red-500 mt-1">{err("type")}</p>}
+            {err("state") && <p className="text-[11px] text-red-500 mt-1">{err("state")}</p>}
           </Field>
         </div>
+
+        {/* City — searchable dropdown */}
+        <div>
+          <Field label="City *">
+            <SearchableSelect
+              options={cities}
+              value={formik.values.city}
+              onChange={(name) => formik.setFieldValue("city", name)}
+              placeholder={!selectedStateId ? "Select State first" : "Select City"}
+              searchPlaceholder="Search city…"
+              loading={citiesLoading}
+              disabled={!selectedStateId}
+              error={!!err("city")}
+            />
+            {err("city") && <p className="text-[11px] text-red-500 mt-1">{err("city")}</p>}
+          </Field>
+        </div>
+      </div>
+
+      {/* Zip Code */}
+      <div className="mb-6">
+        <Field label="Zip Code *">
+          <input
+            name="zip_code"
+            value={formik.values.zip_code}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            placeholder="12345"
+            className={`${inputCls} ${errCls("zip_code")} sm:max-w-50`}
+          />
+          {err("zip_code") && <p className="text-[11px] text-red-500 mt-1">{err("zip_code")}</p>}
+        </Field>
       </div>
 
       {/* Set as Default — only in edit mode */}
       {editAddress && (
         <div className="mb-6">
-          <div className={`flex items-center gap-3 px-4 py-3 rounded-[7px] border bg-gray-50 ${formik.touched.is_default && formik.errors.is_default ? "border-red-400" : "border-gray-200"}`}>
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-[7px] border bg-gray-50 ${
+            formik.touched.is_default && formik.errors.is_default ? "border-red-400" : "border-gray-200"
+          }`}>
             <input
               id="is_default"
               type="checkbox"
@@ -246,10 +298,7 @@ const AddressForm = ({
           className="flex-1 flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145c30] text-white px-4 py-2.5 rounded-[7px] text-sm font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {(formik.isSubmitting || submitting) ? (
-            <>
-              <Loader2 size={14} className="animate-spin" />
-              Saving...
-            </>
+            <><Loader2 size={14} className="animate-spin" /> Saving...</>
           ) : editAddress ? "Update Address" : "Save Address"}
         </button>
       </div>

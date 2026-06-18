@@ -1307,6 +1307,7 @@ import {
 import { getShippingCharge } from "@/utils/shipping";
 import { AddressesTab } from "@/app/(dashboard-my-profile)/dashboard/my-profile/_components/AddressesTab";
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1816,7 +1817,7 @@ try {
       // ── STEP 9: Payment History API ─────────────────────────────────────────
       try {
         const paymentDate = orderData?.updated_at
-          ? orderData.updated_at.split(" ")[0]
+          ? orderData.updated_at.split(/[T ]/)[0]
           : new Date().toISOString().split("T")[0];
 
         await makeApiRequest(apiUrls?.PAYMENT_HISTORY, {
@@ -1917,6 +1918,7 @@ try {
         // GET fail hone pe orderData hi use karo
       }
       localStorage.setItem("recentOrder", JSON.stringify(fullOrder));
+      dispatch(fetchCounts() as any);
       router.push(`/payment-success?orderID=${orderData?.id}`);
     } catch (err: any) {
       console.error("❌ Place order error:", err);
@@ -1924,6 +1926,8 @@ try {
     } finally {
       setIsPlacingOrder(false);
     }
+
+    
   };
 
   const crumbs = [
@@ -1959,9 +1963,12 @@ try {
       <AddressesTab checkoutMode />
     </div>
   );
-
+//     height: 364px;
+//     overflow-x: auto;
+//     padding: 12px;
+// }
   const cartBlock = (
-    <div className="space-y-4 mb-6">
+    <div className="space-y-4 mb-6 h-[350px] overflow-x-auto p-[12px]">
       {isCartLoading ? (
         <div className="space-y-4 py-2">
           {[1, 2].map((i) => (
@@ -2039,35 +2046,30 @@ try {
     </>
   );
 
-  const deliveryBlock = (
+  const activeFees = [
+    { label: "Lift Gate Service",       desc: "Required for deliveries without loading dock", fee: 75,  active: liftGate },
+    { label: "Residential Address",     desc: "Delivery to home or residential location",    fee: 199, active: residential },
+    { label: "Inside Delivery Address", desc: "Delivery inside the building",                fee: 249, active: insideDelivery },
+  ].filter((f) => f.active);
+
+  const deliveryBlock = activeFees.length > 0 ? (
     <div className="mb-6 border border-gray-200 rounded-lg overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-        <h2 className="text-sm font-semibold text-gray-900">Lift Gate or Residential Address</h2>
+        <h2 className="text-sm font-semibold text-gray-900">Additional Delivery Fees</h2>
       </div>
       <div className="divide-y divide-gray-100">
-        {[
-          { label: "Lift Gate Service",       desc: "Required for deliveries without loading dock", fee: 75,  state: liftGate,       toggle: () => setLiftGate(!liftGate) },
-          { label: "Residential Address",     desc: "Delivery to home or residential location",    fee: 199, state: residential,    toggle: () => setResidential(!residential) },
-          { label: "Inside Delivery Address", desc: "Delivery inside the building",                fee: 249, state: insideDelivery, toggle: () => setInsideDelivery(!insideDelivery) },
-        ].map(({ label, desc, fee, state, toggle }) => (
+        {activeFees.map(({ label, desc, fee }) => (
           <div key={label} className="flex items-center justify-between px-4 py-3.5">
             <div>
               <p className="text-sm font-medium text-gray-800">{label}</p>
               <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-              {state && <p className="text-xs text-[#186737] font-semibold mt-1">+${fee}.00 fee will be added</p>}
             </div>
-            <button
-              type="button"
-              onClick={toggle}
-              className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${state ? "bg-[#186737]" : "bg-gray-300"}`}
-            >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${state ? "translate-x-5" : "translate-x-0"}`} />
-            </button>
+            <span className="text-sm font-semibold text-[#186737] shrink-0">+${fee}.00</span>
           </div>
         ))}
       </div>
     </div>
-  );
+  ) : null;
 
   const pricingBlock = isCartLoading ? (
     <div className="space-y-3 animate-pulse mb-4">
@@ -2088,10 +2090,10 @@ try {
       <div className="space-y-2 text-sm mb-4">
         <PriceRow label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`} value={`${currencySymbol}${usd(baseSubtotal)}`} />
         {codeApplied && <PriceRow label="Discount (HORECA10)" value={`-${currencySymbol}${usd(discount)}`} green />}
-        <PriceRow label={`Shipping & Handling${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`} value={`${currencySymbol}${usd(baseShipping)}`} />
-        {liftGate    && <PriceRow label={`Lift Gate Service${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}      value={`${currencySymbol}${usd(liftFee)}`} />}
-        {residential && <PriceRow label={`Residential Address${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}   value={`${currencySymbol}${usd(resFee)}`} />}
-        {insideDelivery && <PriceRow label={`Inside Delivery${ratePercent > 0 ? ` (+${ratePercent}% tax)` : ""}`}    value={`${currencySymbol}${usd(insideFee)}`} />}
+        <PriceRow label={`Shipping & Handling${ratePercent > 0 ? ` ` : ""}`} value={`${currencySymbol}${usd(baseShipping)}`} />
+        {liftGate    && <PriceRow label={`Lift Gate Service${ratePercent > 0 ? ` ` : ""}`}      value={`${currencySymbol}${usd(liftFee)}`} />}
+        {residential && <PriceRow label={`Residential Address${ratePercent > 0 ? `` : ""}`}   value={`${currencySymbol}${usd(resFee)}`} />}
+        {insideDelivery && <PriceRow label={`Inside Delivery${ratePercent > 0 ? ` ` : ""}`}    value={`${currencySymbol}${usd(insideFee)}`} />}
         {ratePercent > 0 && <PriceRow label={`Tax (${ratePercent}%)`} value={`${currencySymbol}${usd(totalTax)}`} />}
       </div>
       <div className="h-px bg-gray-200 mb-4" />

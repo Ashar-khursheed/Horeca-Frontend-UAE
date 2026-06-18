@@ -1,6 +1,7 @@
+"use client";
+
 import {
   CheckCircle2,
-  ChevronRight,
   Mail,
   MapPin,
   MessageCircle,
@@ -13,8 +14,11 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
-import { makeApiCallSSR } from "@/apis/ssr-fetch";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { makeApiRequest } from "@/apis/axios-instance";
 import { ShareButtons } from "./_components/share-buttons";
+import Breadcrumb from "@/components/breadcum";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,24 +26,32 @@ interface OrderProduct {
   id: number;
   quantity: number;
   unit_price: string;
-  shipping_charge: number;
-  expectedShippingDate: string;
+  shipping_charge: string | number;
+  expected_shipping_date?: string;
+  expectedShippingDate?: string;
   product_supplier: {
     delivery_days: string;
-  };
+  } | null;
   product: {
-    name: string;
     sku: string;
-    brand_name: string;
-    images: string[];
-    image_urls: string[];
+    name: { en: string } | string;
+    brand?: { name: { en: string } };
+    brand_name?: string;
+    warranty_attribute?: { en: string };
+    warranty?: string;
+    image_urls?: { en: string[] } | string[];
+    images?: string[];
+    translations?: Array<{ name: string; image_urls: string }>;
   };
 }
 
 interface OrderData {
   order_number: string;
   amount: string;
-  shipping_charge: number;
+  shipping_charge: string | number;
+  is_lift_gate: number;
+  is_residential_address: number;
+  is_inside_delivery: number;
   tax_percentage: string;
   tax_amount: string;
   total_amount: string;
@@ -67,24 +79,46 @@ function parseAddress(raw: string) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function PaymentSuccessPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ orderID?: string }>;
-}) {
-  const { orderID } = await searchParams;
+export default function PaymentSuccessPage() {
+  const searchParams = useSearchParams();
+  const orderID = searchParams.get("orderID");
 
-  const res = orderID
-    ? await makeApiCallSSR<{ success: boolean; data: OrderData }>(
-        `/frontend/orders/${orderID}`,
-        undefined,
-        { withAuth: true, revalidate: 0 }
-      )
-    : null;
+  const [order,   setOrder]   = useState<OrderData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(false);
 
-  const order = res?.success ? res.data : null;
+  useEffect(() => {
+    if (!orderID) { setLoading(false); setError(true); return; }
+    (async () => {
+      try {
+        const res = await makeApiRequest<{ success: boolean; data: OrderData }>(
+          `frontend/orders/${orderID}`
+        );
+        if (res?.success && res.data) {
+          setOrder(res.data);
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [orderID]);
 
-  if (!order) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#E2E8F066] flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 border-4 border-[#186737] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-gray-500 text-sm">Loading your order details…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
     return (
       <div className="min-h-screen bg-[#E2E8F066] flex items-center justify-center">
         <div className="text-center">
@@ -103,31 +137,30 @@ export default async function PaymentSuccessPage({
     );
   }
 
-  const subtotal = Number(order.amount);
-  const shippingTotal = order.shipping_charge;
-  const taxAmount = Number(order.tax_amount);
-  const taxRate = Number(order.tax_percentage) / 100;
-  const total = Number(order.total_amount);
-  const address = parseAddress(order.customer_address);
-  const phone = `${order.customer.country_code} ${order.customer.mobile_number}`;
+  const subtotal      = Number(order.amount);
+  const shippingTotal = Number(order.shipping_charge);
+  const taxAmount     = Number(order.tax_amount);
+  const taxRate       = Number(order.tax_percentage) / 100;
+  const total         = Number(order.total_amount);
+  const address       = parseAddress(order.customer_address ?? "");
+  const phone         = `${order.customer.country_code ?? ""} ${order.customer.mobile_number ?? ""}`.trim();
+
+  const hasLiftGate    = order.is_lift_gate           === 1;
+  const hasResidential = order.is_residential_address === 1;
+  const hasInside      = order.is_inside_delivery     === 1;
+  const liftFee        = hasLiftGate    ? 75  : 0;
+  const resFee         = hasResidential ? 199 : 0;
+  const insideFee      = hasInside      ? 249 : 0;
 
   return (
     <div className="min-h-screen bg-[#E2E8F066]">
 
-      {/* ── Breadcrumb ───────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="global-container py-3 flex items-center gap-1.5 text-sm overflow-x-auto whitespace-nowrap scrollbar-none">
-          <Link href="/" className="text-[#186737] hover:underline flex items-center gap-1 shrink-0">
-            <ShoppingBag size={13} /> Home
-          </Link>
-          <ChevronRight size={13} className="text-gray-300 shrink-0" />
-          <Link href="/cart" className="text-[#186737] hover:underline shrink-0">Cart</Link>
-          <ChevronRight size={13} className="text-gray-300 shrink-0" />
-          <Link href="/checkout" className="text-[#186737] hover:underline shrink-0">Checkout</Link>
-          <ChevronRight size={13} className="text-gray-300 shrink-0" />
-          <span className="font-semibold text-[#186737] shrink-0">Order Confirmed</span>
-        </div>
-      </div>
+      <Breadcrumb crumbs={[
+        { label: "Home",           href: "/" },
+        { label: "Cart",           href: "/cart" },
+        { label: "Checkout",       href: "/checkout" },
+        { label: "Order Confirmed", href: null },
+      ]} />
 
       {/* ── Main ─────────────────────────────────────────────────────────────── */}
       <div className="global-container py-8">
@@ -168,23 +201,27 @@ export default async function PaymentSuccessPage({
                     <span className="text-[#186737] font-bold break-all">{order.customer.email}</span>
                   </p>
                 </div>
-                <div className="flex items-start gap-2.5">
-                  <Phone size={15} className="text-[#186737] mt-1 shrink-0" />
-                  <p className="text-sm text-gray-600 font-medium leading-relaxed">
-                    Our representative will call you at{" "}
-                    <span className="text-[#186737] font-bold whitespace-nowrap">{phone}</span>
-                    . Kindly ensure the number is correct to avoid delivery delays.
-                  </p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <MapPin size={15} className="text-[#186737] mt-1 shrink-0" />
-                  <p className="text-sm text-gray-600 font-medium leading-relaxed">
-                    Being delivered to{" "}
-                    <span className="text-gray-800 font-semibold">
-                      {address.line1}{address.line2 ? `, ${address.line2}` : ""}
-                    </span>
-                  </p>
-                </div>
+                {phone && (
+                  <div className="flex items-start gap-2.5">
+                    <Phone size={15} className="text-[#186737] mt-1 shrink-0" />
+                    <p className="text-sm text-gray-600 font-medium leading-relaxed">
+                      Our representative will call you at{" "}
+                      <span className="text-[#186737] font-bold whitespace-nowrap">{phone}</span>
+                      . Kindly ensure the number is correct to avoid delivery delays.
+                    </p>
+                  </div>
+                )}
+                {address.line1 && (
+                  <div className="flex items-start gap-2.5">
+                    <MapPin size={15} className="text-[#186737] mt-1 shrink-0" />
+                    <p className="text-sm text-gray-600 font-medium leading-relaxed">
+                      Being delivered to{" "}
+                      <span className="text-gray-800 font-semibold">
+                        {address.line1}{address.line2 ? `, ${address.line2}` : ""}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="h-px bg-gray-100 mb-5" />
@@ -197,34 +234,54 @@ export default async function PaymentSuccessPage({
 
               <div className="space-y-0 divide-y divide-gray-50 border border-gray-100 rounded-[7px] overflow-hidden">
                 {order.order_products.map((item) => {
-                  const img = item.product.images?.[0] ?? item.product.image_urls?.[0] ?? "";
+                  const iu = item.product.image_urls;
+                  const img = iu && !Array.isArray(iu)
+                    ? (iu as { en: string[] }).en?.[0] ?? ""
+                    : Array.isArray(iu)
+                    ? (iu as string[])[0] ?? ""
+                    : item.product.images?.[0] ?? "";
+
+                  const productName = typeof item.product.name === "object"
+                    ? (item.product.name as { en: string }).en ?? ""
+                    : item.product.name ?? item.product.translations?.[0]?.name ?? "";
+
+                  const brandName = item.product.brand?.name?.en ?? item.product.brand_name ?? "";
+
                   const price = Number(item.unit_price);
-                  const deliveryLabel = item.expectedShippingDate || item.product_supplier.delivery_days;
+                  const itemShipping = Number(item.shipping_charge);
+                  const deliveryLabel = item.expected_shipping_date
+                    ?? item.expectedShippingDate
+                    ?? item.product_supplier?.delivery_days
+                    ?? "";
 
                   return (
                     <div key={item.id} className="p-4 bg-white hover:bg-gray-50/50 transition-colors">
-                      <p className="text-[#B12704] text-xs font-semibold mb-3 flex items-center gap-1.5">
-                        <Truck size={12} />
-                        Estimated delivery: {deliveryLabel}
-                      </p>
+                      {deliveryLabel && (
+                        <p className="text-[#B12704] text-xs font-semibold mb-3 flex items-center gap-1.5">
+                          <Truck size={12} />
+                          Estimated delivery: {deliveryLabel}
+                        </p>
+                      )}
                       <div className="flex gap-4">
                         <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-[7px] border border-gray-100 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
                           {img && (
                             <img
                               src={img}
-                              alt={item.product.name}
+                              alt={productName}
                               className="w-full h-full object-contain p-1"
                             />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug mb-1">
-                            {item.product.name}
+                            {productName}
                           </p>
-                          <p className="text-xs text-gray-400 mb-0.5">
-                            Brand:{" "}
-                            <span className="font-medium text-gray-600">{item.product.brand_name}</span>
-                          </p>
+                          {brandName && (
+                            <p className="text-xs text-gray-400 mb-0.5">
+                              Brand:{" "}
+                              <span className="font-medium text-gray-600">{brandName}</span>
+                            </p>
+                          )}
                           <p className="text-xs text-gray-400 mb-0.5">
                             Model No:{" "}
                             <span className="font-medium text-gray-600">{item.product.sku}</span>
@@ -241,10 +298,10 @@ export default async function PaymentSuccessPage({
                           </div>
                           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                             <Truck size={11} className="text-[#186737]" />
-                            {item.shipping_charge === 0 ? (
+                            {itemShipping === 0 ? (
                               <span className="text-[#186737] font-semibold">Free Shipping</span>
                             ) : (
-                              `Shipping: $${usd(item.shipping_charge)}`
+                              `Shipping: $${usd(itemShipping)}`
                             )}
                           </p>
                         </div>
@@ -269,7 +326,9 @@ export default async function PaymentSuccessPage({
                   email={order.customer.email}
                   total={total}
                   products={order.order_products.map((p) => ({
-                    name: p.product.name,
+                    name: typeof p.product.name === "object"
+                      ? (p.product.name as { en: string }).en ?? ""
+                      : p.product.name ?? "",
                     sku: p.product.sku,
                     quantity: p.quantity,
                     unit_price: p.unit_price,
@@ -335,6 +394,9 @@ export default async function PaymentSuccessPage({
                     value={shippingTotal === 0 ? "Free" : `$${usd(shippingTotal)}`}
                     valueClass={shippingTotal === 0 ? "text-[#186737]" : undefined}
                   />
+                  {hasLiftGate    && <Row label="Lift Gate Service"       value={`$${usd(liftFee)}`} />}
+                  {hasResidential && <Row label="Residential Address"     value={`$${usd(resFee)}`} />}
+                  {hasInside      && <Row label="Inside Delivery"         value={`$${usd(insideFee)}`} />}
                   <Row
                     label={`Tax (${(taxRate * 100).toFixed(2)}%)`}
                     value={`$${usd(taxAmount)}`}

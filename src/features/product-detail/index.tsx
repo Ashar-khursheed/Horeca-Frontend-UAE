@@ -15,6 +15,7 @@ import { ReviewsSection } from "./reviews-section";
 import { SpecificationsSection } from "./specifications-section";
 import type { ProductDetailResponse, VariantItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
+import { ReportErrorModal } from "./report-error-modal";
 
 interface Props {
   productData: ProductDetailResponse;
@@ -112,6 +113,7 @@ const ProductDetailPage = ({
   const [openOverview, setOpenOverview] = useState(false);
   const [openReviews, setOpenReviews] = useState(false);
   const [openFaq, setOpenFaq] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const selectVariant = (label: string, variant: VariantItem) => {
     setSelectedVariants((prev) => ({ ...prev, [label]: variant }));
@@ -175,6 +177,7 @@ const ProductDetailPage = ({
               variantGroups={variantGroups}
               selectedVariants={selectedVariants}
               onSelectVariant={selectVariant}
+              variants={(productData.variants ?? []) as import("./types").VariantItem[]}
               activePrice={activePrice}
               activeOriginal={productData.price}
               unit={unit}
@@ -328,8 +331,25 @@ const ProductDetailPage = ({
             </div>
           )}
 
+          {/* Report error trigger */}
+          <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
+            <span className="text-sm text-gray-400">Spot something off?</span>
+            <button
+              onClick={() => setReportOpen(true)}
+              className="text-sm text-[#186737] font-semibold hover:underline transition"
+            >
+              Help us improve this page.
+            </button>
+          </div>
+
           <RecommendedProducts
             productSlug={productData.url.split("/").pop() ?? ""}
+          />
+
+          <ReportErrorModal
+            isOpen={reportOpen}
+            onClose={() => setReportOpen(false)}
+            productId={productData.id}
           />
         </div>
       </main>

@@ -137,9 +137,9 @@ export default function CartItemRow({
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Truck size={12} className="text-[#186737]" />
             <span className="font-semibold text-gray-700">
-              {item.shippingCost === 0
-                ? "Free Shipping"
-                : `Shipping Charges: $${fmtPrice(item.shippingCost * item.qty)}`}
+              {item.shippingCost > 0
+                ? `Shipping Charges: $${fmtPrice(item.shippingCost * item.qty)}`
+                : "Shipping Charges Apply"}
             </span>
           </div>
           <span className="text-gray-300">·</span>

@@ -40,7 +40,6 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     );
     return s + (c.price + accessoriesTotal) * c.qty;
   }, 0);
-  // Total shipping = sum of (shippingCost × qty) per item — matches what each item row shows
   const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
@@ -61,8 +60,8 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     discountedSubtotal:      taxable,
     checkPaymentDiscount:    0,
     finalDiscountedSubtotal: taxable,
-    shipping:                0,               // API-level shipping (usually 0)
-    totalShippingCharges:    shippingTotal,    // flat rate: $99 / $199 / $299
+    shipping:                0,
+    totalShippingCharges:    shippingTotal,    // API actual or location tier (99/199/299)
     liftGateFee:             0,
     residentialFee:          0,
     insideDeliveryFee:       0,
