@@ -2318,6 +2318,7 @@ try {
                 <button
                   type="button"
                   disabled={isPlacingOrder}
+                            onClick={handlePlaceOrder}
                   className="flex-1 flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98] text-white font-semibold py-3.5 rounded-[7px] text-sm transition-all"
                 >
                   {isPlacingOrder ? (
