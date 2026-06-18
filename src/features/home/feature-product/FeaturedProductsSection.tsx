@@ -1,13 +1,13 @@
-import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
-import type { FeaturedCategory } from "@/utils/types";
+import { makeApiCallSSR } from "@/apis/ssr-fetch";
+import type { FeaturedCategoryTab } from "@/utils/types";
 import FeaturedProducts from ".";
 
 export async function FeaturedProductsSection() {
-  const res = await makeApiCallSSR<{ data: FeaturedCategory[] }>(
+  const res = await makeApiCallSSR<{ data: FeaturedCategoryTab[] }>(
     apiUrls.FEATURED_PRODUCTS,
     {},
-    { revalidate: 3600 },
+    { revalidate: 0 },
   );
-  return <FeaturedProducts products={res?.data ?? []} />;
+  return <FeaturedProducts tabs={res?.data ?? []} />;
 }
