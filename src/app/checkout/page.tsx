@@ -677,7 +677,7 @@ export default function CheckoutPage() {
           Contact information
         </h2>
         <Link
-          href="/dashboard/my-profile"
+          href="/dashboard/my-profile?mode=checkout"
           className="text-xs font-semibold text-green-700 flex gap-1.5 items-center"
         >
           Edit Info <Pencil className="w-3" />

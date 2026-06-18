@@ -14,9 +14,10 @@ import { useAppSelector } from "@/store/hooks";
 import { AppDispatch } from "@/store/store";
 import { updateProfileSchema } from "@/validation/schema";
 import { useFormik } from "formik";
-import { Building2, CheckCircle, ChevronDown, Mail, Phone, Search, Shield, User } from "lucide-react";
+import { Building2, ArrowLeft, CheckCircle, ChevronDown, Mail, Phone, Search, Shield, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Field, inputCls } from "./shared";
 
 interface CountryOption {
@@ -28,6 +29,9 @@ interface CountryOption {
 
 export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) => {
   const dispatch      = useDispatch<AppDispatch>();
+  const router        = useRouter();
+  const searchParams  = useSearchParams();
+  const isFromCheckout = searchParams?.get("mode") === "checkout";
   const detectedCountry = useAppSelector((s) => s.country.data);
   const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error">("idle");
   const [apiMessage, setApiMessage] = useState("");
@@ -115,6 +119,16 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
 
   return (
     <div className="space-y-5">
+      {isFromCheckout && (
+        <button
+          onClick={() => router.push("/checkout")}
+          className="flex items-center gap-1.5 text-sm font-semibold text-[#186737] hover:underline"
+        >
+          <ArrowLeft size={14} />
+          Back to Checkout
+        </button>
+      )}
+
       {/* Avatar */}
       <div className="flex items-center gap-5 p-5 bg-white rounded-[7px] border border-gray-100 shadow-sm">
         <div className="w-20 h-20 rounded-[7px] bg-[#186737] flex items-center justify-center shadow-md shrink-0">
@@ -226,7 +240,7 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
                   >
                     <span className={formik.values.country_code ? "text-gray-900" : "text-gray-400"}>
                       {formik.values.country_code
-                        ? `${formik.values.country_code} (${countries.find((c) => c.phone_code === formik.values.country_code)?.name ?? ""})`
+                        ? `${formik.values.country_code}`
                         : "Select country code"}
                     </span>
                     <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform ${codeOpen ? "rotate-180" : ""}`} />
