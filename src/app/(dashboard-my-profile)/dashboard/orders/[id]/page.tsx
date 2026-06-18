@@ -526,10 +526,27 @@ export default function OrderDetailPage() {
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-[11px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                               Qty: {item.quantity}
                             </span>
+                            {item.status && (
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
+                                item.status === "Delivered"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : item.status === "Request Return" || item.status === "Return Requested"
+                                  ? "bg-orange-50 text-orange-700 border-orange-200"
+                                  : item.status === "Returned" || item.status === "Refunded"
+                                  ? "bg-red-50 text-red-600 border-red-200"
+                                  : item.status === "Cancelled"
+                                  ? "bg-red-50 text-red-700 border-red-200"
+                                  : item.status === "Shipped" || item.status === "In Transit"
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : "bg-gray-100 text-gray-600 border-gray-200"
+                              }`}>
+                                {item.status}
+                              </span>
+                            )}
                           </div>
                         </div>
 

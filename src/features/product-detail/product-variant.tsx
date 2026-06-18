@@ -1,5 +1,6 @@
 "use client";
 
+import { makeApiRequest } from "@/apis/axios-instance";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,12 +16,13 @@ interface VariantGroup {
 interface ProductVariantProps {
   variants: VariantItem[];
   currency: string;
+  parentId: number;
 }
 
 const fmtP = (n: number) =>
   Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export function ProductVariant({ variants, currency }: ProductVariantProps) {
+export function ProductVariant({ variants, currency, parentId }: ProductVariantProps) {
   const router = useRouter();
   const [groups, setGroups]     = useState<VariantGroup[]>([]);
   const [selected, setSelected] = useState<Record<string, string>>({});
@@ -42,9 +44,27 @@ export function ProductVariant({ variants, currency }: ProductVariantProps) {
     setSelected(init);
   }, [variants]);
 
-  const pick = (attrId: string, value: string, url: string) => {
-    setSelected((p) => ({ ...p, [attrId]: value }));
-    if (url) { setLoading(true); router.push(url); }
+  const pick = async (attrId: string, value: string) => {
+    const nextSelected = { ...selected, [attrId]: value };
+    setSelected(nextSelected);
+    setLoading(true);
+    try {
+      const attribute = Object.entries(nextSelected).map(([id, val]) => ({
+        attribute_id: id,
+        attribute_value: val,
+      }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = await makeApiRequest<any>("frontend/attribute-product-variants", {
+        method: "POST",
+        data: { parent_id: parentId, attribute },
+      });
+      const slug: string | undefined = res?.data?.[0]?.full_slug;
+      if (slug) router.push(`/${slug}`);
+    } catch {
+      // ignore — stay on current page
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onEnter = (attrId: string, value: string) =>
@@ -76,7 +96,7 @@ export function ProductVariant({ variants, currency }: ProductVariantProps) {
                     key={v.sku + v.attribute_value}
                     type="button"
                     disabled={loading}
-                    onClick={() => pick(g.attribute_id, v.attribute_value, v.url)}
+                    onClick={() => pick(g.attribute_id, v.attribute_value)}
                     onMouseEnter={() => onEnter(g.attribute_id, v.attribute_value)}
                     onMouseLeave={() => onLeave(g.attribute_id)}
                     className={` bg-white rounded-[7px] border-2 cursor-pointer transition-all duration-150 hover:border-[#186737] hover:shadow-sm disabled:opacity-50  text-left ${
@@ -116,7 +136,7 @@ export function ProductVariant({ variants, currency }: ProductVariantProps) {
                     type="button"
                     disabled={loading}
                     title={v.attribute_value}
-                    onClick={() => pick(g.attribute_id, v.attribute_value, v.url)}
+                    onClick={() => pick(g.attribute_id, v.attribute_value)}
                     onMouseEnter={() => onEnter(g.attribute_id, v.attribute_value)}
                     onMouseLeave={() => onLeave(g.attribute_id)}
                     className={`w-[72px] h-[72px] rounded-[7px] border-2 overflow-hidden transition-all duration-150 hover:border-[#186737] hover:shadow-sm disabled:opacity-50 ${
@@ -147,7 +167,7 @@ export function ProductVariant({ variants, currency }: ProductVariantProps) {
                     key={v.sku + v.attribute_value}
                     type="button"
                     disabled={loading}
-                    onClick={() => pick(g.attribute_id, v.attribute_value, v.url)}
+                    onClick={() => pick(g.attribute_id, v.attribute_value)}
                     onMouseEnter={() => onEnter(g.attribute_id, v.attribute_value)}
                     onMouseLeave={() => onLeave(g.attribute_id)}
                     className={`flex flex-col items-center gap-1 p-1.5 rounded-[7px] border-2 transition-all duration-150 hover:border-[#186737] hover:shadow-sm disabled:opacity-50 ${
@@ -183,7 +203,7 @@ export function ProductVariant({ variants, currency }: ProductVariantProps) {
                     key={v.sku + v.attribute_value}
                     type="button"
                     disabled={loading}
-                    onClick={() => pick(g.attribute_id, v.attribute_value, v.url)}
+                    onClick={() => pick(g.attribute_id, v.attribute_value)}
                     onMouseEnter={() => onEnter(g.attribute_id, v.attribute_value)}
                     onMouseLeave={() => onLeave(g.attribute_id)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-[7px] border text-left w-full transition-all disabled:opacity-50 ${
@@ -219,8 +239,7 @@ export function ProductVariant({ variants, currency }: ProductVariantProps) {
                 disabled={loading}
                 onChange={(e) => {
                   const val = e.target.value;
-                  const v = g.variants.find((x) => x.attribute_value === val);
-                  if (v) pick(g.attribute_id, val, v.url);
+                  if (val) pick(g.attribute_id, val);
                 }}
                 className="w-full appearance-none px-3 py-2.5 pr-9 rounded-[7px] border border-gray-200 bg-white text-sm text-gray-800 cursor-pointer transition-all focus:outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 disabled:opacity-50"
               >
@@ -245,7 +264,7 @@ export function ProductVariant({ variants, currency }: ProductVariantProps) {
                     key={v.sku + v.attribute_value}
                     type="button"
                     disabled={loading}
-                    onClick={() => pick(g.attribute_id, v.attribute_value, v.url)}
+                    onClick={() => pick(g.attribute_id, v.attribute_value)}
                     onMouseEnter={() => onEnter(g.attribute_id, v.attribute_value)}
                     onMouseLeave={() => onLeave(g.attribute_id)}
                     className={`px-4 py-1.5 rounded-[7px] border text-sm transition-all disabled:opacity-50 ${

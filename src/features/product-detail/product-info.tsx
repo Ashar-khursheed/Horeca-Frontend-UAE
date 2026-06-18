@@ -47,6 +47,7 @@ type ProductInfoProps = {
   selectedVariants: Record<string, VariantItem>;
   onSelectVariant: (label: string, variant: VariantItem) => void;
   variants?: VariantItem[];
+  parentId: number;
   activePrice: number;
   activeOriginal: number;
   unit: string;
@@ -67,6 +68,7 @@ export const ProductInfo = ({
   selectedVariants,
   onSelectVariant,
   variants,
+  parentId,
   activePrice,
   activeOriginal,
   unit,
@@ -288,7 +290,7 @@ export const ProductInfo = ({
 
       {/* <div className="border-t border-gray-300" /> */}
 <div>
-   <ProductVariant variants={variants || []} currency={currency} />
+   <ProductVariant variants={variants || []} currency={currency} parentId={parentId} />
 </div>
       {/* Variant Groups */}
       {/* {variants && variants.length > 0 ? (

@@ -178,6 +178,7 @@ const ProductDetailPage = ({
               selectedVariants={selectedVariants}
               onSelectVariant={selectVariant}
               variants={(productData.variants ?? []) as import("./types").VariantItem[]}
+              parentId={productData.id}
               activePrice={activePrice}
               activeOriginal={productData.price}
               unit={unit}
