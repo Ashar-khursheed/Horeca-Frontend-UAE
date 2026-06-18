@@ -1968,7 +1968,7 @@ try {
 //     padding: 12px;
 // }
   const cartBlock = (
-    <div className="space-y-4 mb-6 h-[350px] overflow-x-auto p-[12px]">
+    <div className={`space-y-4 mb-6 p-3 ${cartItems.length > 4 ? "h-[350px] overflow-y-auto" : ""}`}>
       {isCartLoading ? (
         <div className="space-y-4 py-2">
           {[1, 2].map((i) => (
