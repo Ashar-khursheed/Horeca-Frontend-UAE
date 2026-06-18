@@ -44,21 +44,53 @@ export default function AppInitializer() {
     return () => clearTimeout(timer);
   }, [dispatch]);
 
-  // Location: localStorage cache first, then API fetch
+  // Location fetch (single call) — sets localStorage, cookie, dispatches country
   useEffect(() => {
-    // const cached = getLocationData();
-    // if (cached) {
-    //   if (cached.country) dispatch(fetchCountryByName(cached.country));
-    //   return;
-    // }
+    const DETECT_KEY = "hc_detect_time";
+    const DETECT_TTL = 10 * 1000;
+
+    const currentCookie = document.cookie
+      .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
+    const lastDetect = localStorage.getItem(DETECT_KEY);
+    const isCacheValid = lastDetect && Date.now() - Number(lastDetect) < DETECT_TTL;
+
+    if (isCacheValid && currentCookie) {
+      const cached = getLocationData();
+      if (cached?.country) dispatch(fetchCountryByName(cached.country));
+      return;
+    }
+
     fetch(LOCATION_API)
       .then((r) => r.json())
-      .then((data) => {
+      .then(async (data) => {
         setLocationData(data);
         if (data.country) dispatch(fetchCountryByName(data.country));
+
+        if (data.status === "success" && data.countryCode) {
+          const detected = data.countryCode;
+          const now = Date.now().toString();
+          localStorage.setItem(DETECT_KEY, now);
+          localStorage.setItem("hc_country_code", detected);
+          localStorage.setItem("hc_country_code_time", now);
+          document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
+
+          if (detected !== currentCookie) {
+            dispatch(resetCountry());
+            try {
+              const [fp, fbp] = await Promise.all([
+                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
+                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
+              ]);
+              if (fp?.data) setProducts(fp.data);
+              if (fbp?.data) setBrandProducts(fbp.data);
+            } catch {
+              router.refresh();
+            }
+          }
+        }
       })
       .catch(() => {});
-  }, [dispatch]);
+  }, [dispatch, router]);
 
   // Re-trigger country fetch when location updates (e.g. after VPN change)
   useEffect(() => {
@@ -79,51 +111,6 @@ export default function AppInitializer() {
       dispatch(setLoading(false));
     }
   }, [dispatch]);
-
-    useEffect(() => {
-      const DETECT_KEY = "hc_detect_time";
-      const DETECT_TTL = 10 * 1000; // 10 seconds
-  
-      const currentCookie = document.cookie
-        .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
-  
-      const lastDetect  = localStorage.getItem(DETECT_KEY);
-      const isCacheValid = lastDetect && Date.now() - Number(lastDetect) < DETECT_TTL;
-  
-      if (isCacheValid && currentCookie) return;
-  
-      fetch("https://pim.thehorecastore.co/api/frontend/location")
-        .then(r => r.json())
-        .then(async data => {
-          if (data.status === "success" && data.countryCode) {
-            const detected = data.countryCode;
-            const now = Date.now().toString();
-            localStorage.setItem(DETECT_KEY,             now);
-            localStorage.setItem("hc_country_code",      detected);
-            localStorage.setItem("hc_country_code_time", now);
-            document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
-  
-            if (detected !== currentCookie) {
-              // Reset Redux country so it re-fetches with new force_country
-              dispatch(resetCountry());
-              dispatch(fetchCountryByName(data.country));
-  
-              // Client-side re-fetch products — no SSR round-trip, ~300ms
-              try {
-                const [fp, fbp] = await Promise.all([
-                  makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
-                  makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
-                ]);
-                if (fp?.data)  setProducts(fp.data);
-                if (fbp?.data) setBrandProducts(fbp.data);
-              } catch {
-                router.refresh(); // fallback
-              }
-            }
-          }
-        })
-        .catch(() => {});
-    }, [router]);
 
 
   return null;

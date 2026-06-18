@@ -31,12 +31,12 @@ export default async function RootLayout({
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       {},
-      { revalidate: 0 },
+      { revalidate: 3600 },
     ),
     makeApiCallSSR<SearchSuggestions>(
       apiUrls.SEARCH,
       { query: "true", page: 1, length: 5 },
-      { revalidate: 0 },
+      { revalidate: 3600 },
     ),
   ]);
   const navItemData = navData?.data ?? [];
@@ -56,17 +56,6 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
-        <link
-          rel="stylesheet"
-          type="text/css"
-          charSet="UTF-8"
-          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
-        />
-        <link
-          rel="stylesheet"
-          type="text/css"
-          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
-        />
       </head>
 
       <body suppressHydrationWarning>
