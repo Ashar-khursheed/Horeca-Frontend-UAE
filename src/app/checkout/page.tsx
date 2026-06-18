@@ -2329,7 +2329,7 @@ try {
                       Processing...
                     </>
                   ) : (
-                    <>Place Order Â· {currencySymbol}{usd(grandTotal)}</>
+                    <>Place Order {currencySymbol}{usd(grandTotal)}</>
                   )}
                 </button>
               </div>

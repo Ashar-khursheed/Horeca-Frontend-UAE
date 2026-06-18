@@ -143,6 +143,12 @@ export default function CategoriesPage({
   // category data page
 
   const APIDATA = categoryPage?.category_page;
+  const seoAPIDATA = APIDATA
+    ? {
+        title: APIDATA.title ?? undefined,
+        description: APIDATA.description ?? undefined,
+      }
+    : undefined;
   const randomProducts = categoryPage?.random_products ?? [];
   const crumbs = [
     { label: "Home", href: "/" },
@@ -154,8 +160,6 @@ export default function CategoriesPage({
     <>
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
-        {/* Hero Header */}
-        <section className="bg-white border-b border-gray-100 relative">
           {APIDATA?.banner_image_detail?.image_url ? (
             <>
               {!bannerLoaded && (
@@ -175,9 +179,9 @@ export default function CategoriesPage({
           ) : (
             <div className="w-full h-45 md:h-80 bg-gray-100" />
           )}
-        </section>
+      
         <div className="">
-          <SEOMainContent APIDATA={APIDATA} categorySlug={categorySlug} />
+          <SEOMainContent APIDATA={seoAPIDATA} categorySlug={categorySlug} />
         </div>
         {/* <section className="md:py-7 py-3">
           <div className="global-container">
@@ -421,7 +425,7 @@ export default function CategoriesPage({
         <div className="bg-white md:py-10 py-3 pb-0">
           <SeoContent dataAPI={categoryPage?.seo} />
         </div>
-      </main>
+       </main>
     </>
   );
 }
