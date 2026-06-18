@@ -17,9 +17,10 @@ import {
 import { AppDispatch, RootState } from "@/store/store";
 import { useLocationData } from "@/utils/locationStorage";
 import { useFormik } from "formik";
-import { CheckCircle, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as Yup from "yup";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Field, inputCls } from "./shared";
@@ -308,7 +309,11 @@ const AddressForm = ({
 
 // ── Addresses Tab ──────────────────────────────────────────────────────────────
 export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean }) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch     = useDispatch<AppDispatch>();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const isFromCheckout = searchParams?.get("mode") === "checkout";
+
   const { addresses, loading, deletingId } = useSelector(
     (s: RootState) => s.customerAddress
   );
@@ -333,6 +338,10 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
   };
 
   const handleOpenEdit = (addr: CustomerAddress) => {
+    if (checkoutMode) {
+      router.push("/dashboard/my-profile?tab=addresses&mode=checkout#addresses");
+      return;
+    }
     setEditTarget(addr);
     setModalOpen(true);
   };
@@ -362,6 +371,17 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
   return (
     <>
       <div className="space-y-5">
+        {/* Back to Checkout button — shown on my-profile when navigated from checkout */}
+        {isFromCheckout && !checkoutMode && (
+          <button
+            onClick={() => router.push("/checkout")}
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#186737] hover:underline"
+          >
+            <ArrowLeft size={14} />
+            Back to Checkout
+          </button>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -377,7 +397,7 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors shrink-0 shadow-sm shadow-[#186737]/20"
           >
             <Plus size={14} />
-            {checkoutMode ? "Add Address" : "Add Address"}
+            Add Address
           </button>
         </div>
 
