@@ -27,6 +27,7 @@ import { getShippingCharge, getShippingChargeFromAddress } from "@/utils/shippin
 import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
 import { AddToCartWidgetProps } from "@/features/product-detail/types";
+import GetAQuoteModal from "@/components/get-a-quote-modal";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -144,6 +145,7 @@ export const AddToCartWidget = ({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileLoading, setMobileLoading] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Source of truth inCart status checking Redux store or falling back to product.in_cart (cached/SSR)
@@ -636,7 +638,7 @@ export const AddToCartWidget = ({
             </Link>
           ) : (
             <button
-              onClick={handleAddToCart}
+              onClick={variant === "quote" ? () => setQuoteModalOpen(true) : handleAddToCart}
               disabled={loading}
               className={computedButtonClass}
             >
@@ -708,7 +710,7 @@ export const AddToCartWidget = ({
           ) : isQuote ? (
             /* Mobile Request a Quote button */
             <button
-              // onClick={handleAddToCart}
+              onClick={() => setQuoteModalOpen(true)}
               disabled={loading}
               className="flex-1 h-8.5 rounded-lg bg-[#A6131D] hover:bg-[#8b1018] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
@@ -737,6 +739,15 @@ export const AddToCartWidget = ({
           )}
         </div>
       </div>
+
+      {quoteModalOpen && (
+        <GetAQuoteModal
+          isOpen={quoteModalOpen}
+          onClose={() => setQuoteModalOpen(false)}
+          product={product}
+          country={country?.name}
+        />
+      )}
     </div>
   );
 };

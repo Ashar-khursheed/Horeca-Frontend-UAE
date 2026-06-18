@@ -95,6 +95,8 @@ export const apiUrls = {
   SLIDER: (id: number) => `frontend/sliders/${id}`,
 
 
+  MADE_TO_ORDER: "frontend/made-to-orders",
+
   SQUARE_PAYMENT:"frontend/payment-square",
   PLACE_ORDER:"frontend/orders",
   ORDER_DETAIL: (id: number) => `frontend/orders/${id}`,

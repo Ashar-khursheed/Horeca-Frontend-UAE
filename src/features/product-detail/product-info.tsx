@@ -13,17 +13,15 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
-  Minus,
   Package,
-  Plus,
   RotateCcw,
   ShieldCheck,
-  ShoppingCart,
   Truck,
 } from "lucide-react";
 import { ProductVariant } from "./product-variant";
 import { RatingStars } from "./rating-stars";
 import type { Accessory, AccessoryItem, VariantItem } from "./types";
+import AddToCartWidget from "@/components/add-to-cart";
 
 type BenefitFeature = { benefit: string; feature: string };
 
@@ -35,7 +33,7 @@ const fmtPrice = (n: number) =>
 
 const formatAccessoryName = (
   name: string | { en?: string; ar?: string } | undefined,
-) => (typeof name === "string" ? name : name?.en ?? name?.ar ?? "");
+) => (typeof name === "string" ? name : (name?.en ?? name?.ar ?? ""));
 
 type ProductInfoProps = {
   name: string;
@@ -56,6 +54,8 @@ type ProductInfoProps = {
   deliveryDays: string;
   returnPolicy: string;
   accessories: Accessory[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  product?: any;
 };
 
 export const ProductInfo = ({
@@ -77,12 +77,13 @@ export const ProductInfo = ({
   deliveryDays,
   returnPolicy,
   accessories,
+  product,
 }: ProductInfoProps) => {
+  const isQuote = !!product?.quote_available;
+
   const [openBenefits, setOpenBenefits] = useState<Set<number>>(new Set([0]));
   const [selectedAccessory, setSelectedAccessory] =
     useState<AccessoryItem | null>(null);
-  const [qty, setQty] = useState(1);
-  const [addedSuccess, setAddedSuccess] = useState(false);
   const locationState = useLocationData();
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
 
@@ -96,7 +97,9 @@ export const ProductInfo = ({
           return;
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     if (locationState?.city && locationState?.country) {
       setDeliverTo(`${locationState.city}, ${locationState.country}`);
     }
@@ -107,11 +110,6 @@ export const ProductInfo = ({
     ? ((activeOriginal - activePrice) / activeOriginal) * 100
     : 0;
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
-
-  const handleAddToCart = () => {
-    setAddedSuccess(true);
-    setTimeout(() => setAddedSuccess(false), 1800);
-  };
 
   const toggleBenefit = (i: number) => {
     setOpenBenefits((prev) => {
@@ -132,77 +130,89 @@ export const ProductInfo = ({
       {/* Model & Rating */}
       <div className="md:hidden flex flex-wrap gap-x-4 gap-y-1">
         <p className="text-sm text-gray-500">
-          Model:{" "}
-          <span className="font-semibold text-gray-700">{model}</span>
+          Model: <span className="font-semibold text-gray-700">{model}</span>
         </p>
         {avgRating > 0 && (
           <div className="flex items-center gap-2">
             <RatingStars rating={avgRating} size={16} />
             <span className="text-sm font-bold text-gray-700">{avgRating}</span>
-            <span className="text-sm text-gray-400">({totalReviews} reviews)</span>
+            <span className="text-sm text-gray-400">
+              ({totalReviews} reviews)
+            </span>
           </div>
         )}
       </div>
 
       {/* Mobile-only Price Card */}
       <div className="md:hidden block bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
-        {/* Price */}
-        <div className="flex items-baseline gap-1.5 flex-wrap">
-          {hasSale && (
-            <span className="text-red-500 text-sm font-semibold">
-              -{Math.round(discountPct)}%
-            </span>
-          )}
-          <div className="flex items-baseline gap-0.5">
-            <span className="text-3xl font-bold text-gray-900">
-              {currency}{priceInt}
-            </span>
-            <span className="text-lg font-bold text-gray-900">.{priceDec}</span>
-          </div>
-          <span className="text-sm text-gray-500 font-medium">/{unit}</span>
-        </div>
-        {hasSale && (
-          <p className="text-gray-400 text-sm line-through mt-0.5">
-            Was {currency}{fmtPrice(activeOriginal)}
-          </p>
+        {/* Price — hidden for quote products */}
+        {!isQuote && (
+          <>
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              {hasSale && (
+                <span className="text-red-500 text-sm font-semibold">
+                  -{Math.round(discountPct)}%
+                </span>
+              )}
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-3xl font-bold text-gray-900">
+                  {currency}
+                  {priceInt}
+                </span>
+                <span className="text-lg font-bold text-gray-900">.{priceDec}</span>
+              </div>
+              <span className="text-sm text-gray-500 font-medium">/{unit}</span>
+            </div>
+            {hasSale && (
+              <p className="text-gray-400 text-sm line-through mt-0.5">
+                Was {currency}
+                {fmtPrice(activeOriginal)}
+              </p>
+            )}
+
+            <div className="border-t border-gray-300 my-4" />
+
+            {/* Shipping */}
+            <div className="flex items-start gap-2 mb-3">
+              <Truck size={16} className="text-[#186737] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">
+                  {freeShipping ? "Free Shipping" : "Shipping Charges Apply"}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">Ships {deliveryDays}</p>
+              </div>
+            </div>
+
+            {/* Delivery */}
+            <div className="flex items-start gap-2 mb-3">
+              <Package size={16} className="text-[#186737] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs text-gray-500">Delivering to</p>
+                <p className="text-sm font-semibold text-gray-800">
+                  {deliverTo ?? "Select Location"}
+                </p>
+              </div>
+            </div>
+
+            {/* Return */}
+            <div className="flex items-start gap-2 mb-3">
+              <RotateCcw size={16} className="text-[#186737] shrink-0 mt-0.5" />
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold text-gray-800">{returnPolicy}</span>{" "}
+                return policy
+              </p>
+            </div>
+          </>
         )}
-
-        <div className="border-t border-gray-300 my-4" />
-
-        {/* Shipping */}
-        <div className="flex items-start gap-2 mb-3">
-          <Truck size={16} className="text-[#186737] shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-gray-800">
-              {freeShipping ? "Free Shipping" : "Shipping Charges Apply"}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">Ships {deliveryDays}</p>
-          </div>
-        </div>
-
-        {/* Delivery */}
-        <div className="flex items-start gap-2 mb-3">
-          <Package size={16} className="text-[#186737] shrink-0 mt-0.5" />
-          <div>
-            <p className="text-xs text-gray-500">Delivering to</p>
-            <p className="text-sm font-semibold text-gray-800">{deliverTo ?? "Select Location"}</p>
-          </div>
-        </div>
-
-        {/* Return */}
-        <div className="flex items-start gap-2 mb-3">
-          <RotateCcw size={16} className="text-[#186737] shrink-0 mt-0.5" />
-          <p className="text-sm text-gray-600">
-            <span className="font-semibold text-gray-800">{returnPolicy}</span>{" "}
-            return policy
-          </p>
-        </div>
 
         {/* Accessories */}
         {accessories.map((acc) => (
           <div key={acc.id} className="mb-4">
             <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
-              <ShieldCheck size={16} className="text-[#186737] shrink-0 mt-0.5" />
+              <ShieldCheck
+                size={16}
+                className="text-[#186737] shrink-0 mt-0.5"
+              />
               {acc.name}
             </p>
             <Select
@@ -213,7 +223,8 @@ export const ProductInfo = ({
                   return;
                 }
                 setSelectedAccessory(
-                  acc.accessory_item.find((it) => it.id.toString() === val) ?? null,
+                  acc.accessory_item.find((it) => it.id.toString() === val) ??
+                    null,
                 );
               }}
             >
@@ -231,67 +242,46 @@ export const ProductInfo = ({
           </div>
         ))}
 
-        {/* Qty + Add to Cart */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white shrink-0 h-11">
-            <button
-              onClick={() => setQty((v) => Math.max(1, v - 1))}
-              disabled={qty <= 1}
-              className="w-10 h-full flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Minus size={14} className="text-gray-600" strokeWidth={2} />
-            </button>
-            <span className="w-9 text-center text-sm font-bold text-[#186737]">
-              {qty}
-            </span>
-            <button
-              onClick={() => setQty((v) => Math.min(99, v + 1))}
-              disabled={qty >= 99}
-              className="w-10 h-full flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Plus size={14} className="text-gray-600" strokeWidth={2} />
-            </button>
-          </div>
-          <button
-            onClick={handleAddToCart}
-            className={`flex-1 h-11 rounded-[7px] text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 ${
-              addedSuccess
-                ? "bg-emerald-600 text-white"
-                : "bg-[#186737] hover:bg-[#145c30] text-white"
+        {/* Add to Cart / Request Quote via widget */}
+        {product && (
+          <AddToCartWidget
+            product={product}
+            showCounter={true}
+            iconShow={true}
+            buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${
+              isQuote ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"
             }`}
-          >
-            {addedSuccess ? (
-              <>
-                <CheckCircle size={16} strokeWidth={2} /> Added!
-              </>
-            ) : (
-              <>
-                <ShoppingCart size={16} strokeWidth={2} /> Add To Cart
-              </>
-            )}
-          </button>
-        </div>
+            accessoryItemIds={
+              selectedAccessory ? [selectedAccessory.id] : undefined
+            }
+          />
+        )}
       </div>
 
       {/* Model & Rating */}
       <div className="md:flex hidden flex-wrap gap-x-4 gap-y-1">
         <p className="text-sm text-gray-500">
-          Model:{" "}
-          <span className="font-semibold text-gray-700">{model}</span>
+          Model: <span className="font-semibold text-gray-700">{model}</span>
         </p>
         {avgRating > 0 && (
           <div className="flex items-center gap-2">
             <RatingStars rating={avgRating} size={16} />
             <span className="text-sm font-bold text-gray-700">{avgRating}</span>
-            <span className="text-sm text-gray-400">({totalReviews} reviews)</span>
+            <span className="text-sm text-gray-400">
+              ({totalReviews} reviews)
+            </span>
           </div>
         )}
       </div>
 
       {/* <div className="border-t border-gray-300" /> */}
-<div>
-   <ProductVariant variants={variants || []} currency={currency} parentId={parentId} />
-</div>
+      <div>
+        <ProductVariant
+          variants={variants || []}
+          currency={currency}
+          parentId={parentId}
+        />
+      </div>
       {/* Variant Groups */}
       {/* {variants && variants.length > 0 ? (
         <ProductVariant variants={variants} currency={currency} />
@@ -348,7 +338,9 @@ export const ProductInfo = ({
                 strokeWidth={2.5}
               />
               <span className="text-gray-700 leading-snug">
-                <span className="font-semibold text-gray-900">{f.benefit}:</span>{" "}
+                <span className="font-semibold text-gray-900">
+                  {f.benefit}:
+                </span>{" "}
                 {f.feature}
               </span>
             </li>

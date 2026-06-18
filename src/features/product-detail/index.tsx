@@ -187,6 +187,7 @@ const ProductDetailPage = ({
               deliveryDays={supplier?.delivery_days ?? ""}
               returnPolicy={supplier?.return_policy ?? ""}
               accessories={productData.accessories ?? []}
+              product={productData}
             />
 
             <PurchasePanel

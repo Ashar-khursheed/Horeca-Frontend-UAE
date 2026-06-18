@@ -66,7 +66,6 @@ export const PurchasePanel = ({
   const [showErrors, setShowErrors]       = useState(false);
   const locationState = useLocationData();
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
-
   useEffect(() => {
     try {
       const raw = localStorage.getItem("hc_default_address");
