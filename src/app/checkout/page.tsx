@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
+import { TAX_STORAGE_KEY } from "@/store/slices/tax/taxSlice";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 
@@ -100,6 +101,7 @@ export default function CheckoutPage() {
   const [orderError, setOrderError] = useState<string | null>(null);
 
   const fetchedRef = useRef(false);
+  const taxFetchedZip = useRef<string | null>(null);
 
   useEffect(() => {
     if (fetchedRef.current) return;
@@ -179,6 +181,43 @@ export default function CheckoutPage() {
     if (isUS && (defaultAddr as any).zip_code) {
       const zip = (defaultAddr as any).zip_code;
       const city = encodeURIComponent((defaultAddr as any).city ?? "");
+
+      // Use cached tax data if zip matches — avoid duplicate API calls
+      try {
+        const cached = localStorage.getItem(TAX_STORAGE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.zip === zip) {
+            const cachedRate = parseFloat(
+              (parseFloat(parsed.combined_rate ?? "0") * 100).toFixed(4),
+            );
+            setCartSummary((prev) => {
+              if (!prev) return prev;
+              const discountedSub = prev.subTotal - (prev.discountAmount ?? 0);
+              const taxableAmount = discountedSub + newTotalShipping;
+              const taxAmount = taxableAmount * (cachedRate / 100);
+              const updated = {
+                ...prev,
+                totalShippingCharges: newTotalShipping,
+                taxRatePercentage: cachedRate,
+                discountedSubtotal: discountedSub,
+                finalDiscountedSubtotal: discountedSub,
+                taxableAmount,
+                taxAmount,
+                total: taxableAmount + taxAmount,
+              };
+              localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+              return updated;
+            });
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+
+      // Prevent duplicate API calls for the same zip in this session
+      if (taxFetchedZip.current === zip) return;
+      taxFetchedZip.current = zip;
+
       fetch(
         `https://pim.thehorecastore.co/api/frontend/tax/rate?zip=${zip}&country=US&city=${city}`,
       )
@@ -203,10 +242,12 @@ export default function CheckoutPage() {
               total: taxableAmount + taxAmount,
             };
             localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+             localStorage.setItem(TAX_STORAGE_KEY, JSON.stringify(data));
             return updated;
           });
         })
         .catch(() => {
+          taxFetchedZip.current = null; // allow retry on next render
           setCartSummary((prev) => {
             if (!prev) return prev;
             const discountedSub = prev.subTotal - (prev.discountAmount ?? 0);
