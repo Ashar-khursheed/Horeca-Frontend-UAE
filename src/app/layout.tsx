@@ -26,7 +26,7 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   const isRTL = locale === "ar";
-const isUS = process.env.NEXT_PUBLIC_REGION === "US";
+  const isUS = process.env.NEXT_PUBLIC_REGION === "US";
   const [navData, searchData] = await Promise.all([
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
@@ -35,7 +35,7 @@ const isUS = process.env.NEXT_PUBLIC_REGION === "US";
     ),
     makeApiCallSSR<SearchSuggestions>(
       apiUrls.SEARCH,
-      { query: "true" , page: 1, length: 5 },
+      { query: "true", page: 1, length: 5 },
       { revalidate: 0 },
     ),
   ]);
