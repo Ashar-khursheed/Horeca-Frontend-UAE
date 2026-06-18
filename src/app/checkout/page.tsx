@@ -1,4 +1,4 @@
-﻿// // 'use client'
+// // 'use client'
 
 // // import {
 // //   Check,
@@ -24,8 +24,7 @@
 // // import { MobileCheckout } from './_components/mobile-checkout'
 // // import type { Address, CartItem } from './_components/types'
 
-// // // â”€â”€â”€ Mock Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+// // // Mock Data`n
 // // const CART_ITEMS: CartItem[] = [
 // //   { id: 1, name: 'Turbo Air TAO-2510N-N6 23" Super Undercounter Bottle Cooler, 3.0 cu. ft.', qty: 1, price: 2436.63, shipping: 195.0, deliveryDate: 'May 16, 2026' },
 // //   { id: 2, name: 'Turbo Air TAO-3000N-N6 30" Super Undercounter Bottle Cooler, 5.1 cu. ft.', qty: 1, price: 2986.26, shipping: 0, deliveryDate: 'May 16, 2026' },
@@ -45,8 +44,7 @@
 // //   { id: 8, label: 'Branch', line1: 'Apple Valley, Roanoke Creek Basement', line2: 'Santa Clara, CA 0001, United States' },
 // // ]
 
-// // // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+// // // Helpers`n
 // // const formatCardNumber = (v: string) =>
 // //   v.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ')
 
@@ -58,8 +56,7 @@
 // // const usd = (n: number) =>
 // //   n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-// // // â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+// // // Page`n
 // // export default function CheckoutPage() {
 // //   const [mobileStep, setMobileStep] = useState(1)
 
@@ -112,7 +109,7 @@
 // //   return (
 // //     <div className="min-h-screen">
 
-// //       {/* Mobile â€” separate component file */}
+// //       {/* Mobile  -  separate component file */}
 // //       <MobileCheckout
 // //         mobileStep={mobileStep}
 // //         setMobileStep={setMobileStep}
@@ -153,7 +150,7 @@
 // //         totalSavings={totalSavings}
 // //       />
 
-// //       {/* Desktop â€” 2-column layout */}
+// //       {/* Desktop  -  2-column layout */}
 // //       <div className="hidden lg:block bg-[#f5f7f5]">
 // //         <div className="bg-white border-b border-gray-100">
 // //           <div className="global-container py-3 flex items-center gap-2 text-sm">
@@ -397,7 +394,7 @@
 // //                 </div>
 // //                 {couponApplied && (
 // //                   <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
-// //                     <Check size={12} /> HORECA10 applied â€” 10% off subtotal
+// //                     <Check size={12} /> HORECA10 applied  -  10% off subtotal
 // //                   </p>
 // //                 )}
 // //               </section>
@@ -444,7 +441,7 @@
 // //                 <button type="button"
 // //                   className="mt-5 w-full bg-[#186737] active:scale-[0.98] text-white font-semibold py-4 rounded-[7px] transition-all duration-150 flex items-center justify-center gap-2 text-sm shadow-md shadow-green-900/20"
 // //                 >
-// //                   <Lock size={14} /> Confirm & Pay â€” ${usd(total)} <ChevronRight size={15} />
+// //                   <Lock size={14} /> Confirm & Pay  -  ${usd(total)} <ChevronRight size={15} />
 // //                 </button>
 // //                 <p className="text-center text-[11px] text-gray-400 mt-3">
 // //                   By placing your order, you agree to our{' '}
@@ -492,7 +489,7 @@
 // //   )
 // // }
 
-// // // â”€â”€â”€ Desktop sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// // // --- Desktop sub-components
 
 // // function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
 // //   return (
@@ -528,7 +525,7 @@
 // //   )
 // // }
 
-// // â”€â”€â”€ NEW SHOPIFY-STYLE CHECKOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// // --- NEW SHOPIFY-STYLE CHECKOUT
 
 // "use client";
 
@@ -703,15 +700,14 @@
 
 //   const cartItems = isLoggedIn ? apiCartItems : guestCartItems;
 
-//   // â”€â”€ Pricing from saved cart summary (localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-//   const baseSubtotal = cartSummary?.subTotal ?? 0;
+//   // Pricing from saved cart summary (localStorage)`n//   const baseSubtotal = cartSummary?.subTotal ?? 0;
 //   const baseShipping = cartSummary?.totalShippingCharges ?? 0;
 //   const ratePercent = cartSummary?.taxRatePercentage ?? 0;
 //   const taxRate = ratePercent / 100;
 
 //   const taxable = baseSubtotal - discount;
 
-//   // Service fees (added on checkout) â€” each taxed at same rate
+//   // Service fees (added on checkout)  -  each taxed at same rate
 //   const liftFee = liftGate ? 75 : 0;
 //   const resFee = residential ? 199 : 0;
 //   const insideFee = insideDelivery ? 249 : 0;
@@ -727,8 +723,7 @@
 //   const isCartLoading =
 //     isLoggedIn && (apiStatus === "idle" || apiStatus === "loading");
 
-//   // â”€â”€ Sync updated summary back to localStorage whenever fees / discount change â”€
-//   useEffect(() => {
+//   // Sync updated summary back to localStorage whenever fees / discount change`n//   useEffect(() => {
 //     if (!cartSummary) return;
 //     try {
 //       const additionalFees = liftFee + resFee + insideFee;
@@ -782,7 +777,7 @@
 //       <div className=" global-container bg-white">
 //         {/* <div className="grid grid-cols-1 lg:grid-cols-[1fr_485px] max-w-7xl mx-auto "> */}
 //         <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] max-w-7xl mx-auto ">
-//           {/* â”€â”€ LEFT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+//           {/* -- LEFT ----------------------------------------------------------- */}
 //           <div className="px-6 md:px-12 xl:px-20 py-10 pt-0 border-r border-gray-100">
 //             {/* Breadcrumb */}
 
@@ -934,7 +929,7 @@
 //           </div> */}
 //           </div>
 
-//           {/* â”€â”€ RIGHT â€” Order Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+//           {/* -- RIGHT  -  Order Summary ------------------------------------------- */}
 //           <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10">
 //             {/* Items */}
 //             <div className="space-y-4 mb-6">
@@ -1032,7 +1027,7 @@
 //             )}
 //             {codeApplied && (
 //               <p className="text-[11px] text-[#186737] mb-4">
-//                 HORECA10 â€” 10% off applied
+//                 HORECA10  -  10% off applied
 //               </p>
 //             )}
 
@@ -1100,7 +1095,7 @@
 //             <div className="h-px bg-gray-200 my-4" />
 
 //             {isCartLoading ? (
-//               /* â”€â”€ Price skeleton (matches cart item skeleton duration) â”€â”€ */
+//               /* -- Price skeleton (matches cart item skeleton duration) -- */
 //               <div className="space-y-3 animate-pulse mb-4">
 //                 {[80, 64, 56, 48].map((w) => (
 //                   <div key={w} className="flex justify-between items-center">
@@ -1202,7 +1197,7 @@
 //   );
 // }
 
-// // â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// // --- Sub-components
 
 // function Field({
 //   value,
@@ -1348,7 +1343,7 @@ const getToken = (): string | null => {
   }
 };
 
-// â”€â”€â”€ API base URL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- API base URL
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -1374,8 +1369,7 @@ export default function CheckoutPage() {
   const [residential,    setResidential]    = useState(false);
   const [insideDelivery, setInsideDelivery] = useState(false);
 
-  // â”€â”€ Derived state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const hasAddress =
+  // Derived state`n  const hasAddress =
     addresses.some((a) => a.is_default) || !!getDefaultAddressCache();
 
   // Mobile step (1 = Contact + Address, 2 = Cart + Payment)
@@ -1509,8 +1503,7 @@ export default function CheckoutPage() {
   const currencySymbol: string =
     (rawProducts[0] as any)?.product?.currency?.symbol ?? "$";
 
-  // â”€â”€ Pricing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const baseSubtotal = cartSummary?.subTotal ?? 0;
+  // Pricing`n  const baseSubtotal = cartSummary?.subTotal ?? 0;
   const baseShipping = cartSummary?.totalShippingCharges ?? 0;
   const ratePercent = cartSummary?.taxRatePercentage ?? 0;
   const taxRate = ratePercent / 100;
@@ -1528,8 +1521,7 @@ export default function CheckoutPage() {
   const isCartLoading =
     isLoggedIn && (apiStatus === "idle" || apiStatus === "loading");
 
-  // â”€â”€ Sync summary to localStorage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  useEffect(() => {
+  // Sync summary to localStorage`n  useEffect(() => {
     if (!cartSummary) return;
     try {
       const additionalFees = liftFee + resFee + insideFee;
@@ -1572,11 +1564,10 @@ export default function CheckoutPage() {
     }
   };
 
-  // â”€â”€ Place Order handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // const handlePlaceOrder = async () => {
+  // Place Order handler`n  // const handlePlaceOrder = async () => {
   //   setOrderError(null)
 
-  //   // STEP 1: Card filled check â€” Square tokenize se pata chalega
+  //   // STEP 1: Card filled check  -  Square tokenize se pata chalega
   //   // Pehle address check karte hain
   //   if (!hasAddress) {
   //     setOrderError('Please add a delivery address before placing your order.')
@@ -1585,7 +1576,7 @@ export default function CheckoutPage() {
   //     return
   //   }
 
-  //   // STEP 2: Tokenize karo â€” agar card empty hai Square khud error dega
+  //   // STEP 2: Tokenize karo  -  agar card empty hai Square khud error dega
   //   if (!paymentHandleRef.current) {
   //     setOrderError('Payment form is not ready. Please wait a moment and try again.')
   //     return
@@ -1594,12 +1585,11 @@ export default function CheckoutPage() {
   //   setIsPlacingOrder(true)
 
   //   try {
-  //     // â”€â”€ Tokenize (Square card details lo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  //     let token: any
+  //     // Tokenize (Square card details lo)`n  //     let token: any
   //     try {
   //       token = await paymentHandleRef.current.getPaymentToken()
   //     } catch (tokenErr: any) {
-  //       // Square ne error diya â€” card fill nahi / galat details
+  //       // Square ne error diya  -  card fill nahi / galat details
   //       setOrderError(tokenErr?.message ?? 'Please fill in your card details correctly.')
   //       setIsPlacingOrder(false)
   //       return
@@ -1611,11 +1601,9 @@ export default function CheckoutPage() {
   //       return
   //     }
 
-  //     // â”€â”€ Idempotency key generate karo (fresh, no localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  //     const idempotencyKey = crypto.randomUUID()
+  //     // Idempotency key generate karo (fresh, no localStorage)`n  //     const idempotencyKey = crypto.randomUUID()
 
-  //     // â”€â”€ Payment API call â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  //     const localTotal = (() => {
+  //     // Payment API call`n  //     const localTotal = (() => {
   //       try { return JSON.parse(localStorage.getItem(CART_SUMMARY_KEY) ?? '{}') } catch { return {} }
   //     })()
 
@@ -1637,28 +1625,27 @@ export default function CheckoutPage() {
   //       throw new Error(paymentData?.message ?? 'Payment failed. Please try again.')
   //     }
 
-  //     // â”€â”€ Payment success â€” aage ki 3 APIs baad mein add karenge â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  //     console.log('âœ… Payment successful:', paymentData)
+  //     // -- Payment success  -  aage ki 3 APIs baad mein add karenge
+  //     console.log('Payment successful:', paymentData)
 
-  //     // TODO: placeOrder() â†’ invoice() â†’ paymentHistory() â€” agle step mein
+  //     // TODO: placeOrder() -> invoice() -> paymentHistory()  -  agle step mein
 
   //   } catch (err: any) {
-  //     console.error('âŒ Place order error:', err)
+  //     console.error('Place order error:', err)
   //     setOrderError(err?.message ?? 'Something went wrong. Please try again.')
   //   } finally {
   //     setIsPlacingOrder(false)
   //   }
   // }
 
-  // â”€â”€ handlePlaceOrder â€” complete flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- handlePlaceOrder  -  complete flow
   // Sirf yeh function replace karo apne page.tsx mein
   // Baaki sab same rahega
 
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
-    // â”€â”€ STEP 1: Address check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    if (!hasAddress) {
+    // STEP 1:`n    if (!hasAddress) {
       setOrderError("Please add a delivery address before placing your order.");
       document
         .getElementById("shipping-address-section")
@@ -1666,8 +1653,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    // â”€â”€ STEP 2: Payment handle ready check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    if (!paymentHandleRef.current) {
+    // STEP 2:`n    if (!paymentHandleRef.current) {
       setOrderError(
         "Payment form is not ready. Please wait a moment and try again.",
       );
@@ -1677,8 +1663,7 @@ export default function CheckoutPage() {
     setIsPlacingOrder(true);
 
     try {
-      // â”€â”€ STEP 3: Square tokenize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      let token: any;
+      // STEP 3:`n      let token: any;
       try {
         token = await paymentHandleRef.current.getPaymentToken();
       } catch (tokenErr: any) {
@@ -1693,11 +1678,9 @@ export default function CheckoutPage() {
         return;
       }
 
-      // â”€â”€ STEP 4: Idempotency key (fresh, no localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      const idempotencyKey = crypto.randomUUID();
+      // STEP 4:`n      const idempotencyKey = crypto.randomUUID();
 
-      // â”€â”€ STEP 5: Cart summary se amount lo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      const localSummary = (() => {
+      // STEP 5:`n      const localSummary = (() => {
         try {
           return JSON.parse(localStorage.getItem(CART_SUMMARY_KEY) ?? "{}");
         } catch {
@@ -1706,8 +1689,7 @@ export default function CheckoutPage() {
       })();
       const amount = Number((localSummary?.total ?? grandTotal).toFixed(2));
 
-      // â”€â”€ STEP 6: Square payment API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      const paymentRes = (await makeApiRequest(apiUrls?.SQUARE_PAYMENT, {
+      // STEP 6:`n      const paymentRes = (await makeApiRequest(apiUrls?.SQUARE_PAYMENT, {
         data: {
           source_id: token,
           amount,
@@ -1723,10 +1705,9 @@ export default function CheckoutPage() {
       }
 
       const squarePaymentId = paymentRes ?? null;
-      console.log("âœ… Square Payment done:", squarePaymentId);
+      console.log("Square Payment done:", squarePaymentId);
 
-      // â”€â”€ STEP 7: defaultAddress localStorage se lo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      const defaultAddr = getDefaultAddressCache();
+      // STEP 7:`n      const defaultAddr = getDefaultAddressCache();
       const user = (() => {
         try {
           return JSON.parse(localStorage.getItem("user") ?? "{}");
@@ -1742,7 +1723,7 @@ export default function CheckoutPage() {
         100
       ).toFixed(2);
 
-      // Products array â€” rawProducts se
+      // Products array  -  rawProducts se
       const location = getLocationData();
       const deliveryCharge = getShippingCharge(
         defaultAddr?.city ?? location?.city ?? "",
@@ -1770,8 +1751,7 @@ export default function CheckoutPage() {
         };
       });
 
-      // // â”€â”€ STEP 8: Place Order API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      // const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
+      // // STEP 8:`n      // const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
       //   data: {
       //     customer_id: user?.id,
       //     customer_address_id: defaultAddr?.id,
@@ -1801,11 +1781,10 @@ export default function CheckoutPage() {
       // }
 
       // const orderData = orderRes?.data;
-      // console.log("âœ… Order placed:", orderData?.id, orderData?.order_number);
+      // console.log("Order placed:", orderData?.id, orderData?.order_number);
       // localStorage.removeItem(CART_SUMMARY_KEY);
 
-      // â”€â”€ STEP 8: Place Order API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
+      // STEP 8:`nconst orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
   data: {
     customer_id: user?.id,
     customer_address_id: defaultAddr?.id,
@@ -1833,10 +1812,10 @@ if (!orderRes?.success) {
 }
 
 const orderId = orderRes?.data?.id;
-console.log("âœ… Order placed, ID:", orderId);
+console.log("Order placed, ID:", orderId);
 localStorage.removeItem(CART_SUMMARY_KEY);
 
-// â”€â”€ STEP 8.5: Full order details fetch (place order ke turant baad) â”€â”€â”€â”€â”€â”€â”€
+// -- STEP 8.5: Full order details fetch (place order ke turant baad)
 let orderData: any = orderRes?.data; // fallback
 try {
   const detailRes = (await makeApiRequest(
@@ -1845,14 +1824,13 @@ try {
   )) as any;
   if (detailRes?.success && detailRes?.data) {
     orderData = detailRes.data;
-    console.log("âœ… Order detail fetched:", orderData?.order_number);
+    console.log("Order detail fetched:", orderData?.order_number);
   }
 } catch (detailErr) {
-  console.warn("âš ï¸ Order detail fetch failed (non-blocking):", detailErr);
+  console.warn("Order detail fetch failed (non-blocking):", detailErr);
 }
 
-      // â”€â”€ STEP 9: Payment History API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      try {
+      // STEP 9:`n      try {
         const paymentDate = orderData?.updated_at
           ? orderData.updated_at.split(/[T ]/)[0]
           : new Date().toISOString().split("T")[0];
@@ -1871,14 +1849,13 @@ try {
           },
           method: "POST",
         });
-        console.log("âœ… Payment history saved");
+        console.log("Payment history saved");
       } catch (historyErr) {
         // Payment history fail hone se order cancel nahi hoga
-        console.warn("âš ï¸ Payment history failed (non-blocking):", historyErr);
+        console.warn("Payment history failed (non-blocking):", historyErr);
       }
 
-      // â”€â”€ STEP 10: Screen Transaction API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      try {
+      // STEP 10:`n      try {
         const cardDetails = paymentHandleRef.current?.getCardDetails();
         const billingFirst = user?.name?.split(" ")?.[0] ?? firstName;
         const billingLast =
@@ -1936,13 +1913,12 @@ try {
           },
           method: "POST",
         });
-        console.log("âœ… Screen transaction saved");
+        console.log("Screen transaction saved");
       } catch (screenErr) {
-        console.warn("âš ï¸ Screen transaction failed (non-blocking):", screenErr);
+        console.warn("Screen transaction failed (non-blocking):", screenErr);
       }
 
-      // â”€â”€ STEP 11: Full order details GET karo, save karo, redirect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      let fullOrder = orderData;
+      // STEP 11:`n      let fullOrder = orderData;
       try {
         const detailRes = (await makeApiRequest(
           apiUrls.ORDER_DETAIL(orderData?.id),
@@ -1958,7 +1934,7 @@ try {
       dispatch(fetchCounts() as any);
       router.push(`/payment-success?orderID=${orderData?.id}`);
     } catch (err: any) {
-      console.error("âŒ Place order error:", err);
+      console.error("Place order error:", err);
       setOrderError(err?.message ?? "Something went wrong. Please try again.");
     } finally {
       setIsPlacingOrder(false);
@@ -1973,8 +1949,7 @@ try {
     { label: "Checkout", href: null },
   ];
 
-  // â”€â”€ Shared blocks (used in both mobile & desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const contactBlock = (
+  // Shared blocks (used in both mobile & desktop)`n  const contactBlock = (
     <div className="mb-7">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-base font-semibold text-gray-900">Contact information</h2>
@@ -2079,7 +2054,7 @@ try {
         </button>
       </div>
       {codeError && <p className="text-[11px] text-red-500 mb-4">Invalid code.</p>}
-      {codeApplied && <p className="text-[11px] text-[#186737] mb-4">HORECA10 â€” 10% off applied</p>}
+      {codeApplied && <p className="text-[11px] text-[#186737] mb-4">HORECA10  -  10% off applied</p>}
     </>
   );
 
@@ -2193,10 +2168,10 @@ try {
     <>
       <Breadcrumb crumbs={crumbs} />
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• MOBILE LAYOUT â€” step-based (hidden on lg+) â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• MOBILE LAYOUT  -  step-based (hidden on lg+) â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="lg:hidden min-h-screen bg-gray-50">
 
-        {/* â”€â”€ Step indicator bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* -- Step indicator bar ----------------------------------------------- */}
         <div className="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-0 max-w-sm mx-auto">
             {/* Step 1 */}
@@ -2234,7 +2209,7 @@ try {
           </div>
         </div>
 
-        {/* â”€â”€ STEP 1: Contact + Address â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* -- STEP 1: Contact + Address --------------------------------------- */}
         {mobileStep === 1 && (
           <div className="px-4 py-5 space-y-1 pb-28">
             {/* Contact card */}
@@ -2261,7 +2236,7 @@ try {
           </div>
         )}
 
-        {/* â”€â”€ STEP 2: Cart + Payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* -- STEP 2: Cart + Payment ------------------------------------------ */}
         {mobileStep === 2 && (
           <div className="px-4 py-5 pb-36 space-y-4">
 
@@ -2339,10 +2314,10 @@ try {
         )}
       </div>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• DESKTOP LAYOUT â€” 2-column (hidden on mobile) â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• DESKTOP LAYOUT  -  2-column (hidden on mobile) â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="hidden lg:block global-container bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] max-w-7xl mx-auto">
-          {/* â”€â”€ LEFT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* -- LEFT -------------------------------------------------------- */}
           <div className="px-6 md:px-12 xl:px-20 py-10 pt-0 border-r border-gray-100">
             <CheckoutPayment
               squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
@@ -2354,7 +2329,7 @@ try {
             {addressBlock}
           </div>
 
-          {/* â”€â”€ RIGHT â€” Order Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* -- RIGHT  -  Order Summary ---------------------------------------- */}
           <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10">
             {cartBlock}
             {discountBlock}
@@ -2370,7 +2345,7 @@ try {
   );
 }
 
-// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Sub-components
 
 function Field({
   value,

@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import SEOMainContent from "@/seo/seo-main-content";
 import type { NavPage, ParsedContent, ContentSection } from "./page";
+import Breadcrumb from "@/components/breadcum";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -137,12 +138,21 @@ export function PolicyPageContent({
 }: Props) {
   const { introHtml, sections } = parsedContent;
   const HeroIcon = getHeroIcon(title);
+ const slugToLabel = (slug: string) =>
+  slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+ const crumbs = [
+    { label: "Home", href: "/" },
+    { label: slugToLabel(currentSlug), href: null },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* ── Top bar ────────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-100">
+      {/* <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link
             href="/"
@@ -157,7 +167,9 @@ export function PolicyPageContent({
             <span className="text-gray-700 font-medium">{title}</span>
           </nav>
         </div>
-      </div>
+      </div> */}
+
+      <Breadcrumb  crumbs={crumbs}/>
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
       <div className="bg-linear-to-br from-[#186737] via-[#1a7a40] to-[#0f4523] text-white">
