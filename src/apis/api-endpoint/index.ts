@@ -18,6 +18,7 @@ export const apiUrls = {
   UPDATE_PROFILE: "frontend/customer/update-profile",
   NavigationAPI: "frontend-categories",
   FEATURED_PRODUCTS: "frontend/featured-categories-with-products",
+  FEATURED_CATEGORY_TABS: "frontend/featured-categories",
   FEATURED_BRAND_PRODUCTS: "frontend/featured-brands-with-products",
   BLOGS: "frontend/blogs",
   BLOG_CATEGORIES_WITH_BLOGS: "frontend/categories-with-blogs",

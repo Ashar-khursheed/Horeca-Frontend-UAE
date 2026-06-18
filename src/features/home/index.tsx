@@ -86,7 +86,7 @@ import FeaturedProducts from "./feature-product";
 import FeaturedBrands from "./features-brand";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
-import type { ApiCategory, FeaturedCategory } from "@/utils/types";
+import type { ApiCategory, ApiProductRaw, FeaturedCategory, FeaturedCategoryTab } from "@/utils/types";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
 import { makeApiRequest } from "@/apis/axios-instance";
@@ -100,22 +100,22 @@ export const Home = ({
   sliderItems = [],
   sliderItemsTwo = [],
   featuredCategories = [],
-  featuredProducts = [],
+  categoryTabs = [],
+  initialFeaturedProducts = [],
   featuredBrandProducts = [],
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
   featuredCategories?: ApiCategory[];
-  featuredProducts?: FeaturedCategory[];
+  categoryTabs?: FeaturedCategoryTab[];
+  initialFeaturedProducts?: ApiProductRaw[];
   featuredBrandProducts?: FeaturedCategory[];
 }) => {
   const router   = useRouter();
   const dispatch = useAppDispatch();
-  const [products,      setProducts]      = useState<FeaturedCategory[]>(featuredProducts);
   const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>(featuredBrandProducts);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [blogs, setBlogs] = useState<any[]>([]);
-  console.log("blogsblogsblogsblogs",blogs)
   useEffect(() => {
     makeApiRequest<{ data: typeof blogs }>(apiUrls.BLOGS, {
       params: { per_page: 10, lang: "en", page: 1 },
@@ -152,13 +152,9 @@ export const Home = ({
             dispatch(resetCountry());
             dispatch(fetchCountryByName(data.country));
 
-            // Client-side re-fetch products — no SSR round-trip, ~300ms
+            // Client-side re-fetch brand products — no SSR round-trip
             try {
-              const [fp, fbp] = await Promise.all([
-                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
-                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
-              ]);
-              if (fp?.data)  setProducts(fp.data);
+              const fbp = await makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS);
               if (fbp?.data) setBrandProducts(fbp.data);
             } catch {
               router.refresh(); // fallback
@@ -169,8 +165,6 @@ export const Home = ({
       .catch(() => {});
   }, [router]);
 
-
-  console.log("productsproductsproducts", products);
 
   return (
     <>
@@ -186,7 +180,7 @@ export const Home = ({
         }}
       />
       <ShopByCategories categories={featuredCategories} />
-      <FeaturedProducts products={products} />
+      <FeaturedProducts tabs={categoryTabs} initialProducts={initialFeaturedProducts} />
       <div className="w-full md:py-10 py-4">
         <div className="global-container">
           <div className="grid grid-cols-1">
