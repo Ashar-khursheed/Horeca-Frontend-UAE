@@ -4,7 +4,6 @@ import Logo from "@/assets/logo.png";
 import {
   ChevronDown,
   ChevronRight,
-  Clock,
   Heart,
   LogOut,
   MapPin,
@@ -14,14 +13,14 @@ import {
   Search,
   ShoppingCart,
   User,
-  User2,
-  X,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ProfileDropdown from "../profile-dropdown";
 
+import FinancingModal from "@/components/financing-modal";
 import {
   Sheet,
   SheetClose,
@@ -30,27 +29,21 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/data";
-import {
-  clearProfile,
-  CustomerProfile,
-} from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
 import {
-  fetchCounts,
   clearCounts,
+  fetchCounts,
 } from "@/store/slices/customer-counts/customerCountsSlice";
 import {
-  fetchWishlist,
   clearWishlist,
+  fetchWishlist,
 } from "@/store/slices/wishlist/wishlistSlice";
-import { useLocationData } from "@/utils/locationStorage";
-import { apiUrls } from "@/apis/api-endpoint";
 import { AppDispatch, RootState } from "@/store/store";
+import { useLocationData } from "@/utils/locationStorage";
 import type { SearchSuggestions } from "@/utils/types";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import FinancingModal from "@/components/financing-modal";
 import SearchBar from "./SearchBar";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -170,7 +163,7 @@ export default function NavigationStatic({
     (s: RootState) => s.customerAddress.loading,
   );
   const cachedDefault = useSelector(
-    (s: RootState) => s.customerAddress.cachedDefault,
+    (s: any) => s.customerAddress.cachedDefault,
   );
   const liveDefault = useSelector(
     (s: RootState) =>

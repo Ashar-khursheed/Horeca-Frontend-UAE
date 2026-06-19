@@ -2,7 +2,9 @@
 
 import Breadcrumb from "@/components/breadcum";
 import { ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 
 import AlternateAiProducts from "./alternate-ai-products";
 import RecommendedProducts from "./recommended-products";
@@ -57,6 +59,14 @@ const ProductDetailPage = ({
   const description = productData.description ?? [];
   const benefitsFeatures = productData.benefits_features ?? [];
   const state = useLocationData();
+
+  useEffect(() => {
+    if (!productData.id) return;
+    makeApiRequest(apiUrls.ADD_RECENT_PRODUCT, {
+      method: "POST",
+      data: { product_id: String(productData.id) },
+    }).catch(() => {});
+  }, [productData.id]);
 
   const supplier = productData.suppliers?.[0] ?? null;
   const activePrice =

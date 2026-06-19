@@ -99,6 +99,8 @@ export const apiUrls = {
 
   SQUARE_PAYMENT:"frontend/payment-square",
   PLACE_ORDER:"frontend/orders",
+  ADD_RECENT_PRODUCT: "frontend/recent-products/add",
+  GET_RECENT_PRODUCTS: (page: number) => `frontend/recent-products?page=${page}`,
   ORDER_DETAIL: (id: number) => `frontend/orders/${id}`,
   PAYMENT_HISTORY:"frontend/payments",
   SCREEN_TRANSACTION:"screen-transaction",
