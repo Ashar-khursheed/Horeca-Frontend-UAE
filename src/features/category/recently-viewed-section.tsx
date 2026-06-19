@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-export default function RecentlyViewedSection() {
+export default function RecentlyViewedSection({ excludeId }: { excludeId?: number }) {
   const [products, setProducts] = useState<RawApiProduct[]>([]);
 
   useEffect(() => {
@@ -23,10 +23,11 @@ export default function RecentlyViewedSection() {
 
     makeApiRequest<{ success: boolean; data: RawApiProduct[] }>(url)
       .then((res) => {
-        if (res?.data?.length) setProducts(res.data);
+        const data = (res?.data ?? []).filter((p) => p.id !== excludeId);
+        if (data.length) setProducts(data);
       })
       .catch(() => {});
-  }, []);
+  }, [excludeId]);
 
   if (products.length === 0) return null;
 
@@ -43,7 +44,7 @@ export default function RecentlyViewedSection() {
               className="w-8 h-8 rounded-full border border-gray-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#186737] hover:border-[#186737] hover:text-white text-gray-600 transition-all duration-200 disabled:opacity-30"
             >
               <ChevronLeft size={16} strokeWidth={2.5} />
-            </button>
+            </button >
             <button
               id="recent-slider-next"
               className="w-8 h-8 rounded-full border border-gray-200 bg-white shadow-sm flex items-center justify-center hover:bg-[#186737] hover:border-[#186737] hover:text-white text-gray-600 transition-all duration-200 disabled:opacity-30"

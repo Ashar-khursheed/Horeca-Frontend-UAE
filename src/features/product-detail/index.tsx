@@ -19,6 +19,7 @@ import type { ProductDetailResponse, VariantItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
 import { ReportErrorModal } from "./report-error-modal";
 import { PriceComparisonCard } from "./price-comparison-card";
+import RecentlyViewedSection from "../category/recently-viewed-section";
 
 interface Props {
   productData: ProductDetailResponse;
@@ -364,6 +365,7 @@ const ProductDetailPage = ({
           <RecommendedProducts
             productSlug={productData.url.split("/").pop() ?? ""}
           />
+          <RecentlyViewedSection excludeId={productData.id} />
    {/* Report error trigger */}
           <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
             <span className="text-sm text-gray-400">Spot something off?</span>
