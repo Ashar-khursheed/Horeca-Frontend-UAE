@@ -56,6 +56,8 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
   const countryId   = countryData?.id;
   const countryName = country ?? countryData?.name ?? "";
 
+  console.log("countrycountrycountrycountrycountry",countryData)
+
   const minQty =
     (product as ApiProduct).min_quantity ??
     (product as RawApiProduct).min_quantity ??
@@ -66,6 +68,19 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
   const [states, setStates]               = useState<LookupItem[]>([]);
   const [statesLoading, setStatesLoading] = useState(false);
   const [apiError, setApiError]           = useState<string | null>(null);
+  const [countdown, setCountdown]         = useState(3);
+
+  useEffect(() => {
+    if (!submitted) return;
+    setCountdown(3);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) { clearInterval(interval); onClose(); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [submitted, onClose]);
 
   const productName = resolveName(product.name as LS);
   const images      = resolveImages(
@@ -168,15 +183,16 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
           {/* Success Message */}
           <div className="text-center space-y-4 mb-8">
             <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
-              Order Submitted Successfully!
+            Your Request Submitted Successfully!
             </h2>
-            <p className="text-xl text-black font-medium">
-              Thank you for your order
-            </p>
+            {/* <p className="text-xl text-black font-medium">
+              Thank you for your Quotation we will get back to you shortly.
+            </p> */}
             <p className="text-base text-black max-w-md mx-auto">
-              We&apos;ve received your order and will process it shortly. You&apos;ll
+              We&apos;ve received your Quotation and will process it shortly. You&apos;ll
               receive a confirmation email soon.
             </p>
+            <p className="text-sm text-gray-400">Closing in {countdown}s...</p>
           </div>
 
           {/* Decorative Elements */}
@@ -276,31 +292,23 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
                 className={inputClass("address")}
               />
             </div>
-
-            {/* Zip / City */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Zip Code</label>
-                <input
-                  type="text"
-                  placeholder="12345"
-                  {...formik.getFieldProps("zipCode")}
-                  className={inputClass("zipCode")}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">City</label>
-                <input
-                  type="text"
-                  placeholder="New York"
-                  {...formik.getFieldProps("city")}
-                  className={inputClass("city")}
-                />
-              </div>
-            </div>
-
-            {/* State / Country / Phone */}
+   {/* State / Country / Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Country</label>
+                {/* <img src={countryData?.icon ?? null} alt="" /> */}
+                 <div className="flex gap-1.5 items-center w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-gray-50 text-gray-600 cursor-default outline-none">
+                          <img src={countryData?.icon ?? ""} alt="country image" className="w-4 h-4" />
+                          <span>{countryName}</span>
+
+                        </div>
+                {/* <input
+                  type="text"
+                  value={countryName}
+                  readOnly
+                  className="w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-gray-50 text-gray-600 cursor-default outline-none"
+                /> */}
+              </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">State</label>
                 <SearchableSelect
@@ -317,16 +325,30 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
                   <p className="text-red-500 text-xs mt-1">{formik.errors.state}</p>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Country</label>
+                <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">City</label>
                 <input
                   type="text"
-                  value={countryName}
-                  readOnly
-                  className="w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-gray-50 text-gray-600 cursor-default outline-none"
+                  placeholder="New York"
+                  {...formik.getFieldProps("city")}
+                  className={inputClass("city")}
                 />
               </div>
+             
+            </div>
+            {/* Zip / City */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Zip Code</label>
+                <input
+                  type="text"
+                  placeholder="12345"
+                  {...formik.getFieldProps("zipCode")}
+                  className={inputClass("zipCode")}
+                />
+              </div>
+          
+               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Phone Number <span className="text-red-500">*</span>
                 </label>
@@ -341,6 +363,8 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
                 )}
               </div>
             </div>
+
+         
 
             {/* Notes */}
             <div>

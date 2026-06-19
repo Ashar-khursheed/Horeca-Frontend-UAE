@@ -342,7 +342,7 @@ const WishlistCard = ({
               isWishlist={true}
               onAddedToCart={onAddedToCart}
               wrapperClassName="flex gap-2 items-center justify-end"
-              buttonClassName="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[7px] text-xs sm:text-sm font-semibold bg-[#186737] hover:bg-[#145c30] text-white transition-colors whitespace-nowrap "
+              buttonClassName="flex items-center gap-1 px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-[7px] text-[10px] sm:text-sm font-semibold bg-[#186737] hover:bg-[#145c30] text-white transition-colors whitespace-nowrap"
             />
           </div>
 

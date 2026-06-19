@@ -16,6 +16,7 @@ import { SpecificationsSection } from "./specifications-section";
 import type { ProductDetailResponse, VariantItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
 import { ReportErrorModal } from "./report-error-modal";
+import { PriceComparisonCard } from "./price-comparison-card";
 
 interface Props {
   productData: ProductDetailResponse;
@@ -210,6 +211,8 @@ const ProductDetailPage = ({
               brandUrl=""
               productData={productData}
             />
+
+            <PriceComparisonCard productData={productData} />
           </div>
 
           <AlternateAiProducts
