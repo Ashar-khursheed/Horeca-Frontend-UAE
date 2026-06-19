@@ -220,9 +220,7 @@ export const ProductGallery = ({
           <button
             onClick={handleWishlist}
             disabled={isToggling}
-            className={`absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 disabled:opacity-60 ${
-              showZoom ? "opacity-0" : "opacity-100"
-            }`}
+            className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 disabled:opacity-60"
           >
             <Heart
               size={17}
@@ -234,9 +232,7 @@ export const ProductGallery = ({
           {/* Share */}
           <button
             onClick={() => setShareOpen(true)}
-            className={`absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
-              showZoom ? "opacity-0" : "opacity-100"
-            }`}
+            className="absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10"
           >
             <Share2 size={15} className="text-gray-400" />
           </button>

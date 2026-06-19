@@ -333,7 +333,12 @@ const ProductDetailPage = ({
             </div>
           )}
 
-          {/* Report error trigger */}
+       
+
+          <RecommendedProducts
+            productSlug={productData.url.split("/").pop() ?? ""}
+          />
+   {/* Report error trigger */}
           <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
             <span className="text-sm text-gray-400">Spot something off?</span>
             <button
@@ -343,11 +348,6 @@ const ProductDetailPage = ({
               Help us improve this page.
             </button>
           </div>
-
-          <RecommendedProducts
-            productSlug={productData.url.split("/").pop() ?? ""}
-          />
-
           <ReportErrorModal
             isOpen={reportOpen}
             onClose={() => setReportOpen(false)}

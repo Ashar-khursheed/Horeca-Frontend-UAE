@@ -792,7 +792,7 @@ export default function OrderDetailPage() {
                 </h2>
               </div>
               <div className="p-5 space-y-3">
-                <DetailRow label="Method" value={firstPayment.payment_method} />
+                <DetailRow label="Method" value={firstPayment.payment_method ==="Square" ?"Credit Debit Card":""} />
                 <DetailRow label="Status">
                   <span
                     className={`text-xs font-semibold px-2.5 py-1 rounded-full ${pay.bg} ${pay.text}`}
