@@ -73,18 +73,23 @@ export default async function CategorySlugPage({ params }: PageProps) {
     makeApiCallSSR<{ success: boolean; data: ApiCategoryPage }>(
       apiUrls.MAIN_CATEGPRY_PAGES(categorySlug),
       {},
-      { revalidate: 3600, withAuth: isLoggedIn },
+      { revalidate: revalidate, withAuth: isLoggedIn },
     ),
     makeApiCallSSR<{ success: boolean; data: ApiBrand[] }>(
       apiUrls.BRANDS,
       { category_id: categorySlug },
-      { revalidate: 3600 },
+      { revalidate: revalidate },
     ),
   ]);
 
   const categories = navigationRes?.data ?? [];
   const categoryPage = categoryPageRes?.data ?? null;
   const brands = brandsRes?.data ?? null;
+
+  console.log("API",{
+    "brands":brands,
+    "categoryPage":categoryPage
+  })
 
   if (!categoryPageRes?.success && categories.length === 0) notFound();
 

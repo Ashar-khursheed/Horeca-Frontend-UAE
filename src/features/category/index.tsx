@@ -375,7 +375,7 @@ export default function CategoriesPage({
           </div>
         </section>
 
-        <BrandsSection brands={brands} />
+        {/* <BrandsSection brands={brands} /> */}
         <section className="bg-whiste hidden  py-10 md:pb-10 pb-0">
           <div className="global-container ">
             <div className="grid grid-cols-1">

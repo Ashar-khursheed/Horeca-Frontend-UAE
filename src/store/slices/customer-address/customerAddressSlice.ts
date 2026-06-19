@@ -1,11 +1,6 @@
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
-import {
-  DefaultAddressCache,
-  clearDefaultAddressCache,
-  getDefaultAddressCache,
-  setDefaultAddressCache,
-} from "@/utils/locationStorage";
+import { setDefaultAddressCache } from "@/utils/locationStorage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -53,7 +48,6 @@ interface CustomerAddressState {
   submitting: boolean;
   deletingId: number | null;
   error: string | null;
-  cachedDefault: DefaultAddressCache | null;
   // Location dropdowns
   countries: LocationItem[];
   states: LocationItem[];
@@ -69,7 +63,6 @@ const initialState: CustomerAddressState = {
   submitting: false,
   deletingId: null,
   error: null,
-  cachedDefault: null,
   countries: [],
   states: [],
   cities: [],
@@ -131,7 +124,6 @@ export const updateAddress = createAsyncThunk(
         });
       }
       await dispatch(fetchAddresses());
-      // Save after fetchAddresses so it overwrites any cache clear that happened inside fulfilled
       if (payload.is_default && res.data) {
         setDefaultAddressCache({ ...res.data, is_default: true });
       }
@@ -163,13 +155,18 @@ export const deleteAddress = createAsyncThunk(
 
 export const setDefaultAddress = createAsyncThunk(
   "customerAddress/setDefault",
-  async (id: number, { dispatch, rejectWithValue }) => {
+  async (id: number, { dispatch, getState, rejectWithValue }) => {
     try {
       await makeApiRequest(apiUrls.DEFAULT_CUSTOMER_ADDRESS, {
         method: "POST",
         data: { address_id: id },
       });
-      dispatch(fetchAddresses());
+      await dispatch(fetchAddresses());
+      const state = getState() as { customerAddress: CustomerAddressState };
+      const addr = state.customerAddress.addresses.find((a) => a.id === id);
+      if (addr) {
+        setDefaultAddressCache({ ...addr, is_default: true });
+      }
       return id;
     } catch (err: unknown) {
       const msg =
@@ -258,19 +255,9 @@ const customerAddressSlice = createSlice({
         ...a,
         is_default: a.id === action.payload,
       }));
-      const newDefault = state.addresses.find((a) => a.id === action.payload);
-      if (newDefault) {
-        setDefaultAddressCache(newDefault);
-        state.cachedDefault = newDefault;
-      }
     },
     clearAddresses(state) {
       state.addresses = [];
-      state.cachedDefault = null;
-      clearDefaultAddressCache();
-    },
-    hydrateCachedDefault(state) {
-      state.cachedDefault = getDefaultAddressCache();
     },
   },
   extraReducers: (builder) => {
@@ -283,14 +270,6 @@ const customerAddressSlice = createSlice({
       .addCase(fetchAddresses.fulfilled, (state, action) => {
         state.loading = false;
         state.addresses = action.payload;
-        const defaultAddr = action.payload.find((a) => a.is_default);
-        if (defaultAddr) {
-          setDefaultAddressCache(defaultAddr);
-          state.cachedDefault = defaultAddr;
-        } else {
-          clearDefaultAddressCache();
-          state.cachedDefault = null;
-        }
       })
       .addCase(fetchAddresses.rejected, (state, action) => {
         state.loading = false;
@@ -317,8 +296,15 @@ const customerAddressSlice = createSlice({
         state.submitting = true;
         state.error = null;
       })
-      .addCase(updateAddress.fulfilled, (state) => {
+      .addCase(updateAddress.fulfilled, (state, action) => {
         state.submitting = false;
+        const { id, payload } = action.meta.arg;
+        if (payload.is_default) {
+          state.addresses = state.addresses.map((a) => ({
+            ...a,
+            is_default: a.id === id,
+          }));
+        }
       })
       .addCase(updateAddress.rejected, (state, action) => {
         state.submitting = false;
@@ -391,7 +377,7 @@ const customerAddressSlice = createSlice({
   },
 });
 
-export const { clearStates, clearCities, clearError, optimisticSetDefault, clearAddresses, hydrateCachedDefault } =
+export const { clearStates, clearCities, clearError, optimisticSetDefault, clearAddresses } =
   customerAddressSlice.actions;
 
 export default customerAddressSlice.reducer;
