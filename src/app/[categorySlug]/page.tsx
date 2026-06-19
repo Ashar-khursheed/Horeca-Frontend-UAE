@@ -87,7 +87,6 @@ export default async function CategorySlugPage({ params }: PageProps) {
   const brands = brandsRes?.data ?? null;
 
   console.log("API",{
-    "brands":brands,
     "categoryPage":categoryPage
   })
 

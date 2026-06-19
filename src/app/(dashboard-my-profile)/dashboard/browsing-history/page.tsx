@@ -52,7 +52,10 @@ const resolveSymbol = (c: ApiProduct["currency"]): string =>
   typeof c === "string" ? c : (c?.symbol ?? "");
 
 const fmtPrice = (n: number) =>
-  Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  Number(n).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const SkeletonCard = () => (
@@ -77,7 +80,9 @@ const EmptyState = () => (
         <Eye size={14} className="text-[#186737]" />
       </div>
     </div>
-    <h2 className="text-lg font-bold text-gray-900 mb-2">No Browsing History</h2>
+    <h2 className="text-lg font-bold text-gray-900 mb-2">
+      No Browsing History
+    </h2>
     <p className="text-sm text-gray-500 max-w-xs leading-relaxed mb-8">
       Products you view will appear here so you can quickly find them again.
     </p>
@@ -105,18 +110,19 @@ const EmptyState = () => (
   </div>
 );
 
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function BrowsingHistoryPage() {
-  const [items, setItems]         = useState<ApiProduct[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [page, setPage]           = useState(1);
+  const [items, setItems] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
 
   const fetchProducts = useCallback(async (pageNum: number) => {
     setLoading(true);
     try {
-      const res = await makeApiRequest<ApiResponse>(apiUrls.GET_RECENT_PRODUCTS(pageNum));
+      const res = await makeApiRequest<ApiResponse>(
+        apiUrls.GET_RECENT_PRODUCTS(pageNum),
+      );
       setItems(res?.data ?? []);
       setPagination(res?.pagination ?? null);
     } catch {
@@ -138,10 +144,13 @@ export default function BrowsingHistoryPage() {
           <History size={19} className="text-white" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900 leading-tight">Browsing History</h1>
+          <h1 className="text-xl font-bold text-gray-900 leading-tight">
+            Browsing History
+          </h1>
           {!loading && items.length > 0 && (
             <p className="text-xs text-gray-400 mt-0.5">
-              {items.length} product{items.length !== 1 ? "s" : ""} recently viewed
+              {items.length} product{items.length !== 1 ? "s" : ""} recently
+              viewed
             </p>
           )}
         </div>
@@ -151,7 +160,9 @@ export default function BrowsingHistoryPage() {
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm min-h-100">
         {loading ? (
           <div className="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+            {Array.from({ length: 12 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
           </div>
         ) : items.length === 0 ? (
           <EmptyState />
@@ -159,7 +170,7 @@ export default function BrowsingHistoryPage() {
           <div className="p-5 space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {items.map((product) => (
-                <ProductCard key={product.id} product={product as any}  />
+                <ProductCard key={product.id} product={product as any} />
               ))}
             </div>
 

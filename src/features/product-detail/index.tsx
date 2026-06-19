@@ -62,10 +62,23 @@ const ProductDetailPage = ({
 
   useEffect(() => {
     if (!productData.id) return;
-    makeApiRequest(apiUrls.ADD_RECENT_PRODUCT, {
-      method: "POST",
-      data: { product_id: String(productData.id) },
-    }).catch(() => {});
+    const token = localStorage.getItem("token");
+    if (token) {
+      makeApiRequest(apiUrls.ADD_RECENT_PRODUCT, {
+        method: "POST",
+        data: { product_id: String(productData.id) },
+      }).catch(() => {});
+    } else {
+      makeApiRequest(apiUrls.GUEST_VIEW_PRODUCT, {
+        method: "POST",
+        data: { product_id: String(productData.id) },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }).then((res: any) => {
+        if (res?.guest_token) {
+          localStorage.setItem("guest_token", res.guest_token);
+        }
+      }).catch(() => {});
+    }
   }, [productData.id]);
 
   const supplier = productData.suppliers?.[0] ?? null;

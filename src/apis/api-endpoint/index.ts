@@ -101,6 +101,8 @@ export const apiUrls = {
   PLACE_ORDER:"frontend/orders",
   ADD_RECENT_PRODUCT: "frontend/recent-products/add",
   GET_RECENT_PRODUCTS: (page: number) => `frontend/recent-products?page=${page}`,
+  GUEST_VIEW_PRODUCT: "frontend/guest/view-product",
+  GUEST_RECENT_PRODUCTS: (guestToken: string, page: number) => `frontend/guest/recent-products?guest_token=${guestToken}&page=${page}`,
   ORDER_DETAIL: (id: number) => `frontend/orders/${id}`,
   PAYMENT_HISTORY:"frontend/payments",
   SCREEN_TRANSACTION:"screen-transaction",

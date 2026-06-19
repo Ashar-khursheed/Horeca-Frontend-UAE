@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import { FEATURED_DATA, ItemsAccordion } from "@/data";
 import SeoContent from "@/seo/seo-content";
+import RecentlyViewedSection from "./recently-viewed-section";
 import SEOMainContent from "@/seo/seo-main-content";
 import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
 import { ApiCategory, ApiCategoryName, ApiCategoryPage } from "@/utils/types";
@@ -354,6 +355,8 @@ export default function CategoriesPage({
                       </div> */}
           </div>
         </section>
+        <RecentlyViewedSection />
+
         <section className="md:py-7 py-3">
           <div className="global-container">
             <div className="mt-8">
