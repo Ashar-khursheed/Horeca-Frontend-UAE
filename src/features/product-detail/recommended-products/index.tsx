@@ -71,7 +71,7 @@ const RecommendedProducts = ({ productSlug }: { productSlug: string }) => {
         <p className="text-xs text-gray-500 mt-0.5">Handpicked based on this product</p>
       </div>
       <div className="p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           {loading
             ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
             : products.map((p) => <ProductCard key={p.id} product={p} />)}

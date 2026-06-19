@@ -218,16 +218,18 @@ export default function SearchFeature({
       ? selectedBrands.filter((b) => b.id !== brand.id)
       : [...selectedBrands, brand];
     setSelectedBrands(next);
-    pushURL({ brands: next, page: 1 });
-  }, [selectedBrands, pushURL]);
+    setPriceRange({ min: apiPriceMin, max: apiPriceMax });
+    pushURL({ brands: next, min: apiPriceMin, max: apiPriceMax, page: 1 });
+  }, [selectedBrands, pushURL, apiPriceMin, apiPriceMax]);
 
   const handleCategoryToggle = useCallback((cat: { id: number; name: string }) => {
     const next = selectedCategories.some((c) => c.id === cat.id)
       ? selectedCategories.filter((c) => c.id !== cat.id)
       : [...selectedCategories, cat];
     setSelectedCategories(next);
-    pushURL({ cats: next, page: 1 });
-  }, [selectedCategories, pushURL]);
+    setPriceRange({ min: apiPriceMin, max: apiPriceMax });
+    pushURL({ cats: next, min: apiPriceMin, max: apiPriceMax, page: 1 });
+  }, [selectedCategories, pushURL, apiPriceMin, apiPriceMax]);
 
   const handlePriceChange = useCallback((range: { min: number; max: number }) => {
     setPriceRange(range);
@@ -253,13 +255,13 @@ export default function SearchFeature({
     onPriceChange: handlePriceChange,
     selectedBrands,
     onBrandToggle: handleBrandToggle,
-    onClearBrands: () => { setSelectedBrands([]); pushURL({ brands: [], page: 1 }); },
+    onClearBrands: () => { setSelectedBrands([]); setPriceRange({ min: apiPriceMin, max: apiPriceMax }); pushURL({ brands: [], min: apiPriceMin, max: apiPriceMax, page: 1 }); },
     onClearAll: handleClearAll,
     brands: filterBrands,
     categories: filterCategories,
     selectedCategories,
     onCategoryToggle: handleCategoryToggle,
-    onClearCategories: () => { setSelectedCategories([]); pushURL({ cats: [], page: 1 }); },
+    onClearCategories: () => { setSelectedCategories([]); setPriceRange({ min: apiPriceMin, max: apiPriceMax }); pushURL({ cats: [], min: apiPriceMin, max: apiPriceMax, page: 1 }); },
     priceMin: apiPriceMin,
     priceMax: apiPriceMax,
     selectedRangeFilters: {} as Record<number, { min: number; max: number }[]>,

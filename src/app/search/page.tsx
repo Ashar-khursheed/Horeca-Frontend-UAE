@@ -74,6 +74,8 @@ export default async function SearchPage({ searchParams }: PageProps) {
       )
     : null;
 
+    console.log("searchResult",searchResult)
+
   return (
     <Suspense>
       <SearchFeature

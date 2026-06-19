@@ -25,7 +25,10 @@ import {
   toggleGuestSaveItem,
 } from "@/store/slices/save-for-later/saveForLaterSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { getDefaultAddressCache, getLocationData } from "@/utils/locationStorage";
+import {
+  getDefaultAddressCache,
+  getLocationData,
+} from "@/utils/locationStorage";
 import { getShippingCharge } from "@/utils/shipping";
 import {
   ArrowRight,
@@ -35,7 +38,7 @@ import {
   ChevronUp,
   Home,
   Package,
-  ShoppingCart
+  ShoppingCart,
 } from "lucide-react";
 import { usePerPage } from "@/hooks/usePerPage";
 import Link from "next/link";
@@ -149,7 +152,10 @@ const apiToSavedItem = (p: any): SavedItem => {
     parentCategoryUrl: p.parent_category_url_resolved ?? "",
     minQty: p.suppliers?.[0]?.min_quantity ?? 1,
     isFixed: !!p.suppliers?.[0]?.is_fixed,
-    altTags: Array.isArray(p.alt_tags) && p.alt_tags.length > 0 ? p.alt_tags : undefined,
+    altTags:
+      Array.isArray(p.alt_tags) && p.alt_tags.length > 0
+        ? p.alt_tags
+        : undefined,
   };
 };
 
@@ -209,10 +215,10 @@ export default function CartPage() {
 
   // Derive display items from Redux (logged-in) or local state (guest)
   const defaultAddr = getDefaultAddressCache();
-  const location    = getLocationData();
+  const location = getLocationData();
   const locationShipping = getShippingCharge(
-    defaultAddr?.city    ?? location?.city       ?? "",
-    defaultAddr?.state   ?? location?.regionName ?? "",
+    defaultAddr?.city ?? location?.city ?? "",
+    defaultAddr?.state ?? location?.regionName ?? "",
     defaultAddr?.country ?? location?.countryCode ?? location?.country ?? "",
   );
   const cartItems: CartItem[] = isLoggedIn
@@ -221,14 +227,17 @@ export default function CartPage() {
         // If no per-item charge from API, fall back to location tier (0 for non-US)
         return {
           ...apiProductToCartItem(cp),
-          shippingCost: apiItemShipping > 0 ? apiItemShipping : (locationShipping ?? 0),
+          shippingCost:
+            apiItemShipping > 0 ? apiItemShipping : (locationShipping ?? 0),
         };
       })
     : reduxGuestItems.map((item) => ({
         ...localItemToCartItem(item),
       }));
 
-  const loading = !initialized || (isLoggedIn && (apiStatus === "idle" || apiStatus === "loading"));
+  const loading =
+    !initialized ||
+    (isLoggedIn && (apiStatus === "idle" || apiStatus === "loading"));
   const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
   const subtotal = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
 
@@ -425,7 +434,8 @@ export default function CartPage() {
                   onRemove={handleRemoveSaved}
                   isLoggedIn={isLoggedIn}
                   onAfterAddToCart={() => {
-                    if (isLoggedIn) dispatch(fetchCart(location?.country ?? ""));
+                    if (isLoggedIn)
+                      dispatch(fetchCart(location?.country ?? ""));
                     setSflKey((k) => k + 1);
                   }}
                 />
@@ -457,9 +467,8 @@ export default function CartPage() {
             makeApiRequest(apiUrls.CART_EMPTY, { method: "DELETE" })
               .then(() => dispatch(fetchCart(location?.country ?? "")))
               .catch(() => {})
-                .then(() => dispatch(fetchCounts() as any))
-          .catch(() => {});
-              
+              .then(() => dispatch(fetchCounts() as any))
+              .catch(() => {});
           } else {
             dispatch(clearCart());
           }
@@ -470,7 +479,7 @@ export default function CartPage() {
           cannot be undone.
         </p>
       </Modal>
- {/* <TaxInitializer /> */}
+      {/* <TaxInitializer /> */}
       <CartBreadcrumb />
       <main className="min-h-screen bg-gray-50/60">
         <div className="global-container py-6 sm:py-8">
@@ -564,9 +573,9 @@ export default function CartPage() {
                   </p>
                 </div> */}
               </section>
-<div className="md:hidden block">
-                  <CartSummary cartItems={cartItems} />
-                </div>
+              <div className="md:hidden block">
+                <CartSummary cartItems={cartItems} />
+              </div>
               {/* Saved for Later */}
               <SavedForLaterSection
                 key={sflKey}
@@ -580,19 +589,16 @@ export default function CartPage() {
                 }}
               />
 
-             
-                {/* <div className="md:hidden block">
+              {/* <div className="md:hidden block">
                   <CartSummary cartItems={cartItems} />
                 </div> */}
-           
             </div>
 
             {/* RIGHT */}
-        
-              <div className="md:block hidden">
-                <CartSummary cartItems={cartItems} />
-              </div>
-         
+
+            <div className="md:block hidden">
+              <CartSummary cartItems={cartItems} />
+            </div>
           </div>
         </div>
       </main>
@@ -609,8 +615,8 @@ function useSflVisibleCount() {
       if (w >= 1920) setCount(5);
       else if (w >= 1536) setCount(4);
       else if (w >= 1280) setCount(3);
-      else if (w >= 768)  setCount(2);
-      else                setCount(2);
+      else if (w >= 768) setCount(2);
+      else setCount(2);
     };
     update();
     window.addEventListener("resize", update);
@@ -637,7 +643,9 @@ function SavedForLaterSection({
   const [index, setIndex] = useState(0);
   const max = Math.max(0, items.length - visibleCount);
 
-  useEffect(() => { setIndex(0); }, [visibleCount]);
+  useEffect(() => {
+    setIndex(0);
+  }, [visibleCount]);
 
   if (items.length === 0) return null;
 

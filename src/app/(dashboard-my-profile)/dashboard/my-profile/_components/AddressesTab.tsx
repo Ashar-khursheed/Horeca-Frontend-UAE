@@ -58,6 +58,8 @@ const AddressForm = ({
   const country       = useSelector((s: RootState) => s.country);
   const countryId     = country?.data?.id as number | undefined;
   const countryName   = (country?.data?.name as string) ?? "";
+  const countryIcon   = (country?.data?.icon as string) ?? "";
+  console.log("dsadasdasdsadasdas",countryIcon)
 
   const [states, setStates]               = useState<LookupItem[]>([]);
   const [cities, setCities]               = useState<LookupItem[]>([]);
@@ -197,12 +199,20 @@ const AddressForm = ({
         {/* Country — read-only */}
         <div>
           <Field label="Country *">
-            <input
-              value={countryName || formik.values.country}
+           <div>
+             {/* <img src={countryIcon} className="w-5 h-5" alt="" /> */}
+              <div className="flex gap-1.5 items-center w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-gray-50 text-gray-600 cursor-default outline-none">
+                          <img src={countryIcon ?? ""} alt="country image" className="w-4 h-4" />
+                          <span>{countryName}</span>
+
+                        </div>
+           </div>
+            {/* <input
+              value={ countryName || formik.values.country}
               readOnly
               disabled
               className={`${inputCls} bg-gray-50 text-gray-500 cursor-not-allowed`}
-            />
+            /> */}
           </Field>
         </div>
 
@@ -338,10 +348,10 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
   };
 
   const handleOpenEdit = (addr: CustomerAddress) => {
-    if (checkoutMode) {
-      router.push("/dashboard/my-profile?tab=addresses&mode=checkout#addresses");
-      return;
-    }
+    // if (checkoutMode) {
+    //   router.push("/dashboard/my-profile?tab=addresses&mode=checkout#addresses");
+    //   return;
+    // }
     setEditTarget(addr);
     setModalOpen(true);
   };
@@ -374,15 +384,17 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
     
       <div className="space-y-5">
         {/* Back to Checkout button — shown on my-profile when navigated from checkout */}
-        {isFromCheckout && !checkoutMode && (
-          <button
-            onClick={() => router.push("/checkout")}
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#186737] hover:underline"
-          >
-            <ArrowLeft size={14} />
-            Back to Checkout
-          </button>
-        )}
+      <div className="ml-austo">
+          {isFromCheckout && (
+        <button
+          onClick={() => router.push("/checkout")}
+          className="flex items-center gap-1.5 text-sm font-semibold text-red-600 underline hover:underline"
+        >
+          {/* <ArrowLeft size={14} /> */}
+          Return to Checkout
+        </button>
+      )}
+</div>
 
         {/* Header */}
         <div className="flex items-center justify-between gap-3">

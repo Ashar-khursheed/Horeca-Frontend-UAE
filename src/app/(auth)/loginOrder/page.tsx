@@ -234,7 +234,7 @@ function LoginPanel() {
           await syncGuestCartAfterLogin();
         }
         await dispatch(fetchCounts())
-        const redirect = searchParams.get("redirect") ?? "/checkout";
+        const redirect = searchParams.get("redirect") ?? "/cart";
         router.push(redirect);
       } catch (err: unknown) {
         setApiError(

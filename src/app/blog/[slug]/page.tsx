@@ -112,7 +112,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
     makeApiCallSSR<ApiBlogDetail>(
       apiUrls.BLOG_SINGLE(slug),
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<CommentsResponse>(
       apiUrls.BLOG_COMMENTS(slug),
@@ -122,6 +122,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
   ]);
 
   const initialComments = commentsRes?.data?.comments ?? [];
+
+  console.log("blogblogblog",blog)
 
   if (!blog) notFound();
 

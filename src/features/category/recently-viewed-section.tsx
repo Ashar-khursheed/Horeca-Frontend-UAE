@@ -36,7 +36,7 @@ export default function RecentlyViewedSection({ excludeId }: { excludeId?: numbe
       <div className="global-container">
         <div className="flex items-center justify-between mb-4">
           <h2 className="heading-font-size font-bold text-gray-900">
-            Recently Viewed
+          You Browsed It, We Saved it for Easy Access
           </h2>
           <div className="flex items-center gap-2">
             <button

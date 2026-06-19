@@ -91,6 +91,15 @@ export default function CheckoutPage() {
   const hasAddress =
     addresses.some((a) => a.is_default) || !!getDefaultAddressCache();
 
+  const isUSUser = (() => {
+    const defaultAddr = getDefaultAddressCache();
+    if (defaultAddr?.country) {
+      return defaultAddr.country.toLowerCase().includes("united states");
+    }
+    const loc = getLocationData();
+    return loc?.countryCode === "US" || loc?.country?.toLowerCase().includes("united states") || false;
+  })();
+
   // Mobile step (1 = Contact + Address, 2 = Cart + Payment)
   const [mobileStep, setMobileStep] = useState(1);
 
@@ -319,7 +328,7 @@ export default function CheckoutPage() {
   }));
 
   const cartItems = isLoggedIn ? apiCartItems : guestCartItems;
-
+  console.log('dasdasdsadasd',cartItems)
   const currencySymbol: string =
     (rawProducts[0] as any)?.product?.currency?.symbol ?? "$";
 
@@ -769,7 +778,7 @@ export default function CheckoutPage() {
                   {usd(item.accessories)} accessories
                 </p>
               )}
-              {item.shipping > 0 && (
+              {item.shipping > 0 && isUSUser && (
                 <div className="flex items-center gap-1 mt-0.5 text-[11px] text-gray-400">
                   <Truck size={10} /> {currencySymbol}
                   {usd(item.shipping)} shipping

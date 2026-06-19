@@ -258,13 +258,17 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
+        <div className="grid grid-cols-1 gap-2">
+          {/* <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
             <MessageCircle size={13} /> Chat Now
-          </button>
-          <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
-            <Phone size={13} /> Call Now
-          </button>
+          </button> */}
+            <button className="flex items-center w-full justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
+                <a href="tel:+18664467322" className="flex gap-1.5">
+                  {" "}
+                  <Phone size={13} />
+                  Call Now
+                </a>
+              </button>
         </div>
       </div>
     </div>

@@ -14,11 +14,13 @@ import {
   MessageCircle,
   Share2,
   Home,
+  ArrowRight,
 } from "lucide-react";
 import { BlogsCard } from "@/components/blog-card";
 import { ShareModal } from "@/components/share-modal";
 import BlogComments, { Comment as BlogComment } from "@/components/blog-comments";
 import Breadcrumb from "@/components/breadcum";
+import SeoContent from "@/seo/seo-content";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ApiBlogSeo {
@@ -32,6 +34,14 @@ export interface ApiBlogSeo {
   og_description: string | null;
   og_image_url: string | null;
   schema: string | null;
+}
+
+export interface CustomCard {
+  tab2_title: string;
+  tab2_content: string;
+  tab2_image: string;
+  button_name: string;
+  button_link: string;
 }
 
 export interface ApiBlogDetail {
@@ -54,6 +64,7 @@ export interface ApiBlogDetail {
   url: string;
   category: { id: number; name: string; slug: string | null };
   seo: ApiBlogSeo | null;
+  custom_card: CustomCard | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -372,39 +383,76 @@ export default function BlogDetailClient({
                   </div>
                 )}
 
-                {/* Quick Info card */}
-                <div className="hidden lg:block bg-white rounded-[7px] border border-gray-200 shadow-sm p-5">
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">About this article</p>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#186737]/10 rounded-full flex items-center justify-center shrink-0">
-                        <User size={14} className="text-[#186737]" />
+                {/* Custom Card — tab2 only */}
+                {blog.custom_card && (
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div className="flex items-center gap-4">
+                      {/* Left: text + button */}
+                      <div className="flex-1 min-w-0">
+                        {blog.custom_card.tab2_title && (
+                          <h3 className="text-[20px] font-extrabold text-[#186737] mb-2 leading-snug">
+                            {blog.custom_card.tab2_title}
+                          </h3>
+                        )}
+                        {blog.custom_card.tab2_content && (
+                          <p className="text-[13px] text-gray-700 leading-relaxed mb-3">
+                            {blog.custom_card.tab2_content}
+                          </p>
+                        )}
+                        {blog.custom_card.button_name && blog.custom_card.button_link && (
+                          <Link
+                            href={blog.custom_card.button_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 border border-gray-300 hover:border-[#186737] hover:text-[#fff] bg-[#186737] text-white text-[13px] font-semibold  rounded-[6px] transition-all duration-200 px-7 py-2"
+                          >
+                            {blog.custom_card.button_name}
+                            <ArrowRight size={11} />
+                          </Link>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-[10px] text-gray-400">Written by</p>
-                        <p className="text-sm font-semibold text-gray-800">{blog.author_name}</p>
-                      </div>
-                    </div>
-                    {blog.blog_date && (
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-[#186737]/10 rounded-full flex items-center justify-center shrink-0">
-                          <Calendar size={14} className="text-[#186737]" />
+
+                      {/* Right: image */}
+                      {blog.custom_card.tab2_image && (
+                        <div className="w-[200px] h-[200px] shrink-0 rounded-2xl overflow-hidden shadow-sm">
+                          <img
+                            src={blog.custom_card.tab2_image}
+                            alt={blog.custom_card.tab2_title}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                        <div>
-                          <p className="text-[10px] text-gray-400">Published</p>
-                          <p className="text-sm font-semibold text-gray-800">{formatDate(blog.blog_date)}</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#186737]/10 rounded-full flex items-center justify-center shrink-0">
-                        <Clock size={14} className="text-[#186737]" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-gray-400">Read time</p>
-                        <p className="text-sm font-semibold text-gray-800">{readTime} minutes</p>
-                      </div>
+                      )}
                     </div>
+                  </div>
+                )}
+
+                {/* Register CTA Card */}
+                <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 text-white overflow-hidden relative">
+                  <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+                  <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+                  <div className="relative">
+                    {/* <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                      <User size={18} className="text-white" />
+                    </div> */}
+                    <h3 className="text-base font-extrabold mb-1 leading-snug">
+                      Join HorecaStore Today
+                    </h3>
+                    <p className="text-white/75 text-xs leading-relaxed mb-4">
+                      Get exclusive deals, track orders, and access premium commercial kitchen equipment.
+                    </p>
+                    <Link
+                      href="/register"
+                      className="flex items-center justify-center gap-2 w-full bg-white text-[#186737] text-sm font-bold py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 group"
+                    >
+                      Create Free Account
+                      <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                    <Link
+                      href="/login"
+                      className="flex items-center justify-center gap-1 w-full mt-2 text-white/70 hover:text-white text-xs font-medium transition-colors"
+                    >
+                      Already have an account? Sign in
+                    </Link>
                   </div>
                 </div>
 
@@ -422,7 +470,9 @@ export default function BlogDetailClient({
           </div> */}
         </div>
       </div>
-
+ <div className="bg-white md:py-10 py-3 pb-0">
+          <SeoContent dataAPI={blog?.seo} />
+        </div>
       <style jsx global>{`
         .blog-content h1,
         .blog-content h2,
