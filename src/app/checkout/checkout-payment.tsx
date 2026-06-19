@@ -104,7 +104,7 @@ export default function CheckoutPayment({
           </div>
 
           {/* Card brand icons */}
-          <div className="flex shrink-0 items-center gap-1.5 self-center">
+          <div className="flex shrink-0 items-center gap-1.5 self-center md:block hidden">
             <CardBadge label="VISA"   bg="bg-[#1a1f71]" color="text-white"   />
             <CardBadge label="MC"     bg="bg-[#eb001b]" color="text-white"   />
             <CardBadge label="AMEX"   bg="bg-[#007bc1]" color="text-white"   />

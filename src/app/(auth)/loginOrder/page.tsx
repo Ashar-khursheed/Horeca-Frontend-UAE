@@ -358,7 +358,7 @@ function LoginPanel() {
           </div>
         ) : (
           // <div className="w-full flex justify-center [&>div]:!w-full [&_iframe]:!w-full [&_iframe]:!min-w-full">
-          <div className="google-auth-btn">
+          <div className="google-auth-btn w-full">
             <GoogleLogin
               key={googleKey}
               onSuccess={handleGoogleSuccess}

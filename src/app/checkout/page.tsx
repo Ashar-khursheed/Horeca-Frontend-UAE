@@ -1107,7 +1107,7 @@ export default function CheckoutPage() {
             <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
               <button
                 type="button"
-                onClick={() => setMobileStep(2)}
+                onClick={() => { setMobileStep(2); window.scrollTo(0, 0); }}
                 className="w-full flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145c30] active:scale-[0.98] text-white font-semibold py-3.5 rounded-[7px] text-sm transition-all"
               >
                 Continue to Cart &amp; Payment
@@ -1180,7 +1180,7 @@ export default function CheckoutPage() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setMobileStep(1)}
+                  onClick={() => { setMobileStep(1); window.scrollTo(0, 0); }}
                   className="flex items-center gap-1.5 px-4 py-3.5 rounded-[7px] border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors shrink-0"
                 >
                   <ChevronRight size={15} className="rotate-180" />
