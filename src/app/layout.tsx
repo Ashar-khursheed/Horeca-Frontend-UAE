@@ -11,6 +11,25 @@ import { WebVitals } from "@/components/web-vitals/web-vitals";
 import "./globals.css";
 import CountryDetector from "@/components/country-detector";
 import GlobalPrefetch from "@/components/global-prefetch";
+import { parseScriptHtml } from "@/utils/parse-script-html";
+
+interface CustomScript {
+  id: number;
+  title: string;
+  script_code: string;
+  placement: string;
+  is_active: boolean;
+}
+
+interface CustomScriptsResponse {
+  success: boolean;
+  data: {
+    head_top: CustomScript[];
+    head_bottom: CustomScript[];
+    body_top: CustomScript[];
+    body_bottom: CustomScript[];
+  };
+}
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,7 +46,7 @@ export default async function RootLayout({
   const messages = await getMessages();
   const isRTL = locale === "ar";
   const isUS = process.env.NEXT_PUBLIC_REGION === "US";
-  const [navData, searchData] = await Promise.all([
+  const [navData, searchData, customScriptsData] = await Promise.all([
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       {},
@@ -38,13 +57,20 @@ export default async function RootLayout({
       { query: "true", page: 1, length: 5 },
       { revalidate: 3600 },
     ),
+    makeApiCallSSR<CustomScriptsResponse>(
+      apiUrls.CUSTOM_SCRIPTS,
+      {},
+      { revalidate: 3600 },
+    ),
   ]);
   const navItemData = navData?.data ?? [];
   const searchDataRes = searchData;
+  const scripts = customScriptsData?.data;
 
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
       <head>
+        {scripts?.head_top.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
         <link
           rel="preconnect"
           href="https://d2dy46c7t7z5ba.cloudfront.net"
@@ -56,9 +82,11 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
+        {scripts?.head_bottom.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
       </head>
 
       <body suppressHydrationWarning>
+        {scripts?.body_top.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
         <NextTopLoader
           color="#186737"
           height={4}
@@ -74,6 +102,7 @@ export default async function RootLayout({
             {children}
           </GlobalLayout>
         </NextIntlClientProvider>
+        {scripts?.body_bottom.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
       </body>
     </html>
   );

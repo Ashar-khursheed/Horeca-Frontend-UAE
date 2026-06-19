@@ -107,4 +107,5 @@ export const apiUrls = {
   PAYMENT_HISTORY:"frontend/payments",
   SCREEN_TRANSACTION:"screen-transaction",
   SALE_CATEGORIES: "frontend/sale-categories",
+  CUSTOM_SCRIPTS: "frontend/custom-scripts",
 };
