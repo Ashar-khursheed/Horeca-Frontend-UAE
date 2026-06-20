@@ -1,6 +1,7 @@
 
 "use client";
 
+import FinancingModal from "@/components/financing-modal";
 import { ApiCategory, ApiCategoryName } from "@/features/category";
 import {
   ArrowUpRight,
@@ -28,28 +29,28 @@ const getName = (name: ApiCategoryName | string, locale: string): string => {
 interface LinkItem {
   label: string;
   href: string;
+  isModal?: boolean;
+  modalTitle?: string;
 }
 
 const QUICK_LINKS: LinkItem[] = [
-  { label: "About Us", href: "/about" },
+  { label: "About Us", href: "/pages/about-us" },
   { label: "Starting a Restaurant?", href: "/starting-a-restaurant" },
-  { label: "Financing Options", href: "/financing" },
-  { label: "Request a Quote", href: "/quote" },
+  { label: "Financing Options", href: "#", isModal: true, modalTitle: "Financing Options" },
+  { label: "Request a Quote", href: "#", isModal: true, modalTitle: "Request a Quote" },
   { label: "Track Your Order", href: "/track-order" },
-  { label: "Returns & Refunds", href: "/returns" },
-  { label: "Warranty Info", href: "/warranty" },
+  { label: "Returns & Refunds", href: "/pages/return-policy" },
+  { label: "Warranty Info", href: "/pages/extended-warranty" },
   { label: "Blog & Resources", href: "/blog" },
 ];
 
 const SUPPORT_LINKS: LinkItem[] = [
-  { label: "Help Center", href: "/help" },
-  { label: "Contact Us", href: "/contact" },
-  { label: "Live Chat", href: "/chat" },
-  { label: "FAQs", href: "/faqs" },
-  { label: "Shipping Policy", href: "/shipping" },
-  { label: "Terms of Service", href: "/terms" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Sitemap", href: "/sitemap" },
+  { label: "Help Center", href: "/pages/contact-us" },
+  // { label: "Contact Us", href: "/contact" },
+  { label: "FAQs", href: "/faq" },
+  { label: "Shipping Policy", href: "/pages/shipping-policy" },
+  { label: "Terms of Service", href: "/pages/cancellation-policy" },
+  { label: "Privacy Policy", href: "/pages/privacy-policy" },
 ];
 
 const SOCIAL_LINKS = [
@@ -100,7 +101,15 @@ const CategoryAccordion = ({ category, locale }: { category: ApiCategory; locale
 };
 
 // ─── Links Accordion (Mobile) — Quick Links & Support ────────────────────────
-const LinksAccordion = ({ title, links }: { title: string; links: LinkItem[] }) => {
+const LinksAccordion = ({
+  title,
+  links,
+  onModalOpen,
+}: {
+  title: string;
+  links: LinkItem[];
+  onModalOpen?: (title: string) => void;
+}) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-gray-100">
@@ -117,15 +126,25 @@ const LinksAccordion = ({ title, links }: { title: string; links: LinkItem[] }) 
       </button>
       {open && (
         <div className="pb-3 pl-2 flex flex-col gap-2">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) =>
+            link.isModal ? (
+              <button
+                key={link.label}
+                onClick={() => onModalOpen?.(link.modalTitle ?? link.label)}
+                className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors text-left"
+              >
+                {link.label}
+              </button>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </div>
       )}
     </div>
@@ -135,7 +154,16 @@ const LinksAccordion = ({ title, links }: { title: string; links: LinkItem[] }) 
 // ─── Main Footer ──────────────────────────────────────────────────────────────
 export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
   const locale = useLocale();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+
+  const openModal = (title: string) => {
+    setModalTitle(title);
+    setModalOpen(true);
+  };
+
   return (
+    <>
     <footer className="bg-white border-t border-gray-100">
 
       {/* ── Top CTA Banner ── */}
@@ -247,7 +275,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-4 pb-1">
           Company
         </p>
-        <LinksAccordion title="Quick Links" links={QUICK_LINKS} />
+        <LinksAccordion title="Quick Links" links={QUICK_LINKS} onModalOpen={openModal} />
 
         {/* Support */}
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-4 pb-1">
@@ -275,13 +303,22 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
             </h4>
             <ul className="flex flex-col gap-2">
               {QUICK_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
-                  >
-                    {link.label}
-                  </Link>
+                <li key={link.label}>
+                  {link.isModal ? (
+                    <button
+                      onClick={() => openModal(link.modalTitle ?? link.label)}
+                      className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors text-left"
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -419,6 +456,13 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
       </div>
 
     </footer>
+
+    <FinancingModal
+      isOpen={modalOpen}
+      onClose={() => setModalOpen(false)}
+      title={modalTitle}
+    />
+    </>
   );
 };
 

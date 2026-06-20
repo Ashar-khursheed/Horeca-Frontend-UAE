@@ -137,11 +137,21 @@ export default function AboutUsPage() {
 
       {/* ── Video Hero ─────────────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden bg-[#0f4d26]">
-        {videoSrc && (
+        {window?.innerWidth < 640 && (
           <video
-            key={videoSrc}
-            className="w-full h-full object-cover max-h-[500px]"
-            src={videoSrc}
+            className="w-full h-full object-cover"
+            src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/products/440x680+voice+over+2.mp4`}
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        )}
+        {window?.innerWidth > 640 && (
+          <video
+            className="w-full h-full object-cover"
+            // src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/Brand/Amana/horecastore.mp4`}
+            src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/products/updated+1+1920x500+Voice+over+2.mp4`}
             autoPlay
             muted
             loop

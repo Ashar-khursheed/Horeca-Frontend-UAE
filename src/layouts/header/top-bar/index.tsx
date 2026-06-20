@@ -5,28 +5,41 @@ import LangSwitcher from "@/components/LangSwitcher";
 import FinancingModal from "@/components/financing-modal";
 
 const NAV_LINKS = [
-  { label: "Track your order", href: "/track-order", isModal: false },
-  { label: "Financing", href: "#", isModal: true },
-  { label: "Contact Us", href: "/pages/contact-us", isModal: false },
-  { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false },
+  { label: "Track your order", href: "/track-order", isModal: false, modalTitle: "" },
+  { label: "Financing Options", href: "#", isModal: true, modalTitle: "Financing Options" },
+  { label: "Request a Quote", href: "#", isModal: true, modalTitle: "Request a Quote" },
+  { label: "Contact Us", href: "/pages/contact-us", isModal: false, modalTitle: "" },
+  { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false, modalTitle: "" },
 ];
 
-const TopBar = () => {
-  const [isModalOpen, setIsModalOpen] = useState({
-    modalOne: false,
-  });
+const linkClass = `
+  text-[12px] text-gray-500 px-3 py-0.5
+  relative
+  hover:text-[#186737]
+  transition-colors duration-200 ease-in-out
+  after:absolute after:bottom-0 after:left-3 after:right-3
+  after:h-px after:bg-[#186737]
+  after:scale-x-0 after:origin-left
+  after:transition-transform after:duration-200
+  hover:after:scale-x-100
+`;
 
-  const handleModalOpen = () => {
-    setIsModalOpen({ ...isModalOpen, modalOne: true });
+const TopBar = () => {
+  const [modalTitle, setModalTitle] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleModalOpen = (title: string) => {
+    setModalTitle(title);
+    setIsModalOpen(true);
   };
 
   const handleModalClose = () => {
-    setIsModalOpen({ ...isModalOpen, modalOne: false });
+    setIsModalOpen(false);
   };
 
   return (
     <div>
-      <div className="bg-gray-50  hidden xl:block">
+      <div className="bg-gray-50 hidden xl:block">
         <div className="global-container flex items-center justify-between py-1.5">
           {/* Left: Tagline */}
           <p className="text-[12px] text-gray-500 tracking-wide">
@@ -39,41 +52,17 @@ const TopBar = () => {
               <li key={link.href + link.label} className="flex items-center">
                 {link.isModal ? (
                   <button
-                    onClick={handleModalOpen}
-                    className="
-                      text-[12px] text-gray-500 px-3 py-0.5
-                      relative
-                      hover:text-[#186737]
-                      transition-colors duration-200 ease-in-out
-                      after:absolute after:bottom-0 after:left-3 after:right-3
-                      after:h-px after:bg-[#186737]
-                      after:scale-x-0 after:origin-left
-                      after:transition-transform after:duration-200
-                      hover:after:scale-x-100
-                    "
+                    onClick={() => handleModalOpen(link.modalTitle)}
+                    className={linkClass}
                   >
                     {link.label}
                   </button>
                 ) : (
-                  <Link
-                    href={link.href}
-                    className="
-                      text-[12px] text-gray-500 px-3 py-0.5
-                      relative
-                      hover:text-[#186737]
-                      transition-colors duration-200 ease-in-out
-                      after:absolute after:bottom-0 after:left-3 after:right-3
-                      after:h-px after:bg-[#186737]
-                      after:scale-x-0 after:origin-left
-                      after:transition-transform after:duration-200
-                      hover:after:scale-x-100
-                    "
-                  >
+                  <Link href={link.href} className={linkClass}>
                     {link.label}
                   </Link>
                 )}
 
-                {/* Divider — last item ke baad nahi */}
                 {index < NAV_LINKS.length - 1 && (
                   <span className="w-px h-3.5 bg-gray-300 rounded-full" />
                 )}
@@ -85,7 +74,7 @@ const TopBar = () => {
           </ul>
         </div>
       </div>
-      <FinancingModal isOpen={isModalOpen.modalOne} onClose={handleModalClose} title="Get a Financing Quote" />
+      <FinancingModal isOpen={isModalOpen} onClose={handleModalClose} title={modalTitle} />
     </div>
   );
 };
