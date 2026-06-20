@@ -206,9 +206,14 @@ interface ApiCategoryPage {
     paragraph_2?: LocaleField | null;
     paragraph_3?: LocaleField | null;
     paragraph_4?: LocaleField | null;
+    
     popular_tag_details?: {
       en?: { popularTags: string; popularSlug: string }[] | null;
       ar?: { popularTags: string; popularSlug: string }[] | null;
+    } | null;
+    seo_schema?: {
+      en?: object | null;
+      ar?: object | null;
     } | null;
   } | null;
   category_page: {

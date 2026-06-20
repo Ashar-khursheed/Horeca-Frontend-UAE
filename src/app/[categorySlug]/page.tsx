@@ -7,6 +7,7 @@ import type { ApiCategory, ApiCategoryPage } from "@/utils/types";
 import type { ApiBrand } from "@/components/brands-section";
 import { cookies } from "next/headers";
 import { revalidate } from "@/utils";
+import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 
 
 interface PageProps {
@@ -76,14 +77,22 @@ export default async function CategorySlugPage({ params }: PageProps) {
   const categoryPage = categoryPageRes?.data ?? null;
   const brands = brandsRes?.data ?? null;
 
-  console.log("API",{
-    "categoryPage":categoryPage
-  })
+  // console.log("API",{
+  //   "categoryPage":categoryPage
+  // })
+  const schemaObj = categoryPage?.seo?.seo_schema?.en;
+  const schema: string | null | undefined = typeof schemaObj === "string"
+    ? schemaObj
+    : schemaObj
+    ? JSON.stringify(schemaObj)
+    : undefined;
+    console.log("schemaschemaschema",schemaObj)
 
   if (!categoryPageRes?.success && categories.length === 0) notFound();
 
   return (
     <div>
+      <ProductJsonLd schema={schema} />
       <CategoriesPage
         categories={categories}
         categorySlug={categorySlug}
