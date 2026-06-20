@@ -4,6 +4,7 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import { productDetailRevalidate } from "@/utils";
 import BrandDetailFeature, { type BrandDetailResponse } from "@/features/brand-detail";
+import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -42,8 +43,21 @@ export default async function BrandDetailPage({ params }: PageProps) {
     { page: 1 },
     { revalidate: productDetailRevalidate },
   );
+    const schemaObj = data?.seo?.seo_schema?.en;
+  const schema: string | null | undefined = typeof schemaObj === "string"
+    ? schemaObj
+    : schemaObj
+    ? JSON.stringify(schemaObj)
+    : undefined;
+    console.log("schemaschemaschema",schemaObj)
+
+  console.log("datadatadata",data?.seo)
 
   if (!data?.success || !data?.brand) notFound();
 
-  return <BrandDetailFeature data={data} />;
+  return (
+    <>
+       <ProductJsonLd schema={schema} />
+    <BrandDetailFeature data={data} />;</>
+  )
 }
