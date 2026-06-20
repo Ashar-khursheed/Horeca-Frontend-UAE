@@ -475,13 +475,13 @@ export default function SubCategoryPage({
               <>
                 <button
                   onClick={() => swiperRef.current?.slidePrev()}
-                  className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+                  className={`absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors ${childCategories.length <= 13 ? "md:hidden" : ""}`}
                 >
                   <ChevronLeft size={14} />
                 </button>
                 <button
                   onClick={() => swiperRef.current?.slideNext()}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+                  className={`absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors ${childCategories.length <= 13 ? "md:hidden" : ""}`}
                 >
                   <ChevronRight size={14} />
                 </button>

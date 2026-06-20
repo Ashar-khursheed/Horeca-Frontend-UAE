@@ -6,8 +6,8 @@ import FinancingModal from "@/components/financing-modal";
 
 const NAV_LINKS = [
   { label: "Track your order", href: "/track-order", isModal: false, modalTitle: "" },
-  { label: "Financing Options", href: "#", isModal: true, modalTitle: "Financing Options" },
-  { label: "Request a Quote", href: "#", isModal: true, modalTitle: "Request a Quote" },
+  { label: "Financing Options", href: "#", isModal: true, modalTitle: "Financing" },
+  // { label: "Request a Quote", href: "#", isModal: true, modalTitle: "Request a Quote" },
   { label: "Contact Us", href: "/pages/contact-us", isModal: false, modalTitle: "" },
   { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false, modalTitle: "" },
 ];
