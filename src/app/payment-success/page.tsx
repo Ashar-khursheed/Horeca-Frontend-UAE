@@ -91,11 +91,14 @@ export default function PaymentSuccessPage() {
     if (!orderID) { setLoading(false); setError(true); return; }
     (async () => {
       try {
-        const res = await makeApiRequest<{ success: boolean; data: OrderData }>(
-          `frontend/orders/${orderID}`
-        );
-        if (res?.success && res.data) {
-          setOrder(res.data);
+        const [res] = await Promise.all([
+          makeApiRequest<{ success: boolean; data: OrderData }>(
+            `frontend/orders/${orderID}`
+          ),
+          new Promise((r) => setTimeout(r, 3000)), // minimum 3s loading
+        ]);
+        if ((res as any)?.success && (res as any)?.data) {
+          setOrder((res as any).data);
         } else {
           setError(true);
         }
@@ -110,10 +113,8 @@ export default function PaymentSuccessPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#E2E8F066] flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 border-4 border-[#186737] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-gray-500 text-sm">Loading your order details…</p>
-        </div>
+        <iframe src="https://lottie.host/embed/26761a0a-4293-4565-9d0d-7547ca098730/85hJaOU4Xl.lottie"  className="h-[500px] w-[500px]" ></iframe>
+        <iframe src="https://lottie.host/embed/58285e83-9c43-4b1c-9624-98413c857114/Bl6bku254m.lottie" className="h-[500px] w-[500px]"></iframe>
       </div>
     );
   }

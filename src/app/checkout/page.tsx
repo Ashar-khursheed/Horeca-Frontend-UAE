@@ -24,10 +24,13 @@ import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
 import { TAX_STORAGE_KEY } from "@/store/slices/tax/taxSlice";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
+export const COUPON_KEY = "hc_coupon";
 
 interface CartSummaryCache {
   subTotal: number;
@@ -61,13 +64,35 @@ const getToken = (): string | null => {
   }
 };
 
-// â”€â”€â”€ API base URL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ API base URL â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+
+function CouponAppliedBadge({
+  couponInfo,
+  discount,
+}: {
+  couponInfo: { coupon_code: string; discount_type: string; discount_value: number };
+  discount: number;
+}) {
+  const label =
+    couponInfo.discount_type === "fixed"
+      ? "$" + couponInfo.discount_value.toFixed(2) + " off"
+      : couponInfo.discount_value + "% off";
+  return (
+    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2 mb-2">
+      <div>
+        <p className="text-[12px] font-semibold text-green-700">{couponInfo.coupon_code}</p>
+        <p className="text-[11px] text-green-600">{label} &mdash; saving ${discount.toFixed(2)}</p>
+      </div>
+      <span className="text-[11px] font-bold text-green-700">Applied</span>
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const rawProducts = useAppSelector((s) => s.cart.rawProducts);
-  const guestItems = useAppSelector((s) => s.cart.items);
+  const rawProducts = useAppSelector((s:any) => s.cart.rawProducts);
+  const guestItems = useAppSelector((s:any) => s.cart.items);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
   const addresses = useAppSelector((s) => s.customerAddress.addresses);
   const paymentHandleRef = useRef<CheckoutPaymentHandle | null>(null);
@@ -80,13 +105,21 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [codeApplied, setCodeApplied] = useState(false);
-  const [codeError, setCodeError] = useState(false);
+  const [codeError, setCodeError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponInfo, setCouponInfo] = useState<{
+    coupon_id: number;
+    coupon_code: string;
+    discount_type: string;
+    discount_value: number;
+  } | null>(null);
   const [discount, setDiscount] = useState(0);
+  const [showCouponAnim, setShowCouponAnim] = useState(false);
   const [liftGate, setLiftGate] = useState(false);
   const [residential, setResidential] = useState(false);
   const [insideDelivery, setInsideDelivery] = useState(false);
 
-  // â”€â”€ Derived state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Derived state â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const hasAddress =
     addresses.some((a) => a.is_default) || !!getDefaultAddressCache();
 
@@ -121,10 +154,25 @@ export default function CheckoutPage() {
       if (raw) {
         const saved: CartSummaryCache = JSON.parse(raw);
         setCartSummary(saved);
-        if (saved.isCouponApplied) {
-          setCodeApplied(true);
-          setDiscount(saved.discountAmount);
-        }
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // Restore saved coupon
+    try {
+      const savedCoupon = localStorage.getItem(COUPON_KEY);
+      if (savedCoupon) {
+        const c = JSON.parse(savedCoupon);
+        setCode(c.coupon_code ?? "");
+        setCodeApplied(true);
+        setDiscount(c.discount_amount ?? 0);
+        setCouponInfo({
+          coupon_id: c.coupon_id,
+          coupon_code: c.coupon_code,
+          discount_type: c.discount_type,
+          discount_value: c.discount_value,
+        });
       }
     } catch {
       /* ignore */
@@ -327,43 +375,150 @@ export default function CheckoutPage() {
   }));
 
   const cartItems = isLoggedIn ? apiCartItems : guestCartItems;
-  console.log('dasdasdsadasd',cartItems)
   const currencySymbol: string =
     (rawProducts[0] as any)?.product?.currency?.symbol ?? "$";
 
-  // â”€â”€ Pricing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Pricing â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const baseSubtotal = cartSummary?.subTotal ?? 0;
   const baseShipping = cartSummary?.totalShippingCharges ?? 0;
   const ratePercent = cartSummary?.taxRatePercentage ?? 0;
   const taxRate = ratePercent / 100;
-  const taxable = baseSubtotal - discount;
   const liftFee = liftGate ? 75 : 0;
   const resFee = residential ? 199 : 0;
   const insideFee = insideDelivery ? 249 : 0;
-  const taxOnBase = (taxable + baseShipping) * taxRate;
+  const discountedSubtotal = baseSubtotal - discount;
+  // Tax calculated on discounted subtotal + shipping
+  const taxOnBase = (discountedSubtotal + baseShipping) * taxRate;
   const taxOnFees = (liftFee + resFee + insideFee) * taxRate;
   const totalTax = taxOnBase + taxOnFees;
   const grandTotal =
-    taxable + baseShipping + liftFee + resFee + insideFee + totalTax;
-  const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
+    discountedSubtotal + baseShipping + liftFee + resFee + insideFee + totalTax;
+  const totalItems = cartItems.reduce((s:any, c:any) => s + c.qty, 0);
 
   const isCartLoading =
     isLoggedIn && (apiStatus === "idle" || apiStatus === "loading");
 
-  const handleApplyCode = () => {
-    if (code.toUpperCase() === "HORECA10") {
-      setDiscount(baseSubtotal * 0.1);
-      setCodeApplied(true);
-      setCodeError(false);
-    } else {
-      setCodeError(true);
+  const handleApplyCode = async () => {
+    if (!code.trim()) {
+      setCodeError("Please enter a coupon code");
+      return;
     }
+    setCouponLoading(true);
+    setCodeError("");
+    try {
+      const res = await makeApiRequest<{
+        success: boolean;
+        message: string;
+        data: {
+          coupon_id: number;
+          coupon_code: string;
+          discount_type: "fixed" | "percentage";
+          discount_value: string;
+        };
+      }>(`customer/check-coupon?coupon_code=${code}&orderValue=${grandTotal.toFixed(2)}`);
+
+      if (res?.success && res?.data) {
+        const { coupon_id, coupon_code, discount_type, discount_value } = res.data;
+        const dv = Number(discount_value);
+
+        const discountAmount =
+          discount_type === "fixed"
+            ? dv
+            : (baseSubtotal * dv) / 100;
+
+        const info = { coupon_id, coupon_code, discount_type, discount_value: dv };
+
+        localStorage.setItem(COUPON_KEY, JSON.stringify({ ...info, discount_amount: discountAmount }));
+        localStorage.setItem("coupon_id", String(coupon_id));
+        localStorage.setItem("discount_value", String(discountAmount));
+        localStorage.setItem("discount_type", discount_type);
+
+        // Update hc_cart_summary with coupon applied
+        try {
+          const raw = localStorage.getItem(CART_SUMMARY_KEY);
+          if (raw) {
+            const summary = JSON.parse(raw);
+            const sub = summary.subTotal ?? 0;
+            const shipping = summary.totalShippingCharges ?? 0;
+            const rate = (summary.taxRatePercentage ?? 0) / 100;
+            const r2 = (n: number) => Math.round(n * 100) / 100;
+            const discountedSub = r2(sub - discountAmount);
+            const taxableAmt = r2(discountedSub + shipping);
+            const taxAmt = r2(taxableAmt * rate);
+            const updated = {
+              ...summary,
+              discountAmount: r2(discountAmount),
+              discountedSubtotal: discountedSub,
+              finalDiscountedSubtotal: discountedSub,
+              taxableAmount: taxableAmt,
+              taxAmount: taxAmt,
+              total: r2(taxableAmt + taxAmt),
+              isCouponApplied: true,
+            };
+            localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+            setCartSummary(updated);
+          }
+        } catch { /* ignore */ }
+
+        setCouponInfo(info);
+        setDiscount(discountAmount);
+        setCodeApplied(true);
+        setCodeError("");
+        setShowCouponAnim(true);
+        setTimeout(() => setShowCouponAnim(false), 2500);
+      } else {
+        setCodeError(res?.message || "Invalid coupon code");
+      }
+    } catch (err: any) {
+      setCodeError(err?.response?.data?.message || "Failed to apply coupon. Try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    localStorage.removeItem(COUPON_KEY);
+    localStorage.removeItem("coupon_id");
+    localStorage.removeItem("discount_value");
+    localStorage.removeItem("discount_type");
+
+    // Reset hc_cart_summary to original values (no coupon)
+    try {
+      const raw = localStorage.getItem(CART_SUMMARY_KEY);
+      if (raw) {
+        const summary = JSON.parse(raw);
+        const sub = summary.subTotal ?? 0;
+        const shipping = summary.totalShippingCharges ?? 0;
+        const rate = (summary.taxRatePercentage ?? 0) / 100;
+        const r2 = (n: number) => Math.round(n * 100) / 100;
+        const taxableAmt = r2(sub + shipping);
+        const taxAmt = r2(taxableAmt * rate);
+        const updated = {
+          ...summary,
+          discountAmount: 0,
+          discountedSubtotal: sub,
+          finalDiscountedSubtotal: sub,
+          taxableAmount: taxableAmt,
+          taxAmount: taxAmt,
+          total: r2(taxableAmt + taxAmt),
+          isCouponApplied: false,
+        };
+        localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+        setCartSummary(updated);
+      }
+    } catch { /* ignore */ }
+
+    setCode("");
+    setCodeApplied(false);
+    setCouponInfo(null);
+    setDiscount(0);
+    setCodeError("");
   };
 
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
-    // â”€â”€ STEP 1: Address check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ STEP 1: Address check â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     if (!hasAddress) {
       setOrderError("Please add a delivery address before placing your order.");
       document
@@ -372,7 +527,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    // â”€â”€ STEP 2: Payment handle ready check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ STEP 2: Payment handle ready check â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     if (!paymentHandleRef.current) {
       setOrderError(
         "Payment form is not ready. Please wait a moment and try again.",
@@ -383,7 +538,7 @@ export default function CheckoutPage() {
     setIsPlacingOrder(true);
 
     try {
-      // â”€â”€ STEP 3: Square tokenize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 3: Square tokenize â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       let token: any;
       try {
         token = await paymentHandleRef.current.getPaymentToken();
@@ -399,10 +554,10 @@ export default function CheckoutPage() {
         return;
       }
 
-      // â”€â”€ STEP 4: Idempotency key (fresh, no localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 4: Idempotency key (fresh, no localStorage) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       const idempotencyKey = crypto.randomUUID();
 
-      // â”€â”€ STEP 5: Cart summary se amount lo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 5: Cart summary se amount lo â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       const localSummary = (() => {
         try {
           return JSON.parse(localStorage.getItem(CART_SUMMARY_KEY) ?? "{}");
@@ -412,7 +567,7 @@ export default function CheckoutPage() {
       })();
       const amount = Number(grandTotal.toFixed(2));
 
-      // â”€â”€ STEP 6: Square payment API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 6: Square payment API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       const paymentRes = (await makeApiRequest(apiUrls?.SQUARE_PAYMENT, {
         data: {
           source_id: token,
@@ -430,8 +585,9 @@ export default function CheckoutPage() {
 
       const squarePaymentId = paymentRes ?? null;
 
-      // â”€â”€ STEP 7: defaultAddress localStorage se lo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 7: defaultAddress localStorage se lo â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       const defaultAddr = getDefaultAddressCache();
+      console.log("dadasda",)
       const user = (() => {
         try {
           return JSON.parse(localStorage.getItem("user") ?? "{}");
@@ -441,10 +597,11 @@ export default function CheckoutPage() {
       })();
       const couponId = localStorage.getItem("coupon_id") ?? "";
       const discountVal = localStorage.getItem("discount_value") ?? 0;
+      const discountType = localStorage.getItem("discount_type") ?? "";
       const sessionId = localStorage.getItem("session_id") ?? "";
       const taxPercent = +((ratePercent ?? localSummary?.taxRatePercentage ?? 0)).toFixed(2);
 
-      // Products array â€” rawProducts se
+      // Products array â€" rawProducts se
       const location = getLocationData();
       const deliveryCharge = getShippingCharge(
         defaultAddr?.city ?? location?.city ?? "",
@@ -475,41 +632,7 @@ export default function CheckoutPage() {
         };
       });
 
-      // // â”€â”€ STEP 8: Place Order API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      // const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
-      //   data: {
-      //     customer_id: user?.id,
-      //     customer_address_id: defaultAddr?.id,
-      //     tax_percentage: taxPercent,
-      //     ship_all_at_once: 1,
-      //     is_lift_gate: liftGate ? 1 : 0,
-      //     is_residential_address: residential ? 1 : 0,
-      //     is_inside_delivery: insideDelivery ? 1 : 0,
-      //     separate_deliveries: 0,
-      //     products,
-      //     utm_id: sessionId,
-      //     coupon_id: couponId,
-      //     discount: discountVal,
-      //     is_reserved: 0,
-      //     pay_with_cheque: 0,
-      //     payment_mode: "Square",
-      //     // square_payment_id:    squarePaymentId,
-      //   },
-      //   method: "POST",
-      // })) as any;
-
-      // if (!orderRes?.success) {
-      //   throw new Error(
-      //     orderRes?.message ??
-      //       "Order could not be placed. Please contact support.",
-      //   );
-      // }
-
-      // const orderData = orderRes?.data;
-      // console.log("Order placed:", orderData?.id, orderData?.order_number);
-      // localStorage.removeItem(CART_SUMMARY_KEY);
-
-      // â”€â”€ STEP 8: Place Order API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 8: Place Order API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
         data: {
           customer_id: user?.id,
@@ -522,8 +645,11 @@ export default function CheckoutPage() {
           separate_deliveries: 0,
           products,
           utm_id: sessionId,
-          coupon_id: couponId,
-          discount: discountVal,
+          ...(couponId ? {
+            coupon_id: couponId,
+            discount: discountVal,
+            // additional_discount_type: discountType,
+          } : {}),
           is_reserved: 0,
           pay_with_cheque: 0,
           payment_mode: "Square",
@@ -541,7 +667,7 @@ export default function CheckoutPage() {
       const orderId = orderRes?.data?.id;
       localStorage.removeItem(CART_SUMMARY_KEY);
 
-      // â”€â”€ STEP 8.5: Full order details fetch (place order ke turant baad) â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 8.5: Full order details fetch (place order ke turant baad) â"€â"€â"€â"€â"€â"€â"€
       let orderData: any = orderRes?.data; // fallback
       try {
         const detailRes = (await makeApiRequest(apiUrls.ORDER_DETAIL(orderId), {
@@ -554,7 +680,7 @@ export default function CheckoutPage() {
         console.warn("Order detail fetch failed (non-blocking):", detailErr);
       }
 
-      // â”€â”€ STEP 9: Payment History API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 9: Payment History API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       try {
         const paymentDate = orderData?.updated_at
           ? orderData.updated_at.split(/[T ]/)[0]
@@ -579,7 +705,7 @@ export default function CheckoutPage() {
         console.warn("Payment history failed (non-blocking):", historyErr);
       }
 
-      // â”€â”€ STEP 10: Screen Transaction API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 10: Screen Transaction API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       try {
         const cardDetails = paymentHandleRef.current?.getCardDetails();
         const billingFirst = user?.name?.split(" ")?.[0] ?? firstName;
@@ -642,7 +768,7 @@ export default function CheckoutPage() {
         console.warn("Screen transaction failed (non-blocking):", screenErr);
       }
 
-      // â”€â”€ STEP 11: Full order details GET karo, save karo, redirect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ STEP 11: Full order details GET karo, save karo, redirect â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       let fullOrder = orderData;
       try {
         const detailRes = (await makeApiRequest(
@@ -656,6 +782,14 @@ export default function CheckoutPage() {
         // GET fail hone pe orderData hi use karo
       }
       localStorage.setItem("recentOrder", JSON.stringify(fullOrder));
+
+      // Clear coupon data after successful order
+      localStorage.removeItem(COUPON_KEY);
+      localStorage.removeItem(CART_SUMMARY_KEY);
+      localStorage.removeItem("coupon_id");
+      localStorage.removeItem("discount_value");
+      localStorage.removeItem("discount_type");
+
       dispatch(fetchCounts() as any);
       router.push(`/payment-success?orderID=${orderData?.id}`);
     } catch (err: any) {
@@ -672,7 +806,7 @@ export default function CheckoutPage() {
     { label: "Checkout", href: null },
   ];
 
-  // â”€â”€ Shared blocks (used in both mobile & desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Shared blocks (used in both mobile & desktop) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const contactBlock = (
     <div className="mb-7">
       <div className="flex justify-between items-center mb-4">
@@ -744,7 +878,7 @@ export default function CheckoutPage() {
           Your cart is empty.
         </p>
       ) : (
-        cartItems.map((item) => (
+        cartItems.map((item:any) => (
           <div key={item.id} className="flex items-start gap-3">
             <div className="relative shrink-0">
               <div className="w-16 h-16 rounded-md border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
@@ -802,29 +936,64 @@ export default function CheckoutPage() {
             value={code}
             onChange={(e) => {
               setCode(e.target.value.toUpperCase());
-              setCodeError(false);
+              setCodeError("");
             }}
-            placeholder="Gift card or discount code"
+            placeholder="Enter coupon code"
             disabled={codeApplied}
             className="w-full h-10 pl-9 pr-3 border border-gray-300 rounded-md text-sm outline-none focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/20 bg-white disabled:bg-gray-50 disabled:text-gray-400"
           />
         </div>
-        <button
-          onClick={handleApplyCode}
-          disabled={codeApplied || !code}
-          className="h-10 px-4 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-700 text-sm font-medium transition-colors"
-        >
-          Apply
-        </button>
+        <div className="relative shrink-0">
+          {/* Animation floats above the button */}
+          <AnimatePresence>
+            {showCouponAnim && (
+              <motion.div
+                key="lottie"
+                initial={{ scale: 0.3, opacity: 0, y: 10 }}
+                animate={{ scale: 1, opacity: 1, y: -50 }}
+                exit={{ scale: 0.3, opacity: 0, y: 10 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+                style={{ bottom: "100%" }}
+              >
+                {/* <DotLottieReact
+                  src="https://lottie.host/11f725f0-3999-46da-943d-20e61d1661e5/KPPrJBbOjt.lottie"
+                  autoplay
+                  style={{ width: 80, height: 80 }}
+                /> */}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Button stays visible */}
+          {codeApplied ? (
+            <button
+              onClick={handleRemoveCoupon}
+              className="h-10 px-4 rounded-md bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium transition-colors border border-red-200"
+            >
+              Remove
+            </button>
+          ) : (
+            <button
+              onClick={handleApplyCode}
+              disabled={couponLoading || !code}
+              className="h-10 px-4 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-gray-700 text-sm font-medium transition-colors min-w-[68px]"
+            >
+              {couponLoading ? (
+                <span className="inline-block w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                "Apply"
+              )}
+            </button>
+          )}
+        </div>
       </div>
+
       {codeError && (
-        <p className="text-[11px] text-red-500 mb-4">Invalid code.</p>
+        <p className="text-[11px] text-red-500 mb-2">{codeError}</p>
       )}
-      {codeApplied && (
-        <p className="text-[11px] text-[#186737] mb-4">
-          HORECA10 â€” 10% off applied
-        </p>
-      )}
+
+      {codeApplied && couponInfo && <CouponAppliedBadge couponInfo={couponInfo} discount={discount} />}
     </>
   );
 
@@ -914,11 +1083,17 @@ export default function CheckoutPage() {
           value={`${currencySymbol}${usd(baseSubtotal)}`}
         />
         {codeApplied && (
-          <PriceRow
-            label="Discount (HORECA10)"
-            value={`-${currencySymbol}${usd(discount)}`}
-            green
-          />
+          <>
+            <PriceRow
+              label="Discount"
+              value={`-${currencySymbol}${usd(discount)}`}
+              green
+            />
+            <PriceRow
+              label="Subtotal after discount"
+              value={`${currencySymbol}${usd(discountedSubtotal)}`}
+            />
+          </>
         )}
         <PriceRow
           label={`Shipping & Handling${ratePercent > 0 ? ` ` : ""}`}
@@ -1026,11 +1201,12 @@ export default function CheckoutPage() {
 
   return (
     <>
+   
       <Breadcrumb crumbs={crumbs} />
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• MOBILE LAYOUT â€” step-based (hidden on lg+) â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/*  MOBILE LAYOUT â€" step-based (hidden on lg+)  */}
       <div className="lg:hidden min-h-screen bg-gray-50">
-        {/* â”€â”€ Step indicator bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ Step indicator bar â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         <div className="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-0 max-w-sm mx-auto">
             {/* Step 1 */}
@@ -1093,7 +1269,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* â”€â”€ STEP 1: Contact + Address â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ STEP 1: Contact + Address â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileStep === 1 && (
           <div className="px-4 py-5 space-y-1 pb-28">
             {/* Contact card */}
@@ -1120,7 +1296,7 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {/* â”€â”€ STEP 2: Cart + Payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ STEP 2: Cart + Payment â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileStep === 2 && (
           <div className="px-4 py-5 pb-36 space-y-4">
             {/* Cart items card */}
@@ -1231,10 +1407,10 @@ export default function CheckoutPage() {
         )}
       </div>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â• DESKTOP LAYOUT â€” 2-column (hidden on mobile) â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* â DESKTOP LAYOUT â€" 2-column (hidden on mobile) */}
       <div className="hidden lg:block global-container bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] max-w-7xl mx-auto">
-          {/* â”€â”€ LEFT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* â"€â"€ LEFT â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           <div className="px-6 md:px-12 xl:px-20 py-10 pt-0 border-r border-gray-100">
             <CheckoutPayment
               squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
@@ -1248,7 +1424,7 @@ export default function CheckoutPage() {
             {addressBlock}
           </div>
 
-          {/* â”€â”€ RIGHT â€” Order Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* â"€â"€ RIGHT â€" Order Summary â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10">
             {cartBlock}
             {discountBlock}
@@ -1259,12 +1435,13 @@ export default function CheckoutPage() {
             {placeOrderBtn}
           </div>
         </div>
+
       </div>
     </>
   );
 }
 
-// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 function Field({
   value,
