@@ -34,6 +34,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import SeoContent from "@/seo/seo-content";
 
 // ─── URL codec helpers ─────────────────────────────────────────────────────────
 // RF format: "attrId-unitId:min_max,min_max|attrId2-unitId2:min_max"
@@ -450,6 +451,7 @@ export default function SubCategoryPage({
   }, [apiPriceMin, apiPriceMax, pushURL]);
 
   return (
+<>
     <main className="min-h-screen bg-gray-5p0">
       <Breadcrumb crumbs={crumbs} />
 
@@ -881,6 +883,10 @@ export default function SubCategoryPage({
           </button>
         </div>
       </div>
+    
     </main>
+      <div>
+        <SeoContent dataAPI={subCategoryPage?.seo} />
+      </div></>
   );
 }

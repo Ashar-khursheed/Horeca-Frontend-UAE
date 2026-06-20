@@ -1,34 +1,39 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-import SubCategoryPage from '@/features/category/sub-category'
-import { makeApiCallSSR } from '@/apis/ssr-fetch'
-import { apiUrls } from '@/apis/api-endpoint'
-import { ApiCategory, InnerCategoryPageResponse, ProductsListingResponse } from '@/utils/types'
-import { cookies } from 'next/headers'
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import SubCategoryPage from "@/features/category/sub-category";
+import { makeApiCallSSR } from "@/apis/ssr-fetch";
+import { apiUrls } from "@/apis/api-endpoint";
+import {
+  ApiCategory,
+  InnerCategoryPageResponse,
+  ProductsListingResponse,
+} from "@/utils/types";
+import { cookies } from "next/headers";
+import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 
-export const revalidate = 3600
+export const revalidate = 3600;
 
 interface PageProps {
-  params: Promise<{ categorySlug: string; subCategorySlug: string }>
+  params: Promise<{ categorySlug: string; subCategorySlug: string }>;
   searchParams: Promise<{
-    parent?: string
-    page?: string
-    sort?: string
-    show?: string
-    brands?: string
-    min?: string
-    max?: string
-    rf?: string
-    ff?: string
-  }>
+    parent?: string;
+    page?: string;
+    sort?: string;
+    show?: string;
+    brands?: string;
+    min?: string;
+    max?: string;
+    rf?: string;
+    ff?: string;
+  }>;
 }
 
 const SORT_MAP: Record<string, { sort_by: string; sort_dir: string }> = {
-  "Price: Low to High": { sort_by: "price",      sort_dir: "asc"  },
-  "Price: High to Low": { sort_by: "price",      sort_dir: "desc" },
+  "Price: Low to High": { sort_by: "price", sort_dir: "asc" },
+  "Price: High to Low": { sort_by: "price", sort_dir: "desc" },
   // "Top Rated":          { sort_by: "avg_rating", sort_dir: "desc" },
   // "Newest First":       { sort_by: "created_at", sort_dir: "desc" },
-}
+};
 
 const buildFilterBody = (slug: string) => ({
   category_url: slug,
@@ -36,10 +41,12 @@ const buildFilterBody = (slug: string) => ({
   applied_range_filters: [{}],
   applied_fixed_filters: [{}],
   locale: "en",
-})
+});
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { categorySlug, subCategorySlug } = await params
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { categorySlug, subCategorySlug } = await params;
 
   const res = await makeApiCallSSR<InnerCategoryPageResponse>(
     apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
@@ -49,10 +56,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       method: "POST",
       body: buildFilterBody(subCategorySlug),
     },
-  )
+  );
 
-  const seo = res?.seo
-  if (!seo) return { title: subCategorySlug }
+  const seo = res?.seo;
+  if (!seo) return { title: subCategorySlug };
 
   return {
     title: seo.meta_title ?? seo.title_tag ?? subCategorySlug,
@@ -66,35 +73,70 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: seo.og_description ?? seo.meta_description ?? undefined,
       url: `${process.env.NEXT_SITE_URL}/${categorySlug}/${subCategorySlug}`,
       images:
-        seo.og_image_url && seo.og_image_url !== 'null'
-          ? [{ url: seo.og_image_url, alt: seo.banner_image_alt_text ?? undefined }]
+        seo.og_image_url && seo.og_image_url !== "null"
+          ? [
+              {
+                url: seo.og_image_url,
+                alt: seo.banner_image_alt_text ?? undefined,
+              },
+            ]
           : seo.banner_image_url
-          ? [{ url: seo.banner_image_url, alt: seo.banner_image_alt_text ?? undefined }]
-          : undefined,
-      type: 'website',
+            ? [
+                {
+                  url: seo.banner_image_url,
+                  alt: seo.banner_image_alt_text ?? undefined,
+                },
+              ]
+            : undefined,
+      type: "website",
     },
-  }
+  };
 }
 
-export default async function SubCategorySlugPage({ params, searchParams }: PageProps) {
-    const cookieStore = await cookies();
-  const isLoggedIn  = !!cookieStore.get("token")?.value;
-  const { categorySlug, subCategorySlug } = await params
-  const { parent, page: pageParam, sort: sortParam, show: showParam, brands: brandsParam, min: minParam, max: maxParam, rf: rfParam, ff: ffParam } = await searchParams
-  const currentPage = Math.max(1, Number(pageParam ?? 1))
-  const length      = [20, 50, 100].includes(Number(showParam)) ? Number(showParam) : 20
-  const { sort_by, sort_dir } = SORT_MAP[sortParam ?? ""] ?? { sort_by: "price", sort_dir: "asc" }
+export default async function SubCategorySlugPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const cookieStore = await cookies();
+  const isLoggedIn = !!cookieStore.get("token")?.value;
+  const { categorySlug, subCategorySlug } = await params;
+  const {
+    parent,
+    page: pageParam,
+    sort: sortParam,
+    show: showParam,
+    brands: brandsParam,
+    min: minParam,
+    max: maxParam,
+    rf: rfParam,
+    ff: ffParam,
+  } = await searchParams;
+  const currentPage = Math.max(1, Number(pageParam ?? 1));
+  const length = [20, 50, 100].includes(Number(showParam))
+    ? Number(showParam)
+    : 20;
+  const { sort_by, sort_dir } = SORT_MAP[sortParam ?? ""] ?? {
+    sort_by: "price",
+    sort_dir: "asc",
+  };
 
   // Parse brand IDs from URL: "64:BrandName,65:BrandName2"
   const brandIds = brandsParam
-    ? brandsParam.split(",").map((b) => {
-        const ci = b.indexOf(":");
-        return ci >= 0 ? Number(b.slice(0, ci)) : Number(b);
-      }).filter((id) => !isNaN(id) && id > 0)
+    ? brandsParam
+        .split(",")
+        .map((b) => {
+          const ci = b.indexOf(":");
+          return ci >= 0 ? Number(b.slice(0, ci)) : Number(b);
+        })
+        .filter((id) => !isNaN(id) && id > 0)
     : [];
 
   // Parse range filters: "attrId-unitId:min_max,min_max|attrId2-unitId2:min_max"
-  const applied_range_filters: { attribute_id: number; unit_id?: number; ranges: { min: number; max: number } }[] = [];
+  const applied_range_filters: {
+    attribute_id: number;
+    unit_id?: number;
+    ranges: { min: number; max: number };
+  }[] = [];
   if (rfParam) {
     rfParam.split("|").forEach((part) => {
       const ci = part.indexOf(":");
@@ -102,14 +144,21 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
       const keyParts = part.slice(0, ci).split("-");
       const attrId = Number(keyParts[0]);
       const unit_id = keyParts[1] ? Number(keyParts[1]) : undefined;
-      part.slice(ci + 1).split(",").forEach((r) => {
-        const [min, max] = r.split("_").map(Number);
-        if (!isNaN(min) && !isNaN(max)) {
-          const item: { attribute_id: number; unit_id?: number; ranges: { min: number; max: number } } = { attribute_id: attrId, ranges: { min, max } };
-          if (unit_id) item.unit_id = unit_id;
-          applied_range_filters.push(item);
-        }
-      });
+      part
+        .slice(ci + 1)
+        .split(",")
+        .forEach((r) => {
+          const [min, max] = r.split("_").map(Number);
+          if (!isNaN(min) && !isNaN(max)) {
+            const item: {
+              attribute_id: number;
+              unit_id?: number;
+              ranges: { min: number; max: number };
+            } = { attribute_id: attrId, ranges: { min, max } };
+            if (unit_id) item.unit_id = unit_id;
+            applied_range_filters.push(item);
+          }
+        });
     });
   }
 
@@ -120,13 +169,16 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
       const ci = part.indexOf(":");
       if (ci < 0) return;
       const attrId = Number(part.slice(0, ci));
-      part.slice(ci + 1).split(",").forEach((v) => {
-        const val = v.replace(/\+/g, " ");
-        if (val) applied_fixed_filters.push({ attribute_id: attrId, value: val });
-      });
+      part
+        .slice(ci + 1)
+        .split(",")
+        .forEach((v) => {
+          const val = v.replace(/\+/g, " ");
+          if (val)
+            applied_fixed_filters.push({ attribute_id: attrId, value: val });
+        });
     });
   }
-
 
   const priceRange: { min_price?: string; max_price?: string } = {};
   if (minParam) priceRange.min_price = minParam;
@@ -175,23 +227,34 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
     ),
     makeApiCallSSR<ProductsListingResponse>(
       apiUrls.PRODUCTS_LISTING,
-       {  withAuth: isLoggedIn },
+      { withAuth: isLoggedIn },
       {
         revalidate: revalidate,
         method: "POST",
         body: productsBody,
       },
     ),
-  ])
+  ]);
 
-  const subCategories = navigationRes?.data ?? []
-  const subCategoryPage = subCategoryPageRes ?? null
+  const subCategories = navigationRes?.data ?? [];
+  const subCategoryPage = subCategoryPageRes ?? null;
 
-  if (!subCategoryPageRes?.success) notFound()
+  const schemaObj = (
+    subCategoryPage?.seo as { seo_schema?: unknown } | undefined
+  )?.seo_schema;
+  const schema: string | null | undefined =
+    typeof schemaObj === "string"
+      ? schemaObj
+      : schemaObj
+        ? JSON.stringify(schemaObj)
+        : undefined;
+  console.log("schemaschemaschema", schemaObj);
 
+  if (!subCategoryPageRes?.success) notFound();
 
   return (
     <div>
+      <ProductJsonLd schema={schema} />
       <SubCategoryPage
         subCategories={subCategories}
         categorySlug={categorySlug}
@@ -202,5 +265,5 @@ export default async function SubCategorySlugPage({ params, searchParams }: Page
         currentPage={currentPage}
       />
     </div>
-  )
+  );
 }

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import RestaurantAdsPage from "@/features/starting-a-restaurant";
 import { STATIC_SEO } from "@/data/seo/static-pages-seo";
 
-const s = STATIC_SEO.startingARestaurant;
+const s = STATIC_SEO.contactUs;
 
 export const metadata: Metadata = {
   title: s.title,
@@ -17,10 +16,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function StartingARestaurantPage() {
-  return (
-    <div>
-      <RestaurantAdsPage />
-    </div>
-  );
+export default function ContactUsLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }

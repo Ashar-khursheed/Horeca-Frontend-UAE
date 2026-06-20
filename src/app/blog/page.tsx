@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiBlog } from "@/components/blog-card";
 import BlogListClient from "./BlogListClient";
+import ProductJsonLd from "@/features/product-detail/json-ld-schema";
+import { BLOG_SEO, BLOG_SCHEMA } from "@/data/seo/blog-seo";
 
 export const revalidate = 60;
 
@@ -14,6 +17,21 @@ export interface BlogCategory {
   blogs: ApiBlog[];
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: BLOG_SEO.title,
+    description: BLOG_SEO.meta_description,
+    robots: { index: BLOG_SEO.indexing, follow: true },
+    alternates: { canonical: BLOG_SEO.canonical_url },
+    openGraph: {
+      title: BLOG_SEO.og_title,
+      description: BLOG_SEO.og_description,
+      url: BLOG_SEO.canonical_url,
+      type: "website",
+    },
+  };
+}
+
 export default async function BlogPage() {
   const categories = await makeApiCallSSR<BlogCategory[]>(
     apiUrls.BLOG_CATEGORIES_WITH_BLOGS,
@@ -21,5 +39,10 @@ export default async function BlogPage() {
     { revalidate: 60 }
   );
 
-  return <BlogListClient categories={categories ?? []} />;
+  return (
+    <>
+      <ProductJsonLd schema={BLOG_SCHEMA} />
+      <BlogListClient categories={categories ?? []} />
+    </>
+  );
 }
