@@ -10,7 +10,6 @@ import type { BlogCategory } from "./page";
 
 // ─── Horizontal slider per category ──────────────────────────────────────────
 function CategoryRow({ category }: { category: BlogCategory }) {
-  console.log("dsadasdasdasd",category)
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);

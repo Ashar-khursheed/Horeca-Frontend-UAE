@@ -455,8 +455,6 @@ export default function WishlistPage() {
     : guestItems.map((gi) => guestItemToWishlistItem(gi, currencySymbol));
 
 
-    console.log("itemsitemsitemsitemsitemsitems",items)
-
   const loading = isLoggedIn
     ? fetchStatus === "idle" || fetchStatus === "loading"
     : false;

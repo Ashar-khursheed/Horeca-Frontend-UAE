@@ -56,7 +56,6 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
   const countryId   = countryData?.id;
   const countryName = country ?? countryData?.name ?? "";
 
-  console.log("countrycountrycountrycountrycountry",countryData)
 
   const minQty =
     (product as ApiProduct).min_quantity ??

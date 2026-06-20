@@ -123,8 +123,6 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
   const initialComments = commentsRes?.data?.comments ?? [];
 
-  console.log("blogblogblog",blog)
-
   if (!blog) notFound();
 
   return (

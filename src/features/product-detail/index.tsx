@@ -54,7 +54,6 @@ const ProductDetailPage = ({
   similarProductsGuest = [],
   alternateProducts = [],
 }: Props) => {
-  console.log("ProductDetailPage render", productData);
   const name = productData.name ?? "";
   const images = productData.images ?? [];
   const description = productData.description ?? [];

@@ -82,7 +82,6 @@ function RegisterPageInner() {
   const searchParams = useSearchParams();
   const locationFromRedux = useLocationData();
   const country = useSelector((s: RootState) => s.country);
-  console.log("locationFromRedux",country?.data?.icon)
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);

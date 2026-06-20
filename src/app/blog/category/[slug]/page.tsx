@@ -83,7 +83,6 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     { lang: "en", page, per_page: 20 },
     { revalidate: 0 }
   );
-console.log("resresresresresres",res)
   if (!res?.category) notFound();
 
   return (

@@ -22,7 +22,7 @@
     "formik": "^2.4.9",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.576.0",
-    "next": "16.1.6",
+    "next": "^16.2.9",
     "next-auth": "^4.24.14",
     "next-intl": "^4.8.3",
     "nextjs-toploader": "^3.9.17",

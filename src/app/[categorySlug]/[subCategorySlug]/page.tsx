@@ -248,7 +248,7 @@ export default async function SubCategorySlugPage({
       : schemaObj
         ? JSON.stringify(schemaObj)
         : undefined;
-  console.log("schemaschemaschema", schemaObj);
+ 
 
   if (!subCategoryPageRes?.success) notFound();
 

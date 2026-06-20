@@ -156,7 +156,6 @@ export default function CategoriesPage({
     { label: slugToTitle(categorySlug), href: null },
   ];
 
-  console.log("APIDATAAPIDATAAPIDATAAPIDATA",APIDATA)
 
   return (
     <>

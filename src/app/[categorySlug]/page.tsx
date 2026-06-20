@@ -86,7 +86,7 @@ export default async function CategorySlugPage({ params }: PageProps) {
     : schemaObj
     ? JSON.stringify(schemaObj)
     : undefined;
-    console.log("schemaschemaschema",schemaObj)
+    
 
   if (!categoryPageRes?.success && categories.length === 0) notFound();
 

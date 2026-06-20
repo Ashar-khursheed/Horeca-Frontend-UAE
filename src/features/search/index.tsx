@@ -103,7 +103,6 @@ export default function SearchFeature({
 
   // ── Filter data from API ────────────────────────────────────────────────────
   const d = initialData?.data;
-  console.log("ddddddddddddddddddddddddddddd",d)
   const allProducts = (d?.products ?? []).map(mapProduct);
   const totalPages = d?.total_pages ?? 1;
   const totalRecords = d?.total_records ?? allProducts.length;

@@ -70,7 +70,6 @@ export default function CheckoutPage() {
   const guestItems = useAppSelector((s) => s.cart.items);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
   const addresses = useAppSelector((s) => s.customerAddress.addresses);
-  console.log("rawProducts", rawProducts);
   const paymentHandleRef = useRef<CheckoutPaymentHandle | null>(null);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -430,7 +429,6 @@ export default function CheckoutPage() {
       }
 
       const squarePaymentId = paymentRes ?? null;
-      console.log("Square Payment done:", squarePaymentId);
 
       // â”€â”€ STEP 7: defaultAddress localStorage se lo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const defaultAddr = getDefaultAddressCache();
@@ -541,7 +539,6 @@ export default function CheckoutPage() {
       }
 
       const orderId = orderRes?.data?.id;
-      console.log("Order placed, ID:", orderId);
       localStorage.removeItem(CART_SUMMARY_KEY);
 
       // â”€â”€ STEP 8.5: Full order details fetch (place order ke turant baad) â”€â”€â”€â”€â”€â”€â”€
@@ -552,7 +549,6 @@ export default function CheckoutPage() {
         })) as any;
         if (detailRes?.success && detailRes?.data) {
           orderData = detailRes.data;
-          console.log("Order detail fetched:", orderData?.order_number);
         }
       } catch (detailErr) {
         console.warn("Order detail fetch failed (non-blocking):", detailErr);
@@ -578,7 +574,6 @@ export default function CheckoutPage() {
           },
           method: "POST",
         });
-        console.log("Payment history saved");
       } catch (historyErr) {
         // Payment history fail hone se order cancel nahi hoga
         console.warn("Payment history failed (non-blocking):", historyErr);
@@ -643,7 +638,6 @@ export default function CheckoutPage() {
           },
           method: "POST",
         });
-        console.log("Screen transaction saved");
       } catch (screenErr) {
         console.warn("Screen transaction failed (non-blocking):", screenErr);
       }

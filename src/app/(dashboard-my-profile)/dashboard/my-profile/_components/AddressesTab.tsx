@@ -59,7 +59,6 @@ const AddressForm = ({
   const countryId     = country?.data?.id as number | undefined;
   const countryName   = (country?.data?.name as string) ?? "";
   const countryIcon   = (country?.data?.icon as string) ?? "";
-  console.log("dsadasdasdsadasdas",countryIcon)
 
   const [states, setStates]               = useState<LookupItem[]>([]);
   const [cities, setCities]               = useState<LookupItem[]>([]);
