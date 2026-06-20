@@ -40,6 +40,7 @@ interface PaymentEntry {
   amount: string;
   status: string;
   payment_mode: string;
+  created_at: string;
   payment_details?: { receipt_url?: string };
 }
 
@@ -77,6 +78,8 @@ interface ApiOrderDetail {
   is_inside_delivery: number;
   is_paid: number;
   paid_amount: string;
+  pending_amount: string;
+  payment_link: string | null;
   payment_mode: string | null;
   is_reserved: number;
   pay_with_cheque: number;
@@ -766,13 +769,29 @@ export default function OrderDetailPage() {
               
               </div>
 
-              <div className="border-t border-gray-100 pt-3.5 mt-1">
+              <div className="border-t border-gray-100 pt-3.5 mt-1 space-y-2.5">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total Amount</span>
                   <span className="font-black text-xl text-gray-900">
                     ${fmt(total)}
                   </span>
                 </div>
+                {order.is_paid === 0 && Number(order.paid_amount) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Paid Amount</span>
+                    <span className="text-sm font-semibold text-[#186737]">
+                      ${fmt(Number(order.paid_amount))}
+                    </span>
+                  </div>
+                )}
+                {order.is_paid === 0 && Number(order.pending_amount) > 0 && (
+                  <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
+                    <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
+                    <span className="text-sm font-black text-amber-700">
+                      ${fmt(Number(order.pending_amount))}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* <button className="w-full mt-1 flex items-center justify-center gap-2 py-3 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors shadow-sm shadow-[#186737]/20">
@@ -783,41 +802,81 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Payment Details */}
-          {firstPayment && (
+          {order.payments.length > 0 && (
             <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
                 <CreditCard size={15} className="text-[#186737]" />
-                <h2 className="font-bold text-gray-900 text-sm">
-                  Payment Details
-                </h2>
+                <h2 className="font-bold text-gray-900 text-sm">Payment Details</h2>
+                <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium">
+                  {order.payments.length} payment{order.payments.length !== 1 ? "s" : ""}
+                </span>
               </div>
-              <div className="p-5 space-y-3">
-                <DetailRow label="Method" value={firstPayment.payment_method ==="Square" ?"Credit Debit Card":""} />
-                <DetailRow label="Status">
-                  <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${pay.bg} ${pay.text}`}
-                  >
-                    {firstPayment.status}
-                  </span>
-                </DetailRow>
-                <DetailRow label="Transaction ID">
-                  <span className="text-[11px] font-mono text-gray-500 break-all text-right max-w-[170px]">
-                    {firstPayment.transaction_id}
-                  </span>
-                </DetailRow>
-                {/* {firstPayment.payment_details?.receipt_url && (
-                  <DetailRow label="Receipt">
+
+              <div className="divide-y divide-gray-50">
+                {order.payments.map((payment, idx) => (
+                  <div key={payment.id} className="p-5 space-y-2.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-gray-700">Payment #{idx + 1}</span>
+                      <span className="text-sm font-black text-gray-900">${fmt(Number(payment.amount))}</span>
+                    </div>
+                    <DetailRow
+                      label="Method"
+                      value={payment.payment_method === "Square" ? "Credit / Debit Card" : payment.payment_method}
+                    />
+                    <DetailRow label="Status">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        payment.status === "Completed"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}>
+                        {payment.status}
+                      </span>
+                    </DetailRow>
+                    <DetailRow label="Transaction ID">
+                      <span className="text-[11px] font-mono text-gray-500 break-all text-right max-w-[170px]">
+                        {payment.transaction_id}
+                      </span>
+                    </DetailRow>
+                    <DetailRow label="Date">
+                      <span className="text-xs text-gray-600">
+                        {formatDateTime(payment.created_at).full}
+                      </span>
+                    </DetailRow>
+                    {/* {payment.payment_details?.receipt_url && (
+                      <DetailRow label="Receipt">
+                        <a
+                          href={payment.payment_details.receipt_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#186737] hover:underline font-semibold"
+                        >
+                          View Receipt ↗
+                        </a>
+                      </DetailRow>
+                    )} */}
+                  </div>
+                ))}
+              </div>
+
+              {order.is_paid === 0 && Number(order.pending_amount) > 0 && (
+                <div className="px-5 pb-5 space-y-3">
+                  <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
+                    <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
+                    <span className="text-sm font-black text-amber-700">${fmt(Number(order.pending_amount))}</span>
+                  </div>
+                  {order.payment_link && (
                     <a
-                      href={firstPayment.payment_details.receipt_url}
+                      href={order.payment_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-[#186737] hover:underline font-semibold"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors"
                     >
-                      View Receipt
+                      <CreditCard size={14} />
+                      Pay Now
                     </a>
-                  </DetailRow>
-                )} */}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

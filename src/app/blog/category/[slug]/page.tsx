@@ -61,12 +61,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       category.description ||
       `Browse all ${category.name} articles and tips on HorecaStore.`,
     alternates: {
-      canonical: `https://www.horecastore.ae/blog/category/${slug}`,
+      canonical: `${process.env.NEXT_SITE_URL}/blog/category/${slug}`,
     },
     openGraph: {
       title: `${category.name} Blogs | HorecaStore`,
       description: category.description || `Browse all ${category.name} articles on HorecaStore.`,
-      url: `https://www.horecastore.ae/blog/category/${slug}`,
+      url: `${process.env.NEXT_SITE_URL}/blog/category/${slug}`,
       type: "website",
     },
   };
@@ -81,9 +81,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const res = await makeApiCallSSR<CategoryBlogsResponse>(
     apiUrls.BLOG_CATEGORY_BLOGS(slug),
     { lang: "en", page, per_page: 20 },
-    { revalidate: 3600 }
+    { revalidate: 0 }
   );
-
+console.log("resresresresresres",res)
   if (!res?.category) notFound();
 
   return (

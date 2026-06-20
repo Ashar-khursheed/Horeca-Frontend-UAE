@@ -13,13 +13,13 @@ export const metadata: Metadata = {
     "HorecaStore is a reliable restaurant supply store providing commercial equipment, restaurant supplies, cookware, refrigeration, and foodservice essentials.",
   robots: { index: false, follow: true },
   alternates: {
-    canonical: "https://www.horecastore.ae/",
+    canonical: `${process.env.NEXT_SITE_URL}/`,
   },
   openGraph: {
     title: "Buy Restaurant Supplies & Commercial Equipment – HorecaStore",
     description:
       "HorecaStore is your trusted Restaurant Supply Store & Commercial Equipment destination. Discover durable commercial kitchen tools, shop with confidence, and buy now to equip your business efficiently.",
-    url: "https://www.horecastore.ae/",
+    url: `${process.env.NEXT_SITE_URL}/`,
     type: "website",
   },
 };

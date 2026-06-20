@@ -192,6 +192,14 @@ interface ApiCategoryPage {
     url: string;
     indexing: boolean;
     banner_slug?: string | null;
+    title_tag?: LocaleField | null;
+    meta_title?: LocaleField | null;
+    meta_description?: LocaleField | null;
+    og_title?: LocaleField | null;
+    og_description?: LocaleField | null;
+    og_image_url?: LocaleField | null;
+    header_description?: LocaleField | null;
+    short_title_variant?: LocaleField | null;
     banner_image_url?: LocaleField | null;
     banner_image_alt_text?: LocaleField | null;
     paragraph_1?: LocaleField | null;
@@ -202,7 +210,6 @@ interface ApiCategoryPage {
       en?: { popularTags: string; popularSlug: string }[] | null;
       ar?: { popularTags: string; popularSlug: string }[] | null;
     } | null;
-    current_translation: CategoryPageSeoTranslation;
   } | null;
   category_page: {
     id: number;

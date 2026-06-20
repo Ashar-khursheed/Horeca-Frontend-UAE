@@ -24,11 +24,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title:       seo?.title_tag ?? seo?.meta_title ?? brand?.name?.en ?? slug,
     description: seo?.meta_description ?? undefined,
     robots: { index: data?.seo?.indexing ?? true, follow: true },
-    alternates: { canonical: `https://www.horecastore.ae/brands/${slug}` },
+    alternates: { canonical: `${process.env.NEXT_SITE_URL}/brands/${slug}` },
     openGraph: {
       title:       seo?.og_title && seo.og_title !== "undefined" ? seo.og_title : (seo?.meta_title ?? undefined),
       description: seo?.og_description && seo.og_description !== "undefined" ? seo.og_description : (seo?.meta_description ?? undefined),
-      url:  `https://www.horecastore.ae/brands/${slug}`,
+      url:  `${process.env.NEXT_SITE_URL}/brands/${slug}`,
       type: "website",
       images: seo?.banner_image_url ? [{ url: seo.banner_image_url, alt: seo.banner_image_alt_text ?? "" }] : undefined,
     },

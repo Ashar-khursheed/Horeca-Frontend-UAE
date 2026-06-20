@@ -59,12 +59,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: seo.meta_description ?? undefined,
     robots: { index: seo.indexing ?? true, follow: true },
     alternates: {
-      canonical: `https://www.horecastore.ae/${categorySlug}/${subCategorySlug}`,
+      canonical: `${process.env.NEXT_SITE_URL}/${categorySlug}/${subCategorySlug}`,
     },
     openGraph: {
       title: seo.og_title ?? seo.meta_title ?? undefined,
       description: seo.og_description ?? seo.meta_description ?? undefined,
-      url: `https://www.horecastore.ae/${categorySlug}/${subCategorySlug}`,
+      url: `${process.env.NEXT_SITE_URL}/${categorySlug}/${subCategorySlug}`,
       images:
         seo.og_image_url && seo.og_image_url !== 'null'
           ? [{ url: seo.og_image_url, alt: seo.banner_image_alt_text ?? undefined }]

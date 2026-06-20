@@ -24,36 +24,26 @@ export async function generateMetadata({
     { revalidate: revalidate },
   );
 
-  const seo = res?.data?.seo?.current_translation;
+  const seo = res?.data?.seo;
 
   if (!seo) return { title: categorySlug };
 
   return {
-    title: seo.meta_title ?? seo.title_tag ?? categorySlug,
-    description: seo.meta_description ?? undefined,
-    robots: { index: res?.data?.seo?.indexing ?? true, follow: true },
+    title: seo.meta_title?.en ?? seo.title_tag?.en ?? categorySlug,
+    description: seo.meta_description?.en ?? undefined,
+    robots: { index: seo.indexing ?? true, follow: true },
     alternates: {
-      canonical: `https://www.horecastore.ae/${categorySlug}`,
+      canonical: `${process.env.NEXT_SITE_URL}/${categorySlug}`,
     },
     openGraph: {
-      title: seo.og_title ?? seo.meta_title ?? undefined,
-      description: seo.og_description ?? seo.meta_description ?? undefined,
-      url: `https://www.horecastore.ae/${categorySlug}`,
+      title: seo.og_title?.en ?? seo.meta_title?.en ?? undefined,
+      description: seo.og_description?.en ?? seo.meta_description?.en ?? undefined,
+      url: `${process.env.NEXT_SITE_URL}/${categorySlug}`,
       images:
-        seo.og_image_url && seo.og_image_url !== "null"
-          ? [
-              {
-                url: seo.og_image_url,
-                alt: seo.banner_image_alt_text ?? undefined,
-              },
-            ]
-          : seo.banner_image_url
-            ? [
-                {
-                  url: seo.banner_image_url,
-                  alt: seo.banner_image_alt_text ?? undefined,
-                },
-              ]
+        seo.og_image_url?.en && seo.og_image_url.en !== "null"
+          ? [{ url: seo.og_image_url.en, alt: seo.banner_image_alt_text?.en ?? undefined }]
+          : seo.banner_image_url?.en
+            ? [{ url: seo.banner_image_url.en, alt: seo.banner_image_alt_text?.en ?? undefined }]
             : undefined,
       type: "website",
     },

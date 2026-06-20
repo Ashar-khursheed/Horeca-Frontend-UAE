@@ -555,7 +555,7 @@ export default function BlogDetailClient({
       <ShareModal
         isOpen={shareOpen}
         onClose={() => setShareOpen(false)}
-        url={typeof window !== "undefined" ? window.location.href : `https://www.horecastore.ae${blog.url?.startsWith("/") ? blog.url : `/${blog.url}`}`}
+        url={typeof window !== "undefined" ? window.location.href : `${process.env.NEXT_SITE_URL}${blog.url?.startsWith("/") ? blog.url : `/${blog.url}`}`}
         title={blog.title}
       />
     </>
