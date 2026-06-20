@@ -44,6 +44,7 @@ import { usePerPage } from "@/hooks/usePerPage";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import TaxInitializer from "@/components/TaxInitializer";
+import { COUPON_KEY } from "../checkout/page";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -201,6 +202,14 @@ export default function CartPage() {
     setInitialized(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(()=>{
+     // Clear coupon data after successful order
+      localStorage.removeItem(COUPON_KEY);
+      localStorage.removeItem("coupon_id");
+      localStorage.removeItem("discount_value");
+      localStorage.removeItem("discount_type");
+  },[])
 
   // Re-fetch when items are added — debounced so rapid adds collapse into one call
   useEffect(() => {
