@@ -58,6 +58,6 @@ export default async function BrandDetailPage({ params }: PageProps) {
   return (
     <>
        <ProductJsonLd schema={schema} />
-    <BrandDetailFeature data={data} />;</>
+    <BrandDetailFeature data={data} /></>
   )
 }
