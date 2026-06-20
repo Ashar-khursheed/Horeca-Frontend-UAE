@@ -14,7 +14,12 @@ const ipCache = new Map<string, { country: string; expires: number }>();
 const IP_CACHE_MS = 10 * 60 * 1000; // 10 minutes
 
 async function resolveCountryCode(request: NextRequest): Promise<string> {
-  // Cookie check first — skips any network call on repeat visits
+  // Vercel/Cloudflare inject geo header — zero latency, no API call needed
+  const geoCountry = request.headers.get("x-vercel-ip-country")
+    ?? request.headers.get("cf-ipcountry");
+  if (geoCountry && geoCountry !== "XX") return geoCountry;
+
+  // Cookie check — skips any network call on repeat visits
   const cookieCountry = request.cookies.get("hc_cc")?.value;
   if (cookieCountry) return cookieCountry;
 
@@ -26,7 +31,13 @@ async function resolveCountryCode(request: NextRequest): Promise<string> {
     if (cached && Date.now() < cached.expires) return cached.country;
 
     try {
-      const res  = await fetch(`http://ip-api.com/json/${userIp}?fields=status,countryCode`);
+      // 400ms hard timeout — never block the request more than this
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 400);
+      const res  = await fetch(`http://ip-api.com/json/${userIp}?fields=status,countryCode`, {
+        signal: controller.signal,
+      });
+      clearTimeout(tid);
       const data = await res.json();
       if (data.status === "success" && data.countryCode) {
         ipCache.set(userIp, { country: data.countryCode, expires: Date.now() + IP_CACHE_MS });

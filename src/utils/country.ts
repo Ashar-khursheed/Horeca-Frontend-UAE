@@ -11,19 +11,17 @@ interface GeoResponse {
 // Falls back to location API with user IP if cookie not present
 export async function getCountryCodeSSR(userIp?: string, cookieValue?: string): Promise<string> {
   // Cookie set by the browser on previous visit — most accurate
-  if (cookieValue) {
-    console.log("[Location] from cookie:", cookieValue);
-    return cookieValue;
-  }
+  if (cookieValue) return cookieValue;
   try {
     const reqHeaders: Record<string, string> = {};
     if (userIp) reqHeaders["X-Forwarded-For"] = userIp;
-    const res  = await fetch(GEO_API, { cache: "no-store", headers: reqHeaders });
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 400);
+    const res  = await fetch(GEO_API, { cache: "no-store", headers: reqHeaders, signal: controller.signal });
+    clearTimeout(tid);
     const data: GeoResponse = await res.json();
-    // console.log("[Location] from API | userIp:", userIp, "| countryCode:", data.countryCode);
     if (data.status === "success" && data.countryCode) return data.countryCode;
   } catch {}
-  console.log("[Location] fallback to:", FALLBACK);
   return FALLBACK;
 }
 
