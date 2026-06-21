@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import { cookies, headers } from "next/headers";
 
 import { WebVitals } from "@/components/web-vitals/web-vitals";
 import "./globals.css";
@@ -45,22 +46,32 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   const isRTL = locale === "ar";
-  const isUS = process.env.NEXT_PUBLIC_REGION === "US";
+
+  // Read country code ONCE for the layout — the getLocale() call above already
+  // makes this layout dynamic, so these extra reads cost nothing in terms of
+  // rendering mode but do remove 6 redundant header/cookie reads that used to
+  // happen inside every makeApiCallSSR call below.
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    "US";
+
   const [navData, searchData, customScriptsData] = await Promise.all([
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       {},
-      { revalidate: 3600 },
+      { revalidate: 3600, countryCode },
     ),
     makeApiCallSSR<SearchSuggestions>(
       apiUrls.SEARCH,
       { query: "true", page: 1, length: 5 },
-      { revalidate: 3600 },
+      { revalidate: 3600, countryCode },
     ),
     makeApiCallSSR<CustomScriptsResponse>(
       apiUrls.CUSTOM_SCRIPTS,
       {},
-      { revalidate: 3600 },
+      { revalidate: 3600, countryCode },
     ),
   ]);
   const navItemData = navData?.data ?? [];

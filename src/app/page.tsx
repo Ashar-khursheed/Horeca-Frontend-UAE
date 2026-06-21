@@ -4,7 +4,8 @@ import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiCategory, FeaturedCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
-import { cookies } from "next/headers";
+import type { ApiBlog } from "@/components/blog-card";
+import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
 
 export const metadata: Metadata = {
@@ -24,54 +25,81 @@ export const metadata: Metadata = {
   },
 };
 
-// export const dynamic = "force-dynamic";
-// export const revalidate = 3600;
 export default async function Page() {
-  const cookieStore = await cookies();
-  const isLoggedIn  = !!cookieStore.get("token")?.value;
+  // ── Single dynamic read for the entire page ──────────────────────────────────
+  // Reading cookies() and headers() here (once) is enough to opt this page into
+  // dynamic rendering. Passing these values explicitly to makeApiCallSSR means
+  // those helpers never call cookies()/headers() themselves — no redundant reads.
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const token       = cookieStore.get("token")?.value?.trim() ?? null;
+  const isLoggedIn  = !!token;
+  const countryCode =
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    "US";
 
-  const [slider1, slider2, categoryRes, featuredCategoriesRes, categoryTabsRes, featuredBrandProductsRes] = await Promise.all([
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: revalidate }),
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: revalidate }),
-    makeApiCallSSR<{ data: ApiCategory[] }>(
-      apiUrls.NavigationAPI,
-      { with_parent: false, is_featured: true },
-      { revalidate: revalidate },
+  const [
+    slider1,
+    slider2,
+    featuredCategoriesRes,
+    categoryTabsRes,
+    featuredBrandProductsRes,
+    blogsRes,
+  ] = await Promise.all([
+    makeApiCallSSR<{ items: SliderItem[] }>(
+      "frontend/sliders/1",
+      {},
+      { revalidate, countryCode },
     ),
+    makeApiCallSSR<{ items: SliderItem[] }>(
+      "frontend/sliders/2",
+      {},
+      { revalidate, countryCode },
+    ),
+    // Only the with_parent:true variant is consumed by ShopByCategories.
+    // The with_parent:false call that existed before was never read — removed.
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: true, is_featured: true },
-      { revalidate: revalidate},
+      { revalidate, countryCode },
     ),
     makeApiCallSSR<{ data: FeaturedCategoryTab[] }>(
       apiUrls.FEATURED_CATEGORY_TABS,
       {},
-      { revalidate: revalidate },
+      { revalidate, countryCode },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate: revalidate, withAuth: isLoggedIn },
+      { revalidate, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
+    ),
+    // Blogs were previously fetched client-side inside a useEffect (waterfall).
+    // Fetching SSR here means the section is populated in the initial HTML.
+    makeApiCallSSR<{ data: ApiBlog[] }>(
+      apiUrls.BLOGS,
+      { per_page: 10, lang: "en", page: 1 },
+      { revalidate: 3600, countryCode },
     ),
   ]);
 
   const categoryTabs = categoryTabsRes?.data ?? [];
 
-  // Fetch initial products for the first tab SSR
+  // First tab products — sequential because we need the tab id first.
   const firstTabId = categoryTabs[0]?.id;
   const initialProductsRes = firstTabId
     ? await makeApiCallSSR<{ data: ApiProductRaw[] }>(
         apiUrls.FEATURED_CATEGORY_TABS,
         { category_id: firstTabId },
-        { revalidate: revalidate, withAuth: isLoggedIn },
+        { revalidate, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
       )
     : null;
 
-  const sliderItems        = slider1?.items ?? [];
-  const sliderItemsTwo     = slider2?.items ?? [];
-  const featuredCategories = featuredCategoriesRes?.data ?? [];
+  const sliderItems             = slider1?.items ?? [];
+  const sliderItemsTwo          = slider2?.items ?? [];
+  const featuredCategories      = featuredCategoriesRes?.data ?? [];
   const initialFeaturedProducts: ApiProductRaw[] = initialProductsRes?.data ?? [];
-  const featuredBrandProducts  = featuredBrandProductsRes?.data ?? [];
+  const featuredBrandProducts   = featuredBrandProductsRes?.data ?? [];
+  const blogs                   = blogsRes?.data ?? [];
 
   const homeSchema = {
     "@context": "https://schema.org",
@@ -161,7 +189,15 @@ export default async function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeSchema) }}
       />
       <main>
-        <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} categoryTabs={categoryTabs} initialFeaturedProducts={initialFeaturedProducts} featuredBrandProducts={featuredBrandProducts} />
+        <HomePage
+          sliderItems={sliderItems}
+          sliderItemsTwo={sliderItemsTwo}
+          featuredCategories={featuredCategories}
+          categoryTabs={categoryTabs}
+          initialFeaturedProducts={initialFeaturedProducts}
+          featuredBrandProducts={featuredBrandProducts}
+          blogs={blogs}
+        />
       </main>
     </>
   );
