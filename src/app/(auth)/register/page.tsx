@@ -34,6 +34,7 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -178,6 +179,7 @@ function RegisterPageInner() {
     },
   });
 
+  const phoneValidation = usePhoneValidation(formik.values.mobile_number, isoCode);
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (!credentialResponse.credential) {
@@ -195,9 +197,12 @@ function RegisterPageInner() {
         method: "POST",
         data: { credential: credentialResponse.credential },
       });
-      setAuthToken(res.token);
-      localStorage.setItem("user", JSON.stringify(res.customer));
-      dispatch(setProfile(res.customer));
+           setAuthToken(res.token);
+      const profileRes = await makeApiRequest<{ success: boolean; customer: CustomerProfile }>(
+        apiUrls.GETMYPROFILE
+      );
+      localStorage.setItem("user", JSON.stringify(profileRes.customer));
+      dispatch(setProfile(profileRes.customer));
 
       // Sync guest wishlist & cart in parallel for maximum speed
       const syncPromises = [];
@@ -359,7 +364,7 @@ function RegisterPageInner() {
                 </label>
                 <div
                   className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${
-                    err("mobile_number")
+                    err("mobile_number") || phoneValidation.isInvalid
                       ? "border-red-400"
                       : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
                   }`}
@@ -389,13 +394,19 @@ function RegisterPageInner() {
                     className="flex-1 px-3 text-sm outline-none bg-white placeholder:text-gray-300"
                   />
                 </div>
-                {detectedCountry && !err("mobile_number") && (
+                {detectedCountry && !err("mobile_number") && !phoneValidation.isInvalid && !phoneValidation.validating && (
                   <p className="text-[11px] text-gray-400 mt-1">
                     Detected: {detectedCountry}
                   </p>
                 )}
+                {phoneValidation.validating && !err("mobile_number") && (
+                  <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
+                )}
                 {err("mobile_number") && (
                   <p className="text-[11px] text-red-500 mt-1">{err("mobile_number")}</p>
+                )}
+                {!err("mobile_number") && phoneValidation.isInvalid && (
+                  <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
                 )}
               </div>
             </div>

@@ -19,6 +19,8 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Field, inputCls } from "./shared";
+import { useLocationData } from "@/utils/locationStorage";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 
 interface CountryOption {
   id: number;
@@ -32,6 +34,8 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
   const router        = useRouter();
   const searchParams  = useSearchParams();
   const isFromCheckout = searchParams?.get("mode") === "checkout";
+  const locationData  = useLocationData();
+  const isoCode       = locationData?.countryCode ?? "";
   const detectedCountry = useAppSelector((s) => s.country.data);
   const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error">("idle");
   const [apiMessage, setApiMessage] = useState("");
@@ -116,6 +120,8 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
       }
     },
   });
+
+  const phoneValidation = usePhoneValidation(formik.values.mobile_number, isoCode);
 
   const hasErr = (f: keyof typeof formik.values) =>
     !!(formik.touched[f] && formik.errors[f]);
@@ -298,9 +304,15 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   placeholder="501234567"
-                  className={`${inputCls} ${hasErr("mobile_number") ? "border-red-400 focus:ring-red-100" : ""}`}
+                  className={`${inputCls} ${hasErr("mobile_number") || phoneValidation.isInvalid ? "border-red-400 focus:ring-red-100" : ""}`}
                 />
+                {phoneValidation.validating && !hasErr("mobile_number") && (
+                  <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
+                )}
                 {hasErr("mobile_number") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.mobile_number}</p>}
+                {!hasErr("mobile_number") && phoneValidation.isInvalid && (
+                  <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
+                )}
               </Field>
             </div>
           </div>

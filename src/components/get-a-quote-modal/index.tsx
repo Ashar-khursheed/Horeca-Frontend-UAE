@@ -52,9 +52,11 @@ interface GetAQuoteModalProps {
 }
 
 const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalProps) => {
-  const countryData = useAppSelector((s) => s.country.data);
-  const countryId   = countryData?.id;
-  const countryName = country ?? countryData?.name ?? "";
+  const countryData  = useAppSelector((s) => s.country.data);
+  const countryId    = countryData?.id;
+  const countryName  = country ?? countryData?.name ?? "";
+  const countryIcon  = countryData?.icon ?? "";
+  const phoneCode    = countryData?.phone_code ?? "";
 
 
   const minQty =
@@ -65,7 +67,10 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
   const [qty, setQty]                     = useState(minQty);
   const [submitted, setSubmitted]         = useState(false);
   const [states, setStates]               = useState<LookupItem[]>([]);
+  const [cities, setCities]               = useState<LookupItem[]>([]);
+  const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
   const [statesLoading, setStatesLoading] = useState(false);
+  const [citiesLoading, setCitiesLoading] = useState(false);
   const [apiError, setApiError]           = useState<string | null>(null);
   const [countdown, setCountdown]         = useState(3);
 
@@ -100,6 +105,18 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
       .finally(() => setStatesLoading(false));
   }, [isOpen, countryId]);
 
+  // Fetch cities when selectedStateId changes
+  useEffect(() => {
+    if (!selectedStateId) { setCities([]); return; }
+    setCitiesLoading(true);
+    setCities([]);
+    makeApiRequest<LookupResponse>("frontend/countries/lookup", {
+      params: { state_id: selectedStateId, type: "cities" },
+    })
+      .then((res) => setCities(res.data ?? []))
+      .finally(() => setCitiesLoading(false));
+  }, [selectedStateId]);
+
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -122,7 +139,7 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
             quantity:     qty,
             name:         values.name.trim(),
             email:        values.email.trim(),
-            phone_number: values.phone.trim(),
+            phone_number: `${phoneCode}${values.phone.trim()}`,
             address:      values.address.trim() || null,
             city:         values.city.trim() || null,
             state:        values.state || null,
@@ -147,6 +164,8 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
     formik.resetForm();
     setSubmitted(false);
     setApiError(null);
+    setSelectedStateId(null);
+    setCities([]);
     onClose();
   };
 
@@ -297,7 +316,7 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Country</label>
                 {/* <img src={countryData?.icon ?? null} alt="" /> */}
                  <div className="flex gap-1.5 items-center w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-gray-50 text-gray-600 cursor-default outline-none">
-                          <img src={countryData?.icon ?? ""} alt="country image" className="w-4 h-4" />
+                          <img src={countryIcon} alt="country image" className="w-4 h-4" />
                           <span>{countryName}</span>
 
                         </div>
@@ -313,7 +332,11 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
                 <SearchableSelect
                   options={states}
                   value={formik.values.state}
-                  onChange={(name) => formik.setFieldValue("state", name)}
+                  onChange={(name, id) => {
+                    formik.setFieldValue("state", name);
+                    formik.setFieldValue("city", "");
+                    setSelectedStateId(id);
+                  }}
                   placeholder="Select State"
                   searchPlaceholder="Search state…"
                   loading={statesLoading}
@@ -326,11 +349,15 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
               </div>
                 <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">City</label>
-                <input
-                  type="text"
-                  placeholder="New York"
-                  {...formik.getFieldProps("city")}
-                  className={inputClass("city")}
+                <SearchableSelect
+                  options={cities}
+                  value={formik.values.city}
+                  onChange={(name) => formik.setFieldValue("city", name)}
+                  placeholder={!selectedStateId ? "Select State first" : "Select City"}
+                  searchPlaceholder="Search city…"
+                  loading={citiesLoading}
+                  disabled={!selectedStateId}
+                  error={!!(formik.touched.city && formik.errors.city)}
                 />
               </div>
              
@@ -351,12 +378,25 @@ const GetAQuoteModal = ({ isOpen, onClose, product, country }: GetAQuoteModalPro
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Phone Number <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="tel"
-                  placeholder="(123) 456-7890"
-                  {...formik.getFieldProps("phone")}
-                  className={inputClass("phone")}
-                />
+                <div className={`flex items-center border rounded-md overflow-hidden transition-all ${
+                  formik.touched.phone && formik.errors.phone
+                    ? "border-red-400 ring-2 ring-red-100"
+                    : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
+                }`}>
+                  <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border-r border-gray-200 shrink-0">
+                    {countryIcon && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={countryIcon} alt="" className="w-4 h-4 object-cover rounded-sm" />
+                    )}
+                    <span className="text-sm text-gray-600 font-medium">{phoneCode}</span>
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="501234567"
+                    {...formik.getFieldProps("phone")}
+                    className="flex-1 py-2 px-3 text-sm outline-none bg-white placeholder:text-gray-400"
+                  />
+                </div>
                 {formik.touched.phone && formik.errors.phone && (
                   <p className="text-red-500 text-xs mt-1">{formik.errors.phone}</p>
                 )}

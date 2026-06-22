@@ -108,4 +108,5 @@ export const apiUrls = {
   SCREEN_TRANSACTION:"screen-transaction",
   SALE_CATEGORIES: "frontend/sale-categories",
   CUSTOM_SCRIPTS: "frontend/custom-scripts",
+  PHONE_VALIDATE: "frontend/phone/validate",
 };
