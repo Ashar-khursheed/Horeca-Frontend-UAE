@@ -153,9 +153,9 @@ export default function NavigationStatic({
   navItemData?: Category[];
   searchData?: SearchSuggestions | null;
 }) {
-  const reduxCustomer = useSelector((s: RootState) => s.profile.customer);
+  const reduxCustomer = useSelector((s: any) => s.profile.customer);
   const locationData = useLocationData();
-  const profileLoading = useSelector((s: RootState) => s.profile.loading);
+  const profileLoading = useSelector((s: any) => s.profile.loading);
   const customer = reduxCustomer;
   const dispatch = useDispatch<AppDispatch>();
 
@@ -285,17 +285,16 @@ export default function NavigationStatic({
               </div>
 
               {/* ── Delivery Location (xl only) ── */}
-              {/* <div className="relative hidden xl:block shrink-0" ref={addressRef}> */}
-              <div className="relative hidden xl:block shrink-0" >
-                <Link
-                  href={"/dashboard/my-profile#addresses"}                  
+              {/* ── Delivery Location Dropdown ── */}
+              <div className="relative hidden xl:block shrink-0" ref={addressRef}>
+                <button
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={() => setAddressShow((v) => !v)}
                   className={`flex items-center gap-1.5 border rounded-full px-2 xl:px-2.5 2xl:px-3 h-10 transition-colors group min-w-[150px] xl:min-w-[150px] 2xl:min-w-[170px] ${addressShow ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
                 >
                   <MapPin size={15} className="text-[#186737] shrink-0" />
                   <div className="flex flex-col items-start overflow-hidden">
-                    <span className="text-[10px] text-gray-400 leading-none">
-                      Deliver To
-                    </span>
+                    <span className="text-[10px] text-gray-400 leading-none">Deliver To</span>
                     {isResolvingAddress || !deliverLabel ? (
                       <span className="w-20 h-3 bg-gray-200 animate-pulse rounded inline-block" />
                     ) : (
@@ -308,94 +307,66 @@ export default function NavigationStatic({
                     size={13}
                     className={`text-gray-400 shrink-0 transition-transform duration-200 ml-auto ${addressShow ? "rotate-180 text-[#186737]" : "group-hover:text-[#186737]"}`}
                   />
-                </Link>
+                </button>
 
                 {addressShow && (
                   <div
                     className="absolute top-full left-0 mt-3 w-72 bg-white rounded-xl z-50 overflow-hidden"
-                    style={{
-                      boxShadow:
-                        "0 20px 60px rgba(0,0,0,0.13), 0 4px 20px rgba(24,103,55,0.08)",
-                    }}
+                    style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.13), 0 4px 20px rgba(24,103,55,0.08)" }}
                   >
                     <div className="h-1 bg-linear-to-r from-[#186737] to-[#22a350]" />
 
-                    {!customer ? (
-                      /* Guest state */
-                      <div className="p-4 flex flex-col items-center gap-3 text-center">
-                        <div className="w-11 h-11 rounded-full bg-[#186737]/10 flex items-center justify-center">
-                          <MapPin size={20} className="text-[#186737]" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-800 text-[13px]">Set your delivery address</p>
-                          <p className="text-[11px] text-gray-400 mt-0.5">Sign in to see your saved addresses</p>
-                        </div>
-                        <Link
-                          href="/login"
-                          onClick={() => setAddressShow(false)}
-                          className="w-full h-9 rounded-lg bg-[#186737] text-white text-[12px] font-semibold flex items-center justify-center hover:bg-[#145c2e] transition-colors"
-                        >
-                          Sign In
-                        </Link>
-                      </div>
-                    ) : resolvedDefault ? (
-                      /* Logged-in with address */
+                    {customer ? (
+                      /* ── Logged in ── */
                       <div className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-[11px] font-bold tracking-widest uppercase text-gray-400">Delivering To</p>
-                          {resolvedDefault.type && (
-                            <span className="text-[10px] font-semibold text-[#186737] bg-[#186737]/10 rounded-full px-2 py-0.5 capitalize">
-                              {resolvedDefault.type}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-start gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-[#186737]/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <MapPin size={14} className="text-[#186737]" />
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-7 h-7 rounded-full bg-[#186737]/10 flex items-center justify-center shrink-0">
+                            <MapPin size={13} className="text-[#186737]" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-gray-800 leading-snug">
-                              {resolvedDefault.address}
-                            </p>
-                            {resolvedDefault.address2 && (
-                              <p className="text-[12px] text-gray-500 leading-snug">{resolvedDefault.address2}</p>
-                            )}
-                            <p className="text-[12px] text-gray-500 leading-snug mt-0.5">
+                          <p className="text-sm font-bold text-gray-900">Delivery Address</p>
+                        </div>
+
+                        {resolvedDefault ? (
+                          <div className="bg-gray-50 rounded-lg p-3 mb-3 text-xs text-gray-600 leading-relaxed space-y-0.5">
+                            <p className="font-medium text-gray-800">
                               {[
-                                resolvedDefault.related_city?.name ?? resolvedDefault.city,
-                                resolvedDefault.related_state?.name ?? resolvedDefault.state,
-                                resolvedDefault.related_country?.name ?? resolvedDefault.country,
-                              ]
-                                .filter(Boolean)
-                                .join(", ")}
-                              {resolvedDefault.zip_code && ` ${resolvedDefault.zip_code}`}
+                                resolvedDefault.address?.replace(/,\s*$/, ""),
+                                resolvedDefault.city,
+                                resolvedDefault.state,
+                              ].filter(Boolean).join(", ")}
+                              {resolvedDefault.zip_code ? ` ${resolvedDefault.zip_code}` : ""}
                             </p>
+                            <p className="text-gray-500">{resolvedDefault.country}</p>
                           </div>
-                        </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 mb-3 italic">No default address saved.</p>
+                        )}
+
                         <Link
-                          href="/dashboard/addresses"
+                          href="/dashboard/my-profile#addresses"
                           onClick={() => setAddressShow(false)}
-                          className="mt-3 w-full h-8 rounded-lg border border-gray-200 text-[12px] font-semibold text-gray-600 flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+                          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-xs font-semibold transition-colors"
                         >
+                          <MapPin size={12} />
                           Manage Addresses
                         </Link>
                       </div>
                     ) : (
-                      /* Logged-in but no address */
-                      <div className="p-4 flex flex-col items-center gap-3 text-center">
-                        <div className="w-11 h-11 rounded-full bg-[#186737]/10 flex items-center justify-center">
+                      /* ── Not logged in ── */
+                      <div className="p-4 text-center">
+                        <div className="w-12 h-12 rounded-full bg-[#186737]/10 flex items-center justify-center mx-auto mb-3">
                           <MapPin size={20} className="text-[#186737]" />
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-800 text-[13px]">No saved address</p>
-                          <p className="text-[11px] text-gray-400 mt-0.5">Add an address to set your delivery location</p>
-                        </div>
+                        <p className="text-sm font-bold text-gray-900 mb-1">Set Delivery Address</p>
+                        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                          Login to view and manage your saved delivery addresses.
+                        </p>
                         <Link
-                          href="/dashboard/addresses"
+                          href="/login"
                           onClick={() => setAddressShow(false)}
-                          className="w-full h-9 rounded-lg bg-[#186737] text-white text-[12px] font-semibold flex items-center justify-center hover:bg-[#145c2e] transition-colors"
+                          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-xs font-semibold transition-colors"
                         >
-                          Add Address
+                          Login to continue
                         </Link>
                       </div>
                     )}

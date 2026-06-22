@@ -70,10 +70,12 @@ const usd = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function parseAddress(raw: string) {
-  const parts = raw.split("\n");
+  const clean = (s: string) =>
+    s.split(",").map((p) => p.trim()).filter(Boolean).join(", ");
+  const parts = raw.split(/\\n|\n/);
   return {
-    line1: parts[0]?.trim() ?? "",
-    line2: parts[1]?.trim() ?? "",
+    line1: clean(parts[0]?.trim() ?? ""),
+    line2: clean(parts[1]?.trim() ?? ""),
   };
 }
 

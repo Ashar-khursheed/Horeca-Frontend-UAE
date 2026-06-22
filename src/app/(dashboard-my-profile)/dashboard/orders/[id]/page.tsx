@@ -1,6 +1,8 @@
 "use client";
 
 import { makeApiRequest } from "@/apis/axios-instance";
+import { useInvoiceDownload, InvoiceHiddenTemplate } from "@/components/download-invoice";
+
 import {
   AlertCircle,
   ArrowLeft,
@@ -9,8 +11,10 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
+  Download,
   FileText,
   Headphones,
+  Loader2,
   Mail,
   MapPin,
   Package,
@@ -295,6 +299,7 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<ApiOrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { handleDownload, loadings, invoiceRef } = useInvoiceDownload(order);
 
   useEffect(() => {
     if (!id) return;
@@ -361,6 +366,8 @@ export default function OrderDetailPage() {
   const firstPayment = order.payments[0];
 
   return (
+   <>
+   
     <div className="p-4 sm:p-6 space-y-5 max-w-[1400px]">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -794,10 +801,17 @@ export default function OrderDetailPage() {
                 )}
               </div>
 
-              {/* <button className="w-full mt-1 flex items-center justify-center gap-2 py-3 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors shadow-sm shadow-[#186737]/20">
-                <Download size={14} />
-                Download Invoice
-              </button> */}
+            {/* <button
+  onClick={handleDownload}
+  disabled={loadings}
+  className="w-full flex items-center justify-center gap-2 mt-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20 disabled:opacity-60 disabled:cursor-not-allowed"
+>
+  {loadings ? (
+    <><Loader2 size={14} className="animate-spin" /> Generating PDF…</>
+  ) : (
+    <><Download size={14} /> Download Invoice</>
+  )}
+</button> */}
             </div>
           </div>
 
@@ -918,6 +932,9 @@ export default function OrderDetailPage() {
         </div>
       </div>
     </div>
+  {/* <InvoiceHiddenTemplate order={order} invoiceRef={invoiceRef} /> */}
+    </>
+
   );
 }
 

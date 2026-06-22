@@ -32,6 +32,18 @@ const TRENDING = [
 ];
 
 const SORT_OPTIONS = ["Default Sorting", "Price: Low to High", "Price: High to Low"];
+
+function getSortLabel(sortBy: string | null, sortDir: string | null): string {
+  if (sortBy === "price" && sortDir === "asc") return "Price: Low to High";
+  if (sortBy === "price" && sortDir === "desc") return "Price: High to Low";
+  return "Default Sorting";
+}
+
+function getSortParams(label: string): { sort_by?: string; sort_dir?: string } {
+  if (label === "Price: Low to High") return { sort_by: "price", sort_dir: "asc" };
+  if (label === "Price: High to Low") return { sort_by: "price", sort_dir: "desc" };
+  return {};
+}
 const SHOW_OPTIONS = [20, 50, 100];
 
 function mapProduct(p: SearchProduct): ApiProduct {
@@ -92,7 +104,7 @@ export default function SearchFeature({
   const submitted = !!query;
 
   const [inputValue, setInputValue] = useState(query);
-  const [sort, setSort] = useState("Default Sorting");
+  const [sort, setSort] = useState(getSortLabel(searchParams.get("sort_by"), searchParams.get("sort_dir")));
   const [perPage, setPerPage] = useState(20);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -152,6 +164,7 @@ export default function SearchFeature({
     setPriceRange({ min: initMin, max: initMax });
     setSelectedBrands(initBrands);
     setSelectedCategories(initCategories);
+    setSort(getSortLabel(searchParams.get("sort_by"), searchParams.get("sort_dir")));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParamsKey, apiPriceMin, apiPriceMax]);
 
@@ -163,13 +176,15 @@ export default function SearchFeature({
     max?: number;
     page?: number;
     q?: string;
+    sort?: string;
   }) => {
-    const brands = overrides.brands ?? selectedBrands;
-    const cats   = overrides.cats   ?? selectedCategories;
-    const min    = overrides.min    ?? priceRange.min;
-    const max    = overrides.max    ?? priceRange.max;
-    const q2     = overrides.q      ?? query;
-    const pg     = overrides.page   ?? 1;
+    const brands    = overrides.brands ?? selectedBrands;
+    const cats      = overrides.cats   ?? selectedCategories;
+    const min       = overrides.min    ?? priceRange.min;
+    const max       = overrides.max    ?? priceRange.max;
+    const q2        = overrides.q      ?? query;
+    const pg        = overrides.page   ?? 1;
+    const sortLabel = overrides.sort   ?? sort;
 
     const parts: string[] = [`q=${encodeURIComponent(q2)}`];
     if (brands.length)
@@ -179,20 +194,16 @@ export default function SearchFeature({
     const priceActive = min !== apiPriceMin || max !== apiPriceMax;
     if (priceActive) { parts.push(`min=${min}`); parts.push(`max=${max}`); }
     if (pg > 1) parts.push(`page=${pg}`);
+    const sortParams = getSortParams(sortLabel);
+    if (sortParams.sort_by) { parts.push(`sort_by=${sortParams.sort_by}`); parts.push(`sort_dir=${sortParams.sort_dir}`); }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
     startTransition(() => {
       router.replace(`/search?${parts.join("&")}`, { scroll: false });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBrands, selectedCategories, priceRange, query, apiPriceMin, apiPriceMax]);
+  }, [selectedBrands, selectedCategories, priceRange, query, sort, apiPriceMin, apiPriceMax]);
 
-  // ── Sort (client-side only) ─────────────────────────────────────────────────
-  const sortedProducts = [...allProducts].sort((a, b) => {
-    if (sort === "Price: Low to High") return a.price - b.price;
-    if (sort === "Price: High to Low") return b.price - a.price;
-    return 0;
-  });
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const goToSearch = (q: string, page = 1) => {
@@ -320,7 +331,7 @@ export default function SearchFeature({
           <div className="bg-gray-50 min-h-screen">
             <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-100">
               <p className="text-xs text-gray-500">
-                <span className="font-semibold text-gray-800">{sortedProducts.length}</span> results for{" "}
+                <span className="font-semibold text-gray-800">{allProducts.length}</span> results for{" "}
                 <span className="font-semibold text-[#186737]">&ldquo;{query}&rdquo;</span>
               </p>
               <button
@@ -340,9 +351,9 @@ export default function SearchFeature({
               <div className="p-3 grid grid-cols-2 gap-3">
                 {Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)}
               </div>
-            ) : sortedProducts.length > 0 ? (
+            ) : allProducts.length > 0 ? (
               <div className="p-3 grid grid-cols-2 gap-3">
-                {sortedProducts.map((p) => <ProductCard key={p.id} product={p} />)}
+                {allProducts.map((p) => <ProductCard key={p.id} product={p} />)}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20">
@@ -432,7 +443,7 @@ export default function SearchFeature({
                   <div>
                     <p className="text-xs text-gray-500">
                       Showing{" "}
-                      <span className="font-semibold text-gray-800">{sortedProducts.length}</span> of{" "}
+                      <span className="font-semibold text-gray-800">{allProducts.length}</span> of{" "}
                       <span className="font-semibold text-gray-800">{totalRecords}</span> results for{" "}
                       <span className="font-semibold text-[#186737]">&ldquo;{query}&rdquo;</span>
                     </p>
@@ -458,7 +469,7 @@ export default function SearchFeature({
                     )}
                   </div>
                   <div className="flex items-center gap-3">
-                    <select value={sort} onChange={(e) => setSort(e.target.value)}
+                    <select value={sort} onChange={(e) => { setSort(e.target.value); pushURL({ sort: e.target.value, page: 1 }); }}
                       className="text-xs border border-gray-200 rounded-[7px] px-2.5 py-1.5 outline-none focus:border-[#186737] text-gray-700 bg-white"
                     >
                       {SORT_OPTIONS.map((o) => <option key={o}>{o}</option>)}
@@ -483,9 +494,9 @@ export default function SearchFeature({
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                     {Array.from({ length: 20 }).map((_, i) => <ProductCardSkeleton key={i} />)}
                   </div>
-                ) : sortedProducts.length > 0 ? (
+                ) : allProducts.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-                    {sortedProducts.map((p) => <ProductCard key={p.id} product={p} />)}
+                    {allProducts.map((p) => <ProductCard key={p.id} product={p} />)}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[7px] border border-gray-100">

@@ -44,14 +44,7 @@ const nextConfig: NextConfig = {
       'date-fns',
     ],
   },
-  async rewrites() {
-    return [
-    {
-  source: "/api/:path*",
-  destination: "https://test-us.thehorecastore.co/api/:path*",
-}
-    ];
-  }
+
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
