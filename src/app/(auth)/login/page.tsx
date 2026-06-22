@@ -27,6 +27,7 @@ import { setProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import { apiUrls } from "@/apis/api-endpoint";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { setDefaultAddressCache, DefaultAddressCache } from "@/utils/locationStorage";
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -91,6 +92,18 @@ const clearGoogleStateCookie = () => {
   }
 };
 
+async function cacheDefaultAddress() {
+  try {
+    const res = await makeApiRequest<{ success: boolean; data: DefaultAddressCache[] }>(
+      apiUrls.GET_CUSTOMER_ADDRESS
+    );
+    const defaultAddr = res.data?.find((a) => a.is_default);
+    if (defaultAddr) setDefaultAddressCache(defaultAddr);
+  } catch {
+    // non-critical — ignore silently
+  }
+}
+
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -139,6 +152,8 @@ function LoginPageInner() {
         await Promise.all(syncPromises);
       }
 
+      await cacheDefaultAddress();
+
       const redirect = searchParams.get("redirect") ?? "/";
       window.location.href = redirect;
     } catch {
@@ -177,6 +192,8 @@ function LoginPageInner() {
         if (syncPromises.length > 0) {
           await Promise.all(syncPromises);
         }
+
+        await cacheDefaultAddress();
 
         const redirect = searchParams.get("redirect") ?? "/";
         window.location.href = redirect;

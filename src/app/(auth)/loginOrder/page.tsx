@@ -166,7 +166,8 @@ function LoginPanel() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleKey, setGoogleKey] = useState(0);
   const [apiError, setApiError] = useState("");
-
+  const country = useSelector((s: RootState) => s.country?.data);
+  console.log("qqqqqqqqqqqqq",country)
   useEffect(() => {
     clearGoogleStateCookie();
   }, []);
@@ -565,7 +566,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
                 <span className="text-xs text-gray-400 animate-pulse">...</span>
               ) : (
                 <>
-                  <span className="text-base leading-none">{flagEmoji}</span>
+                  <img src={country.data?.icon ?? ""} className="w-5 h-5" alt="" />
                   <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                     {dialCode}
                   </span>

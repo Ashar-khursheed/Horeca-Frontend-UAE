@@ -329,6 +329,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import ReCAPTCHA from "react-google-recaptcha";
 import axiosInstance from "@/apis/axios-instance";
+import { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type FormType = "Business" | "Restaurant" | "Hotel";
@@ -501,7 +503,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
   const [captchaError, setCaptchaError] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("");
-
+  const country = useSelector((s: RootState) => s.country?.data);
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const utmSource = urlParams.get("utm_source");
@@ -670,15 +672,23 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
             <label htmlFor="phone" className="block text-[#2D2D2D] font-bold text-sm 2xl:text-base">
               Phone Number<span className="text-red-600">*</span>
             </label>
-            <input
-              type="text"
-              id="phone"
-              placeholder="(234) 567-8900"
-              className={inputClass}
-              value={formik.values.phone}
-              onBlur={formik.handleBlur("phone")}
-              onChange={handlePhoneChange}
-            />
+            <div className="relative flex items-center mt-2">
+              <img
+                src={country?.icon ?? ""}
+                alt="India"
+                className="absolute left-3 w-5 h-4 object-cover rounded-sm"
+              />
+              <span className="absolute left-10 text-sm text-gray-600 font-medium select-none">+91</span>
+              <input
+                type="text"
+                id="phone"
+                placeholder="(234) 567-8900"
+                className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 py-2 pl-18 pr-3 2xl:py-3 rounded-md placeholder:text-sm 2xl:placeholder:text-base"
+                value={formik.values.phone}
+                onBlur={formik.handleBlur("phone")}
+                onChange={handlePhoneChange}
+              />
+            </div>
             {formik.touched.phone && formik.errors.phone && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.phone}</p>
             )}

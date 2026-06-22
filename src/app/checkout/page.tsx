@@ -28,6 +28,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
 import { TAX_STORAGE_KEY } from "@/store/slices/tax/taxSlice";
+import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -95,6 +96,7 @@ export default function CheckoutPage() {
   const guestItems = useAppSelector((s:any) => s.cart.items);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
   const addresses = useAppSelector((s) => s.customerAddress.addresses);
+  const country = useAppSelector((s) => s.country);
   const paymentHandleRef = useRef<CheckoutPaymentHandle | null>(null);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -208,6 +210,11 @@ export default function CheckoutPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const location = getLocationData();
+    if (location?.country) dispatch(fetchCountryByName(location.country));
+  }, [dispatch]);
 
   // ── Recalculate shipping & tax when default address changes ──────────────────
   useEffect(() => {
@@ -835,13 +842,30 @@ export default function CheckoutPage() {
             placeholder="Full name"
             disable
           />
-          <Field
-            value={phone}
-            onChange={setPhone}
-            type="tel"
-            placeholder="Phone"
-            disable
-          />
+          <div className="relative flex items-center w-full h-12 border border-gray-300 rounded-md bg-white overflow-hidden">
+              <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 h-full shrink-0">
+                {country.loading ? (
+                  <span className="text-xs text-gray-400 animate-pulse">...</span>
+                ) : (
+                  <>
+                    {country.data?.icon && (
+                      <img src={country.data.icon} alt="" className="w-5 h-4 object-cover rounded-sm" />
+                    )}
+                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                      {country.data?.phone_code ?? ""}
+                    </span>
+                  </>
+                )}
+              </div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Phone"
+                disabled
+                className="flex-1 h-full px-3 text-sm outline-none bg-white placeholder:text-gray-400 cursor-not-allowed"
+              />
+            </div>
         </div>
       </div>
     </div>

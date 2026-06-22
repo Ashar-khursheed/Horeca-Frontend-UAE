@@ -134,6 +134,11 @@
 
 body{
   font-family: var(--font-inter, "Inter", sans-serif);
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }
 @layer base {
   * {
@@ -592,6 +597,9 @@ img {
 button{
   cursor: pointer;
 }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 
 .embla__viewport {
