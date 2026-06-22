@@ -135,8 +135,11 @@ function LoginPageInner() {
         data: { credential: credentialResponse.credential },
       });
       setAuthToken(res.token);
-      localStorage.setItem("user", JSON.stringify(res.customer));
-      dispatch(setProfile(res.customer));
+      const profileRes = await makeApiRequest<{ success: boolean; customer: CustomerProfile }>(
+        apiUrls.GETMYPROFILE
+      );
+      localStorage.setItem("user", JSON.stringify(profileRes.customer));
+      dispatch(setProfile(profileRes.customer));
 
       // Sync guest wishlist & cart in parallel for maximum speed
       const syncPromises = [];
