@@ -81,6 +81,21 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+
+
+// axiosInstance.interceptors.response.use(
+//   (response) => response,
+//   (error: AxiosError) => {
+//     const isAuthEndpoint = error.config?.url?.includes("/auth/");
+//     if (error.response?.status === 401 && !isAuthEndpoint) {
+//       removeAuthToken();
+//       if (typeof window !== "undefined") {
+//         window.location.href = "/login";
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 // ─── Generic Request ──────────────────────────────────────────────────────────
 
 interface ApiRequestOptions {

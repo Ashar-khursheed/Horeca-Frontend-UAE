@@ -105,6 +105,7 @@ export default function CheckoutPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode ] = useState()
   const [code, setCode] = useState("");
   const [codeApplied, setCodeApplied] = useState(false);
   const [codeError, setCodeError] = useState("");
@@ -188,7 +189,8 @@ export default function CheckoutPage() {
         setEmail(user.email ?? "");
         const code = user.country_code ?? "";
         const mobile = user.mobile_number ?? "";
-        setPhone(code ? `${code}${mobile}` : mobile);
+        setPhone(mobile ? `${mobile}` : mobile);
+        setCountryCode(code)
         const parts = (user.name ?? "").trim().split(/\s+/);
         setFirstName(parts[0] ?? "");
         setLastName(parts.slice(1).join(" "));
@@ -851,9 +853,9 @@ export default function CheckoutPage() {
                     {country.data?.icon && (
                       <img src={country.data.icon} alt="" className="w-5 h-4 object-cover rounded-sm" />
                     )}
-                    {/* <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                      {country.data?.phone_code ?? ""}
-                    </span> */}
+                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                      {countryCode ?? ""}
+                    </span>
                   </>
                 )}
               </div>
