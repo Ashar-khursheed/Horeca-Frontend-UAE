@@ -525,7 +525,7 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
-    // â"€â"€ STEP 1: Address check â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+    // â"€â"€ STEP 1: Address check 
     if (!hasAddress) {
       setOrderError("Please add a delivery address before placing your order.");
       document
@@ -534,7 +534,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    // â"€â"€ STEP 2: Payment handle ready check â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+    // â"€â"€ STEP 2: Payment handle ready check 
     if (!paymentHandleRef.current) {
       setOrderError(
         "Payment form is not ready. Please wait a moment and try again.",
@@ -545,7 +545,7 @@ export default function CheckoutPage() {
     setIsPlacingOrder(true);
 
     try {
-      // â"€â"€ STEP 3: Square tokenize â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 3: Square tokenize 
       let token: any;
       try {
         token = await paymentHandleRef.current.getPaymentToken();
@@ -561,10 +561,10 @@ export default function CheckoutPage() {
         return;
       }
 
-      // â"€â"€ STEP 4: Idempotency key (fresh, no localStorage) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 4: Idempotency key (fresh, no localStorage) 
       const idempotencyKey = crypto.randomUUID();
 
-      // â"€â"€ STEP 5: Cart summary se amount lo â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 5: Cart summary se amount lo 
       const localSummary = (() => {
         try {
           return JSON.parse(localStorage.getItem(CART_SUMMARY_KEY) ?? "{}");
@@ -574,7 +574,7 @@ export default function CheckoutPage() {
       })();
       const amount = Number(grandTotal.toFixed(2));
 
-      // â"€â"€ STEP 6: Square payment API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 6: Square payment API 
       const paymentRes = (await makeApiRequest(apiUrls?.SQUARE_PAYMENT, {
         data: {
           source_id: token,
@@ -592,7 +592,7 @@ export default function CheckoutPage() {
 
       const squarePaymentId = paymentRes ?? null;
 
-      // â"€â"€ STEP 7: defaultAddress localStorage se lo â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 7: defaultAddress localStorage se lo 
       const defaultAddr = getDefaultAddressCache();
       console.log("dadasda",)
       const user = (() => {
@@ -639,7 +639,7 @@ export default function CheckoutPage() {
         };
       });
 
-      // â"€â"€ STEP 8: Place Order API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 8: Place Order API 
       const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
         data: {
           customer_id: user?.id,
@@ -674,7 +674,7 @@ export default function CheckoutPage() {
       const orderId = orderRes?.data?.id;
       localStorage.removeItem(CART_SUMMARY_KEY);
 
-      // â"€â"€ STEP 8.5: Full order details fetch (place order ke turant baad) â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 8.5: Full order details fetch (place order ke turant baad) 
       let orderData: any = orderRes?.data; // fallback
       try {
         const detailRes = (await makeApiRequest(apiUrls.ORDER_DETAIL(orderId), {
@@ -687,7 +687,7 @@ export default function CheckoutPage() {
         console.warn("Order detail fetch failed (non-blocking):", detailErr);
       }
 
-      // â"€â"€ STEP 9: Payment History API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 9: Payment History API 
       try {
         const paymentDate = orderData?.updated_at
           ? orderData.updated_at.split(/[T ]/)[0]
@@ -712,7 +712,7 @@ export default function CheckoutPage() {
         console.warn("Payment history failed (non-blocking):", historyErr);
       }
 
-      // â"€â"€ STEP 10: Screen Transaction API â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 10: Screen Transaction API 
       try {
         const cardDetails = paymentHandleRef.current?.getCardDetails();
         const billingFirst = user?.name?.split(" ")?.[0] ?? firstName;

@@ -68,8 +68,10 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    const isAuthEndpoint = error.config?.url?.includes("/auth/");
-    if (error.response?.status === 401 && !isAuthEndpoint) {
+    const url = error.config?.url ?? "";
+    const isAuthEndpoint    = url.includes("/auth/");
+    const isPaymentEndpoint = url.includes("payments") || url.includes("screen-transaction") || url.includes("payment-history");
+    if (error.response?.status === 401 && !isAuthEndpoint && !isPaymentEndpoint) {
       removeAuthToken();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
