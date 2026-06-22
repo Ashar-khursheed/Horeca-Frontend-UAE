@@ -2,8 +2,8 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getCountryCodeClient } from "@/utils/country";
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://test-us.thehorecastore.co/api/",
-    // baseURL: "/api",
+  // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://test-us.thehorecastore.co/api/",
+    baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
