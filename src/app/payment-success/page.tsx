@@ -112,9 +112,152 @@ export default function PaymentSuccessPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#E2E8F066] flex items-center justify-center">
-        <iframe src="https://lottie.host/embed/26761a0a-4293-4565-9d0d-7547ca098730/85hJaOU4Xl.lottie"  className="h-[500px] w-[500px]" ></iframe>
-        <iframe src="https://lottie.host/embed/58285e83-9c43-4b1c-9624-98413c857114/Bl6bku254m.lottie" className="h-[500px] w-[500px]"></iframe>
+      <div className="min-h-screen bg-[#E2E8F066]">
+        {/* breadcrumb skeleton */}
+        <div className="global-container py-3">
+          <div className="flex items-center gap-2">
+            {[80, 50, 70, 110].map((w, i) => (
+              <div key={i} className="flex items-center gap-2">
+                {i > 0 && <div className="w-3 h-3 rounded-full bg-gray-200 animate-pulse" />}
+                <div className={`h-3 rounded bg-gray-200 animate-pulse`} style={{ width: w }} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="global-container py-8">
+          <div className="bg-white rounded-[10px] shadow-lg overflow-hidden">
+            {/* green stripe */}
+            <div className="h-2 w-full bg-linear-to-r from-[#186737] via-[#22a855] to-[#186737]" />
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px]">
+              {/* ── LEFT skeleton ── */}
+              <div className="p-4 sm:p-6 lg:p-8 border-r border-gray-100 order-2 lg:order-1">
+                {/* success heading */}
+                <div className="flex items-start gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2" />
+                    <div className="h-3 bg-gray-100 animate-pulse rounded w-1/3 mt-1" />
+                  </div>
+                </div>
+
+                <div className="h-px bg-gray-100 mb-5" />
+
+                {/* info rows */}
+                <div className="space-y-4 mb-5">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <div className="w-4 h-4 rounded bg-gray-200 animate-pulse shrink-0 mt-0.5" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-gray-200 animate-pulse rounded w-full" />
+                        <div className="h-3 bg-gray-200 animate-pulse rounded w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="h-px bg-gray-100 mb-5" />
+
+                {/* order items heading */}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-4 h-4 rounded bg-gray-200 animate-pulse" />
+                  <div className="h-4 bg-gray-200 animate-pulse rounded w-24" />
+                </div>
+
+                {/* order item cards */}
+                <div className="border border-gray-100 rounded-[7px] overflow-hidden divide-y divide-gray-50">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="p-4">
+                      <div className="h-3 bg-gray-100 animate-pulse rounded w-40 mb-3" />
+                      <div className="flex gap-4">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-[7px] bg-gray-200 animate-pulse shrink-0" />
+                        <div className="flex-1 space-y-2 pt-1">
+                          <div className="h-3.5 bg-gray-200 animate-pulse rounded w-full" />
+                          <div className="h-3.5 bg-gray-200 animate-pulse rounded w-3/4" />
+                          <div className="h-3 bg-gray-100 animate-pulse rounded w-1/3" />
+                          <div className="h-3 bg-gray-100 animate-pulse rounded w-1/4" />
+                          <div className="h-4 bg-gray-200 animate-pulse rounded w-20 mt-2" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="h-px bg-gray-100 my-5" />
+
+                {/* share + CTAs */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-4 h-4 rounded bg-gray-200 animate-pulse" />
+                  <div className="h-3 bg-gray-200 animate-pulse rounded w-36" />
+                </div>
+                <div className="flex gap-2 mb-5">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="w-9 h-9 rounded-full bg-gray-200 animate-pulse" />
+                  ))}
+                </div>
+
+                <div className="h-px bg-gray-100 my-5" />
+
+                <div className="flex gap-3">
+                  <div className="h-10 w-36 rounded-[7px] bg-gray-200 animate-pulse" />
+                  <div className="h-10 w-36 rounded-[7px] bg-gray-100 animate-pulse" />
+                </div>
+              </div>
+
+              {/* ── RIGHT skeleton ── */}
+              <div className="flex flex-col gap-4 p-4 sm:p-6 order-1 lg:order-2 border-b border-gray-100 lg:border-b-0">
+                {/* thank you card */}
+                <div className="bg-green-50 rounded-[10px] p-6 flex flex-col items-center gap-3">
+                  <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="h-6 bg-gray-200 animate-pulse rounded w-28" />
+                  <div className="h-3 bg-gray-100 animate-pulse rounded w-48" />
+                  <div className="h-3 bg-gray-100 animate-pulse rounded w-40" />
+                  <div className="h-12 bg-gray-200 animate-pulse rounded-[7px] w-full mt-1" />
+                </div>
+
+                {/* order summary */}
+                <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5 space-y-3">
+                  <div className="h-4 bg-gray-200 animate-pulse rounded w-32 mb-4" />
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex justify-between">
+                      <div className="h-3 bg-gray-200 animate-pulse rounded w-28" />
+                      <div className="h-3 bg-gray-200 animate-pulse rounded w-16" />
+                    </div>
+                  ))}
+                  <div className="h-px bg-gray-100" />
+                  <div className="flex justify-between pt-1">
+                    <div className="h-4 bg-gray-200 animate-pulse rounded w-20" />
+                    <div className="h-5 bg-gray-200 animate-pulse rounded w-20" />
+                  </div>
+                </div>
+
+                {/* trust badges */}
+                <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex flex-col items-center gap-1.5">
+                        <div className="w-8 h-8 rounded-[7px] bg-gray-200 animate-pulse" />
+                        <div className="h-2.5 bg-gray-200 animate-pulse rounded w-10" />
+                        <div className="h-2 bg-gray-100 animate-pulse rounded w-14" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* support */}
+                <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4 space-y-3">
+                  <div className="h-3 bg-gray-100 animate-pulse rounded w-16 mx-auto" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-10 rounded-[7px] bg-gray-200 animate-pulse" />
+                    <div className="h-10 rounded-[7px] bg-gray-200 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

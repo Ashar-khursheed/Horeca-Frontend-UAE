@@ -34,18 +34,39 @@ type Status = 'idle' | 'loading' | 'ready' | 'error'
 // ─── Singleton script loader ──────────────────────────────────────────────────
 
 let _scriptPromise: Promise<void> | null = null
+let _loadedSrc: string | null = null
 
-function loadSquareScript(): Promise<void> {
+function getSquareSrc(appId: string): string {
+  return appId.startsWith('sandbox-')
+    ? 'https://sandbox.web.squarecdn.com/v1/square.js'
+    : 'https://web.squarecdn.com/v1/square.js'
+}
+
+function loadSquareScript(appId: string): Promise<void> {
+  const expectedSrc = getSquareSrc(appId)
+
+  // If a wrong-environment script was loaded before, tear it down
+  if (_loadedSrc && _loadedSrc !== expectedSrc) {
+    const old = document.querySelector(`script[src="${_loadedSrc}"]`)
+    old?.remove()
+    delete (window as any).Square
+    _scriptPromise = null
+    _loadedSrc = null
+  }
+
   if (_scriptPromise) return _scriptPromise
+
   _scriptPromise = new Promise((resolve, reject) => {
-    if (typeof window !== 'undefined' && (window as any).Square) {
+    // Square already present from the correct CDN
+    if ((window as any).Square && _loadedSrc === expectedSrc) {
       resolve(); return
     }
     const s = document.createElement('script')
-    s.src = 'https://sandbox.web.squarecdn.com/v1/square.js'
-    s.onload  = () => resolve()
+    s.src = expectedSrc
+    s.onload  = () => { _loadedSrc = expectedSrc; resolve() }
     s.onerror = () => {
       _scriptPromise = null
+      _loadedSrc = null
       reject(new Error('Square.js failed to load'))
     }
     document.head.appendChild(s)
@@ -102,7 +123,7 @@ const SquarePayment = forwardRef<SquarePaymentHandle, Props>(function SquarePaym
       const container = document.getElementById('sq-card-container')
       if (container) container.innerHTML = ''
 
-      await loadSquareScript()
+      await loadSquareScript(appId)
 
       const Square = (window as any).Square
       if (!Square) throw new Error('Square.js not available after load')

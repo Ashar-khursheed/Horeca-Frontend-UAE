@@ -10,7 +10,7 @@ import { loginUser } from "@/store/slices/auth/authSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
-import { useLocationData } from "@/utils/locationStorage";
+import { useLocationData, setDefaultAddressCache, DefaultAddressCache } from "@/utils/locationStorage";
 import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
 import { guestCheckoutSchema, loginSchema } from "@/validation/schema";
 import { useFormik } from "formik";
@@ -157,6 +157,18 @@ const clearGoogleStateCookie = () => {
 };
 
 // ── Login Panel ───────────────────────────────────────────────────────────────
+async function cacheDefaultAddress() {
+  try {
+    const res = await makeApiRequest<{ success: boolean; data: DefaultAddressCache[] }>(
+      apiUrls.GET_CUSTOMER_ADDRESS
+    );
+    const defaultAddr = res.data?.find((a) => a.is_default);
+    if (defaultAddr) setDefaultAddressCache(defaultAddr);
+  } catch {
+    // non-critical
+  }
+}
+
 function LoginPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -206,8 +218,11 @@ function LoginPanel() {
         await Promise.all(syncPromises);
       }
       await dispatch(fetchCounts());
-      const redirect = searchParams.get("redirect") ?? "/checkout";
-      router.push(redirect);
+      await cacheDefaultAddress();
+      // const redirect = searchParams.get("redirect") ?? "/checkout";
+      // router.push(redirect);
+       const redirect = searchParams.get("redirect") ?? "/cart";
+      window.location.href = redirect;
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
@@ -234,9 +249,12 @@ function LoginPanel() {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
-        await dispatch(fetchCounts())
-        const redirect = searchParams.get("redirect") ?? "/cart";
-        router.push(redirect);
+        await dispatch(fetchCounts());
+        await cacheDefaultAddress();
+        // const redirect = searchParams.get("redirect") ?? "/cart";
+        // router.push(redirect);
+         const redirect = searchParams.get("redirect") ?? "/cart";
+      window.location.href = redirect;
       } catch (err: unknown) {
         setApiError(
           typeof err === "string"

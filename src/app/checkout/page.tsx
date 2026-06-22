@@ -851,9 +851,9 @@ export default function CheckoutPage() {
                     {country.data?.icon && (
                       <img src={country.data.icon} alt="" className="w-5 h-4 object-cover rounded-sm" />
                     )}
-                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                    {/* <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                       {country.data?.phone_code ?? ""}
-                    </span>
+                    </span> */}
                   </>
                 )}
               </div>
