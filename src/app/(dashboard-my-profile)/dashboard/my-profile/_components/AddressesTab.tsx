@@ -89,7 +89,7 @@ const AddressForm = ({
         state:      values.state?.trim() ?? "",
         city:       values.city.trim(),
         zip_code:   values.zip_code.trim(),
-        is_default: editAddress ? values.is_default : true,
+    is_default: values.is_default, // ✅ Add mode mein bhi user ki value use karo
       };
       try {
         if (editAddress) {
