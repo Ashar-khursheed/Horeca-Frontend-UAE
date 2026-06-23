@@ -355,7 +355,10 @@ export default function CategoriesPage({
                       </div> */}
           </div>
         </section>
-        <RecentlyViewedSection />
+     
+     {/* <div className="global-contaier"> */}
+         <RecentlyViewedSection container={true} />
+     {/* </div> */}
 
         <section className="md:py-7 py-3">
           <div className="global-container">

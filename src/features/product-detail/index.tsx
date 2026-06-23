@@ -364,7 +364,7 @@ const ProductDetailPage = ({
           <RecommendedProducts
             productSlug={productData.url.split("/").pop() ?? ""}
           />
-          <RecentlyViewedSection excludeId={productData.id} />
+          <RecentlyViewedSection excludeId={productData.id} container={false} />
    {/* Report error trigger */}
           <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
             <span className="text-sm text-gray-400">Spot something off?</span>

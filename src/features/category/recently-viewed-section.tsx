@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-export default function RecentlyViewedSection({ excludeId }: { excludeId?: number }) {
+export default function RecentlyViewedSection({ excludeId, container }: { excludeId?: number, container:any }) {
   const [products, setProducts] = useState<RawApiProduct[]>([]);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function RecentlyViewedSection({ excludeId }: { excludeId?: numbe
 
   return (
     <section className="md:py-7 py-3">
-      <div className="global-containers">
+      <div className={`${container && "global-container"}`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="heading-font-size font-bold text-gray-900">
           You Browsed It, We Saved it for Easy Access
