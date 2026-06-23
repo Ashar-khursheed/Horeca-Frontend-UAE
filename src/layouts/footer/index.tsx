@@ -4,17 +4,17 @@
 import FinancingModal from "@/components/financing-modal";
 import { ApiCategory, ApiCategoryName } from "@/features/category";
 import {
-  ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Mail,
-  MapPin,
-  Phone,
-  Twitter,
-  Youtube,
+    ArrowUpRight,
+    ChevronDown,
+    ChevronUp,
+    Facebook,
+    Instagram,
+    Linkedin,
+    Mail,
+    MapPin,
+    Phone,
+    Twitter,
+    Youtube,
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
@@ -199,7 +199,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                 </div>
               </a>
               <a
-                href="mailto:support@thehorecastore.com"
+                href="mailto:sales@thehorecastore.com"
                 className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-[7px] transition-all duration-200"
               >
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -207,7 +207,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                 </div>
                 <div className="text-center md:text-left">
                   <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">Email Support</p>
-                  <p className="text-black font-semibold text-base">support@thehorecastore.com</p>
+                  <p className="text-black font-semibold text-base">sales@thehorecastore.com</p>
                 </div>
               </a>
             </div>
@@ -368,8 +368,8 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                 </div>
                 <div>
                   <p className="text-[11px] text-gray-400 font-medium">Email</p>
-                  <a href="mailto:support@thehorecastore.com" className="text-[13px] text-gray-700 hover:text-[#186737] transition-colors font-medium">
-                    support@thehorecastore.com
+                  <a href="mailto:sales@thehorecastore.com" className="text-[13px] text-gray-700 hover:text-[#186737] transition-colors font-medium">
+                    sales@thehorecastore.com
                   </a>
                 </div>
               </li>

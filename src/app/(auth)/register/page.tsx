@@ -114,6 +114,23 @@ function RegisterPageInner() {
   const isoCode = locationFromRedux?.countryCode ?? "";
   const flagEmoji = isoCode ? getFlagEmoji(isoCode) : country?.data?.icon;
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
+  const isUSPhone = isoCode === "US" || dialCode === "+1";
+
+  const formatUSPhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isUSPhone) {
+      const formatted = formatUSPhone(e.target.value);
+      formik.setFieldValue("mobile_number", formatted);
+    } else {
+      formik.handleChange(e);
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -140,7 +157,7 @@ function RegisterPageInner() {
         formData.append("password_confirmation", values.password_confirmation);
         formData.append("type", values.type);
         formData.append("country_code", dialCode);
-        formData.append("mobile_number", values.mobile_number);
+        formData.append("mobile_number", values.mobile_number.replace(/\D/g, ""));
         if (values.type === "Business" && values.business_name) {
           formData.append("business_name", values.business_name.trim());
         }
@@ -180,7 +197,10 @@ function RegisterPageInner() {
     },
   });
 
-  const phoneValidation = usePhoneValidation(formik.values.mobile_number, isoCode);
+  const phoneValidation = usePhoneValidation(
+    formik.values.mobile_number.replace(/\D/g, ""),
+    isoCode
+  );
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (!credentialResponse.credential) {
@@ -249,7 +269,15 @@ function RegisterPageInner() {
           <h1 className="text-2xl font-black text-gray-900 mb-1">Create Account</h1>
           <p className="text-sm text-gray-500 mb-6">Fill in your details to get started.</p>
 
-          <form onSubmit={formik.handleSubmit} noValidate className="space-y-4">
+          <form
+            noValidate
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (phoneValidation.isInvalid || phoneValidation.validating) return;
+              formik.handleSubmit(e);
+            }}
+          >
 
             {/* Row 1 – Type + Full Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -389,9 +417,9 @@ function RegisterPageInner() {
                     type="tel"
                     name="mobile_number"
                     value={formik.values.mobile_number}
-                    onChange={formik.handleChange}
+                    onChange={handlePhoneChange}
                     onBlur={formik.handleBlur}
-                    placeholder="501234567"
+                    placeholder={isUSPhone ? "(432) 423-4234" : "501234567"}
                     inputMode="numeric"
                     className="flex-1 px-3 text-sm outline-none bg-white placeholder:text-gray-300"
                   />

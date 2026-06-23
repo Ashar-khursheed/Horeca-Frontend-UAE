@@ -2,9 +2,9 @@
 
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
-import { AddressesTab } from "@/app/(dashboard-my-profile)/dashboard/my-profile/_components/AddressesTab";
+import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
+import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
 import Breadcrumb from "@/components/breadcum";
-import PhoneRequiredModal from "@/components/phone-required-modal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchCart,
@@ -29,6 +29,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -65,13 +66,17 @@ const getToken = (): string | null => {
   }
 };
 
-// â"€â"€â"€ API base URL â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// API base URL
 
 function CouponAppliedBadge({
   couponInfo,
   discount,
 }: {
-  couponInfo: { coupon_code: string; discount_type: string; discount_value: number };
+  couponInfo: {
+    coupon_code: string;
+    discount_type: string;
+    discount_value: number;
+  };
   discount: number;
 }) {
   const label =
@@ -81,8 +86,12 @@ function CouponAppliedBadge({
   return (
     <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2 mb-2">
       <div>
-        <p className="text-[12px] font-semibold text-green-700">{couponInfo.coupon_code}</p>
-        <p className="text-[11px] text-green-600">{label} &mdash; saving ${discount.toFixed(2)}</p>
+        <p className="text-[12px] font-semibold text-green-700">
+          {couponInfo.coupon_code}
+        </p>
+        <p className="text-[11px] text-green-600">
+          {label} &mdash; saving ${discount.toFixed(2)}
+        </p>
       </div>
       <span className="text-[11px] font-bold text-green-700">Applied</span>
     </div>
@@ -92,12 +101,14 @@ function CouponAppliedBadge({
 export default function CheckoutPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const rawProducts = useAppSelector((s:any) => s.cart.rawProducts);
-  const guestItems = useAppSelector((s:any) => s.cart.items);
+  const rawProducts = useAppSelector((s: any) => s.cart.rawProducts);
+  const guestItems = useAppSelector((s: any) => s.cart.items);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
   const addresses = useAppSelector((s) => s.customerAddress.addresses);
+  const isAddressSaving = useAppSelector((s) => s.customerAddress.submitting);
   const country = useAppSelector((s) => s.country);
   const paymentHandleRef = useRef<CheckoutPaymentHandle | null>(null);
+  const addressCheckoutRef = useRef<AddressCheckoutHandle | null>(null);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [cartSummary, setCartSummary] = useState<CartSummaryCache | null>(null);
@@ -105,7 +116,7 @@ export default function CheckoutPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode ] = useState()
+  const [countryCode, setCountryCode] = useState();
   const [code, setCode] = useState("");
   const [codeApplied, setCodeApplied] = useState(false);
   const [codeError, setCodeError] = useState("");
@@ -122,7 +133,7 @@ export default function CheckoutPage() {
   const [residential, setResidential] = useState(false);
   const [insideDelivery, setInsideDelivery] = useState(false);
 
-  // â"€â"€ Derived state â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+  // â"€â"€ Derived state
   const hasAddress =
     addresses.some((a) => a.is_default) || !!getDefaultAddressCache();
 
@@ -132,20 +143,40 @@ export default function CheckoutPage() {
       return defaultAddr.country.toLowerCase().includes("united states");
     }
     const loc = getLocationData();
-    return loc?.countryCode === "US" || loc?.country?.toLowerCase().includes("united states") || false;
+    return (
+      loc?.countryCode === "US" ||
+      loc?.country?.toLowerCase().includes("united states") ||
+      false
+    );
   })();
 
   // Mobile step (1 = Contact + Address, 2 = Cart + Payment)
   const [mobileStep, setMobileStep] = useState(1);
 
-  // Place Order button loading
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-
-  // Inline error message (card ya address)
+  const [orderStep, setOrderStep] = useState<OrderStep>("idle");
   const [orderError, setOrderError] = useState<string | null>(null);
 
-  // Phone number required modal
-  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+
+  // US phone format & API validation
+  const isoCode = getLocationData()?.countryCode ?? "";
+  const isUSPhone = (countryCode as any) === "+1" || isoCode === "US";
+
+  const formatUSPhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = isUSPhone ? formatUSPhone(e.target.value) : e.target.value;
+    setPhone(val);
+    setPhoneError("");
+  };
+
+  const phoneValidation = usePhoneValidation(phone.replace(/\D/g, ""), isoCode);
 
   const fetchedRef = useRef(false);
   const taxFetchedZip = useRef<string | null>(null);
@@ -192,8 +223,22 @@ export default function CheckoutPage() {
         setEmail(user.email ?? "");
         const code = user.country_code ?? "";
         const mobile = user.mobile_number ?? "";
-        setPhone(mobile ? `${mobile}` : mobile);
-        setCountryCode(code)
+        setCountryCode(code);
+
+        // US format apply on autofill
+        const locCode = getLocationData()?.countryCode ?? "";
+        const isUS = code === "+1" || locCode === "US";
+        if (isUS && mobile) {
+          const digits = mobile.replace(/\D/g, "").slice(0, 10);
+          let formatted = digits;
+          if (digits.length > 6) formatted = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+          else if (digits.length > 3) formatted = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+          else if (digits.length) formatted = `(${digits}`;
+          setPhone(formatted);
+        } else {
+          setPhone(mobile);
+        }
+
         const parts = (user.name ?? "").trim().split(/\s+/);
         setFirstName(parts[0] ?? "");
         setLastName(parts.slice(1).join(" "));
@@ -280,7 +325,9 @@ export default function CheckoutPage() {
             return;
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // Prevent duplicate API calls for the same zip in this session
       if (taxFetchedZip.current === zip) return;
@@ -310,7 +357,7 @@ export default function CheckoutPage() {
               total: taxableAmount + taxAmount,
             };
             localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
-             localStorage.setItem(TAX_STORAGE_KEY, JSON.stringify(data));
+            localStorage.setItem(TAX_STORAGE_KEY, JSON.stringify(data));
             return updated;
           });
         })
@@ -390,7 +437,7 @@ export default function CheckoutPage() {
   const currencySymbol: string =
     (rawProducts[0] as any)?.product?.currency?.symbol ?? "$";
 
-  // â"€â"€ Pricing â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+  // â"€â"€ Pricing
   const baseSubtotal = cartSummary?.subTotal ?? 0;
   const baseShipping = cartSummary?.totalShippingCharges ?? 0;
   const ratePercent = cartSummary?.taxRatePercentage ?? 0;
@@ -405,7 +452,7 @@ export default function CheckoutPage() {
   const totalTax = taxOnBase + taxOnFees;
   const grandTotal =
     discountedSubtotal + baseShipping + liftFee + resFee + insideFee + totalTax;
-  const totalItems = cartItems.reduce((s:any, c:any) => s + c.qty, 0);
+  const totalItems = cartItems.reduce((s: any, c: any) => s + c.qty, 0);
 
   const isCartLoading =
     isLoggedIn && (apiStatus === "idle" || apiStatus === "loading");
@@ -427,20 +474,29 @@ export default function CheckoutPage() {
           discount_type: "fixed" | "percentage";
           discount_value: string;
         };
-      }>(`customer/check-coupon?coupon_code=${code}&orderValue=${grandTotal.toFixed(2)}`);
+      }>(
+        `customer/check-coupon?coupon_code=${code}&orderValue=${grandTotal.toFixed(2)}`,
+      );
 
       if (res?.success && res?.data) {
-        const { coupon_id, coupon_code, discount_type, discount_value } = res.data;
+        const { coupon_id, coupon_code, discount_type, discount_value } =
+          res.data;
         const dv = Number(discount_value);
 
         const discountAmount =
-          discount_type === "fixed"
-            ? dv
-            : (baseSubtotal * dv) / 100;
+          discount_type === "fixed" ? dv : (baseSubtotal * dv) / 100;
 
-        const info = { coupon_id, coupon_code, discount_type, discount_value: dv };
+        const info = {
+          coupon_id,
+          coupon_code,
+          discount_type,
+          discount_value: dv,
+        };
 
-        localStorage.setItem(COUPON_KEY, JSON.stringify({ ...info, discount_amount: discountAmount }));
+        localStorage.setItem(
+          COUPON_KEY,
+          JSON.stringify({ ...info, discount_amount: discountAmount }),
+        );
         localStorage.setItem("coupon_id", String(coupon_id));
         localStorage.setItem("discount_value", String(discountAmount));
         localStorage.setItem("discount_type", discount_type);
@@ -470,7 +526,9 @@ export default function CheckoutPage() {
             localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
             setCartSummary(updated);
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
 
         setCouponInfo(info);
         setDiscount(discountAmount);
@@ -482,7 +540,9 @@ export default function CheckoutPage() {
         setCodeError(res?.message || "Invalid coupon code");
       }
     } catch (err: any) {
-      setCodeError(err?.response?.data?.message || "Failed to apply coupon. Try again.");
+      setCodeError(
+        err?.response?.data?.message || "Failed to apply coupon. Try again.",
+      );
     } finally {
       setCouponLoading(false);
     }
@@ -518,7 +578,9 @@ export default function CheckoutPage() {
         localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
         setCartSummary(updated);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     setCode("");
     setCodeApplied(false);
@@ -531,51 +593,93 @@ export default function CheckoutPage() {
     setOrderError(null);
 
     // ── Phone number check
-    if (!phone) {
-      setPhoneModalOpen(true);
+    if (!phone || phoneValidation.isInvalid || phoneValidation.validating) {
+      setPhoneError(!phone ? "Phone number is required" : phoneValidation.isInvalid ? (phoneValidation.errorMsg || "Phone number is invalid") : "Please wait for phone validation");
+      setTimeout(() => {
+        const el = document.getElementById("phone-input");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.focus();
+      }, 50);
       return;
     }
+    setPhoneError("");
 
-    // â"€â"€ STEP 1: Address check
-    if (!hasAddress) {
-      setOrderError("Please add a delivery address before placing your order.");
-      document
-        .getElementById("shipping-address-section")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
+    // ── STEP 2: Address validate (no API — sirf form check)
+    if (addressCheckoutRef.current) {
+      const addressValid = await addressCheckoutRef.current.validate();
+      if (!addressValid) {
+        setOrderError("Please fill in your delivery address before placing your order.");
+        setTimeout(() => {
+          const el =
+            document.getElementById("address-street-input") ??
+            document.getElementById("shipping-address-section");
+          if (el) {
+            const y = el.getBoundingClientRect().top + window.scrollY - 100;
+            window.scrollTo({ top: y, behavior: "smooth" });
+            (el as HTMLInputElement).focus?.();
+          }
+        }, 50);
+        return;
+      }
     }
 
-    // â"€â"€ STEP 2: Payment handle ready check 
+    // ── STEP 3: Card validate (tokenize) — koi API call nahi isse pehle
     if (!paymentHandleRef.current) {
-      setOrderError(
-        "Payment form is not ready. Please wait a moment and try again.",
-      );
+      setOrderError("Payment form is not ready. Please wait a moment and try again.");
+      return;
+    }
+    // Modal kholo — card step
+    // setOrderStep("card");
+    let token: any;
+    try {
+      token = await paymentHandleRef.current.getPaymentToken();
+    } catch (tokenErr: any) {
+      setOrderStep("idle");
+      // setOrderError(tokenErr?.message ?? "Please fill in your card details correctly.");
+      return;
+    }
+    if (!token) {
+      setOrderStep("idle");
+      setOrderError("Could not process card. Please try again.");
       return;
     }
 
     setIsPlacingOrder(true);
 
     try {
-      // â"€â"€ STEP 3: Square tokenize 
-      let token: any;
+      // ── Profile update
+      setOrderStep("profile");
       try {
-        token = await paymentHandleRef.current.getPaymentToken();
-      } catch (tokenErr: any) {
-        setOrderError(
-          tokenErr?.message ?? "Please fill in your card details correctly.",
-        );
+        const user = JSON.parse(localStorage.getItem("user") ?? "{}");
+        await makeApiRequest(apiUrls.UPDATE_PROFILE, {
+          method: "POST",
+          data: {
+            name: `${firstName} ${lastName}`.trim(),
+            email,
+            mobile_number: phone.replace(/\D/g, ""),
+            country_code: countryCode ?? user.country_code ?? "",
+            type: user?.type,
+            business_name: user?.business_detail?.business_name,
+          },
+        });
+      } catch {
+        /* non-blocking */
+      }
+
+      // ── Address save
+      setOrderStep("address");
+      const addressSaved = await addressCheckoutRef.current?.save();
+      if (!addressSaved) {
+        setOrderStep("idle");
+        setOrderError("Please fill in your delivery address before placing your order.");
+        document.getElementById("shipping-address-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
 
-      if (!token) {
-        setOrderError("Could not process card. Please try again.");
-        return;
-      }
-
-      // â"€â"€ STEP 4: Idempotency key (fresh, no localStorage) 
+      // â"€â"€ STEP 4: Idempotency key (fresh, no localStorage)
       const idempotencyKey = crypto.randomUUID();
 
-      // â"€â"€ STEP 5: Cart summary se amount lo 
+      // â"€â"€ STEP 5: Cart summary se amount lo
       const localSummary = (() => {
         try {
           return JSON.parse(localStorage.getItem(CART_SUMMARY_KEY) ?? "{}");
@@ -585,7 +689,8 @@ export default function CheckoutPage() {
       })();
       const amount = Number(grandTotal.toFixed(2));
 
-      // â"€â"€ STEP 6: Square payment API 
+      // ── Square payment
+      setOrderStep("payment");
       const paymentRes = (await makeApiRequest(apiUrls?.SQUARE_PAYMENT, {
         data: {
           source_id: token,
@@ -603,9 +708,9 @@ export default function CheckoutPage() {
 
       const squarePaymentId = paymentRes ?? null;
 
-      // â"€â"€ STEP 7: defaultAddress localStorage se lo 
+      // â"€â"€ STEP 7: defaultAddress localStorage se lo
       const defaultAddr = getDefaultAddressCache();
-      console.log("dadasda",)
+      console.log("dadasda");
       const user = (() => {
         try {
           return JSON.parse(localStorage.getItem("user") ?? "{}");
@@ -617,7 +722,11 @@ export default function CheckoutPage() {
       const discountVal = localStorage.getItem("discount_value") ?? 0;
       const discountType = localStorage.getItem("discount_type") ?? "";
       const sessionId = localStorage.getItem("session_id") ?? "";
-      const taxPercent = +((ratePercent ?? localSummary?.taxRatePercentage ?? 0)).toFixed(2);
+      const taxPercent = +(
+        ratePercent ??
+        localSummary?.taxRatePercentage ??
+        0
+      ).toFixed(2);
 
       // Products array â€" rawProducts se
       const location = getLocationData();
@@ -650,7 +759,8 @@ export default function CheckoutPage() {
         };
       });
 
-      // â"€â"€ STEP 8: Place Order API 
+      // ── Place order
+      setOrderStep("order");
       const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
         data: {
           customer_id: user?.id,
@@ -663,11 +773,13 @@ export default function CheckoutPage() {
           separate_deliveries: 0,
           products,
           utm_id: sessionId,
-          ...(couponId ? {
-            coupon_id: couponId,
-            discount: discountVal,
-            // additional_discount_type: discountType,
-          } : {}),
+          ...(couponId
+            ? {
+                coupon_id: couponId,
+                discount: discountVal,
+                // additional_discount_type: discountType,
+              }
+            : {}),
           is_reserved: 0,
           pay_with_cheque: 0,
           payment_mode: "Square",
@@ -685,7 +797,7 @@ export default function CheckoutPage() {
       const orderId = orderRes?.data?.id;
       localStorage.removeItem(CART_SUMMARY_KEY);
 
-      // â"€â"€ STEP 8.5: Full order details fetch (place order ke turant baad) 
+      // â"€â"€ STEP 8.5: Full order details fetch (place order ke turant baad)
       let orderData: any = orderRes?.data; // fallback
       try {
         const detailRes = (await makeApiRequest(apiUrls.ORDER_DETAIL(orderId), {
@@ -698,7 +810,7 @@ export default function CheckoutPage() {
         console.warn("Order detail fetch failed (non-blocking):", detailErr);
       }
 
-      // â"€â"€ STEP 9: Payment History API 
+      // â"€â"€ STEP 9: Payment History API
       try {
         const paymentDate = orderData?.updated_at
           ? orderData.updated_at.split(/[T ]/)[0]
@@ -723,7 +835,7 @@ export default function CheckoutPage() {
         console.warn("Payment history failed (non-blocking):", historyErr);
       }
 
-      // â"€â"€ STEP 10: Screen Transaction API 
+      // â"€â"€ STEP 10: Screen Transaction API
       try {
         const cardDetails = paymentHandleRef.current?.getCardDetails();
         const billingFirst = user?.name?.split(" ")?.[0] ?? firstName;
@@ -786,7 +898,7 @@ export default function CheckoutPage() {
         console.warn("Screen transaction failed (non-blocking):", screenErr);
       }
 
-      // â"€â"€ STEP 11: Full order details GET karo, save karo, redirect â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+      // â"€â"€ STEP 11: Full order details GET karo, save karo, 
       let fullOrder = orderData;
       try {
         const detailRes = (await makeApiRequest(
@@ -808,11 +920,39 @@ export default function CheckoutPage() {
       localStorage.removeItem("discount_value");
       localStorage.removeItem("discount_type");
 
+      setOrderStep("done");
       dispatch(fetchCounts() as any);
-      router.push(`/payment-success?orderID=${orderData?.id}`);
+      setTimeout(() => router.push(`/payment-success?orderID=${orderData?.id}`), 1200);
     } catch (err: any) {
       console.error("Place order error:", err);
-      setOrderError(err?.message ?? "Something went wrong. Please try again.");
+      setOrderStep("idle");
+
+      // API response se proper message nikalte hain
+      const resData = err?.response?.data;
+      const rawApiMsg: string =
+        resData?.errors?.[0] ??
+        resData?.message ??
+        err?.message ??
+        "";
+
+      let userMsg = "Something went wrong. Please try again.";
+      if (rawApiMsg.includes("VALUE_TOO_HIGH")) {
+        userMsg = "Payment could not be processed. Please contact support.";
+      } else if (rawApiMsg.includes("INSUFFICIENT_FUNDS")) {
+        userMsg = "Insufficient funds. Please use a different card.";
+      } else if (rawApiMsg.includes("CVV") || rawApiMsg.includes("cvv")) {
+        userMsg = "Invalid CVV. Please check your card details.";
+      } else if (rawApiMsg.includes("card") || rawApiMsg.includes("Card")) {
+        userMsg = "Card payment failed. Please check your card details.";
+      } else if (rawApiMsg.includes("CARD_EXPIRED") || rawApiMsg.includes("expired")) {
+        userMsg = "Your card has expired. Please use a different card.";
+      } else if (rawApiMsg.toLowerCase().includes("payment")) {
+        userMsg = "Payment failed. Please try again or use a different card.";
+      } else if (rawApiMsg) {
+        userMsg = rawApiMsg.length > 150 ? "Payment failed. Please try again." : rawApiMsg;
+      }
+
+      setOrderError(userMsg);
     } finally {
       setIsPlacingOrder(false);
     }
@@ -824,19 +964,19 @@ export default function CheckoutPage() {
     { label: "Checkout", href: null },
   ];
 
-  // â"€â"€ Shared blocks (used in both mobile & desktop) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+  // â"€â"€ Shared blocks (used in both mobile & desktop)
   const contactBlock = (
     <div className="mb-7">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-base font-semibold text-gray-900">
           Contact information
         </h2>
-        <Link
+        {/* <Link
           href="/dashboard/my-profile?mode=checkout"
           className="text-xs font-semibold text-green-700 flex gap-1.5 items-center"
         >
           Edit Info <Pencil className="w-3" />
-        </Link>
+        </Link> */}
       </div>
       <div className="space-y-3">
         <Field
@@ -853,14 +993,19 @@ export default function CheckoutPage() {
             placeholder="Full name"
             disable
           />
-          <div className="relative flex items-center w-full h-12 border border-gray-300 rounded-md bg-white overflow-hidden">
-              <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 h-full shrink-0">
+          <div id="phone-field-wrapper">
+            <div className={`relative flex items-center w-full h-12 border rounded-md bg-white overflow-hidden ${phoneError || phoneValidation.isInvalid ? "border-red-400" : "border-gray-300"}`}>
+              <div className="flex items-center gap-1.5 px-3 bg-white border-r border-gray-200 h-full shrink-0">
                 {country.loading ? (
                   <span className="text-xs text-gray-400 animate-pulse">...</span>
                 ) : (
                   <>
                     {country.data?.icon && (
-                      <img src={country.data.icon} alt="" className="w-5 h-4 object-cover rounded-sm" />
+                      <img
+                        src={country.data.icon}
+                        alt=""
+                        className="w-5 h-4 object-cover rounded-sm"
+                      />
                     )}
                     <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                       {countryCode ?? ""}
@@ -869,23 +1014,34 @@ export default function CheckoutPage() {
                 )}
               </div>
               <input
+                id="phone-input"
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Phone"
-                disabled
-                className="flex-1 h-full px-3 text-sm outline-none bg-white placeholder:text-gray-400 cursor-not-allowed"
+                onChange={handlePhoneChange}
+                placeholder={isUSPhone ? "(432) 423-4234" : "Phone number"}
+                className="flex-1 h-full px-3 text-sm outline-none bg-white placeholder:text-gray-400"
               />
             </div>
+            {phoneError && (
+              <p className="text-[11px] text-red-500 mt-1">{phoneError}</p>
+            )}
+            {!phoneError && phoneValidation.validating && (
+              <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
+            )}
+            {!phoneError && phoneValidation.isInvalid && (
+              <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 
   const addressBlock = (
-    <div className="mb-8" id="shipping-address-section">
-      <AddressesTab checkoutMode />
-    </div>
+    <AddressCheckout
+      ref={addressCheckoutRef}
+      onFormChange={() => setOrderError(null)}
+    />
   );
   //     height: 364px;
   //     overflow-x: auto;
@@ -913,7 +1069,7 @@ export default function CheckoutPage() {
           Your cart is empty.
         </p>
       ) : (
-        cartItems.map((item:any) => (
+        cartItems.map((item: any) => (
           <div key={item.id} className="flex items-start gap-3">
             <div className="relative shrink-0">
               <div className="w-16 h-16 rounded-md border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
@@ -1028,7 +1184,9 @@ export default function CheckoutPage() {
         <p className="text-[11px] text-red-500 mb-2">{codeError}</p>
       )}
 
-      {codeApplied && couponInfo && <CouponAppliedBadge couponInfo={couponInfo} discount={discount} />}
+      {codeApplied && couponInfo && (
+        <CouponAppliedBadge couponInfo={couponInfo} discount={discount} />
+      )}
     </>
   );
 
@@ -1096,7 +1254,7 @@ export default function CheckoutPage() {
     </div>
   );
 
-  const pricingBlock = isCartLoading ? (
+  const pricingBlock = (isCartLoading || isAddressSaving) ? (
     <div className="space-y-3 animate-pulse mb-4">
       {[80, 64, 56, 48].map((w) => (
         <div key={w} className="flex justify-between items-center">
@@ -1236,7 +1394,7 @@ export default function CheckoutPage() {
 
   return (
     <>
-   
+      <OrderProcessingModal step={orderStep} />
       <Breadcrumb crumbs={crumbs} />
 
       {/*  MOBILE LAYOUT â€" step-based (hidden on lg+)  */}
@@ -1321,7 +1479,10 @@ export default function CheckoutPage() {
             <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
               <button
                 type="button"
-                onClick={() => { setMobileStep(2); window.scrollTo(0, 0); }}
+                onClick={() => {
+                  setMobileStep(2);
+                  window.scrollTo(0, 0);
+                }}
                 className="w-full flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145c30] active:scale-[0.98] text-white font-semibold py-3.5 rounded-[7px] text-sm transition-all"
               >
                 Continue to Cart &amp; Payment
@@ -1353,7 +1514,13 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment form card */}
+            
+
+            {/* Price summary card */}
             <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+              {pricingBlock}
+            </div>
+<div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
               <h2 className="text-sm font-bold text-gray-800 mb-4">
                 Payment Details
               </h2>
@@ -1365,12 +1532,6 @@ export default function CheckoutPage() {
                 }}
               />
             </div>
-
-            {/* Price summary card */}
-            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
-              {pricingBlock}
-            </div>
-
             {/* Fixed bottom Place Order CTA */}
             <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
               {orderError && (
@@ -1394,7 +1555,10 @@ export default function CheckoutPage() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => { setMobileStep(1); window.scrollTo(0, 0); }}
+                  onClick={() => {
+                    setMobileStep(1);
+                    window.scrollTo(0, 0);
+                  }}
                   className="flex items-center gap-1.5 px-4 py-3.5 rounded-[7px] border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors shrink-0"
                 >
                   <ChevronRight size={15} className="rotate-180" />
@@ -1444,9 +1608,22 @@ export default function CheckoutPage() {
 
       {/* â DESKTOP LAYOUT â€" 2-column (hidden on mobile) */}
       <div className="hidden lg:block global-container bg-white">
-        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] max-w-7xl mx-auto">
-          {/* â"€â"€ LEFT â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+        <div className="grid grid-cols-1 relative lg:grid-cols-[60%_40%] max-w-7xl mx-auto relative">
+          {/* â"€â"€ LEFT  */}
           <div className="px-6 md:px-12 xl:px-20 py-10 pt-0 border-r border-gray-100">
+            {/* <CheckoutPayment
+              squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
+              squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
+              onHandleReady={(h) => {
+                paymentHandleRef.current = h;
+              }}
+            /> */}
+            <div className="flex items-center gap-3 mb-6" />
+            {contactBlock}
+            {addressBlock}
+            <div className="h-px bg-gray-200 my-4" />
+            {deliveryBlock}
+            <div className="h-px bg-gray-200 my-4" />
             <CheckoutPayment
               squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
               squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
@@ -1454,39 +1631,23 @@ export default function CheckoutPage() {
                 paymentHandleRef.current = h;
               }}
             />
-            <div className="flex items-center gap-3 mb-6" />
-            {contactBlock}
-            {addressBlock}
-          </div>
-
-          {/* â"€â"€ RIGHT â€" Order Summary â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-          <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10">
-            {cartBlock}
-            {discountBlock}
-            <div className="h-px bg-gray-200 my-4" />
-            {deliveryBlock}
-            <div className="h-px bg-gray-200 my-4" />
-            {pricingBlock}
             {placeOrderBtn}
           </div>
-        </div>
 
+          {/* â"€â"€ RIGHT â€" Order Summary  */}
+        <div className=" bg-[#fafafa] sticky top-0 ">
+            <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10 sticky top-0">
+            {cartBlock}
+            {discountBlock}
+
+            <div className="h-px bg-gray-200 my-4" />
+            {pricingBlock}
+            {/* {placeOrderBtn} */}
+          </div>
+        </div>
+        </div>
       </div>
 
-      <PhoneRequiredModal
-        isOpen={phoneModalOpen}
-        onClose={() => setPhoneModalOpen(false)}
-        defaultCountryCode={countryCode ?? ""}
-        userName={`${firstName} ${lastName}`.trim()}
-        userEmail={email}
-        userType={(() => { try { const u = JSON.parse(localStorage.getItem("user") ?? "{}"); return u.type ?? "Private"; } catch { return "Private"; } })()}
-        userBusinessName={(() => { try { const u = JSON.parse(localStorage.getItem("user") ?? "{}"); return u.business_detail?.business_name ?? ""; } catch { return ""; } })()}
-        onSuccess={(code, mobile) => {
-          setCountryCode(code as any);
-          setPhone(mobile);
-          setPhoneModalOpen(false);
-        }}
-      />
     </>
   );
 }

@@ -1,26 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState, useRef } from "react";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  MessageCircle,
-  Package,
-  RotateCcw,
-  XCircle,
-  Send,
-  Paperclip,
-  X,
-  CheckCircle2,
-  Star,
-  UtensilsCrossed,
-  Globe,
-  Truck,
-  Headphones,
-} from "lucide-react";
+import { makeApiRequest } from "@/apis/axios-instance";
+import logo1 from "@/assets/banners/contact-us/1.png";
+import logo2 from "@/assets/banners/contact-us/2.png";
+import logo3 from "@/assets/banners/contact-us/3.png";
+import logo4 from "@/assets/banners/contact-us/4.png";
+import logo5 from "@/assets/banners/contact-us/5.png";
+import BannerContact from "@/assets/banners/contact-us/contactMainBanner.jpg";
 import {
   Accordion,
   AccordionContent,
@@ -28,14 +14,28 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ContactUsFAQ } from "@/data";
-import logo1 from "@/assets/banners/contact-us/1.png";
-import logo2 from "@/assets/banners/contact-us/2.png";
-import logo3 from "@/assets/banners/contact-us/3.png";
-import logo4 from "@/assets/banners/contact-us/4.png";
-import logo5 from "@/assets/banners/contact-us/5.png";
-import BannerContact from "@/assets/banners/contact-us/contactMainBanner.jpg";
 import { useAppSelector } from "@/store/hooks";
-import { makeApiRequest } from "@/apis/axios-instance";
+import {
+  CheckCircle2,
+  Globe,
+  Headphones,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Package,
+  Paperclip,
+  Phone,
+  RotateCcw,
+  Send,
+  Star,
+  Truck,
+  UtensilsCrossed,
+  X,
+  XCircle,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRef, useState } from "react";
 
 // ── Phone helpers (same logic as legacy contact form) ─────────────────────────
 const formatPhoneWithCursor = (value: string, cursorPosition: number) => {
@@ -770,10 +770,10 @@ export default function ContactUsPage() {
                   Email Us Directly
                 </p>
                 <a
-                  href="mailto:support@thehorecastore.com"
+                  href="mailto:sales@thehorecastore.com"
                   className="text-xs text-[#186737] hover:underline break-all"
                 >
-              support@thehorecastore.com
+              sales@thehorecastore.com
                 </a>
               </div>
             </div>

@@ -647,7 +647,7 @@ export const AddToCartWidget = ({
                       const v = parseInt(e.target.value);
                       if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
                     }}
-                    className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed "
+                    className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed text-[14px]"
                   />
                   <button
                     onClick={handleIncrement}

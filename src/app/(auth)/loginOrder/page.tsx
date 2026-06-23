@@ -444,6 +444,14 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
   const isoCode = locationFromRedux?.countryCode ?? "";
   const flagEmoji = isoCode ? getFlagEmoji(isoCode) : "🌍";
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
+  const isUSPhone = dialCode === "+1" || isoCode === "US";
+
+  const formatUSPhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
 
   const formik = useFormik({
     initialValues: { name: "", email: "", phone: "", consent: false },
@@ -462,7 +470,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         formData.append("password_confirmation", guestPassword);
         formData.append("type", "Private");
         formData.append("country_code", dialCode);
-        formData.append("mobile_number", values.phone);
+        formData.append("mobile_number", values.phone.replace(/\D/g, ""));
 
         await makeApiRequest(apiUrls.REGISTER, {
           method: "POST",
@@ -498,7 +506,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
-  const phoneValidation = usePhoneValidation(formik.values.phone, isoCode);
+  const phoneValidation = usePhoneValidation(formik.values.phone.replace(/\D/g, ""), isoCode);
 
   const nameErr = !!(formik.touched.name && formik.errors.name);
   const emailErr = !!(formik.touched.email && formik.errors.email);
@@ -602,13 +610,15 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
               name="phone"
               value={formik.values.phone}
               onChange={(e) => {
-                const v = e.target.value.replace(/\D/g, "");
-                formik.setFieldValue("phone", v);
+                const val = isUSPhone
+                  ? formatUSPhone(e.target.value)
+                  : e.target.value.replace(/\D/g, "");
+                formik.setFieldValue("phone", val);
               }}
               onBlur={formik.handleBlur}
-              placeholder="501234567"
+              placeholder={isUSPhone ? "(432) 423-4234" : "501234567"}
               inputMode="numeric"
-              maxLength={15}
+              maxLength={isUSPhone ? 14 : 15}
               className="flex-1 h-full px-3 text-sm outline-none bg-transparent placeholder:text-gray-400"
             />
           </div>

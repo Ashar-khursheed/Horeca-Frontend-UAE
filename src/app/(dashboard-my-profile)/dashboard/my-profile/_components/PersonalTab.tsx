@@ -316,7 +316,7 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
                   className={`${inputCls} ${hasErr("mobile_number") || phoneValidation.isInvalid ? "border-red-400 focus:ring-red-100" : ""}`}
                 />
                 {phoneValidation.validating && !hasErr("mobile_number") && (
-                  <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
+                  <p className="text-[11px] text-gray-400 mt-1 hidden">Validating...</p>
                 )}
                 {hasErr("mobile_number") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.mobile_number}</p>}
                 {!hasErr("mobile_number") && phoneValidation.isInvalid && (

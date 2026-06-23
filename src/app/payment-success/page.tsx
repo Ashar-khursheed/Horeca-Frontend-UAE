@@ -297,7 +297,18 @@ export default function PaymentSuccessPage() {
   const total           = Number(order.total_amount);
   const currencySymbol  = order.currency?.target_symbol ?? "$";
   const address       = parseAddress(order.customer_address ?? "");
-  const phone         = `${order.customer.country_code ?? ""} ${order.customer.mobile_number ?? ""}`.trim();
+  const rawCode   = order.customer.country_code ?? "";
+  const rawMobile = order.customer.mobile_number ?? "";
+  const isUSCode  = rawCode === "+1";
+  const formatUSPhone = (num: string) => {
+    const d = num.replace(/\D/g, "").slice(0, 10);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `(${d.slice(0,3)}) ${d.slice(3)}`;
+    return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  };
+  const phone = isUSCode
+    ? `${rawCode} ${formatUSPhone(rawMobile)}`
+    : `${rawCode} ${rawMobile}`.trim();
 
   const hasLiftGate    = order.is_lift_gate           === 1;
   const hasResidential = order.is_residential_address === 1;
@@ -309,12 +320,12 @@ export default function PaymentSuccessPage() {
   return (
     <div className="min-h-screen bg-[#E2E8F066]">
 
-      <Breadcrumb crumbs={[
+      {/* <Breadcrumb crumbs={[
         { label: "Home",           href: "/" },
         { label: "Cart",           href: "/cart" },
         { label: "Checkout",       href: "/checkout" },
         { label: "Order Confirmed", href: null },
-      ]} />
+      ]} /> */}
 
       {/* ── Main ─────────────────────────────────────────────────────────────── */}
       <div className="global-container py-8">

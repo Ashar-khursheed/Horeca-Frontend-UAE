@@ -72,10 +72,10 @@ export default function CheckoutPayment({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     // <div className="mt-5 rounded-xl border-2 border-[#E2E8F0]">
-    <div className="mt-5 rounded-xl border-2 border-[#E2E8F0]">
+    <div className="mt-5 rounded-[7px] border-2 border-[#E2E8F0]">
 
       {/* Header */}
-      <div className="flex items-center justify-between rounded-t-xl bg-[#E2E8F0] px-6 py-3">
+      <div className="flex items-center justify-between rounded-t-[4px] bg-[#E2E8F0] px-6 py-3">
         <h2 className="text-lg font-semibold text-[#424242]">Payment Method</h2>
       </div>
 

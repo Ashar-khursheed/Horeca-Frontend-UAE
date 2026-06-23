@@ -144,7 +144,7 @@ export default function DashboardPage() {
           {[
             { name: "My Profile",          href: "/dashboard/my-profile", Icon: Settings,    bg: "bg-orange-100",  color: "text-orange-500" },
             { name: "My Orders",           href: "/dashboard/orders",     Icon: ShoppingBag, bg: "bg-blue-100",    color: "text-blue-500" },
-            { name: "Payments & Invoices", href: "/dashboard/payments",   Icon: CreditCard,  bg: "bg-amber-100",   color: "text-amber-500" },
+            // { name: "Payments & Invoices", href: "/dashboard/payments",   Icon: CreditCard,  bg: "bg-amber-100",   color: "text-amber-500" },
             { name: "My Wishlist",         href: "/wishlist",             Icon: Heart,       bg: "bg-rose-100",    color: "text-rose-500" },
             { name: "Browsing History",    href: "/dashboard/browsing-history", Icon: History, bg: "bg-purple-100", color: "text-purple-500" },
             { name: "Saved Documents",     href: "/dashboard/documents",  Icon: FolderOpen,  bg: "bg-teal-100",    color: "text-teal-500" },
