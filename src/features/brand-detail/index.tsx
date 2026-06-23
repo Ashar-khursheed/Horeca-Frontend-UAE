@@ -393,7 +393,7 @@ export default function BrandDetailFeature({
                 {brandName}
               </h1>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* <div className="flex items-center gap-2 flex-wrap">
               {brand.website && (
                 <a
                   href={brand.website}
@@ -404,7 +404,7 @@ export default function BrandDetailFeature({
                   <Globe size={14} /> Visit Website
                 </a>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
