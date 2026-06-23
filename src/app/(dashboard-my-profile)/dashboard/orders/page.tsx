@@ -250,7 +250,7 @@ export default function MyOrdersPage() {
             </Select>
           </div>
 
-          <div className="min-w-[145px]">
+          {/* <div className="min-w-[145px]">
             <Select value={paymentFilter} onValueChange={(val) => { setPaymentFilter(val); resetPagination(); }}>
               <SelectTrigger className="h-9 w-full rounded-[7px] border-gray-200 text-sm text-gray-700 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 bg-white cursor-pointer">
                 <SelectValue />
@@ -262,7 +262,7 @@ export default function MyOrdersPage() {
                 <SelectItem value="Partially Paid">Partially Paid</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="relative min-w-[130px]">
             <CalendarDays size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />

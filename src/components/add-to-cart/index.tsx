@@ -384,7 +384,7 @@ export const AddToCartWidget = ({
 
     const token = getToken();
     if (token) {
-      const defaultAddr = getDefaultAddressCache();
+    const defaultAddr = getDefaultAddressCache();
       const shippingCharge = defaultAddr
         ? getShippingChargeFromAddress(defaultAddr)
         : getShippingCharge(

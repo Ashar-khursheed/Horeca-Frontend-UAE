@@ -33,7 +33,7 @@ export default function RecentlyViewedSection({ excludeId }: { excludeId?: numbe
 
   return (
     <section className="md:py-7 py-3">
-      <div className="global-container">
+      <div className="global-containers">
         <div className="flex items-center justify-between mb-4">
           <h2 className="heading-font-size font-bold text-gray-900">
           You Browsed It, We Saved it for Easy Access

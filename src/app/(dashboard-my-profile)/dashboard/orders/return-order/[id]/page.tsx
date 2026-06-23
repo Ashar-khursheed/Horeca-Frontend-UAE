@@ -606,8 +606,40 @@ export default function ReturnOrderPage() {
                   )}
                 </div>
 
+          {/* Action buttons */}
+          <div className="space-y-2.5 md:flex  gap-2.5 items-center  md:w-xl">
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+              className={`w-full m-0 flex items-center md:mb-0 mb-3 justify-center gap-2 py-3 rounded-[7px] text-sm font-bold transition-all shadow-sm ${
+                canSubmit && !submitting
+                  ? "bg-[#186737] text-white hover:bg-[#145c30] shadow-green-200 cursor-pointer"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {submitting ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <RotateCcw size={15} />
+                  Start Return Process ({selectedCount} Item{selectedCount !== 1 ? "s" : ""})
+                </>
+              )}
+            </button>
+
+            <Link
+              href="/dashboard/orders"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-[7px] text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all"
+            >
+              <ArrowLeft size={14} />
+              Back to Orders
+            </Link>
+          </div>
                 {/* Video upload */}
-                <div>
+                {/* <div>
                   <p className="text-xs font-semibold text-gray-600 mb-1.5">
                     Upload Problem Videos{" "}
                     <span className="text-gray-400 font-normal">(Optional)</span>
@@ -645,7 +677,7 @@ export default function ReturnOrderPage() {
                       ))}
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -707,38 +739,6 @@ export default function ReturnOrderPage() {
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="space-y-2.5">
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-[7px] text-sm font-bold transition-all shadow-sm ${
-                canSubmit && !submitting
-                  ? "bg-[#186737] text-white hover:bg-[#145c30] shadow-green-200 cursor-pointer"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              {submitting ? (
-                <>
-                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <RotateCcw size={15} />
-                  Start Return Process ({selectedCount} Item{selectedCount !== 1 ? "s" : ""})
-                </>
-              )}
-            </button>
-
-            <Link
-              href="/dashboard/orders"
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-[7px] text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <ArrowLeft size={14} />
-              Back to Orders
-            </Link>
-          </div>
 
           {!canSubmit && (
             <div className="flex items-start gap-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2.5">

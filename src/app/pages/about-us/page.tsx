@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import FinancingModal from "@/components/financing-modal";
 import { useRef, useState, useEffect } from "react";
 import {
   Shield,
@@ -104,6 +105,7 @@ function SectionImage({ alt }: { alt: string }) {
 export default function AboutUsPage() {
   const [activeTab, setActiveTab] = useState("Our Vision");
   const [videoSrc, setVideoSrc] = useState("");
+  const [financingOpen, setFinancingOpen] = useState(false);
 
   const visionRef = useRef<HTMLDivElement>(null);
   const goalRef = useRef<HTMLDivElement>(null);
@@ -133,6 +135,7 @@ export default function AboutUsPage() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-white">
 
       {/* ── Video Hero ─────────────────────────────────────────────────────── */}
@@ -343,12 +346,12 @@ export default function AboutUsPage() {
                 >
                   Contact Us <ChevronRight size={15} />
                 </Link>
-                <Link
-                  href="/create-quotation"
+                <button
+                  onClick={() => setFinancingOpen(true)}
                   className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-[9px] border border-[#186737] text-[#186737] hover:bg-[#186737] hover:text-white text-sm font-bold transition-all"
                 >
                   Request a Quote
-                </Link>
+                </button>
               </div>
             </div>
             <div className="flex-1 w-full">
@@ -415,5 +418,12 @@ export default function AboutUsPage() {
       </section>
 
     </div>
+
+    <FinancingModal
+      isOpen={financingOpen}
+      onClose={() => setFinancingOpen(false)}
+      title="Request a Quote"
+    />
+    </>
   );
 }

@@ -106,7 +106,13 @@ export const addAddress = createAsyncThunk(
         apiUrls.ADD_CUSTOMER_ADDRESS,
         { method: "POST", data: payload }
       );
-      dispatch(fetchAddresses());
+      const newAddressId = res.data.id;
+      const result = await dispatch(fetchAddresses()).unwrap();
+      if (payload.is_default) {
+        syncDefaultToCache(result, newAddressId);
+      } else {
+        syncDefaultToCache(result);
+      }
       return res.message;
     } catch (err: unknown) {
       const msg =

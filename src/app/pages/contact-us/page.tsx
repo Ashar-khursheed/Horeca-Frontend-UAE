@@ -121,6 +121,7 @@ export default function ContactUsPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [activeTab, setActiveTab] = useState(ButtonTabs[0]);
+  const [bannerLoaded, setBannerLoaded] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const country = useAppSelector((s) => s.country.data);
@@ -191,13 +192,16 @@ export default function ContactUsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div>
+      <div className="relative w-full">
+        {!bannerLoaded && (
+          <div className="absolute inset-0 bg-gray-200 animate-pulse" style={{ minHeight: 220 }} />
+        )}
         <Image
           src={BannerContact}
           alt="Contact Us Banner"
-          // width={1600}
-          // height={400}
-          className="w-full h-6s4 object-cover"
+          className={`w-full h-6s4 object-cover transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0"}`}
+          priority
+          onLoad={() => setBannerLoaded(true)}
         />
       </div>
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
@@ -242,7 +246,7 @@ export default function ContactUsPage() {
               icon: RotateCcw,
               title: "Return or Replace Item",
               desc: "Something not right? We'll make it right — fast and easy.",
-              href: "/contact-us#form",
+              href: "/dashboard/orders",
               label: "Start Return",
               color: "text-amber-600",
               bg: "bg-amber-50",
@@ -252,7 +256,7 @@ export default function ContactUsPage() {
               icon: XCircle,
               title: "Cancel My Order",
               desc: "Changed your mind? Cancel your order quickly online.",
-              href: "/contact-us#form",
+              href: "/dashboard/orders",
               label: "Manage My Order",
               color: "text-red-600",
               bg: "bg-red-50",
@@ -393,7 +397,7 @@ export default function ContactUsPage() {
                       }`}
                     >
                       <div className="flex items-center px-3 bg-white border-r border-gray-200 shrink-0">
-                        <Phone size={13} className="text-gray-400 mr-1.5" />
+                        {/* <Phone size={13} className="text-gray-400 mr-1.5" /> */}
                         {/* <select
                           value={form.countryCode}
                           onChange={(e) => set("countryCode", e.target.value)}
@@ -461,7 +465,7 @@ export default function ContactUsPage() {
                       errors.topic
                         ? "border-red-400 focus:ring-2 focus:ring-red-100"
                         : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                    } ${!form.topic ? "text-gray-300" : "text-gray-800"}`}
+                    } ${!form.topic ? "text-black" : "text-gray-800"}`}
                   >
                     <option value="" disabled>Select a topic</option>
                     <option value="order">Order Related</option>
@@ -664,12 +668,12 @@ export default function ContactUsPage() {
                 >
                   <Phone size={13} /> (866) 446-7322
                 </a>
-                <a
+                {/* <a
                   href="tel:+18664467323"
                   className="flex items-center gap-2 text-sm font-semibold text-[#186737] hover:underline"
                 >
                   <Phone size={13} /> (866) 446-7323
-                </a>
+                </a> */}
               </div>
 
               <a
@@ -766,10 +770,10 @@ export default function ContactUsPage() {
                   Email Us Directly
                 </p>
                 <a
-                  href="mailto:support@horecastore.ae"
+                  href="mailto:support@thehorecastore.com"
                   className="text-xs text-[#186737] hover:underline break-all"
                 >
-                  support@horecastore.ae
+              support@thehorecastore.com
                 </a>
               </div>
             </div>
