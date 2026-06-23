@@ -92,7 +92,7 @@ const clearGoogleStateCookie = () => {
   }
 };
 
-async function cacheDefaultAddress() {
+export async function cacheDefaultAddress() {
   try {
     const res = await makeApiRequest<{ success: boolean; data: DefaultAddressCache[] }>(
       apiUrls.GET_CUSTOMER_ADDRESS

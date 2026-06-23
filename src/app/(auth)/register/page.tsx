@@ -35,6 +35,7 @@ import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSl
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
+import { cacheDefaultAddress } from "../login/page";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -203,7 +204,7 @@ function RegisterPageInner() {
       );
       localStorage.setItem("user", JSON.stringify(profileRes.customer));
       dispatch(setProfile(profileRes.customer));
-
+ await cacheDefaultAddress();
       // Sync guest wishlist & cart in parallel for maximum speed
       const syncPromises = [];
       const guestWishlist = localStorage.getItem("horeca_wishlist");
@@ -220,6 +221,7 @@ function RegisterPageInner() {
 
       const redirect = searchParams.get("redirect") ?? "/";
       window.location.href = redirect;
+      //  await cacheDefaultAddress();
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);

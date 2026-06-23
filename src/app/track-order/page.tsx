@@ -59,6 +59,17 @@ interface ApiCustomer {
   mobile_number: string;
 }
 
+interface PaymentEntry {
+  id: number;
+  transaction_id: string;
+  payment_method: string;
+  amount: string;
+  status: string;
+  payment_mode: string;
+  created_at: string;
+  payment_details?: { receipt_url?: string };
+}
+
 interface ApiTrackingOrder {
   id: number;
   order_number: string;
@@ -73,11 +84,21 @@ interface ApiTrackingOrder {
   is_paid: number;
   is_reserved: number;
   paid_amount: string;
+  pending_amount: string;
+  payment_link: string | null;
   payment_mode: string | null;
   created_at: string;
   customer: ApiCustomer;
   customer_address: string;
   order_products: ApiOrderProduct[];
+  payments: PaymentEntry[];
+  currency: {
+    source_title: string;
+    source_symbol: string;
+    target_title: string;
+    target_symbol: string;
+    conversion_rate: number;
+  };
 }
 
 interface TrackingApiResponse {
@@ -381,6 +402,7 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
   const currentIdx = STATUS_TO_STEP[order.status] ?? 1;
   const placedAt = formatDateTime(order.created_at);
 
+  const sym                = order.currency?.target_symbol ?? "$";
   const subtotal           = Number(order.amount);
   const tax                = Number(order.tax_amount);
   const shipping           = Number(order.shipping_charge);
@@ -431,9 +453,9 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                   <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
                   {order.status}
                 </span>
-                <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full ${pc.bg} ${pc.text}`}>
+                {/* <span className={`inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full ${pc.bg} ${pc.text}`}>
                   {paymentStatus}
-                </span>
+                </span> */}
               </div>
               <p className="text-xs text-gray-400 mt-1.5">
                 Placed on {placedAt.date} at {placedAt.time}
@@ -532,10 +554,10 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="text-base font-bold text-gray-900">
-                            ${fmt(price * op.quantity)}
+                            {sym}{fmt(price * op.quantity)}
                           </p>
                           {op.quantity > 1 && (
-                            <p className="text-[11px] text-gray-400 mt-0.5">${fmt(price)} each</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">{sym}{fmt(price)} each</p>
                           )}
                         </div>
                       </div>
@@ -547,7 +569,7 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
 
             <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
               <span className="text-xs text-gray-500 font-medium">Items Subtotal</span>
-              <span className="text-sm font-bold text-gray-900">${fmt(subtotal)}</span>
+              <span className="text-sm font-bold text-gray-900">{sym}{fmt(subtotal)}</span>
             </div>
           </div>
 
@@ -688,27 +710,27 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
             </div>
             <div className="p-5 space-y-3">
               <div className="space-y-2.5">
-                <SummaryRow label="Subtotal" value={`$${fmt(subtotal)}`} />
+                <SummaryRow label="Subtotal" value={`${sym}${fmt(subtotal)}`} />
                 {discount > 0 && (
-                  <SummaryRow label="Coupon Discount" value={`-$${fmt(discount)}`} green />
+                  <SummaryRow label="Coupon Discount" value={`-${sym}${fmt(discount)}`} green />
                 )}
                 {additionalDiscount > 0 && (
-                  <SummaryRow label="Additional Discount" value={`-$${fmt(additionalDiscount)}`} green />
+                  <SummaryRow label="Additional Discount" value={`-${sym}${fmt(additionalDiscount)}`} green />
                 )}
-                <SummaryRow
-                  label={`Tax (${Number(order.tax_percentage).toFixed(2)}%)`}
-                  value={`$${fmt(tax)}`}
-                />
-                <SummaryRow
-                  label="Shipping"
-                  value={shipping === 0 ? "Free" : `$${fmt(shipping)}`}
-                  green={shipping === 0}
-                />
+                {tax > 0 && (
+                  <SummaryRow
+                    label={`Tax (${Number(order.tax_percentage).toFixed(2)}%)`}
+                    value={`${sym}${fmt(tax)}`}
+                  />
+                )}
+                {shipping > 0 && (
+                  <SummaryRow label="Shipping" value={`${sym}${fmt(shipping)}`} />
+                )}
               </div>
               <div className="border-t border-gray-100 pt-3.5">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total Amount</span>
-                  <span className="font-black text-xl text-gray-900">${fmt(total)}</span>
+                  <span className="font-black text-xl text-gray-900">{sym}{fmt(total)}</span>
                 </div>
               </div>
               {/* <button className="w-full flex items-center justify-center gap-2 py-3 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors shadow-sm shadow-[#186737]/20">
@@ -719,21 +741,71 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
           </div>
 
           {/* Payment Details */}
-          <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-              <CreditCard size={15} className="text-[#186737]" />
-              <h3 className="font-bold text-gray-900 text-sm">Payment Details</h3>
-            </div>
-            <div className="p-5 space-y-3">
-              <DetailRow label="Method" value={order.payment_mode ?? "—"} />
-              <DetailRow label="Status">
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${pc.bg} ${pc.text}`}>
-                  {paymentStatus}
+          {(order.payments ?? []).length > 0 && (
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <CreditCard size={15} className="text-[#186737]" />
+                <h3 className="font-bold text-gray-900 text-sm">Payment Details</h3>
+                <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium">
+                  {order.payments.length} payment{order.payments.length !== 1 ? "s" : ""}
                 </span>
-              </DetailRow>
-              <DetailRow label="Paid Amount" value={`$${fmt(Number(order.paid_amount))}`} />
+              </div>
+
+              <div className="divide-y divide-gray-50">
+                {order.payments.map((payment, idx) => (
+                  <div key={payment.id} className="p-5 space-y-2.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-gray-700">Payment #{idx + 1}</span>
+                      <span className="text-sm font-black text-gray-900">{sym}{fmt(Number(payment.amount))}</span>
+                    </div>
+                    <DetailRow
+                      label="Method"
+                      value={payment.payment_method === "Square" ? "Credit / Debit Card" : payment.payment_method}
+                    />
+                    <DetailRow label="Status">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        payment.status === "Completed"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}>
+                        {payment.status}
+                      </span>
+                    </DetailRow>
+                    <DetailRow label="Transaction ID">
+                      <span className="text-[11px] font-mono text-gray-500 break-all text-right max-w-[170px]">
+                        {payment.transaction_id}
+                      </span>
+                    </DetailRow>
+                    <DetailRow label="Date">
+                      <span className="text-xs text-gray-600">
+                        {(() => { const dt = formatDateTime(payment.created_at); return `${dt.date} at ${dt.time}`; })()}
+                      </span>
+                    </DetailRow>
+                  </div>
+                ))}
+              </div>
+
+              {order.is_paid === 0 && Number(order.pending_amount) > 0 && (
+                <div className="px-5 pb-5 space-y-3">
+                  <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
+                    <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
+                    <span className="text-sm font-black text-amber-700">{sym}{fmt(Number(order.pending_amount))}</span>
+                  </div>
+                  {order.payment_link && (
+                    <a
+                      href={order.payment_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors"
+                    >
+                      <CreditCard size={14} />
+                      Pay Now
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* Need Help */}
           <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">

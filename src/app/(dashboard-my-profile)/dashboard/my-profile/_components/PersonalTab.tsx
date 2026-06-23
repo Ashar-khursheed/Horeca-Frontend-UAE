@@ -155,7 +155,16 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
           </h3>
         </div>
 
-        <form onSubmit={formik.handleSubmit} noValidate>
+        <form
+          noValidate
+          onSubmit={(e) => {
+            if (phoneValidation.validating || phoneValidation.isInvalid) {
+              e.preventDefault();
+              return;
+            }
+            formik.handleSubmit(e);
+          }}
+        >
           <div className="p-5 space-y-4">
             {apiStatus === "success" && (
               <div className="flex items-start gap-3 p-3.5 rounded-[7px] bg-emerald-50 border border-emerald-200">
@@ -321,8 +330,12 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
          <div className="">
              <button
               type="submit"
-              disabled={formik.isSubmitting}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 bg-[#186737] hover:bg-[#145c30] text-white disabled:opacity-70 disabled:cursor-not-allowed"
+              disabled={formik.isSubmitting || phoneValidation.isInvalid || phoneValidation.validating}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 bg-[#186737] hover:bg-[#145c30] text-white disabled:opacity-70 ${
+                formik.isSubmitting || phoneValidation.isInvalid || phoneValidation.validating
+                  ? "!cursor-not-allowed opacity-70"
+                  : "cursor-pointer"
+              }`}
             >
               {formik.isSubmitting ? (
                 <>

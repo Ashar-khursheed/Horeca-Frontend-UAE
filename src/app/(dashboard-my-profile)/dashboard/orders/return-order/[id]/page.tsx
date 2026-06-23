@@ -48,6 +48,13 @@ interface ApiOrder {
   updated_at: string;
   total_amount: string;
   order_products: ApiOrderProduct[];
+  currency: {
+    source_title: string;
+    source_symbol: string;
+    target_title: string;
+    target_symbol: string;
+    conversion_rate: number;
+  };
 }
 
 interface ApiOrderResponse {
@@ -155,6 +162,7 @@ export default function ReturnOrderPage() {
     order.status === "Delivered" &&
     Date.now() - new Date(order.updated_at).getTime() > 7 * 24 * 60 * 60 * 1000;
 
+  const sym = order.currency?.target_symbol ?? "$";
   const items: ReturnItem[] = order.order_products.map((op) => {
     const item = mapProduct(op);
     if (isReturnWindowExpired) {
@@ -405,7 +413,7 @@ export default function ReturnOrderPage() {
                           </span>
                         ) : (
                           <p className="text-sm font-bold text-gray-900 shrink-0">
-                            ${fmt(item.price)}
+                            {sym}{fmt(item.price)}
                           </p>
                         )}
                       </div>
@@ -703,11 +711,11 @@ export default function ReturnOrderPage() {
                 highlight={selectedCount > 0}
               />
               <div className="border-t border-gray-100 pt-3">
-                <SummaryRow label="Order Total" value={`$${fmt(total)}`} bold />
+                <SummaryRow label="Order Total" value={`${sym}${fmt(total)}`} bold />
                 {selectedCount > 0 && (
                   <SummaryRow
                     label="Return Amount"
-                    value={`$${fmt(selectedReturnTotal)}`}
+                    value={`${sym}${fmt(selectedReturnTotal)}`}
                     highlight
                     bold
                   />

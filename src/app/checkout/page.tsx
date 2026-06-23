@@ -2,13 +2,19 @@
 
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
+import { AddressesTab } from "@/app/(dashboard-my-profile)/dashboard/my-profile/_components/AddressesTab";
 import Breadcrumb from "@/components/breadcum";
+import PhoneRequiredModal from "@/components/phone-required-modal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchCart,
   hydrateCart,
   resetApiStatus,
 } from "@/store/slices/cart/cartSlice";
+import { fetchCountryByName } from "@/store/slices/country/countrySlice";
+import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { TAX_STORAGE_KEY } from "@/store/slices/tax/taxSlice";
 import {
   getDefaultAddressCache,
   getLocationData,
@@ -17,18 +23,12 @@ import {
   getShippingCharge,
   getShippingChargeFromAddress,
 } from "@/utils/shipping";
-import { AddressesTab } from "@/app/(dashboard-my-profile)/dashboard/my-profile/_components/AddressesTab";
-import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
-import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
-import { TAX_STORAGE_KEY } from "@/store/slices/tax/taxSlice";
-import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -143,6 +143,9 @@ export default function CheckoutPage() {
 
   // Inline error message (card ya address)
   const [orderError, setOrderError] = useState<string | null>(null);
+
+  // Phone number required modal
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
 
   const fetchedRef = useRef(false);
   const taxFetchedZip = useRef<string | null>(null);
@@ -527,7 +530,13 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
-    // â"€â"€ STEP 1: Address check 
+    // ── Phone number check
+    if (!phone) {
+      setPhoneModalOpen(true);
+      return;
+    }
+
+    // â"€â"€ STEP 1: Address check
     if (!hasAddress) {
       setOrderError("Please add a delivery address before placing your order.");
       document
@@ -1463,6 +1472,21 @@ export default function CheckoutPage() {
         </div>
 
       </div>
+
+      <PhoneRequiredModal
+        isOpen={phoneModalOpen}
+        onClose={() => setPhoneModalOpen(false)}
+        defaultCountryCode={countryCode ?? ""}
+        userName={`${firstName} ${lastName}`.trim()}
+        userEmail={email}
+        userType={(() => { try { const u = JSON.parse(localStorage.getItem("user") ?? "{}"); return u.type ?? "Private"; } catch { return "Private"; } })()}
+        userBusinessName={(() => { try { const u = JSON.parse(localStorage.getItem("user") ?? "{}"); return u.business_detail?.business_name ?? ""; } catch { return ""; } })()}
+        onSuccess={(code, mobile) => {
+          setCountryCode(code as any);
+          setPhone(mobile);
+          setPhoneModalOpen(false);
+        }}
+      />
     </>
   );
 }

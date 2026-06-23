@@ -32,7 +32,12 @@ const addressSchema = Yup.object({
   country:    Yup.string().required("Country is required"),
   state:      Yup.string().trim().required("State is required"),
   city:       Yup.string().trim().required("City is required"),
-  zip_code:   Yup.string().trim().required("ZIP code is required"),
+  zip_code: Yup.string()
+    .trim()
+    .required("ZIP code is required")
+    .matches(/^\d+$/, "ZIP code must contain numbers only")
+    .min(3, "ZIP code must be at least 3 digits")
+    .max(10, "ZIP code must be at most 10 digits"),
   is_default: Yup.boolean(),
 });
 
@@ -260,9 +265,15 @@ const AddressForm = ({
           <input
             name="zip_code"
             value={formik.values.zip_code}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+              formik.setFieldValue("zip_code", val);
+              formik.setFieldTouched("zip_code", true, false);
+            }}
             onBlur={formik.handleBlur}
             placeholder="12345"
+            inputMode="numeric"
+            maxLength={10}
             className={`${inputCls} ${errCls("zip_code")} sm:max-w-50`}
           />
           {err("zip_code") && <p className="text-[11px] text-red-500 mt-1">{err("zip_code")}</p>}

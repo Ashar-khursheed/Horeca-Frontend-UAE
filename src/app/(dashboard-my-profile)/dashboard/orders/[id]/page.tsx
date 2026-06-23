@@ -100,6 +100,13 @@ interface ApiOrderDetail {
   tracking: TrackingEntry[];
   payments: PaymentEntry[];
   total_products: number;
+  currency: {
+    source_title: string;
+    source_symbol: string;
+    target_title: string;
+    target_symbol: string;
+    conversion_rate: number;
+  };
 }
 
 interface OrderDetailResponse {
@@ -364,6 +371,7 @@ export default function OrderDetailPage() {
 
   const addressLines = order.customer_address.split(/\\n|\n/).filter(Boolean);
   const firstPayment = order.payments[0];
+  const sym = order.currency?.target_symbol ?? "$";
 
   return (
    <>
@@ -562,11 +570,11 @@ export default function OrderDetailPage() {
 
                         <div className="shrink-0 text-right">
                           <p className="text-base font-bold text-gray-900">
-                            ${fmt(lineTotal)}
+                            {sym}{fmt(lineTotal)}
                           </p>
                           {item.quantity > 1 && (
                             <p className="text-[11px] text-gray-400 mt-0.5">
-                              ${fmt(Number(item.unit_price))} each
+                              {sym}{fmt(Number(item.unit_price))} each
                             </p>
                           )}
                         </div>
@@ -582,7 +590,7 @@ export default function OrderDetailPage() {
                 Items Subtotal
               </span>
               <span className="text-sm font-bold text-gray-900">
-                ${fmt(subtotal)}
+                {sym}{fmt(subtotal)}
               </span>
             </div>
           </div>
@@ -746,33 +754,33 @@ export default function OrderDetailPage() {
             </div>
             <div className="p-5 space-y-3">
               <div className="space-y-2.5">
-                <SummaryRow label="Subtotal" value={`$${fmt(subtotal)}`} />
+                <SummaryRow label="Subtotal" value={`${sym}${fmt(subtotal)}`} />
                 {discount > 0 && (
                   <SummaryRow
                     label="Coupon Discount"
-                    value={`-$${fmt(discount)}`}
+                    value={`-${sym}${fmt(discount)}`}
                     green
                   />
                 )}
                 {additionalDiscount > 0 && (
                   <SummaryRow
                     label="Additional Discount"
-                    value={`-$${fmt(additionalDiscount)}`}
+                    value={`-${sym}${fmt(additionalDiscount)}`}
                     green
                   />
                 )}
-                  {shipping > 0 ? (
-                  <SummaryRow label="Shipping" value={`$${fmt(shipping)}`} />
-                ) : (
-                  <SummaryRow label="Shipping" value="Free" green />
+                {shipping > 0 && (
+                  <SummaryRow label="Shipping" value={`${sym}${fmt(shipping)}`} />
                 )}
-                {order.is_lift_gate           === 1 && <SummaryRow label="Lift Gate Service"       value={`$${fmt(liftFee)}`} />}
-                {order.is_residential_address === 1 && <SummaryRow label="Residential Address"     value={`$${fmt(resFee)}`} />}
-                {order.is_inside_delivery     === 1 && <SummaryRow label="Inside Delivery"         value={`$${fmt(insideFee)}`} />}
-                <SummaryRow
-                  label={`Tax (${Number(order.tax_percentage).toFixed(2)}%)`}
-                  value={`$${fmt(tax)}`}
-                />
+                {order.is_lift_gate           === 1 && <SummaryRow label="Lift Gate Service"   value={`${sym}${fmt(liftFee)}`} />}
+                {order.is_residential_address === 1 && <SummaryRow label="Residential Address" value={`${sym}${fmt(resFee)}`} />}
+                {order.is_inside_delivery     === 1 && <SummaryRow label="Inside Delivery"     value={`${sym}${fmt(insideFee)}`} />}
+                {tax > 0 && (
+                  <SummaryRow
+                    label={`Tax (${Number(order.tax_percentage).toFixed(2)}%)`}
+                    value={`${sym}${fmt(tax)}`}
+                  />
+                )}
               
               </div>
 
@@ -780,14 +788,14 @@ export default function OrderDetailPage() {
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total Amount</span>
                   <span className="font-black text-xl text-gray-900">
-                    ${fmt(total)}
+                    {sym}{fmt(total)}
                   </span>
                 </div>
                 {order.is_paid === 0 && Number(order.paid_amount) > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Paid Amount</span>
                     <span className="text-sm font-semibold text-[#186737]">
-                      ${fmt(Number(order.paid_amount))}
+                      {sym}{fmt(Number(order.paid_amount))}
                     </span>
                   </div>
                 )}
@@ -795,7 +803,7 @@ export default function OrderDetailPage() {
                   <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
                     <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
                     <span className="text-sm font-black text-amber-700">
-                      ${fmt(Number(order.pending_amount))}
+                      {sym}{fmt(Number(order.pending_amount))}
                     </span>
                   </div>
                 )}
@@ -831,7 +839,7 @@ export default function OrderDetailPage() {
                   <div key={payment.id} className="p-5 space-y-2.5">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-gray-700">Payment #{idx + 1}</span>
-                      <span className="text-sm font-black text-gray-900">${fmt(Number(payment.amount))}</span>
+                      <span className="text-sm font-black text-gray-900">{sym}{fmt(Number(payment.amount))}</span>
                     </div>
                     <DetailRow
                       label="Method"
@@ -876,7 +884,7 @@ export default function OrderDetailPage() {
                 <div className="px-5 pb-5 space-y-3">
                   <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
                     <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
-                    <span className="text-sm font-black text-amber-700">${fmt(Number(order.pending_amount))}</span>
+                    <span className="text-sm font-black text-amber-700">{sym}{fmt(Number(order.pending_amount))}</span>
                   </div>
                   {order.payment_link && (
                     <a

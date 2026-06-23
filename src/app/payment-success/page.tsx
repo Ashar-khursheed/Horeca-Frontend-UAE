@@ -56,6 +56,13 @@ interface OrderData {
   tax_amount: string;
   total_amount: string;
   customer_address: string;
+  currency: {
+    source_title: string;
+    source_symbol: string;
+    target_title: string;
+    target_symbol: string;
+    conversion_rate: number;
+  };
   customer: {
     email: string;
     country_code: string;
@@ -283,11 +290,12 @@ export default function PaymentSuccessPage() {
     );
   }
 
-  const subtotal      = Number(order.amount);
-  const shippingTotal = Number(order.shipping_charge);
-  const taxAmount     = Number(order.tax_amount);
-  const taxRate       = Number(order.tax_percentage) / 100;
-  const total         = Number(order.total_amount);
+  const subtotal        = Number(order.amount);
+  const shippingTotal   = Number(order.shipping_charge);
+  const taxAmount       = Number(order.tax_amount);
+  const taxRate         = Number(order.tax_percentage) / 100;
+  const total           = Number(order.total_amount);
+  const currencySymbol  = order.currency?.target_symbol ?? "$";
   const address       = parseAddress(order.customer_address ?? "");
   const phone         = `${order.customer.country_code ?? ""} ${order.customer.mobile_number ?? ""}`.trim();
 
@@ -438,7 +446,7 @@ export default function PaymentSuccessPage() {
                           </p>
                           <div className="flex items-baseline gap-2">
                             <span className="text-base font-bold text-[#186737]">
-                              ${usd(price)}
+                              {currencySymbol}{usd(price)}
                             </span>
                             <span className="text-xs text-gray-400">/ Each</span>
                           </div>
@@ -447,7 +455,7 @@ export default function PaymentSuccessPage() {
                             {itemShipping === 0 ? (
                               <span className="text-[#186737] font-semibold">Free Shipping</span>
                             ) : (
-                              `Shipping: $${usd(itemShipping)}`
+                              `Shipping: ${currencySymbol}${usd(itemShipping)}`
                             )}
                           </p>
                         </div>
@@ -533,30 +541,30 @@ export default function PaymentSuccessPage() {
                 <div className="space-y-2.5 text-sm">
                   <Row
                     label={`Subtotal (${order.order_products.length} item${order.order_products.length !== 1 ? "s" : ""})`}
-                    value={`$${usd(subtotal)}`}
+                    value={`${currencySymbol}${usd(subtotal)}`}
                   />
-                  <Row
-                    label="Shipping & Handling"
-                    value={shippingTotal === 0 ? "Free" : `$${usd(shippingTotal)}`}
-                    valueClass={shippingTotal === 0 ? "text-[#186737]" : undefined}
-                  />
-                  {hasLiftGate    && <Row label="Lift Gate Service"       value={`$${usd(liftFee)}`} />}
-                  {hasResidential && <Row label="Residential Address"     value={`$${usd(resFee)}`} />}
-                  {hasInside      && <Row label="Inside Delivery"         value={`$${usd(insideFee)}`} />}
-                  <Row
-                    label={`Tax (${(taxRate * 100).toFixed(2)}%)`}
-                    value={`$${usd(taxAmount)}`}
-                  />
+                  {shippingTotal > 0 && (
+                    <Row label="Shipping & Handling" value={`${currencySymbol}${usd(shippingTotal)}`} />
+                  )}
+                  {hasLiftGate    && <Row label="Lift Gate Service"   value={`${currencySymbol}${usd(liftFee)}`} />}
+                  {hasResidential && <Row label="Residential Address" value={`${currencySymbol}${usd(resFee)}`} />}
+                  {hasInside      && <Row label="Inside Delivery"     value={`${currencySymbol}${usd(insideFee)}`} />}
+                  {taxAmount > 0 && (
+                    <Row
+                      label={`Tax (${(taxRate * 100).toFixed(2)}%)`}
+                      value={`${currencySymbol}${usd(taxAmount)}`}
+                    />
+                  )}
                   <div className="h-px bg-gray-100" />
                   <div className="flex justify-between items-baseline pt-1">
                     <span className="font-bold text-gray-800">Total Paid</span>
-                    <span className="text-lg font-black text-[#186737]">${usd(total)}</span>
+                    <span className="text-lg font-black text-[#186737]">{currencySymbol}{usd(total)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Trust badges */}
-              <div className="bg-white rounded-[7px] border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-4">
+              {/* <div className="bg-white rounded-[7px] border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-4">
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {[
                     { Icon: Shield, label: "Secure", desc: "SSL encrypted" },
@@ -572,17 +580,17 @@ export default function PaymentSuccessPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               {/* Support */}
               <div className="bg-white rounded-[7px] border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-4">
                 <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center mb-3">
                   Need Help?
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2">
                   {[
-                    { Icon: MessageCircle, label: "Live Chat", href: "/pages/contact-us" },
-                    { Icon: Phone, label: "Call Us", href: "tel:+1-800-000-0000" },
+                    // { Icon: MessageCircle, label: "Live Chat", href: "/pages/contact-us" },
+                    { Icon: Phone, label: "Call Us", href: "tel:+18664467322" },
                   ].map(({ Icon, label, href }) => (
                     <Link
                       key={label}
