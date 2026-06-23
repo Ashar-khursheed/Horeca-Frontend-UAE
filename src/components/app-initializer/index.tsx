@@ -13,7 +13,7 @@ import { apiUrls } from "@/apis/api-endpoint";
 import FeaturedProducts from "@/features/home/feature-product";
 import { useRouter } from "next/navigation";
 
-const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
+const AUTH_MAX_MS    = 259200 * 1000; // 72 hours
 const LOCATION_API   = "https://pim.thehorecastore.co/api/frontend/location";
 const LOCATION_EVENT = "hc_location_updated";
 
@@ -67,6 +67,10 @@ export default function AppInitializer() {
           localStorage.setItem("hc_country_code", detected);
           localStorage.setItem("hc_country_code_time", now);
           document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
+
+          if (detected !== "US") {
+            localStorage.removeItem("horeca_tax_rate");
+          }
 
           if (detected !== currentCookie) {
             dispatch(resetCountry());

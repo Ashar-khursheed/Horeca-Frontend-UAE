@@ -1,9 +1,9 @@
 "use client";
 
-import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
 import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
+import { updateProfile, placeOrderWithPayment, parseOrderError } from "./place-order-api";
 import Breadcrumb from "@/components/breadcum";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -592,81 +592,42 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
-    // ── Phone number check
+    // 1. Phone check
     if (!phone || phoneValidation.isInvalid || phoneValidation.validating) {
       setPhoneError(!phone ? "Phone number is required" : phoneValidation.isInvalid ? (phoneValidation.errorMsg || "Phone number is invalid") : "Please wait for phone validation");
-      setTimeout(() => {
-        const el = document.getElementById("phone-input");
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-        el?.focus();
-      }, 50);
+      setTimeout(() => { const el = document.getElementById("phone-input"); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus(); }, 50);
       return;
     }
     setPhoneError("");
 
-    // ── STEP 2: Address validate (no API — sirf form check)
+    // 2. Address validate (no API)
     if (addressCheckoutRef.current) {
-      const addressValid = await addressCheckoutRef.current.validate();
-      if (!addressValid) {
+      const ok = await addressCheckoutRef.current.validate();
+      if (!ok) {
         setOrderError("Please fill in your delivery address before placing your order.");
         setTimeout(() => {
-          const el =
-            document.getElementById("address-street-input") ??
-            document.getElementById("shipping-address-section");
-          if (el) {
-            const y = el.getBoundingClientRect().top + window.scrollY - 100;
-            window.scrollTo({ top: y, behavior: "smooth" });
-            (el as HTMLInputElement).focus?.();
-          }
+          const el = document.getElementById("address-street-input") ?? document.getElementById("shipping-address-section");
+          if (el) { window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 100, behavior: "smooth" }); (el as HTMLInputElement).focus?.(); }
         }, 50);
         return;
       }
     }
 
-    // ── STEP 3: Card validate (tokenize) — koi API call nahi isse pehle
-    if (!paymentHandleRef.current) {
-      setOrderError("Payment form is not ready. Please wait a moment and try again.");
-      return;
-    }
-    // Modal kholo — card step
-    // setOrderStep("card");
+    // 3. Card tokenize (no API)
+    if (!paymentHandleRef.current) { setOrderError("Payment form is not ready. Please wait a moment and try again."); return; }
+    setOrderStep("card");
     let token: any;
-    try {
-      token = await paymentHandleRef.current.getPaymentToken();
-    } catch (tokenErr: any) {
-      setOrderStep("idle");
-      // setOrderError(tokenErr?.message ?? "Please fill in your card details correctly.");
-      return;
-    }
-    if (!token) {
-      setOrderStep("idle");
-      setOrderError("Could not process card. Please try again.");
-      return;
-    }
+    try { token = await paymentHandleRef.current.getPaymentToken(); }
+    catch (e: any) { setOrderStep("idle"); setOrderError(e?.message ?? "Please fill in your card details correctly."); return; }
+    if (!token) { setOrderStep("idle"); setOrderError("Could not process card. Please try again."); return; }
 
     setIsPlacingOrder(true);
-
     try {
-      // ── Profile update
+      // 4. Profile update
       setOrderStep("profile");
-      try {
-        const user = JSON.parse(localStorage.getItem("user") ?? "{}");
-        await makeApiRequest(apiUrls.UPDATE_PROFILE, {
-          method: "POST",
-          data: {
-            name: `${firstName} ${lastName}`.trim(),
-            email,
-            mobile_number: phone.replace(/\D/g, ""),
-            country_code: countryCode ?? user.country_code ?? "",
-            type: user?.type,
-            business_name: user?.business_detail?.business_name,
-          },
-        });
-      } catch {
-        /* non-blocking */
-      }
+      await updateProfile({ firstName, lastName, email, phone, countryCode: countryCode as any ?? "" });
 
-      // ── Address save
+      // 5. Address save
       setOrderStep("address");
       const addressSaved = await addressCheckoutRef.current?.save();
       if (!addressSaved) {
@@ -676,283 +637,25 @@ export default function CheckoutPage() {
         return;
       }
 
-      // â"€â"€ STEP 4: Idempotency key (fresh, no localStorage)
-      const idempotencyKey = crypto.randomUUID();
-
-      // â"€â"€ STEP 5: Cart summary se amount lo
-      const localSummary = (() => {
-        try {
-          return JSON.parse(localStorage.getItem(CART_SUMMARY_KEY) ?? "{}");
-        } catch {
-          return {};
-        }
-      })();
-      const amount = Number(grandTotal.toFixed(2));
-
-      // ── Square payment
-      setOrderStep("payment");
-      const paymentRes = (await makeApiRequest(apiUrls?.SQUARE_PAYMENT, {
-        data: {
-          source_id: token,
-          amount,
-          idempotency_key: idempotencyKey,
-        },
-        method: "POST",
-      })) as any;
-
-      if (!paymentRes?.success) {
-        throw new Error(
-          paymentRes?.message ?? "Payment failed. Please try again.",
-        );
-      }
-
-      const squarePaymentId = paymentRes ?? null;
-
-      // â"€â"€ STEP 7: defaultAddress localStorage se lo
-      const defaultAddr = getDefaultAddressCache();
-      console.log("dadasda");
-      const user = (() => {
-        try {
-          return JSON.parse(localStorage.getItem("user") ?? "{}");
-        } catch {
-          return {};
-        }
-      })();
-      const couponId = localStorage.getItem("coupon_id") ?? "";
-      const discountVal = localStorage.getItem("discount_value") ?? 0;
-      const discountType = localStorage.getItem("discount_type") ?? "";
-      const sessionId = localStorage.getItem("session_id") ?? "";
-      const taxPercent = +(
-        ratePercent ??
-        localSummary?.taxRatePercentage ??
-        0
-      ).toFixed(2);
-
-      // Products array â€" rawProducts se
-      const location = getLocationData();
-      const deliveryCharge = getShippingCharge(
-        defaultAddr?.city ?? location?.city ?? "",
-        defaultAddr?.state ?? location?.regionName ?? "",
-        defaultAddr?.country ??
-          location?.countryCode ??
-          location?.country ??
-          "",
-      );
-
-      const products = rawProducts.map((cp: any) => {
-        const quantity = Number(cp.quantity) || 1;
-        const productShipping = Number(cp.product?.shippingCharge) || 0;
-        const shippingCharge =
-          productShipping > 0
-            ? productShipping * quantity
-            : (deliveryCharge ?? 0) * quantity;
-
-        return {
-          product_id: cp.product_id ?? cp.id,
-          vendor_id: cp.vendor_product_supplier?.vendor_id,
-          quantity,
-          shipping_charge: shippingCharge,
-          unit_price: parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
-          accessory_item_ids: (cp.accessories_options_details ?? []).map(
-            (a: any) => a.item_id,
-          ),
-        };
+      // 6. Payment + order + history (all in place-order-api.ts)
+      const orderId = await placeOrderWithPayment({
+        token,
+        amount: Number(grandTotal.toFixed(2)),
+        firstName, lastName, email, phone,
+        countryCode: countryCode as any ?? "",
+        rawProducts,
+        liftGate, residential, insideDelivery,
+        ratePercent,
+        cardDetails: paymentHandleRef.current?.getCardDetails(),
+        onStep: setOrderStep,
       });
-
-      // ── Place order
-      setOrderStep("order");
-      const orderRes = (await makeApiRequest(apiUrls?.PLACE_ORDER, {
-        data: {
-          customer_id: user?.id,
-          customer_address_id: defaultAddr?.id,
-          tax_percentage: taxPercent,
-          ship_all_at_once: 1,
-          is_lift_gate: liftGate ? 1 : 0,
-          is_residential_address: residential ? 1 : 0,
-          is_inside_delivery: insideDelivery ? 1 : 0,
-          separate_deliveries: 0,
-          products,
-          utm_id: sessionId,
-          ...(couponId
-            ? {
-                coupon_id: couponId,
-                discount: discountVal,
-                // additional_discount_type: discountType,
-              }
-            : {}),
-          is_reserved: 0,
-          pay_with_cheque: 0,
-          payment_mode: "Square",
-        },
-        method: "POST",
-      })) as any;
-
-      if (!orderRes?.success) {
-        throw new Error(
-          orderRes?.message ??
-            "Order could not be placed. Please contact support.",
-        );
-      }
-
-      const orderId = orderRes?.data?.id;
-      localStorage.removeItem(CART_SUMMARY_KEY);
-
-      // â"€â"€ STEP 8.5: Full order details fetch (place order ke turant baad)
-      let orderData: any = orderRes?.data; // fallback
-      try {
-        const detailRes = (await makeApiRequest(apiUrls.ORDER_DETAIL(orderId), {
-          method: "GET",
-        })) as any;
-        if (detailRes?.success && detailRes?.data) {
-          orderData = detailRes.data;
-        }
-      } catch (detailErr) {
-        console.warn("Order detail fetch failed (non-blocking):", detailErr);
-      }
-
-      // â"€â"€ STEP 9: Payment History API
-      try {
-        const paymentDate = orderData?.updated_at
-          ? orderData.updated_at.split(/[T ]/)[0]
-          : new Date().toISOString().split("T")[0];
-
-        await makeApiRequest(apiUrls?.PAYMENT_HISTORY, {
-          data: {
-            order_id: orderData?.id,
-            transaction_id: squarePaymentId?.payment?.id,
-            payment_mode: "Credit Card",
-            amount: orderData?.total_amount,
-            status: "Completed",
-            payment_date: paymentDate,
-            notes: "",
-            payment_details: JSON.stringify(paymentRes?.payment ?? {}),
-            payment_method: "Square",
-          },
-          method: "POST",
-        });
-      } catch (historyErr) {
-        // Payment history fail hone se order cancel nahi hoga
-        console.warn("Payment history failed (non-blocking):", historyErr);
-      }
-
-      // â"€â"€ STEP 10: Screen Transaction API
-      try {
-        const cardDetails = paymentHandleRef.current?.getCardDetails();
-        const billingFirst = user?.name?.split(" ")?.[0] ?? firstName;
-        const billingLast =
-          user?.name?.split(" ")?.slice(1)?.join(" ") ?? lastName;
-        const billingAddr = defaultAddr?.address ?? "";
-        const billingCity =
-          defaultAddr?.related_city?.name ?? defaultAddr?.city ?? "";
-        const billingState =
-          defaultAddr?.related_state?.name ?? defaultAddr?.state ?? "";
-        const billingZip = defaultAddr?.zip_code ?? "";
-        const countryNameToCode: Record<string, string> = {
-          "united states": "US",
-          canada: "CA",
-          "united kingdom": "GB",
-          australia: "AU",
-          "united arab emirates": "AE",
-          uae: "AE",
-        };
-        const rawCountry = (
-          defaultAddr?.related_country?.name ??
-          defaultAddr?.country ??
-          ""
-        )
-          .toLowerCase()
-          .trim();
-        const billingCountry =
-          countryNameToCode[rawCountry] ?? rawCountry.slice(0, 2).toUpperCase();
-        const expMonth = String(cardDetails?.expMonth ?? "").padStart(2, "0");
-        const expYear = String(cardDetails?.expYear ?? "").slice(-2);
-
-        await makeApiRequest(apiUrls?.SCREEN_TRANSACTION, {
-          data: {
-            order_id: String(orderData?.id) ?? String(orderData?.id),
-            amount,
-            billing_first_name: billingFirst,
-            billing_last_name: billingLast,
-            billing_email: user?.email ?? email,
-            billing_phone: user?.mobile_number ?? phone,
-            billing_address: billingAddr,
-            billing_city: billingCity,
-            billing_state: billingState,
-            billing_zip: billingZip,
-            billing_country: billingCountry,
-            shipping_first_name: billingFirst,
-            shipping_last_name: billingLast,
-            shipping_address: billingAddr,
-            shipping_city: billingCity,
-            shipping_state: billingState,
-            shipping_zip: billingZip,
-            shipping_country: billingCountry,
-            card_bin: "",
-            card_last4: cardDetails?.last4 ?? "",
-            card_type: cardDetails?.brand ?? "",
-            card_expiration: expMonth + expYear,
-          },
-          method: "POST",
-        });
-      } catch (screenErr) {
-        console.warn("Screen transaction failed (non-blocking):", screenErr);
-      }
-
-      // â"€â"€ STEP 11: Full order details GET karo, save karo, 
-      let fullOrder = orderData;
-      try {
-        const detailRes = (await makeApiRequest(
-          apiUrls.ORDER_DETAIL(orderData?.id),
-          { method: "GET" },
-        )) as any;
-        if (detailRes?.success && detailRes?.data) {
-          fullOrder = detailRes.data;
-        }
-      } catch {
-        // GET fail hone pe orderData hi use karo
-      }
-      localStorage.setItem("recentOrder", JSON.stringify(fullOrder));
-
-      // Clear coupon data after successful order
-      localStorage.removeItem(COUPON_KEY);
-      localStorage.removeItem(CART_SUMMARY_KEY);
-      localStorage.removeItem("coupon_id");
-      localStorage.removeItem("discount_value");
-      localStorage.removeItem("discount_type");
 
       setOrderStep("done");
       dispatch(fetchCounts() as any);
-      setTimeout(() => router.push(`/payment-success?orderID=${orderData?.id}`), 1200);
+      setTimeout(() => router.push(`/payment-success?orderID=${orderId}`), 1200);
     } catch (err: any) {
-      console.error("Place order error:", err);
       setOrderStep("idle");
-
-      // API response se proper message nikalte hain
-      const resData = err?.response?.data;
-      const rawApiMsg: string =
-        resData?.errors?.[0] ??
-        resData?.message ??
-        err?.message ??
-        "";
-
-      let userMsg = "Something went wrong. Please try again.";
-      if (rawApiMsg.includes("VALUE_TOO_HIGH")) {
-        userMsg = "Payment could not be processed. Please contact support.";
-      } else if (rawApiMsg.includes("INSUFFICIENT_FUNDS")) {
-        userMsg = "Insufficient funds. Please use a different card.";
-      } else if (rawApiMsg.includes("CVV") || rawApiMsg.includes("cvv")) {
-        userMsg = "Invalid CVV. Please check your card details.";
-      } else if (rawApiMsg.includes("card") || rawApiMsg.includes("Card")) {
-        userMsg = "Card payment failed. Please check your card details.";
-      } else if (rawApiMsg.includes("CARD_EXPIRED") || rawApiMsg.includes("expired")) {
-        userMsg = "Your card has expired. Please use a different card.";
-      } else if (rawApiMsg.toLowerCase().includes("payment")) {
-        userMsg = "Payment failed. Please try again or use a different card.";
-      } else if (rawApiMsg) {
-        userMsg = rawApiMsg.length > 150 ? "Payment failed. Please try again." : rawApiMsg;
-      }
-
-      setOrderError(userMsg);
+      setOrderError(parseOrderError(err));
     } finally {
       setIsPlacingOrder(false);
     }
@@ -1288,10 +991,12 @@ export default function CheckoutPage() {
             />
           </>
         )}
-        <PriceRow
-          label={`Shipping & Handling${ratePercent > 0 ? ` ` : ""}`}
-          value={`${currencySymbol}${usd(baseShipping)}`}
-        />
+        {baseShipping > 0 && (
+          <PriceRow
+            label={`Shipping & Handling${ratePercent > 0 ? ` ` : ""}`}
+            value={`${currencySymbol}${usd(baseShipping)}`}
+          />
+        )}
         {liftGate && (
           <PriceRow
             label={`Lift Gate Service${ratePercent > 0 ? ` ` : ""}`}

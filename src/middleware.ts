@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PROTECTED_ROUTES = ["/dashboard", "/checkout", "/create-quotation"];
 const AUTH_ROUTES = [ "/forgot-password"];
-const AUTH_MAX_MS = 259200 * 1000; // 24 hours
+const AUTH_MAX_MS = 259200 * 1000; // 72 hours
 function clearAuthCookies(response: NextResponse): NextResponse {
   response.cookies.set("token", "", { maxAge: 0, path: "/" });
   response.cookies.set("login_time", "", { maxAge: 0, path: "/" });
