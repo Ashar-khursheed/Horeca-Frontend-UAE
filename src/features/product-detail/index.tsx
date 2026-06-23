@@ -3,6 +3,7 @@
 import Breadcrumb from "@/components/breadcum";
 import { ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 
@@ -15,9 +16,10 @@ import { PurchasePanel } from "./purchase-panel";
 import { QASection } from "./qa-section";
 import { ReviewsSection } from "./reviews-section";
 import { SpecificationsSection } from "./specifications-section";
-import type { ProductDetailResponse, VariantItem } from "./types";
+import type { ProductDetailResponse, ProductReview, VariantItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
 import { ReportErrorModal } from "./report-error-modal";
+import AddReviewModal from "@/components/add-review-modal";
 import { PriceComparisonCard } from "./price-comparison-card";
 import RecentlyViewedSection from "../category/recently-viewed-section";
 
@@ -59,7 +61,8 @@ const ProductDetailPage = ({
   const description = productData.description ?? [];
   const benefitsFeatures = productData.benefits_features ?? [];
   const state = useLocationData();
-
+  const router = useRouter();
+console.log("productDataproductDataproductDataproductData",productData)
   useEffect(() => {
     if (!productData.id) return;
     const token = localStorage.getItem("token");
@@ -138,6 +141,7 @@ const ProductDetailPage = ({
   const [openReviews, setOpenReviews] = useState(false);
   const [openFaq, setOpenFaq] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   const selectVariant = (label: string, variant: VariantItem) => {
     setSelectedVariants((prev) => ({ ...prev, [label]: variant }));
@@ -284,7 +288,7 @@ const ProductDetailPage = ({
             </div>
           )}
 
-          {avgRating > 0 && (
+          {/* {avgRating > 0 && ( */}
             <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
               {/* Mobile: accordion header */}
               <button
@@ -311,7 +315,10 @@ const ProductDetailPage = ({
                     used this product.
                   </p>
                 </div>
-                <button className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setReviewModalOpen(true)}
+                  className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
+                >
                   <MessageCircle size={15} strokeWidth={2} />
                   Leave a Review
                 </button>
@@ -323,10 +330,11 @@ const ProductDetailPage = ({
                   avgRating={avgRating}
                   reviews={reviews}
                   ratingDist={ratingDist}
+                  productId={productData.id}
                 />
               </div>
             </div>
-          )}
+          {/* )} */}
 
           {qaItems.length > 0 && (
             <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
@@ -375,6 +383,12 @@ const ProductDetailPage = ({
               Help us improve this page.
             </button>
           </div>
+          <AddReviewModal
+            isOpen={reviewModalOpen}
+            onClose={() => setReviewModalOpen(false)}
+            productId={productData.id}
+            onSuccess={() => router.refresh()}
+          />
           <ReportErrorModal
             isOpen={reportOpen}
             onClose={() => setReportOpen(false)}
