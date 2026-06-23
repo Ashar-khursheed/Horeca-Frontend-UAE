@@ -46,7 +46,7 @@ export const FeaturedProducts = ({
         {/* ── HEADER ─────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
           <h2 className="heading-font-size font-bold text-slate-900 shrink-0">
-            Featured Products
+           Featured Products
           </h2>
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar">
             {tabs.map((tab, i) => (
