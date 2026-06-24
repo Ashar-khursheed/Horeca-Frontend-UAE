@@ -546,8 +546,8 @@ function RegisterPageInner() {
                   </div>
                   <span className="text-[11px] text-gray-500 leading-relaxed">
                     By submitting this form, you consent to receive promotional offers from Horecastore at the number provided. Consent is not a condition of purchase. Message &amp; data rates may apply. Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers aren&apos;t shared with third parties.{" "}
-                    <Link href="/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
-                    <Link href="/terms" className="text-[#186737] hover:underline">Terms and Conditions</Link>.
+                    <Link href="/pages/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
+                    <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">Terms and Conditions</Link>.
                   </span>
                 </label>
                 {err("consent") && (

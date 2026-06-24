@@ -71,13 +71,24 @@ interface MobileNavItemProps {
   item: Category;
   depth?: number;
   onClose: () => void;
+  rootSlug?: string;
+  parentSlug?: string;
 }
 
-function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
+function MobileNavItem({ item, depth = 0, onClose, rootSlug, parentSlug }: MobileNavItemProps) {
   const [open, setOpen] = useState(false);
   const hasChildren = (item.children?.length ?? 0) > 0;
-  const href = item.slug === "shop-by-brands" ? "/brands" : `/${item.slug}`;
 
+  let href: string;
+  if (item.slug === "shop-by-brands") {
+    href = "/brands";
+  } else if (depth === 0) {
+    href = `/${item.slug}`;
+  } else if (depth === 1) {
+    href = `/${rootSlug}/${item.slug}`;
+  } else {
+    href = `/${rootSlug}/${item.slug}?parent=${parentSlug}`;
+  }
   const rowPadLeft =
     depth === 0 ? "px-5" : depth === 1 ? "pl-7 pr-5" : "pl-10 pr-5";
   const labelSize =
@@ -126,6 +137,8 @@ function MobileNavItem({ item, depth = 0, onClose }: MobileNavItemProps) {
               item={child}
               depth={depth + 1}
               onClose={onClose}
+              rootSlug={depth === 0 ? item.slug : rootSlug}
+              parentSlug={item.slug}
             />
           ))}
           <Link

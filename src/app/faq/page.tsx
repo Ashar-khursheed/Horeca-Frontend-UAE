@@ -373,7 +373,7 @@ export default function FAQPage() {
               Call +1 866-446-7322
             </a>
             <Link
-              href="/contact-us"
+              href="/pages/contact-us"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/15 border border-white/25 text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-colors"
             >
               Send a Message

@@ -674,7 +674,7 @@ export default function CheckoutPage() {
         email,
         phone,
         countryCode: (countryCode as any) ?? "",
-      });
+      }, dispatch);
 
       // 5. Address save
       setOrderStep("address");

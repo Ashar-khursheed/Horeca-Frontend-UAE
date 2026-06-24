@@ -1,6 +1,7 @@
 "use client";
 
 import { makeApiRequest } from "@/apis/axios-instance";
+import CTA from "@/components/cta";
 import {
   AlertCircle,
   ArrowLeft,
@@ -808,7 +809,8 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
           )}
 
           {/* Need Help */}
-          <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
+          <CTA/>
+          {/* <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
             <div className="flex items-start gap-3 mb-4">
               <div className="w-10 h-10 rounded-[7px] bg-[#f0f9f4] border border-[#c3e6d4] flex items-center justify-center shrink-0">
                 <Headphones size={17} className="text-[#186737]" />
@@ -821,25 +823,25 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
               </div>
             </div>
             <div className="grid grid-cols-1 gap-2">
-              {/* <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
+              <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
                 <MessageCircle size={13} />
                 Chat Now
-              </button> */}
+              </button>
               <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
-                {/* <Phone size={13} /> */}
+                <Phone size={13} />
         <a href="tel:+18664467322" className="flex gap-1.5 items-center">  <Phone size={13} />
                 Call Now</a>
               </button>
-              {/* <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] bg-gray-50 text-gray-600 text-xs font-semibold hover:bg-gray-100 transition-colors">
+              <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] bg-gray-50 text-gray-600 text-xs font-semibold hover:bg-gray-100 transition-colors">
                 <Star size={13} />
                 Rate Order
               </button>
               <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] bg-gray-50 text-gray-600 text-xs font-semibold hover:bg-gray-100 transition-colors">
                 <AlertCircle size={13} />
                 Report Issue
-              </button> */}
+              </button>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

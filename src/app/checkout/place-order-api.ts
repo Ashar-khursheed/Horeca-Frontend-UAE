@@ -3,6 +3,8 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { getDefaultAddressCache, getLocationData } from "@/utils/locationStorage";
 import { getShippingCharge } from "@/utils/shipping";
 import type { OrderStep } from "./order-processing-modal";
+import { setProfile } from "@/store/slices/my-profile/profileSlice";
+import type { AppDispatch } from "@/store/store";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -25,16 +27,19 @@ export interface PlaceOrderParams {
 }
 
 // ── Update profile (non-blocking) ────────────────────────────────────────────
-export async function updateProfile(params: {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  countryCode: string;
-}) {
+export async function updateProfile(
+  params: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    countryCode: string;
+  },
+  dispatch: AppDispatch,
+) {
   try {
     const user = JSON.parse(localStorage.getItem("user") ?? "{}");
-    await makeApiRequest(apiUrls.UPDATE_PROFILE, {
+    const res = await makeApiRequest<{ customer: any }>(apiUrls.UPDATE_PROFILE, {
       method: "POST",
       data: {
         name: `${params.firstName} ${params.lastName}`.trim(),
@@ -45,6 +50,12 @@ export async function updateProfile(params: {
         business_name: user?.business_detail?.business_name,
       },
     });
+    // if (res?.customer) {
+    //   dispatch(setProfile(res.customer));
+    //   if (typeof window !== "undefined") {
+    //     localStorage.setItem("user", JSON.stringify(res.customer));
+    //   }
+    // }
   } catch {
     /* non-blocking */
   }

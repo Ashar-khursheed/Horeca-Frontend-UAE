@@ -567,7 +567,8 @@ export default function ContactUsPage() {
                     </div>
                   </div>
                   <span className="text-[11px] text-gray-500 leading-relaxed">
-                  <p className="text-sm">By submitting this form, you consent to receive promotional offers from Horecastore at the number provided. Consent is not a condition of purchase. Message &amp; data rates may apply. Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers aren't shared with third parties. <span><a className="text-blue-500" href="/pages/privacy-policy">Privacy Policy</a> &amp; <a className="text-blue-500" href="/pages/return-policy">Terms and condition</a></span></p>
+                  <p className="text-sm">By submitting this form, you consent to receive promotional offers from Horecastore at the number provided. Consent is not a condition of purchase. Message &amp; data rates may apply. Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers aren't shared with third parties.  <Link href="/pages/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
+                    <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">Terms and Conditions</Link>.</p>
                   </span>
                 </label>
                 {errors.consent && (
@@ -666,7 +667,7 @@ export default function ContactUsPage() {
                   href="tel:+18664467322"
                   className="flex items-center gap-2 text-sm font-semibold text-[#186737] hover:underline"
                 >
-                  <Phone size={13} /> (866) 446-7322
+                  <Phone size={13} /> +1 (866) 446-7322
                 </a>
                 {/* <a
                   href="tel:+18664467323"
@@ -676,12 +677,12 @@ export default function ContactUsPage() {
                 </a> */}
               </div>
 
-              <a
+              {/* <a
                 href="tel:+18664467322"
                 className="mt-4 flex items-center justify-center gap-2 h-10 w-full rounded-[8px] bg-[#186737] hover:bg-[#145c30] text-white text-xs font-bold transition-all"
               >
-                <Phone size={13} /> Start Live Chat
-              </a>
+                <Phone size={13} /> Call Us 
+              </a> */}
             </div>
 
             {/* Showroom */}
