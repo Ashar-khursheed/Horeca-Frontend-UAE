@@ -370,11 +370,10 @@ export default function BlogDetailClient({
                         <button
                           key={item.id}
                           onClick={() => scrollToSection(item.id)}
-                          className={`w-full text-left px-3 py-2 text-sm rounded-[7px] flex items-start gap-2 transition-all ${
-                            activeSection === item.id
+                          className={`w-full text-left px-3 py-2 text-sm rounded-[7px] flex items-start gap-2 transition-all ${activeSection === item.id
                               ? "bg-[#186737]/10 text-[#186737] font-semibold"
                               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                          }`}
+                            }`}
                         >
                           <ChevronRight size={13} className="shrink-0 mt-0.5" />
                           <span className="text-left leading-snug">{item.text}</span>
@@ -428,34 +427,34 @@ export default function BlogDetailClient({
                 )}
 
                 {/* Sticky Form & CTA Container */}
-                <div className="lg:sticky lg:top-24 space-y-5 h-fit">
+                <div className="lg:sticky lg:top-[20px] xl:top-[10px] space-y-3 lg:space-y-2 xl:space-y-5 h-fit">
                   {/* Consultation Inquiry Form */}
                   <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
 
                   {/* Register CTA Card */}
-                  <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 text-white overflow-hidden relative">
+                  <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 lg:p-3 xl:p-5 text-white overflow-hidden relative">
                     <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
                     <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
                     <div className="relative">
                       {/* <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
                         <User size={18} className="text-white" />
                       </div> */}
-                      <h3 className="text-base font-extrabold mb-1 leading-snug">
+                      <h3 className="text-base lg:text-sm xl:text-base font-extrabold mb-1 leading-snug">
                         Join HorecaStore Today
                       </h3>
-                      <p className="text-white/75 text-xs leading-relaxed mb-4">
+                      <p className="text-white/75 text-xs lg:hidden xl:block leading-relaxed mb-4 xl:mb-4">
                         Get exclusive deals, track orders, and access premium commercial kitchen equipment.
                       </p>
                       <Link
                         href="/register"
-                        className="flex items-center justify-center gap-2 w-full bg-white text-[#186737] text-sm font-bold py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 group"
+                        className="flex items-center justify-center gap-2 w-full bg-white text-[#186737] text-sm lg:text-xs xl:text-sm font-bold py-2.5 lg:py-1.5 xl:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 group"
                       >
                         Create Free Account
                         <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
                       </Link>
                       <Link
                         href="/login"
-                        className="flex items-center justify-center mt-2 w-full text-white/70 hover:text-white text-xs font-medium transition-colors"
+                        className="flex items-center justify-center mt-2 lg:mt-1.5 xl:mt-2 w-full text-white/70 hover:text-white text-xs lg:text-[10px] xl:text-xs font-medium transition-colors"
                       >
                         Already have an account? Sign in
                       </Link>
@@ -477,9 +476,9 @@ export default function BlogDetailClient({
           </div> */}
         </div>
       </div>
- <div className="bg-white md:py-10 py-3 pb-0">
-          <SeoContent dataAPI={blog?.seo} />
-        </div>
+      <div className="bg-white md:py-10 py-3 pb-0">
+        <SeoContent dataAPI={blog?.seo} />
+      </div>
       <style jsx global>{`
         .blog-content h1,
         .blog-content h2,

@@ -162,21 +162,16 @@ export default function CategoriesPage({
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
           {APIDATA?.banner_image_detail?.image_url ? (
-            <>
-              {!bannerLoaded && (
-                <div className="w-full h-45 md:h-80 bg-gray-200 animate-pulse" />
-              )}
+            <div className="relative w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-200 overflow-hidden">
               <Image
                 src={APIDATA.banner_image_detail.image_url}
                 alt={APIDATA.banner_image_detail?.alt || "Category banner"}
-                width={0}
-                height={0}
+                fill
                 sizes="100vw"
-                className={`w-full h-auto transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+                className="object-cover"
                 priority
-                onLoad={() => setBannerLoaded(true)}
               />
-            </>
+            </div>
           ) : (
             <div className="w-full h-45 md:h-80 bg-gray-100" />
           )}

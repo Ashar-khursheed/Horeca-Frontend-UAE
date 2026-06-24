@@ -192,16 +192,14 @@ export default function ContactUsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="relative w-full">
-        {!bannerLoaded && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse" style={{ minHeight: 220 }} />
-        )}
+      <div className="relative w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-200 overflow-hidden">
         <Image
           src={BannerContact}
           alt="Contact Us Banner"
-          className={`w-full h-6s4 object-cover transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0"}`}
+          fill
+          sizes="100vw"
+          className="object-cover"
           priority
-          onLoad={() => setBannerLoaded(true)}
         />
       </div>
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
