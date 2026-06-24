@@ -464,7 +464,7 @@ function LoginPageInner() {
             {/* Google */}
             <div className="w-full flex justify-center min-h-[40px]">
               {googleLoading ? (
-                <div className="w-full h-10 border border-gray-200 rounded-[9px] flex items-center justify-center bg-gray-50">
+                <div className="w-full h-10 border border-gray-200 rounded-[9px] flex items-center justify-center bg-[#186737]">
                   <Loader />
                 </div>
               ) : (
