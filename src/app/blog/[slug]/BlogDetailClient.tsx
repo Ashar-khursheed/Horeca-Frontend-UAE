@@ -427,6 +427,9 @@ export default function BlogDetailClient({
                   </div>
                 )}
 
+                {/* Consultation Inquiry Form */}
+                <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
+
                 {/* Register CTA Card */}
                 <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 text-white overflow-hidden relative">
                   <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
@@ -450,15 +453,12 @@ export default function BlogDetailClient({
                     </Link>
                     <Link
                       href="/login"
-                      className="flex items-center justify-center gap-1 w-full mt-2 text-white/70 hover:text-white text-xs font-medium transition-colors"
+                      className="flex items-center justify-center mt-2 w-full text-white/70 hover:text-white text-xs font-medium transition-colors"
                     >
                       Already have an account? Sign in
                     </Link>
                   </div>
                 </div>
-
-                {/* Consultation Inquiry Form */}
-                <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
 
               </div>
             </aside>
