@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { ShareButtons } from "./_components/share-buttons";
 import Breadcrumb from "@/components/breadcum";
+import CTA from "@/components/cta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -353,7 +354,8 @@ export default function PaymentSuccessPage() {
           {/* ── Green success stripe ─────────────────────────────────────────── */}
           <div className="h-2 w-full bg-linear-to-r from-[#186737] via-[#22a855] to-[#186737]" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_370px] gap-0">
+          {/* <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-0"> */}
 
             {/* ── LEFT ──────────────────────────────────────────────────────── */}
             <div className="p-4 sm:p-6 lg:p-8 border-r border-gray-100 order-2 lg:order-1">
@@ -523,6 +525,7 @@ export default function PaymentSuccessPage() {
               <div className="h-px bg-gray-100 my-5" />
 
               {/* CTA buttons */}
+              {/* <CTA/> */}
               <div className="flex gap-3 w-full justify-between">
                 <div>
                   <Link
@@ -620,7 +623,8 @@ export default function PaymentSuccessPage() {
               </div> */}
 
               {/* Support */}
-              <div className="bg-white rounded-[7px] border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-4">
+              <CTA/>
+              {/* <div className="bg-white rounded-[7px] border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-4">
                 <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center mb-3">
                   Need Help?
                 </p>
@@ -639,7 +643,7 @@ export default function PaymentSuccessPage() {
                     </Link>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
