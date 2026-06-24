@@ -8,8 +8,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { FEATURED_DATA, ItemsAccordion } from "@/data";
 import SeoContent from "@/seo/seo-content";
+import RecentlyViewedSection from "./recently-viewed-section";
 import SEOMainContent from "@/seo/seo-main-content";
 import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
 import { ApiCategory, ApiCategoryName, ApiCategoryPage } from "@/utils/types";
@@ -143,6 +143,12 @@ export default function CategoriesPage({
   // category data page
 
   const APIDATA = categoryPage?.category_page;
+  const seoAPIDATA = APIDATA
+    ? {
+        title: APIDATA.title ?? undefined,
+        description: APIDATA.description ?? undefined,
+      }
+    : undefined;
   const randomProducts = categoryPage?.random_products ?? [];
   const crumbs = [
     { label: "Home", href: "/" },
@@ -150,12 +156,11 @@ export default function CategoriesPage({
     { label: slugToTitle(categorySlug), href: null },
   ];
 
+
   return (
     <>
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
-        {/* Hero Header */}
-        <section className="bg-white border-b border-gray-100 relative">
           {APIDATA?.banner_image_detail?.image_url ? (
             <>
               {!bannerLoaded && (
@@ -175,9 +180,9 @@ export default function CategoriesPage({
           ) : (
             <div className="w-full h-45 md:h-80 bg-gray-100" />
           )}
-        </section>
+      
         <div className="">
-          <SEOMainContent APIDATA={APIDATA} categorySlug={categorySlug} />
+          <SEOMainContent APIDATA={seoAPIDATA} categorySlug={categorySlug} />
         </div>
         {/* <section className="md:py-7 py-3">
           <div className="global-container">
@@ -350,6 +355,11 @@ export default function CategoriesPage({
                       </div> */}
           </div>
         </section>
+     
+     {/* <div className="global-contaier"> */}
+         <RecentlyViewedSection container={true} />
+     {/* </div> */}
+
         <section className="md:py-7 py-3">
           <div className="global-container">
             <div className="mt-8">
@@ -371,57 +381,66 @@ export default function CategoriesPage({
           </div>
         </section>
 
-        <BrandsSection brands={brands} />
-        <section className="bg-whiste hidden  py-10 md:pb-10 pb-0">
-          <div className="global-container ">
-            <div className="grid grid-cols-1">
-              <h2 className="flex items-center justify-center text-center flex-col heading-font-size font-bold ">
-                Frequently Asked Questions
-              </h2>
-              <p className="hidden sm:block text-[17px] text-[#4B5563] font-inter px-16 mt-2 text-center">
-                Everything you need to know before you buy.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 grid-cols-1 md:gap-10 max-w-6xl mx-auto">
-              {/* Left Column */}
-              <Accordion
-                type="single"
-                collapsible
-                defaultValue="item-1"
-                className="mt-4"
-              >
-                {ItemsAccordion.slice(
-                  0,
-                  Math.ceil(ItemsAccordion.length / 2),
-                ).map((item) => (
-                  <AccordionItem key={item.value} value={item.value}>
-                    <AccordionTrigger>{item.trigger}</AccordionTrigger>
-                    <AccordionContent>{item.content}</AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-
-              {/* Right Column */}
-              <Accordion type="single" collapsible className="mt-4">
-                {ItemsAccordion.slice(Math.ceil(ItemsAccordion.length / 2)).map(
-                  (item, index) => (
-                    <AccordionItem
-                      key={`right-${index}`}
-                      value={`right-${index}`}
-                    >
-                      <AccordionTrigger>{item.trigger}</AccordionTrigger>
-                      <AccordionContent>{item.content}</AccordionContent>
-                    </AccordionItem>
-                  ),
-                )}
-              </Accordion>
-            </div>
-          </div>
-        </section>
+        {/* FAQ Section — API driven */}
+        {APIDATA?.faqs && (APIDATA.faqs as any[]).length > 0 && (() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const faqs = APIDATA.faqs as any[];
+          const half = Math.ceil(faqs.length / 2);
+          const left = faqs.slice(0, half);
+          const right = faqs.slice(half);
+          const getQ = (f: any) => typeof f.question === "string" ? f.question : (f.question?.en ?? "");
+          const getA = (f: any) => typeof f.answer === "string" ? f.answer : (f.answer?.en ?? "");
+          return (
+            <section className="py-10 md:pb-10 pb-6 bg-white">
+              <div className="global-container">
+                <div className="text-center mb-8">
+                  <h2 className="heading-font-size font-bold text-gray-900">
+                    Frequently Asked Questions
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-2 max-w-xl mx-auto">
+                    Everything you need to know before you buy.
+                  </p>
+                </div>
+                <div className="grid md:grid-cols-2 grid-cols-1 md:gap-8 max-w-5xl mx-auto">
+                  <Accordion type="single" collapsible defaultValue={`faq-0`} className="space-y-2">
+                    {left.map((f: any, i: number) => (
+                      <AccordionItem key={f.id ?? i} value={`faq-${i}`} className="border border-gray-100 rounded-[7px] px-4 shadow-sm">
+                        <AccordionTrigger className="text-sm font-semibold text-gray-900 py-4 text-left">
+                          {getQ(f)}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div
+                            className="text-sm text-gray-600 leading-relaxed pb-3"
+                            dangerouslySetInnerHTML={{ __html: getA(f) }}
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                  <Accordion type="single" collapsible className="space-y-2">
+                    {right.map((f: any, i: number) => (
+                      <AccordionItem key={f.id ?? i} value={`faq-r-${i}`} className="border border-gray-100 rounded-[7px] px-4 shadow-sm">
+                        <AccordionTrigger className="text-sm font-semibold text-gray-900 py-4 text-left">
+                          {getQ(f)}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div
+                            className="text-sm text-gray-600 leading-relaxed pb-3"
+                            dangerouslySetInnerHTML={{ __html: getA(f) }}
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
         <div className="bg-white md:py-10 py-3 pb-0">
           <SeoContent dataAPI={categoryPage?.seo} />
         </div>
-      </main>
+       </main>
     </>
   );
 }

@@ -65,6 +65,15 @@ interface LocalizedString { en?: string; ar?: string; }
    products: ApiProductRaw[];
  }
 
+ interface FeaturedCategoryTab {
+   id: number;
+   parent_id: number;
+   image_url: string;
+   order: number;
+   is_featured: boolean;
+   name: string;
+ }
+
 
 interface CategoryPageImageDetail {
   image_url: string;
@@ -142,6 +151,7 @@ interface InnerCategoryPageResponse {
     icon_image: string;
     url: string;
   }[];
+  
 }
 
 interface ProductsListingResponse {
@@ -183,17 +193,29 @@ interface ApiCategoryPage {
     url: string;
     indexing: boolean;
     banner_slug?: string | null;
+    title_tag?: LocaleField | null;
+    meta_title?: LocaleField | null;
+    meta_description?: LocaleField | null;
+    og_title?: LocaleField | null;
+    og_description?: LocaleField | null;
+    og_image_url?: LocaleField | null;
+    header_description?: LocaleField | null;
+    short_title_variant?: LocaleField | null;
     banner_image_url?: LocaleField | null;
     banner_image_alt_text?: LocaleField | null;
     paragraph_1?: LocaleField | null;
     paragraph_2?: LocaleField | null;
     paragraph_3?: LocaleField | null;
     paragraph_4?: LocaleField | null;
+
     popular_tag_details?: {
       en?: { popularTags: string; popularSlug: string }[] | null;
       ar?: { popularTags: string; popularSlug: string }[] | null;
     } | null;
-    current_translation: CategoryPageSeoTranslation;
+    seo_schema?: {
+      en?: object | null;
+      ar?: object | null;
+    } | null;
   } | null;
   category_page: {
     id: number;
@@ -303,7 +325,7 @@ interface SearchSuggestions {
 
 export type {
   ApiCategory,
-  ApiCategoryName, ApiCategoryPage, ApiProductRaw, CategoryPageImageDetail, CategoryPageSeoTranslation, FeaturedCategory, FixedFilterItem, HeaderProps, InnerCategoryPageResponse,
+  ApiCategoryName, ApiCategoryPage, ApiProductRaw, CategoryPageImageDetail, CategoryPageSeoTranslation, FeaturedCategory, FeaturedCategoryTab, FixedFilterItem, HeaderProps, InnerCategoryPageResponse,
   InnerCategoryPageSeo, LocalizedString, ProductsListingResponse, Props, RangeFilterItem, SearchBrand, SearchCategory, SearchProduct, SearchSuggestions
 };
 

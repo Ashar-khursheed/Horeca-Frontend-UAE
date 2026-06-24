@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import FinancingModal from "@/components/financing-modal";
 import { useRef, useState, useEffect } from "react";
 import {
   Shield,
@@ -104,6 +105,7 @@ function SectionImage({ alt }: { alt: string }) {
 export default function AboutUsPage() {
   const [activeTab, setActiveTab] = useState("Our Vision");
   const [videoSrc, setVideoSrc] = useState("");
+  const [financingOpen, setFinancingOpen] = useState(false);
 
   const visionRef = useRef<HTMLDivElement>(null);
   const goalRef = useRef<HTMLDivElement>(null);
@@ -133,15 +135,26 @@ export default function AboutUsPage() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-white">
 
       {/* ── Video Hero ─────────────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden bg-[#0f4d26]">
-        {videoSrc && (
+        {window?.innerWidth < 640 && (
           <video
-            key={videoSrc}
-            className="w-full h-full object-cover max-h-[500px]"
-            src={videoSrc}
+            className="w-full h-full object-cover"
+            src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/products/440x680+voice+over+2.mp4`}
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        )}
+        {window?.innerWidth > 640 && (
+          <video
+            className="w-full h-full object-cover"
+            // src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/Brand/Amana/horecastore.mp4`}
+            src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/products/updated+1+1920x500+Voice+over+2.mp4`}
             autoPlay
             muted
             loop
@@ -333,12 +346,12 @@ export default function AboutUsPage() {
                 >
                   Contact Us <ChevronRight size={15} />
                 </Link>
-                <Link
-                  href="/create-quotation"
+                <button
+                  onClick={() => setFinancingOpen(true)}
                   className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-[9px] border border-[#186737] text-[#186737] hover:bg-[#186737] hover:text-white text-sm font-bold transition-all"
                 >
                   Request a Quote
-                </Link>
+                </button>
               </div>
             </div>
             <div className="flex-1 w-full">
@@ -405,5 +418,12 @@ export default function AboutUsPage() {
       </section>
 
     </div>
+
+    <FinancingModal
+      isOpen={financingOpen}
+      onClose={() => setFinancingOpen(false)}
+      title="Request a Quote"
+    />
+    </>
   );
 }

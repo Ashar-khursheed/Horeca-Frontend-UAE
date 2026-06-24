@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Mail, ArrowLeft, Star, ShieldCheck, KeyRound, CheckCircle2 } from "lucide-react";
+import { makeApiRequest } from "@/apis/axios-instance";
 
 // ── Trust Badge ───────────────────────────────────────────────────────────────
 const TrustBadge = ({
@@ -59,6 +60,7 @@ export default function ForgotPasswordPage() {
   const [emailError, setEmailError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const validate = () => {
     if (!email) {
@@ -73,14 +75,25 @@ export default function ForgotPasswordPage() {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setApiError("");
+    try {
+      await makeApiRequest("auth/forgot-password", {
+        method: "POST",
+        data: { email, type: "customer" },
+      });
       setSent(true);
-    }, 1800);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Something went wrong. Please try again.";
+      setApiError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -255,6 +268,12 @@ export default function ForgotPasswordPage() {
                       "Send Reset Link"
                     )}
                   </button>
+
+                  {apiError && (
+                    <p className="text-[12px] text-red-500 text-center mt-1">
+                      {apiError}
+                    </p>
+                  )}
                 </form>
 
                 {/* Back to login */}

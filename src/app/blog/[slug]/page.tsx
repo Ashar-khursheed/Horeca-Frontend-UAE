@@ -86,12 +86,12 @@ export async function generateMetadata({
     keywords: seo?.primary_keyword ?? undefined,
     robots: seo?.indexing === false ? "noindex, nofollow" : "index, follow",
     alternates: {
-      canonical: `https://www.horecastore.ae${canonical}`,
+      canonical: `${process.env.NEXT_SITE_URL}${canonical}`,
     },
     openGraph: {
       title: seo?.og_title || title,
       description: seo?.og_description || description,
-      url: `https://www.horecastore.ae${canonical}`,
+      url: `${process.env.NEXT_SITE_URL}${canonical}`,
       type: "article",
       images: ogImage ? [{ url: ogImage, alt: blog.title }] : [],
     },
@@ -112,7 +112,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
     makeApiCallSSR<ApiBlogDetail>(
       apiUrls.BLOG_SINGLE(slug),
       {},
-      { revalidate: 3600 },
+      { revalidate: 0 },
     ),
     makeApiCallSSR<CommentsResponse>(
       apiUrls.BLOG_COMMENTS(slug),

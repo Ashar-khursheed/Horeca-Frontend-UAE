@@ -46,6 +46,7 @@ export const ProductGallery = ({
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
+
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPos,  setZoomPos]  = useState({ x: 50, y: 50 });
@@ -105,6 +106,12 @@ export const ProductGallery = ({
 
   const lensX = Math.min(Math.max(zoomPos.x - LENS_PCT / 2, 0), 100 - LENS_PCT);
   const lensY = Math.min(Math.max(zoomPos.y - LENS_PCT / 2, 0), 100 - LENS_PCT);
+
+  // Clamp zoom panel so it never goes off the right edge of the viewport
+  const zoomPanelSize = zoomRect ? Math.min(zoomRect.height, 380) : 380;
+  const zoomPanelLeft = zoomRect
+    ? Math.min(zoomRect.right + 16, window.innerWidth - zoomPanelSize - 8)
+    : 0;
 
   return (
     <>
@@ -213,9 +220,7 @@ export const ProductGallery = ({
           <button
             onClick={handleWishlist}
             disabled={isToggling}
-            className={`absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 disabled:opacity-60 ${
-              showZoom ? "opacity-0" : "opacity-100"
-            }`}
+            className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 disabled:opacity-60"
           >
             <Heart
               size={17}
@@ -227,9 +232,7 @@ export const ProductGallery = ({
           {/* Share */}
           <button
             onClick={() => setShareOpen(true)}
-            className={`absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10 ${
-              showZoom ? "opacity-0" : "opacity-100"
-            }`}
+            className="absolute top-3 right-14 w-9 h-9 bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all z-10"
           >
             <Share2 size={15} className="text-gray-400" />
           </button>
@@ -292,15 +295,15 @@ export const ProductGallery = ({
         title={productName}
       />
 
-      {/* Zoom Panel */}
+      {/* External Zoom Panel — fixed, appears to the right of the image */}
       {showZoom && zoomRect && (
         <div
-          className="fixed z-999 rounded-[7px] overflow-hidden pointer-events-none"
+          className="fixed z-[9999] rounded-[7px] overflow-hidden pointer-events-none"
           style={{
             top: zoomRect.top,
-            left: zoomRect.right + 16,
-            width: zoomRect.height,
-            height: zoomRect.height,
+            left: zoomPanelLeft,
+            width: zoomPanelSize,
+            height: zoomPanelSize,
             boxShadow: "0 4px 32px 0 rgba(0,0,0,0.18)",
             border: "1px solid #e5e7eb",
             backgroundImage: `url(${images[activeImg]})`,

@@ -43,6 +43,7 @@ interface CartState {
   apiEntries: ApiCartEntry[];  // logged-in cart minimal (for widget counters)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawProducts: any[];          // full API products for cart page display
+  cartShippingCharge: string;  // cart-level shipping_charge from API
   apiStatus: ApiStatus;
   lastAddedAt: number;         // bumped on every addApiEntry — cart page watches this to re-fetch
 }
@@ -74,7 +75,8 @@ export const fetchCart = createAsyncThunk(
       params: { country: countryName },
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const products: any[] = res?.data?.customer_cart_products ?? [];
+    const data = res?.data ?? {};
+    const products: any[] = data.customer_cart_products ?? [];
     return {
       entries: products.map((cp) => ({
         cartItemId: cp.id as number,
@@ -82,14 +84,15 @@ export const fetchCart = createAsyncThunk(
         quantity: cp.quantity as number,
       })) as ApiCartEntry[],
       rawProducts: products,
+      cartShippingCharge: data.shipping_charge ?? "0.00",
     };
   },
   {
-    // Skip if already loading or succeeded — prevents N calls from N widgets
+    // Skip if a fetch is already in-flight — prevents concurrent duplicate calls
     condition: (_, { getState }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const status: ApiStatus = (getState() as any).cart?.apiStatus;
-      return status !== "loading" && status !== "succeeded";
+      return status !== "loading";
     },
   },
 );
@@ -99,6 +102,7 @@ const initialState: CartState = {
   items: [],
   apiEntries: [],
   rawProducts: [],
+  cartShippingCharge: "0.00",
   apiStatus: "idle",
   lastAddedAt: 0,
 };
@@ -197,6 +201,7 @@ const cartSlice = createSlice({
         state.apiStatus = "succeeded";
         state.apiEntries = action.payload.entries;
         state.rawProducts = action.payload.rawProducts;
+        state.cartShippingCharge = action.payload.cartShippingCharge;
       })
       .addCase(fetchCart.rejected, (state) => {
         state.apiStatus = "failed";

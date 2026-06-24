@@ -72,10 +72,10 @@ export default function CheckoutPayment({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     // <div className="mt-5 rounded-xl border-2 border-[#E2E8F0]">
-    <div className="mt-5 rounded-xl border-2 border-[#E2E8F0]">
+    <div className="mt-5 rounded-[7px] border-2 border-[#E2E8F0]">
 
       {/* Header */}
-      <div className="flex items-center justify-between rounded-t-xl bg-[#E2E8F0] px-6 py-3">
+      <div className="flex items-center justify-between rounded-t-[4px] bg-[#E2E8F0] px-6 py-3">
         <h2 className="text-lg font-semibold text-[#424242]">Payment Method</h2>
       </div>
 
@@ -104,7 +104,7 @@ export default function CheckoutPayment({
           </div>
 
           {/* Card brand icons */}
-          <div className="flex shrink-0 items-center gap-1.5 self-center">
+          <div className="flex shrink-0 items-center gap-1.5 self-center md:block hidden">
             <CardBadge label="VISA"   bg="bg-[#1a1f71]" color="text-white"   />
             <CardBadge label="MC"     bg="bg-[#eb001b]" color="text-white"   />
             <CardBadge label="AMEX"   bg="bg-[#007bc1]" color="text-white"   />

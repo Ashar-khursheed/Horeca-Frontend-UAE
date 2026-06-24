@@ -23,7 +23,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AddToCartWidget from "../add-to-cart";
 import TickerBadge from "../ticker-badge";
 import { Modal } from "@/components/ui/modal";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -102,12 +108,19 @@ export interface RawApiProduct {
     id: number;
     name: LS | { en?: string; ar?: string };
     is_required: number;
-    accessory_item: { id: number; name: LS | { en?: string; ar?: string }; price: number }[];
+    accessory_item: {
+      id: number;
+      name: LS | { en?: string; ar?: string };
+      price: number;
+    }[];
   }[];
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const resolveStr = (v: LS | { name?: string; symbol?: string } | undefined, locale = "en"): string => {
+const resolveStr = (
+  v: LS | { name?: string; symbol?: string } | undefined,
+  locale = "en",
+): string => {
   if (!v) return "";
   if (typeof v === "string") return v;
   const o = v as Record<string, string | undefined>;
@@ -115,7 +128,10 @@ const resolveStr = (v: LS | { name?: string; symbol?: string } | undefined, loca
   return o.en ?? o.ar ?? o.name ?? o.symbol ?? "";
 };
 
-type CurrencyField = string | { name?: string; symbol?: string; display_title?: string } | undefined;
+type CurrencyField =
+  | string
+  | { name?: string; symbol?: string; display_title?: string }
+  | undefined;
 const resolveCurrencySymbol = (c: CurrencyField): string => {
   if (!c) return "AED";
   if (typeof c === "string") return c;
@@ -126,14 +142,14 @@ interface ProductCardProps {
   product: ApiProduct | RawApiProduct;
   newUrl?: string;
   aboveFold?: boolean;
-  onWishlistToggle?: (product: ApiProduct | RawApiProduct, inWishlist: boolean) => void;
+  onWishlistToggle?: (
+    product: ApiProduct | RawApiProduct,
+    inWishlist: boolean,
+  ) => void;
   onBeforeAdd?: () => Promise<void>;
   onAddSuccess?: () => void;
   onAddedToCart?: (productId: number) => void;
 }
-
-
-
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const fmtPrice = (n: number) =>
@@ -223,8 +239,8 @@ export const AddToCartButton = ({
       success
         ? "bg-[#186737] hover:bg-[#145c30] text-white"
         : variant === "quote"
-        ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
-        : "bg-[#186737] hover:bg-[#145c30] text-white",
+          ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
+          : "bg-[#186737] hover:bg-[#145c30] text-white",
     ].join(" ")}
   >
     {success ? (
@@ -251,30 +267,47 @@ export const ProductCard = ({
   // ── Country from Redux (client-side currency conversion) ─────────────
   const country = useAppSelector((s) => s.country.data);
   // ── Wishlist from Redux ───────────────────────────────────────────────
-  const wishlistIds      = useAppSelector((s) => s.wishlist.ids);
+  const wishlistIds = useAppSelector((s) => s.wishlist.ids);
   const wishlistHydrated = useAppSelector((s) => s.wishlist.hydrated);
-  const isToggling       = useAppSelector((s) => s.wishlist.toggling.includes(product.id));
-  const isLoggedIn       = useAppSelector((s) => !!(s.auth as any).customer);
+  const isToggling = useAppSelector((s) =>
+    s.wishlist.toggling.includes(product.id),
+  );
+  const isLoggedIn = useAppSelector((s) => !!(s.auth as any).customer);
   // Logged-in: ISR cache ka in_wishlist unreliable hai (shared cache) — sirf Redux use karo
   // Guest: SSR in_wishlist reliable hai (no auth, sab ko same data) — flicker bachao
   const inWishlist = wishlistHydrated
     ? wishlistIds.includes(product.id)
-    : (isLoggedIn ? false : !!product.in_wishlist);
+    : isLoggedIn
+      ? false
+      : !!product.in_wishlist;
   // ── Normalise fields that may arrive in either flat or localised form ──
   const name = resolveStr(product.name, locale);
   const rawImages = product.images;
   const images_ = Array.isArray(rawImages)
     ? (rawImages as string[])
-    : (locale === "ar"
-        ? ((rawImages as { ar?: string[]; en?: string[] })?.ar ?? (rawImages as { en?: string[] })?.en ?? [])
-        : ((rawImages as { en?: string[] })?.en ?? (rawImages as { ar?: string[] })?.ar ?? []));
-  const deliveryDays = product.delivery_days ?? ("suppliers" in product ? (product as RawApiProduct).suppliers?.[0]?.delivery_days : undefined) ?? "";
+    : locale === "ar"
+      ? ((rawImages as { ar?: string[]; en?: string[] })?.ar ??
+        (rawImages as { en?: string[] })?.en ??
+        [])
+      : ((rawImages as { en?: string[] })?.en ??
+        (rawImages as { ar?: string[] })?.ar ??
+        []);
+  const deliveryDays =
+    product.delivery_days ??
+    ("suppliers" in product
+      ? (product as RawApiProduct).suppliers?.[0]?.delivery_days
+      : undefined) ??
+    "";
 
-  const sellUnitStr = resolveStr(product.selling_type?.attribute_value_unit, locale);
+  const sellUnitStr = resolveStr(
+    product.selling_type?.attribute_value_unit,
+    locale,
+  );
   const originalPrice = product.original_price ?? product.price ?? 0;
   const supplier0 = (product as RawApiProduct).suppliers?.[0];
   const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
-  const isFixed = product.is_fixed != null ? !!product.is_fixed : !!(supplier0?.is_fixed);
+  const isFixed =
+    product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
   const isQuote = !!product.quote_available;
   // if (isQuote) console.log("[QUOTE PRODUCT]", product.id, product.quote_available);
 
@@ -283,30 +316,37 @@ export const ProductCard = ({
   useEffect(() => {
     dispatch(hydrateGuestWishlist());
     if (product.in_wishlist) dispatch(seedWishlistIds([product.id]));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Accessories modal ────────────────────────────────────────────────
   const rawAccessories = (product as RawApiProduct).accessories ?? [];
-  const hasRequiredAccessories = rawAccessories.some((a) => a.is_required === 1);
-  const [accessoryModalOpen, setAccessoryModalOpen] = useState(false);
-  const [selectedAccItems, setSelectedAccItems]     = useState<Record<number, number | null>>({});
-  const [accShowErrors, setAccShowErrors]           = useState(false);
-  const accCanAddToCart = rawAccessories.every(
-    (a) => a.is_required !== 1 || selectedAccItems[a.id] != null
+  const hasRequiredAccessories = rawAccessories.some(
+    (a) => a.is_required === 1,
   );
-  const resolveAccName = (n: LS | { en?: string; ar?: string } | undefined): string => {
+  const [accessoryModalOpen, setAccessoryModalOpen] = useState(false);
+  const [selectedAccItems, setSelectedAccItems] = useState<
+    Record<number, number | null>
+  >({});
+  const [accShowErrors, setAccShowErrors] = useState(false);
+  const accCanAddToCart = rawAccessories.every(
+    (a) => a.is_required !== 1 || selectedAccItems[a.id] != null,
+  );
+  const resolveAccName = (
+    n: LS | { en?: string; ar?: string } | undefined,
+  ): string => {
     if (!n) return "";
     if (typeof n === "string") return n;
     const o = n as Record<string, string | undefined>;
     return locale === "ar" ? (o.ar ?? o.en ?? "") : (o.en ?? o.ar ?? "");
   };
-  const selectedAccessoryIds = Object.values(selectedAccItems).filter((v): v is number => v != null);
+  const selectedAccessoryIds = Object.values(selectedAccItems).filter(
+    (v): v is number => v != null,
+  );
 
   // ── Price logic (sale_price=0 means no sale) ─────────────────────────
   const hasSale =
-    product.sale_price > 0 &&
-    product.sale_price !== originalPrice;
+    product.sale_price > 0 && product.sale_price !== originalPrice;
 
   const activePrice = hasSale ? product.sale_price : originalPrice;
 
@@ -317,7 +357,6 @@ export const ProductCard = ({
   // ── Currency symbol: prefer country Redux, fallback to API field ─────
   // Price amount comes from API as-is. Client-side fetch (useEffect in
   // sub-category) re-fetches with user IP → correct local-currency prices.
-  
 
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
 
@@ -352,23 +391,30 @@ export const ProductCard = ({
     () => () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     },
-    []
+    [],
   );
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (isToggling) return;
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) {
       // Logged-in: call API
-      dispatch(toggleWishlistItem({ productId: product.id, currentlyInWishlist: inWishlist }))
-            .then(() => dispatch(fetchCounts() as any))
-                .catch(() => {});
-      
+      dispatch(
+        toggleWishlistItem({
+          productId: product.id,
+          currentlyInWishlist: inWishlist,
+        }),
+      )
+        .then(() => dispatch(fetchCounts() as any))
+        .catch(() => {});
     } else {
       // Guest: save full product to localStorage
-      dispatch(toggleGuestWishlistItem({ productId: product.id, rawProduct: product }));
+      dispatch(
+        toggleGuestWishlistItem({ productId: product.id, rawProduct: product }),
+      );
     }
     if (onWishlistToggle) onWishlistToggle(product, !inWishlist);
   };
@@ -377,15 +423,14 @@ export const ProductCard = ({
     ? product.url
     : `/${product.parent_category_url ?? newUrl}/${product.url}`;
   const displayImages = images.slice(0, 5);
-  const visibleImages = showHoverImages ? displayImages : displayImages.slice(0, 1);
+  const visibleImages = showHoverImages
+    ? displayImages
+    : displayImages.slice(0, 1);
 
   return (
-    <div
-      className="bg-white rounded-[7px] shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden cursor-pointer flex flex-col h-full border border-transparent hover:border-[#dceee4] hover:shadow-[0_4px_20px_rgba(0,0,0,0.11)] transition-all duration-200"
-    >
+    <div className="bg-white rounded-[7px] shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden cursor-pointer flex flex-col h-full border border-transparent hover:border-[#dceee4] hover:shadow-[0_4px_20px_rgba(0,0,0,0.11)] transition-all duration-200">
       {/* ── IMAGE AREA ───────────────────────────────────────────────── */}
       <div className="relative bg-white">
-
         {/* Discount badge */}
         {hasSale && discountPct > 0 && (
           <div className="absolute top-3 left-3 z-10">
@@ -404,7 +449,9 @@ export const ProductCard = ({
           <Heart
             size={17}
             strokeWidth={2}
-            className={inWishlist ? "fill-[#186737] text-[#186737]" : "text-gray-400"}
+            className={
+              inWishlist ? "fill-[#186737] text-[#186737]" : "text-gray-400"
+            }
           />
         </button>
 
@@ -427,7 +474,7 @@ export const ProductCard = ({
               visibleImages.map((img, i) => (
                 <Image
                   key={img}
-                  src={img }
+                  src={img}
                   alt={product.alt_tags?.[i] || name}
                   fill
                   priority={aboveFold && i === 0}
@@ -435,7 +482,8 @@ export const ProductCard = ({
                   className="object-contain p-2 transition-opacity duration-500"
                   style={{ opacity: imgIndex === i ? 1 : 0 }}
                   onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "https://placehold.co/400";
+                    (e.currentTarget as HTMLImageElement).src =
+                      "https://placehold.co/400";
                     (e.currentTarget as HTMLImageElement).style.opacity = "1";
                   }}
                   sizes="(max-width: 640px) 175px, (max-width: 1024px) 33vw, 20vw"
@@ -467,20 +515,19 @@ export const ProductCard = ({
 
       {/* ── CONTENT AREA ─────────────────────────────────────────────── */}
       <div className="px-3 pb-3 pt-2 md:px-4 md:pb-4 md:pt-2 flex flex-col flex-1 border-t border-gray-100">
-
         {/* Product name */}
         <Link href={productLink}>
-          <p
-            className="md:font-semibold font-semibold text-[13.5px] lg:text-[14.5px] text-gray-900 line-clamp-2 hover:text-[#186737] transition-colors leading-snug"
-           
-          >
+          <p className="md:font-semibold font-semibold text-[13.5px] lg:text-[14.5px] text-gray-900 line-clamp-2 hover:text-[#186737] transition-colors leading-snug">
             {name}
           </p>
         </Link>
 
         {/* SKU */}
         {product.sku && (
-          <p className="mt-1.5 text-xs text-[#6B7280] font-medium" title={product.sku}>
+          <p
+            className="mt-1.5 text-xs text-[#6B7280] font-medium"
+            title={product.sku}
+          >
             Model No: {product.sku}
           </p>
         )}
@@ -509,7 +556,7 @@ export const ProductCard = ({
         </p>
         <p className="mt- text-[12.5px] font-semibold text-[#4B5563] md:hidden flex items-center gap-1">
           <Truck size={13} className="text-[#186737] flex-shrink-0" />
-         Shipping Fee
+          Shipping Fee
         </p>
 
         {/* Ships in X Days */}
@@ -535,7 +582,7 @@ export const ProductCard = ({
               </p>
             </div>
           ) : (
-            <div >
+            <div>
               {/* Main price line: -11%  $19,990.26  /Each */}
               <div className="flex items-baseline gap-2 flex-wrap leading-none">
                 {hasSale && (
@@ -572,9 +619,11 @@ export const ProductCard = ({
               {/* WAS price */}
               {hasSale ? (
                 <p className="text-[#6B7280] font-semibold text-[13px] line-through mt-1">
-                  WAS     {typeof product?.currency === "object"
-                      ? product.currency?.symbol || "AED"
-                      : product?.currency || "AED"} {fmtPrice(originalPrice)}
+                  WAS{" "}
+                  {typeof product?.currency === "object"
+                    ? product.currency?.symbol || "AED"
+                    : product?.currency || "AED"}{" "}
+                  {fmtPrice(originalPrice)}
                 </p>
               ) : null}
             </div>
@@ -600,7 +649,11 @@ export const ProductCard = ({
         {/* Accessories Modal */}
         <Modal
           isOpen={accessoryModalOpen}
-          onClose={() => { setAccessoryModalOpen(false); setAccShowErrors(false); setSelectedAccItems({}); }}
+          onClose={() => {
+            setAccessoryModalOpen(false);
+            setAccShowErrors(false);
+            setSelectedAccItems({});
+          }}
           title={`Product Accessories`}
           width="max-w-md"
           showFooter={false}
@@ -609,44 +662,79 @@ export const ProductCard = ({
           {/* Product mini info */}
           <div className="flex items-center gap-3 pb-4 mb-4 border-b border-gray-100">
             {images_.length > 0 && (
-              <img src={images_[0]} alt={name} className="w-14 h-14 object-contain rounded-[7px] border border-gray-100 bg-gray-50" />
+              <img
+                src={images_[0]}
+                alt={name}
+                className="w-14 h-14 object-contain rounded-[7px] border border-gray-100 bg-gray-50"
+              />
             )}
             <div>
-              <p className="text-sm font-semibold text-gray-900 line-clamp-2">{name}</p>
-              {product.sku && <p className="text-xs text-gray-400 mt-0.5">Model No: {product.sku}</p>}
+              <p className="text-sm font-semibold text-gray-900 line-clamp-2">
+                {name}
+              </p>
+              {product.sku && (
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Model No: {product.sku}
+                </p>
+              )}
             </div>
           </div>
 
           {/* Accessory selectors */}
           {rawAccessories.map((acc) => {
             const isRequired = acc.is_required === 1;
-            const hasError   = accShowErrors && isRequired && selectedAccItems[acc.id] == null;
+            const hasError =
+              accShowErrors && isRequired && selectedAccItems[acc.id] == null;
             return (
               <div key={acc.id} className="mb-4">
                 <p className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1.5">
-                  <ShieldCheck size={15} className={isRequired ? "text-red-500 shrink-0" : "text-[#186737] shrink-0"} />
+                  <ShieldCheck
+                    size={15}
+                    className={
+                      isRequired
+                        ? "text-red-500 shrink-0"
+                        : "text-[#186737] shrink-0"
+                    }
+                  />
                   <span className="capitalize">{resolveAccName(acc.name)}</span>
-                  {isRequired && <span className="text-red-500 text-xs font-normal">*</span>}
+                  {isRequired && (
+                    <span className="text-red-500 text-xs font-normal">*</span>
+                  )}
                 </p>
                 <Select
                   value={selectedAccItems[acc.id]?.toString() ?? ""}
                   onValueChange={(val) => {
-                    setSelectedAccItems((prev) => ({ ...prev, [acc.id]: Number(val) }));
+                    setSelectedAccItems((prev) => ({
+                      ...prev,
+                      [acc.id]: Number(val),
+                    }));
                     if (val) setAccShowErrors(false);
                   }}
                 >
-                  <SelectTrigger className={`w-full h-10 text-sm focus:ring-[#186737] ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`}>
-                    <SelectValue placeholder={`Select ${resolveAccName(acc.name)}…`} />
+                  <SelectTrigger
+                    className={`w-full h-10 text-sm focus:ring-[#186737] ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`}
+                  >
+                    <SelectValue
+                      placeholder={`Select ${resolveAccName(acc.name)}…`}
+                    />
                   </SelectTrigger>
                   <SelectContent className="z-10000">
                     {acc.accessory_item.map((item) => (
                       <SelectItem key={item.id} value={item.id.toString()}>
-                        {resolveAccName(item.name)} — +{Number(item.price).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {resolveAccName(item.name)} — +
+                        {Number(item.price).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {hasError && <p className="text-xs text-red-500 mt-1">Please select {resolveAccName(acc.name)}</p>}
+                {hasError && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Please select {resolveAccName(acc.name)}
+                  </p>
+                )}
               </div>
             );
           })}
@@ -654,7 +742,10 @@ export const ProductCard = ({
           {/* Add to Cart inside modal */}
           <div
             onClickCapture={(e) => {
-              if (!accCanAddToCart) { e.stopPropagation(); setAccShowErrors(true); }
+              if (!accCanAddToCart) {
+                e.stopPropagation();
+                setAccShowErrors(true);
+              }
             }}
           >
             <AddToCartWidget
@@ -690,8 +781,5 @@ export const ProductCard = ({
     </div>
   );
 };
-
-
-
 
 export default ProductCard;

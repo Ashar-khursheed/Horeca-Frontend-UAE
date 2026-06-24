@@ -1,26 +1,44 @@
 "use client";
 
 import ProductCard from "@/components/product-card";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
-import { FeaturedCategory, LocalizedString } from "@/utils/types";
-import { useLocale } from "next-intl";
+import type { ApiProductRaw, FeaturedCategoryTab } from "@/utils/types";
 import { useState } from "react";
+import { ProductCardSkeleton } from "@/components/loading-sketlon";
 
-function str(v: LocalizedString | string | undefined, locale = "en"): string {
-  if (!v) return "";
-  if (typeof v === "string") return v;
-  return locale === "ar" ? (v.ar ?? v.en ?? "") : (v.en ?? v.ar ?? "");
-}
+export const FeaturedProducts = ({
+  tabs = [],
+  initialProducts = [],
+}: {
+  tabs?: FeaturedCategoryTab[];
+  initialProducts?: ApiProductRaw[];
+}) => {
+  const [activeIdx, setActiveIdx]   = useState(0);
+  const [products, setProducts]     = useState<ApiProductRaw[]>(initialProducts);
+  const [loading, setLoading]       = useState(false);
 
-export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategory[] }) => {
-  const locale = useLocale();
+  if (!tabs.length) return null;
 
+  const handleTabClick = async (idx: number) => {
+    if (idx === activeIdx) return;
+    setActiveIdx(idx);
+    setLoading(true);
+    try {
+      const res = await makeApiRequest<{ data: ApiProductRaw[] }>(
+        apiUrls.FEATURED_CATEGORY_TABS,
+        { params: { category_id: tabs[idx].id } },
+      );
+      setProducts(res?.data ?? []);
+    } catch {
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  const activeGroup = products[activeIdx];
-  const featuredProducts = (activeGroup?.products ?? []).slice(0, 10);
-  if (!products.length) return null;
+  const displayProducts = products.slice(0, 12);
 
   return (
     <section className="w-full bg-white py-5">
@@ -28,13 +46,13 @@ export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategor
         {/* ── HEADER ─────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
           <h2 className="heading-font-size font-bold text-slate-900 shrink-0">
-            Featured Products
+           Featured Products
           </h2>
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar">
-            {products.map((g, i) => (
+            {tabs.map((tab, i) => (
               <button
-                key={i}
-                onClick={() => setActiveIdx(i)}
+                key={tab.id}
+                onClick={() => handleTabClick(i)}
                 className={[
                   "whitespace-nowrap px-3.5 py-1.5 md:text-[15px] text-[12px] font-medium rounded-full shrink-0 transition-all duration-200",
                   activeIdx === i
@@ -42,7 +60,7 @@ export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategor
                     : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200",
                 ].join(" ")}
               >
-                {str(g.name, locale)}
+                {tab.name}
               </button>
             ))}
           </div>
@@ -53,21 +71,31 @@ export const FeaturedProducts = ({ products = [] }: { products?: FeaturedCategor
           style={{ width: "calc(100% - 2rem)" }}
         />
 
-        {/* MOBILE — horizontal scroll */}
-        <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="shrink-0 w-[175px]">
-              <ProductCard product={product as any} />
+        {loading ? (
+          <div className={generateDynamicCSSProductCard}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ProductCardSkeleton/>
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* MOBILE — horizontal scroll */}
+            <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
+              {displayProducts.map((product) => (
+                <div key={product.id} className="shrink-0 w-[175px]">
+                  <ProductCard product={product as any} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* TABLET + DESKTOP — grid */}
-        <div className={generateDynamicCSSProductCard}>
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product as any} />
-          ))}
-        </div>
+            {/* TABLET + DESKTOP — grid */}
+            <div className={generateDynamicCSSProductCard}>
+              {displayProducts.map((product) => (
+                <ProductCard key={product.id} product={product as any} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <style>{`

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useLocationData } from "@/utils/locationStorage";
+import { useLocationData, DEFAULT_ADDRESS_EVENT } from "@/utils/locationStorage";
 import { setTaxRate, TAX_STORAGE_KEY, type TaxRateData } from "@/store/slices/tax/taxSlice";
 import type { AppDispatch } from "@/store/store";
 
@@ -41,6 +41,16 @@ export default function TaxInitializer() {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocationData();
   const fetchedZip = useRef<string | null>(null);
+  const [addressTick, setAddressTick] = useState(0);
+
+  useEffect(() => {
+    const onAddressChange = () => {
+      fetchedZip.current = null;
+      setAddressTick((t) => t + 1);
+    };
+    window.addEventListener(DEFAULT_ADDRESS_EVENT, onAddressChange);
+    return () => window.removeEventListener(DEFAULT_ADDRESS_EVENT, onAddressChange);
+  }, []);
 
   useEffect(() => {
     // Only run for US locations
@@ -78,7 +88,7 @@ export default function TaxInitializer() {
       .catch(() => {
         fetchedZip.current = null; // allow retry on next mount if fetch failed
       });
-  }, [location, dispatch]);
+  }, [location, dispatch, addressTick]);
 
   return null;
 }

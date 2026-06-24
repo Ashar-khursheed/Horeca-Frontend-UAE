@@ -5,10 +5,13 @@ import {
   Lock,
   MessageCircle,
   Phone,
+  PhoneCall,
   RotateCcw,
   ShieldCheck,
   Tag,
   CheckCircle,
+  Clock,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -16,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { CartItem, fmtPrice } from "./cart-types";
 import { getTaxRateData } from "@/utils/taxCalculator";
+import CTA from "../cta";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 
@@ -40,7 +44,6 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     );
     return s + (c.price + accessoriesTotal) * c.qty;
   }, 0);
-  // Total shipping = sum of (shippingCost × qty) per item — matches what each item row shows
   const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
@@ -61,8 +64,8 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     discountedSubtotal:      taxable,
     checkPaymentDiscount:    0,
     finalDiscountedSubtotal: taxable,
-    shipping:                0,               // API-level shipping (usually 0)
-    totalShippingCharges:    shippingTotal,    // flat rate: $99 / $199 / $299
+    shipping:                0,
+    totalShippingCharges:    shippingTotal,    // API actual or location tier (99/199/299)
     liftGateFee:             0,
     residentialFee:          0,
     insideDeliveryFee:       0,
@@ -244,30 +247,7 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
         </div>
       </div>
 
-      {/* Need Help */}
-      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
-        <div className="flex items-start gap-3 mb-3.5">
-          <div className="w-9 h-9 rounded-full bg-[#f0f9f4] border-2 border-[#c3e6d4] flex items-center justify-center shrink-0">
-            <MessageCircle size={15} className="text-[#186737]" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-900">
-              Need Help Placing Order
-            </p>
-            <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
-              Our Customer Success Team will guide you with every step.
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
-            <MessageCircle size={13} /> Chat Now
-          </button>
-          <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
-            <Phone size={13} /> Call Now
-          </button>
-        </div>
-      </div>
+      <CTA/>
     </div>
   );
 }

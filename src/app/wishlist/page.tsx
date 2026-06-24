@@ -341,12 +341,12 @@ const WishlistCard = ({
               showCounter={false}
               isWishlist={true}
               onAddedToCart={onAddedToCart}
-              wrapperClassName="flex gap-2 items-center"
-              buttonClassName="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[7px] text-xs sm:text-sm font-semibold bg-[#186737] hover:bg-[#145c30] text-white transition-colors whitespace-nowrap "
+              wrapperClassName="flex gap-2 items-center justify-end"
+              buttonClassName="flex items-center gap-1 px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-[7px] text-[10px] sm:text-sm font-semibold bg-[#186737] hover:bg-[#145c30] text-white transition-colors whitespace-nowrap"
             />
           </div>
 
-          <div className="sm:hidden mt-2 flex items-center gap-1 text-[10px] text-gray-400">
+          <div className="sm:hidden mt-2 flex items-center  gap-1 text-[10px] text-gray-400">
             <Truck size={10} className="text-[#186737] shrink-0" />
             <span className={item.freeShipping ? "text-[#186737] font-medium" : ""}>
              Shipping Charges Apply
@@ -454,8 +454,6 @@ export default function WishlistPage() {
     ? apiEntries.map((e) => apiEntryToWishlistItem(e, currencySymbol))
     : guestItems.map((gi) => guestItemToWishlistItem(gi, currencySymbol));
 
-
-    console.log("itemsitemsitemsitemsitemsitems",items)
 
   const loading = isLoggedIn
     ? fetchStatus === "idle" || fetchStatus === "loading"

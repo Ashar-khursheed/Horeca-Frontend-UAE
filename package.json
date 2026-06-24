@@ -11,6 +11,7 @@
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
+    "@lottiefiles/dotlottie-react": "^0.19.4",
     "@react-oauth/google": "^0.13.5",
     "@reduxjs/toolkit": "^2.11.2",
     "@tanstack/react-query": "^5.90.21",
@@ -21,8 +22,11 @@
     "embla-carousel-react": "^8.6.0",
     "formik": "^2.4.9",
     "framer-motion": "^12.38.0",
+    "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.14.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.576.0",
-    "next": "16.1.6",
+    "next": "^16.2.9",
     "next-auth": "^4.24.14",
     "next-intl": "^4.8.3",
     "nextjs-toploader": "^3.9.17",
@@ -44,6 +48,7 @@
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-google-recaptcha": "^2.1.9",
     "@types/react-slick": "^0.23.13",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4",

@@ -58,7 +58,7 @@ export default function CategoryCard({ categories = [] }: { categories?: ApiCate
           <Link
             key={cat.id}
             href={href}
-            className={`group flex flex-col items-center bg-gray-50 border border-slate-200 rounded-[7px] overflow-hidden hover:border-[#186737] hover:shadow-md hover:-translate-y-1 transition-all duration-200${i >= 14 ? " hidden 2xl:flex" : i >= 12 ? " hidden xl:flex" : i >= 10 ? " hidden lg:flex" : ""}`}
+            className={`group flex flex-col justify-between items-center bg-gray-50 border border-slate-200 rounded-[7px] overflow-hidden hover:border-[#186737] hover:shadow-md hover:-translate-y-1 transition-all duration-200${i >= 14 ? " hidden 2xl:flex" : i >= 12 ? " hidden xl:flex" : i >= 10 ? " hidden lg:flex" : ""}`}
           >
             <div className="w-full aspect-square relative p-3">
               <Image

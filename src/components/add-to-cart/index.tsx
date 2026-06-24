@@ -2,10 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useLocationData, getDefaultAddressCache } from "@/utils/locationStorage";
+import {
+  useLocationData,
+  getDefaultAddressCache,
+} from "@/utils/locationStorage";
 import {
   addItem,
   hydrateCart,
@@ -23,10 +33,14 @@ import {
   toggleGuestWishlistItem,
 } from "@/store/slices/wishlist/wishlistSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { getShippingCharge, getShippingChargeFromAddress } from "@/utils/shipping";
+import {
+  getShippingCharge,
+  getShippingChargeFromAddress,
+} from "@/utils/shipping";
 import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
 import { AddToCartWidgetProps } from "@/features/product-detail/types";
+import GetAQuoteModal from "@/components/get-a-quote-modal";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -144,12 +158,17 @@ export const AddToCartWidget = ({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileLoading, setMobileLoading] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Source of truth inCart status checking Redux store or falling back to product.in_cart (cached/SSR)
   const inCart = isLoggedIn
-    ? (apiStatus === "succeeded" ? apiInCart : (apiInCart || !!product.in_cart))
-    : (isHydrated ? !!guestCartItem : (!!guestCartItem || !!product.in_cart));
+    ? apiStatus === "succeeded"
+      ? apiInCart
+      : apiInCart || !!product.in_cart
+    : isHydrated
+      ? !!guestCartItem
+      : !!guestCartItem || !!product.in_cart;
 
   // Derived mobile display values
   const effectiveMobileInCart = inCart;
@@ -208,7 +227,7 @@ export const AddToCartWidget = ({
         );
         return found.id;
       }
-    } catch { }
+    } catch {}
     return null;
   };
 
@@ -241,7 +260,11 @@ export const AddToCartWidget = ({
     const defaultAddr = token ? getDefaultAddressCache() : null;
     const shippingCharge = defaultAddr
       ? getShippingChargeFromAddress(defaultAddr)
-      : getShippingCharge(location?.city ?? "", location?.regionName ?? "", location?.countryCode ?? location?.country ?? "");
+      : getShippingCharge(
+          location?.city ?? "",
+          location?.regionName ?? "",
+          location?.countryCode ?? location?.country ?? "",
+        );
     const subTotal = activePrice * count;
     const totalPrice = subTotal + shippingCharge;
 
@@ -268,9 +291,15 @@ export const AddToCartWidget = ({
           res?.id ??
           0;
         // Update apiEntries (header count) and bump lastAddedAt (triggers cart page re-fetch)
-        dispatch(addApiEntry({ cartItemId: itemId, productId: product.id, quantity: count }));
+        dispatch(
+          addApiEntry({
+            cartItemId: itemId,
+            productId: product.id,
+            quantity: count,
+          }),
+        );
         dispatch(fetchCounts() as any);
-        if (!itemId) resolveCartItemId().catch(() => { });
+        if (!itemId) resolveCartItemId().catch(() => {});
         // Notify parent immediately after successful add (before flash)
         onAddSuccess?.();
       } catch {
@@ -355,10 +384,14 @@ export const AddToCartWidget = ({
 
     const token = getToken();
     if (token) {
-      const defaultAddr = getDefaultAddressCache();
+    const defaultAddr = getDefaultAddressCache();
       const shippingCharge = defaultAddr
         ? getShippingChargeFromAddress(defaultAddr)
-        : getShippingCharge(location?.city ?? "", location?.regionName ?? "", location?.countryCode ?? location?.country ?? "");
+        : getShippingCharge(
+            location?.city ?? "",
+            location?.regionName ?? "",
+            location?.countryCode ?? location?.country ?? "",
+          );
       try {
         await onBeforeAdd?.();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -393,7 +426,7 @@ export const AddToCartWidget = ({
         dispatch(fetchCounts() as any);
 
         // If no real ID yet, resolve in background
-        if (!itemId) resolveCartItemId().catch(() => { });
+        if (!itemId) resolveCartItemId().catch(() => {});
       } catch {
         // silent
       }
@@ -446,6 +479,26 @@ export const AddToCartWidget = ({
     }
 
     setMobileLoading(false);
+    
+    // If used inside wishlist: remove the item from wishlist after add
+    if (isWishlist) {
+      const token = getToken();
+      if (token) {
+        dispatch(
+          toggleWishlistItem({
+            productId: product.id,
+            currentlyInWishlist: true,
+          }),
+        );
+      } else {
+        dispatch(
+          toggleGuestWishlistItem({
+            productId: product.id,
+            rawProduct: product,
+          }),
+        );
+      }
+    }
     setTimeout(() => onAddedToCart?.(product.id), 900);
   };
 
@@ -541,18 +594,18 @@ export const AddToCartWidget = ({
   const label = isQuote ? "Request a Quote" : "Add To Cart";
 
   const computedButtonClass = buttonClassName
-    ? `${buttonClassName} flex items-center justify-center gap-2 transition-colors duration-200${(addedSuccess || (inCart && variant !== "quote")) ? " !bg-[#186737] !text-white" : ""}`
+    ? `${buttonClassName} flex items-center justify-center gap-2 transition-colors duration-200${addedSuccess || (inCart && variant !== "quote") ? " !bg-[#186737] !text-white" : ""}`
     : [
-      "flex-1 3xl:h-[44px] 2xl:h-[36px] md:h-[34px] rounded-[4px] 3xl:text-[14px] 2xl:text-[12px] text-[10px] font-semibold",
-      "flex items-center justify-center gap-2 transition-colors duration-200",
-      (addedSuccess || (inCart && variant !== "quote"))
-        ? "bg-[#186737] hover:bg-[#145c30] text-white"
-        : loading
-          ? "bg-gray-400 text-white cursor-wait"
-          : variant === "quote"
-            ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
-            : "bg-[#186737] hover:bg-[#145c30] text-white",
-    ].join(" ");
+        "flex-1 3xl:h-[44px] 2xl:h-[36px] md:h-[34px] rounded-[4px] 3xl:text-[14px] 2xl:text-[12px] text-[10px] font-semibold",
+        "flex items-center justify-center gap-2 transition-colors duration-200",
+        addedSuccess || (inCart && variant !== "quote")
+          ? "bg-[#186737] hover:bg-[#145c30] text-white"
+          : loading
+            ? "bg-gray-400 text-white cursor-wait"
+            : variant === "quote"
+              ? "bg-[#A6131D] hover:bg-[#8b1018] text-white"
+              : "bg-[#186737] hover:bg-[#145c30] text-white",
+      ].join(" ");
 
   const isAddedState = addedSuccess || (inCart && variant !== "quote");
 
@@ -594,7 +647,7 @@ export const AddToCartWidget = ({
                       const v = parseInt(e.target.value);
                       if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
                     }}
-                    className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed "
+                    className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed text-[14px]"
                   />
                   <button
                     onClick={handleIncrement}
@@ -611,14 +664,15 @@ export const AddToCartWidget = ({
                     />
                   </button>
                 </div>
-              </div></>
+              </div>
+            </>
           )}
 
           {/* Add To Cart / Request Quote Button */}
           {isAddedState ? (
             <Link
               href="/cart"
-              className={`${computedButtonClass} w-full flex items-center justify-center gap-1.5 group`}
+              className={`${computedButtonClass} w-fulls flex items-center justify-center gap-1.5 group`}
             >
               {iconShow && <CheckCircle size={13} strokeWidth={2} />}
               <span className="whitespace-nowrap">
@@ -628,7 +682,11 @@ export const AddToCartWidget = ({
                   <>
                     Added!{" "}
                     <span className="underline ml-1 font-bold inline-flex items-center gap-0.5">
-                      View Cart <ArrowRight size={10} className="transition-transform group-hover:translate-x-0.5" />
+                      View Cart{" "}
+                      <ArrowRight
+                        size={10}
+                        className="transition-transform group-hover:translate-x-0.5"
+                      />
                     </span>
                   </>
                 )}
@@ -636,7 +694,11 @@ export const AddToCartWidget = ({
             </Link>
           ) : (
             <button
-              onClick={handleAddToCart}
+              onClick={
+                variant === "quote"
+                  ? () => setQuoteModalOpen(true)
+                  : handleAddToCart
+              }
               disabled={loading}
               className={computedButtonClass}
             >
@@ -667,7 +729,11 @@ export const AddToCartWidget = ({
               <span>
                 Added!{" "}
                 <span className="underline ml-1 font-bold inline-flex items-center gap-0.5">
-                  View Cart <ArrowRight size={9} className="transition-transform group-hover:translate-x-0.5" />
+                  View Cart{" "}
+                  <ArrowRight
+                    size={9}
+                    className="transition-transform group-hover:translate-x-0.5"
+                  />
                 </span>
               </span>
             </Link>
@@ -708,7 +774,7 @@ export const AddToCartWidget = ({
           ) : isQuote ? (
             /* Mobile Request a Quote button */
             <button
-              // onClick={handleAddToCart}
+              onClick={() => setQuoteModalOpen(true)}
               disabled={loading}
               className="flex-1 h-8.5 rounded-lg bg-[#A6131D] hover:bg-[#8b1018] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
@@ -737,6 +803,15 @@ export const AddToCartWidget = ({
           )}
         </div>
       </div>
+
+      {quoteModalOpen && (
+        <GetAQuoteModal
+          isOpen={quoteModalOpen}
+          onClose={() => setQuoteModalOpen(false)}
+          product={product}
+          country={country?.name}
+        />
+      )}
     </div>
   );
 };

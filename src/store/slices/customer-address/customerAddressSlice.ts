@@ -1,11 +1,6 @@
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
-import {
-  DefaultAddressCache,
-  clearDefaultAddressCache,
-  getDefaultAddressCache,
-  setDefaultAddressCache,
-} from "@/utils/locationStorage";
+import { setDefaultAddressCache } from "@/utils/locationStorage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -53,7 +48,6 @@ interface CustomerAddressState {
   submitting: boolean;
   deletingId: number | null;
   error: string | null;
-  cachedDefault: DefaultAddressCache | null;
   // Location dropdowns
   countries: LocationItem[];
   states: LocationItem[];
@@ -69,7 +63,6 @@ const initialState: CustomerAddressState = {
   submitting: false,
   deletingId: null,
   error: null,
-  cachedDefault: null,
   countries: [],
   states: [],
   cities: [],
@@ -79,6 +72,14 @@ const initialState: CustomerAddressState = {
 };
 
 // ── Thunks ─────────────────────────────────────────────────────────────────────
+const syncDefaultToCache = (addresses: CustomerAddress[], id?: number) => {
+  const defaultAddr = id
+    ? addresses.find((a) => a.id === id)
+    : addresses.find((a) => a.is_default);
+  if (defaultAddr) {
+    setDefaultAddressCache({ ...defaultAddr, is_default: true });
+  }
+};
 
 export const fetchAddresses = createAsyncThunk(
   "customerAddress/fetchAll",
@@ -105,7 +106,13 @@ export const addAddress = createAsyncThunk(
         apiUrls.ADD_CUSTOMER_ADDRESS,
         { method: "POST", data: payload }
       );
-      dispatch(fetchAddresses());
+      const newAddressId = res.data.id;
+      const result = await dispatch(fetchAddresses()).unwrap();
+      if (payload.is_default) {
+        syncDefaultToCache(result, newAddressId);
+      } else {
+        syncDefaultToCache(result);
+      }
       return res.message;
     } catch (err: unknown) {
       const msg =
@@ -116,6 +123,53 @@ export const addAddress = createAsyncThunk(
   }
 );
 
+// export const updateAddress = createAsyncThunk(
+//   "customerAddress/update",
+//   async ({ id, payload }: { id: number; payload: AddressPayload }, { dispatch, rejectWithValue }) => {
+//     try {
+//       const res = await makeApiRequest<{ success: boolean; message: string; data: CustomerAddress }>(
+//         apiUrls.UPDATE_CUSTOMER_ADDRESS(id),
+//         { method: "PUT", data: payload }
+//       );
+//       if (payload.is_default) {
+//         await makeApiRequest(apiUrls.DEFAULT_CUSTOMER_ADDRESS, {
+//           method: "POST",
+//           data: { address_id: id },
+//         });
+//       }
+//       await dispatch(fetchAddresses());
+//       return res.message;
+//     } catch (err: unknown) {
+//       const msg =
+//         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+//         "Failed to update address.";
+//       return rejectWithValue(msg);
+//     }
+//   }
+// );
+
+// export const updateAddress = createAsyncThunk(
+//   "customerAddress/update",
+//   async ({ id, payload }: { id: number; payload: AddressPayload }, { dispatch, rejectWithValue }) => {
+//     try {
+//       const res = await makeApiRequest<{ success: boolean; message: string; data: CustomerAddress }>(
+//         apiUrls.UPDATE_CUSTOMER_ADDRESS(id),
+//         { method: "PUT", data: payload }
+//       );
+//       // ❌ REMOVED: DEFAULT_CUSTOMER_ADDRESS duplicate call
+//       // UPDATE API khud is_default handle karta hai, toh yeh conflict create kar raha tha
+//       await dispatch(fetchAddresses());
+//       return res.message;
+//     } catch (err: unknown) {
+//       const msg =
+//         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+//         "Failed to update address.";
+//       return rejectWithValue(msg);
+//     }
+//   }
+// );
+
+// ── updateAddress thunk ──────────────────────────────────────────────────────
 export const updateAddress = createAsyncThunk(
   "customerAddress/update",
   async ({ id, payload }: { id: number; payload: AddressPayload }, { dispatch, rejectWithValue }) => {
@@ -124,16 +178,14 @@ export const updateAddress = createAsyncThunk(
         apiUrls.UPDATE_CUSTOMER_ADDRESS(id),
         { method: "PUT", data: payload }
       );
+      // ❌ REMOVED: DEFAULT_CUSTOMER_ADDRESS duplicate call hata di
+      const result = await dispatch(fetchAddresses()).unwrap(); // ✅ await + unwrap
+      // Agar is_default true tha toh us address ko cache karo
       if (payload.is_default) {
-        await makeApiRequest(apiUrls.DEFAULT_CUSTOMER_ADDRESS, {
-          method: "POST",
-          data: { address_id: id },
-        });
-      }
-      await dispatch(fetchAddresses());
-      // Save after fetchAddresses so it overwrites any cache clear that happened inside fulfilled
-      if (payload.is_default && res.data) {
-        setDefaultAddressCache({ ...res.data, is_default: true });
+        syncDefaultToCache(result, id);
+      } else {
+        // Koi aur default ho sakta hai — fresh list se sync karo
+        syncDefaultToCache(result);
       }
       return res.message;
     } catch (err: unknown) {
@@ -163,13 +215,18 @@ export const deleteAddress = createAsyncThunk(
 
 export const setDefaultAddress = createAsyncThunk(
   "customerAddress/setDefault",
-  async (id: number, { dispatch, rejectWithValue }) => {
+  async (id: number, { dispatch, getState, rejectWithValue }) => {
     try {
       await makeApiRequest(apiUrls.DEFAULT_CUSTOMER_ADDRESS, {
         method: "POST",
         data: { address_id: id },
       });
-      dispatch(fetchAddresses());
+      await dispatch(fetchAddresses());
+      const state = getState() as { customerAddress: CustomerAddressState };
+      const addr = state.customerAddress.addresses.find((a) => a.id === id);
+      if (addr) {
+        setDefaultAddressCache({ ...addr, is_default: true });
+      }
       return id;
     } catch (err: unknown) {
       const msg =
@@ -258,19 +315,9 @@ const customerAddressSlice = createSlice({
         ...a,
         is_default: a.id === action.payload,
       }));
-      const newDefault = state.addresses.find((a) => a.id === action.payload);
-      if (newDefault) {
-        setDefaultAddressCache(newDefault);
-        state.cachedDefault = newDefault;
-      }
     },
     clearAddresses(state) {
       state.addresses = [];
-      state.cachedDefault = null;
-      clearDefaultAddressCache();
-    },
-    hydrateCachedDefault(state) {
-      state.cachedDefault = getDefaultAddressCache();
     },
   },
   extraReducers: (builder) => {
@@ -283,14 +330,6 @@ const customerAddressSlice = createSlice({
       .addCase(fetchAddresses.fulfilled, (state, action) => {
         state.loading = false;
         state.addresses = action.payload;
-        const defaultAddr = action.payload.find((a) => a.is_default);
-        if (defaultAddr) {
-          setDefaultAddressCache(defaultAddr);
-          state.cachedDefault = defaultAddr;
-        } else {
-          clearDefaultAddressCache();
-          state.cachedDefault = null;
-        }
       })
       .addCase(fetchAddresses.rejected, (state, action) => {
         state.loading = false;
@@ -311,19 +350,42 @@ const customerAddressSlice = createSlice({
         state.error = action.payload as string;
       });
 
+    // // updateAddress
+    // builder
+    //   .addCase(updateAddress.pending, (state) => {
+    //     state.submitting = true;
+    //     state.error = null;
+    //   })
+    //   .addCase(updateAddress.fulfilled, (state, action) => {
+    //     state.submitting = false;
+    //     const { id, payload } = action.meta.arg;
+    //     if (payload.is_default) {
+    //       state.addresses = state.addresses.map((a) => ({
+    //         ...a,
+    //         is_default: a.id === id,
+    //       }));
+    //     }
+    //   })
+    //   .addCase(updateAddress.rejected, (state, action) => {
+    //     state.submitting = false;
+    //     state.error = action.payload as string;
+    //   });
+
     // updateAddress
-    builder
-      .addCase(updateAddress.pending, (state) => {
-        state.submitting = true;
-        state.error = null;
-      })
-      .addCase(updateAddress.fulfilled, (state) => {
-        state.submitting = false;
-      })
-      .addCase(updateAddress.rejected, (state, action) => {
-        state.submitting = false;
-        state.error = action.payload as string;
-      });
+builder
+  .addCase(updateAddress.pending, (state) => {
+    state.submitting = true;
+    state.error = null;
+  })
+  .addCase(updateAddress.fulfilled, (state) => {
+    state.submitting = false;
+    // ✅ fetchAddresses() fresh data la raha hai server se
+    // is_default manually set karne ki zaroorat nahi
+  })
+  .addCase(updateAddress.rejected, (state, action) => {
+    state.submitting = false;
+    state.error = action.payload as string;
+  });
 
     // deleteAddress
     builder
@@ -391,7 +453,7 @@ const customerAddressSlice = createSlice({
   },
 });
 
-export const { clearStates, clearCities, clearError, optimisticSetDefault, clearAddresses, hydrateCachedDefault } =
+export const { clearStates, clearCities, clearError, optimisticSetDefault, clearAddresses } =
   customerAddressSlice.actions;
 
 export default customerAddressSlice.reducer;

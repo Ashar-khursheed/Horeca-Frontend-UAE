@@ -27,6 +27,10 @@ import { setProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import { apiUrls } from "@/apis/api-endpoint";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import {
+  setDefaultAddressCache,
+  DefaultAddressCache,
+} from "@/utils/locationStorage";
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -74,27 +78,45 @@ const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 // ── Helper to clear Google State Cookie ──────────────────────────────────────
 const clearGoogleStateCookie = () => {
   try {
-    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
-    const parts = window.location.hostname.split('.');
+    document.cookie =
+      "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie =
+      "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" +
+      window.location.hostname;
+    const parts = window.location.hostname.split(".");
     if (parts.length > 2) {
-      const parentDomain = parts.slice(1).join('.');
-      document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + parentDomain;
+      const parentDomain = parts.slice(1).join(".");
+      document.cookie =
+        "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" +
+        parentDomain;
     }
   } catch (e) {
     console.error("Failed to clear Google state cookie", e);
   }
 };
 
+export async function cacheDefaultAddress() {
+  try {
+    const res = await makeApiRequest<{
+      success: boolean;
+      data: DefaultAddressCache[];
+    }>(apiUrls.GET_CUSTOMER_ADDRESS);
+    const defaultAddr = res.data?.find((a) => a.is_default);
+    if (defaultAddr) setDefaultAddressCache(defaultAddr);
+  } catch {
+    // non-critical — ignore silently
+  }
+}
+
 function LoginPageInner() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const dispatch     = useDispatch<AppDispatch>();
-  const [showPass, setShowPass]           = useState(false);
-  const [loading, setLoading]             = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleKey, setGoogleKey]         = useState(0);
-  const [apiError, setApiError]           = useState("");
+  const [googleKey, setGoogleKey] = useState(0);
+  const [apiError, setApiError] = useState("");
 
   useEffect(() => {
     clearGoogleStateCookie();
@@ -117,8 +139,12 @@ function LoginPageInner() {
         data: { credential: credentialResponse.credential },
       });
       setAuthToken(res.token);
-      localStorage.setItem("user", JSON.stringify(res.customer));
-      dispatch(setProfile(res.customer));
+      const profileRes = await makeApiRequest<{
+        success: boolean;
+        customer: CustomerProfile;
+      }>(apiUrls.GETMYPROFILE);
+      localStorage.setItem("user", JSON.stringify(profileRes.customer));
+      dispatch(setProfile(profileRes.customer));
 
       // Sync guest wishlist & cart in parallel for maximum speed
       const syncPromises = [];
@@ -133,6 +159,8 @@ function LoginPageInner() {
       if (syncPromises.length > 0) {
         await Promise.all(syncPromises);
       }
+
+      await cacheDefaultAddress();
 
       const redirect = searchParams.get("redirect") ?? "/";
       router.push(redirect);
@@ -160,6 +188,8 @@ function LoginPageInner() {
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
 
+        router.push("/")
+
         // Sync guest wishlist & cart in parallel for maximum speed
         const syncPromises = [];
         const guestWishlist = localStorage.getItem("horeca_wishlist");
@@ -173,6 +203,8 @@ function LoginPageInner() {
         if (syncPromises.length > 0) {
           await Promise.all(syncPromises);
         }
+
+        await cacheDefaultAddress();
 
         const redirect = searchParams.get("redirect") ?? "/";
         router.push(redirect);
@@ -383,19 +415,8 @@ function LoginPageInner() {
                       & data rates may apply. Message frequency varies.
                       Unsubscribe by replying STOP. Reply HELP for help. Phone
                       numbers aren't shared with third parties.
-                      <Link
-                        href="/privacy-policy"
-                        className="text-[#186737] hover:underline"
-                      >
-                        Privacy Policy
-                      </Link>{" "}
-                      &{" "}
-                      <Link
-                        href="/terms"
-                        className="text-[#186737] hover:underline"
-                      >
-                        Terms and Conditions
-                      </Link>
+                      <Link href="/pages/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
+                    <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">Terms and Conditions</Link>.
                       .
                     </span>
                   </label>
@@ -434,7 +455,7 @@ function LoginPageInner() {
             {/* Google */}
             <div className="w-full flex justify-center min-h-[40px]">
               {googleLoading ? (
-                <div className="w-full h-10 border border-gray-200 rounded-[9px] flex items-center justify-center bg-gray-50">
+                <div className="w-full h-10 border border-gray-200 rounded-[9px] flex items-center justify-center bg-[#186737]">
                   <Loader />
                 </div>
               ) : (
@@ -466,7 +487,6 @@ function LoginPageInner() {
                 Register now
               </Link>
             </p>
-
           </div>
         </div>
       </main>

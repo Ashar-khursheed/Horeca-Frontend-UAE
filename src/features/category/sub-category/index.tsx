@@ -34,6 +34,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import SeoContent from "@/seo/seo-content";
 
 // ─── URL codec helpers ─────────────────────────────────────────────────────────
 // RF format: "attrId-unitId:min_max,min_max|attrId2-unitId2:min_max"
@@ -450,6 +451,7 @@ export default function SubCategoryPage({
   }, [apiPriceMin, apiPriceMax, pushURL]);
 
   return (
+<>
     <main className="min-h-screen bg-gray-5p0">
       <Breadcrumb crumbs={crumbs} />
 
@@ -473,13 +475,13 @@ export default function SubCategoryPage({
               <>
                 <button
                   onClick={() => swiperRef.current?.slidePrev()}
-                  className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+                  className={`absolute left-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors ${childCategories.length <= 5 ? "md:hidden" : childCategories.length <= 8 ? "xl:hidden" : childCategories.length <= 11 ? "2xl:hidden" : ""}`}
                 >
                   <ChevronLeft size={14} />
                 </button>
                 <button
                   onClick={() => swiperRef.current?.slideNext()}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors"
+                  className={`absolute right-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors ${childCategories.length <= 5 ? "md:hidden" : childCategories.length <= 8 ? "xl:hidden" : childCategories.length <= 11 ? "2xl:hidden" : ""}`}
                 >
                   <ChevronRight size={14} />
                 </button>
@@ -881,6 +883,10 @@ export default function SubCategoryPage({
           </button>
         </div>
       </div>
+    
     </main>
+      <div>
+        <SeoContent dataAPI={subCategoryPage?.seo} />
+      </div></>
   );
 }

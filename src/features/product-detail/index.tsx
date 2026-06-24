@@ -2,7 +2,10 @@
 
 import Breadcrumb from "@/components/breadcum";
 import { ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 
 import AlternateAiProducts from "./alternate-ai-products";
 import RecommendedProducts from "./recommended-products";
@@ -13,8 +16,12 @@ import { PurchasePanel } from "./purchase-panel";
 import { QASection } from "./qa-section";
 import { ReviewsSection } from "./reviews-section";
 import { SpecificationsSection } from "./specifications-section";
-import type { ProductDetailResponse, VariantItem } from "./types";
+import type { ProductDetailResponse, ProductReview, VariantItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
+import { ReportErrorModal } from "./report-error-modal";
+import AddReviewModal from "@/components/add-review-modal";
+import { PriceComparisonCard } from "./price-comparison-card";
+import RecentlyViewedSection from "../category/recently-viewed-section";
 
 interface Props {
   productData: ProductDetailResponse;
@@ -49,12 +56,33 @@ const ProductDetailPage = ({
   similarProductsGuest = [],
   alternateProducts = [],
 }: Props) => {
-  console.log("ProductDetailPage render", productData);
   const name = productData.name ?? "";
   const images = productData.images ?? [];
   const description = productData.description ?? [];
   const benefitsFeatures = productData.benefits_features ?? [];
   const state = useLocationData();
+  const router = useRouter();
+console.log("productDataproductDataproductDataproductData",productData)
+  useEffect(() => {
+    if (!productData.id) return;
+    const token = localStorage.getItem("token");
+    if (token) {
+      makeApiRequest(apiUrls.ADD_RECENT_PRODUCT, {
+        method: "POST",
+        data: { product_id: String(productData.id) },
+      }).catch(() => {});
+    } else {
+      makeApiRequest(apiUrls.GUEST_VIEW_PRODUCT, {
+        method: "POST",
+        data: { product_id: String(productData.id) },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }).then((res: any) => {
+        if (res?.guest_token) {
+          localStorage.setItem("guest_token", res.guest_token);
+        }
+      }).catch(() => {});
+    }
+  }, [productData.id]);
 
   const supplier = productData.suppliers?.[0] ?? null;
   const activePrice =
@@ -112,6 +140,8 @@ const ProductDetailPage = ({
   const [openOverview, setOpenOverview] = useState(false);
   const [openReviews, setOpenReviews] = useState(false);
   const [openFaq, setOpenFaq] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   const selectVariant = (label: string, variant: VariantItem) => {
     setSelectedVariants((prev) => ({ ...prev, [label]: variant }));
@@ -175,6 +205,8 @@ const ProductDetailPage = ({
               variantGroups={variantGroups}
               selectedVariants={selectedVariants}
               onSelectVariant={selectVariant}
+              variants={(productData.variants ?? []) as import("./types").VariantItem[]}
+              parentId={productData.id}
               activePrice={activePrice}
               activeOriginal={productData.price}
               unit={unit}
@@ -183,6 +215,7 @@ const ProductDetailPage = ({
               deliveryDays={supplier?.delivery_days ?? ""}
               returnPolicy={supplier?.return_policy ?? ""}
               accessories={productData.accessories ?? []}
+              product={productData}
             />
 
             <PurchasePanel
@@ -205,7 +238,13 @@ const ProductDetailPage = ({
               brandUrl=""
               productData={productData}
             />
+
+
+            <PriceComparisonCard productData={productData} />
+
+            
           </div>
+          
 
           <AlternateAiProducts
             similarProductsGuest={similarProductsGuest}
@@ -253,7 +292,7 @@ const ProductDetailPage = ({
             </div>
           )}
 
-          {avgRating > 0 && (
+          {/* {avgRating > 0 && ( */}
             <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
               {/* Mobile: accordion header */}
               <button
@@ -280,7 +319,10 @@ const ProductDetailPage = ({
                     used this product.
                   </p>
                 </div>
-                <button className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setReviewModalOpen(true)}
+                  className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
+                >
                   <MessageCircle size={15} strokeWidth={2} />
                   Leave a Review
                 </button>
@@ -292,10 +334,11 @@ const ProductDetailPage = ({
                   avgRating={avgRating}
                   reviews={reviews}
                   ratingDist={ratingDist}
+                  productId={productData.id}
                 />
               </div>
             </div>
-          )}
+          {/* )} */}
 
           {qaItems.length > 0 && (
             <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
@@ -328,8 +371,32 @@ const ProductDetailPage = ({
             </div>
           )}
 
+       
+
           <RecommendedProducts
             productSlug={productData.url.split("/").pop() ?? ""}
+          />
+          <RecentlyViewedSection excludeId={productData.id} container={false} />
+   {/* Report error trigger */}
+          <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
+            <span className="text-sm text-gray-400">Spot something off?</span>
+            <button
+              onClick={() => setReportOpen(true)}
+              className="text-sm text-[#186737] font-semibold hover:underline transition"
+            >
+              Help us improve this page.
+            </button>
+          </div>
+          <AddReviewModal
+            isOpen={reviewModalOpen}
+            onClose={() => setReviewModalOpen(false)}
+            productId={productData.id}
+            onSuccess={() => router.refresh()}
+          />
+          <ReportErrorModal
+            isOpen={reportOpen}
+            onClose={() => setReportOpen(false)}
+            productId={productData.id}
           />
         </div>
       </main>

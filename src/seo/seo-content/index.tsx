@@ -36,8 +36,12 @@ export interface SeoApiData {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getLocaleStr(obj: LocaleStr | null | undefined, locale: string): string | null {
+function getLocaleStr(
+  obj: LocaleStr | string | null | undefined,
+  locale: string,
+): string | null {
   if (!obj) return null;
+  if (typeof obj === "string") return obj || null;
   const val = locale === "ar" ? obj.ar : obj.en;
   return val ?? obj.en ?? obj.ar ?? null;
 }
@@ -110,23 +114,23 @@ Paragraph.displayName = "Paragraph";
 
 // ─── Main SeoContent Component ────────────────────────────────────────────────
 
-export default function SeoContent({ dataAPI }: { dataAPI?: SeoApiData | null }) {
+export default function SeoContent({ dataAPI }: { dataAPI?: any | null }) {
   const locale = useLocale();
-
-  if (!dataAPI) return null;
+  if (!dataAPI) return null;;
 
   const bannerUrl = getLocaleStr(dataAPI.banner_image_url, locale);
   const bannerAlt = getLocaleStr(dataAPI.banner_image_alt_text, locale);
-  const para1     = getLocaleStr(dataAPI.paragraph_1, locale);
-  const para2     = getLocaleStr(dataAPI.paragraph_2, locale);
-  const para3     = getLocaleStr(dataAPI.paragraph_3, locale);
-  const para4     = getLocaleStr(dataAPI.paragraph_4, locale);
+  const para1 = getLocaleStr(dataAPI.paragraph_1, locale);
+  const para2 = getLocaleStr(dataAPI.paragraph_2, locale);
+  const para3 = getLocaleStr(dataAPI.paragraph_3, locale);
+  const para4 = getLocaleStr(dataAPI.paragraph_4, locale);
 
   const popularTagsObj = dataAPI.popular_tag_details;
-  const popularTags: PopularTagDetail[] =
-    (locale === "ar" ? popularTagsObj?.ar : popularTagsObj?.en) ??
-    popularTagsObj?.en ??
-    [];
+  const popularTags: PopularTagDetail[] = Array.isArray(popularTagsObj)
+    ? popularTagsObj
+    : ((locale === "ar" ? popularTagsObj?.ar : popularTagsObj?.en) ??
+      popularTagsObj?.en ??
+      []);
 
   if (!para1 && !para2 && !para3 && !para4 && !bannerUrl) return null;
 

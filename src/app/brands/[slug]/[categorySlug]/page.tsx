@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${catName} - ${brandName}`,
     alternates: {
-      canonical: `https://www.horecastore.ae/brands/${slug}/${categorySlug}`,
+      canonical: `${process.env.NEXT_SITE_URL}/brands/${slug}/${categorySlug}`,
     },
   };
 }

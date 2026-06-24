@@ -29,16 +29,22 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   experimental: {
-    optimizePackageImports: ['lucide-react', 'swiper', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+    optimizePackageImports: [
+      'lucide-react',
+      'swiper',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-sheet',
+      'framer-motion',
+      'date-fns',
+    ],
   },
-  async rewrites() {
-    return [
-    {
-  source: "/api/:path*",
-  destination: "https://test-us.thehorecastore.co/api/:path*",
-}
-    ];
-  }
+
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');

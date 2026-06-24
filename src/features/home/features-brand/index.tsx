@@ -32,7 +32,7 @@ export const FeaturedBrands = ({
         {/* ── HEADER ─────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-2 mb-3  flex-wrap">
           <h2 className="heading-font-size font-bold text-slate-900 shrink-0">
-            Top Stories: Brand Directory
+          Featured Brands
           </h2>
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar ">
             {products.map((g, i) => (

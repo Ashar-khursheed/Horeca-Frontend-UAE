@@ -68,17 +68,6 @@ const RECENT_QUOTES = [
   { id: "Q-2790", items: 1, total: "$2,395.26", date: "Apr 22, 2026", status: "Accepted" },
 ];
 
-// ── Mobile nav items (ProfileDrawer style) ────────────────────────────────────
-const MOBILE_NAV_ITEMS = [
-  { name: "My Profile",          href: "/dashboard/my-profile", Icon: Settings },
-  { name: "My Orders",           href: "/dashboard/orders",     Icon: ShoppingBag },
-  // { name: "My Quotes",           href: "/dashboard/quotes",     Icon: FileText },
-  { name: "Payments & Invoices", href: "/dashboard/payments",   Icon: CreditCard },
-  { name: "My Wishlist",         href: "/wishlist",             Icon: Heart },
-  {    name: "Browsing History",       href: "/dashboard/browsing-history", Icon:History },
-  { name: "Saved Docs",          href: "/dashboard/documents",  Icon: FolderOpen },
-  { name: "Support Center",      href: "/dashboard/support",    Icon: Headphones },
-];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
@@ -97,113 +86,85 @@ export default function DashboardPage() {
   return (
     <>
       {/* ══════════════════ MOBILE DESIGN (hidden on lg+) ══════════════════ */}
-      <div className="lg:hidden min-h-screen bg-gray-50 overflow-y-auto">
+      <div className="lg:hidden min-h-screen bg-[#f5f6fa]">
 
-        {/* ── Green gradient header ─────────────────────────────────────── */}
-        <div className="bg-gradient-to-br from-[#186737] via-green-600 to-green-700 px-6 pt-6 pb-8 rounded-b-[2rem] shadow-xl">
-
-          {/* Avatar + user info */}
+        {/* ── Header ────────────────────────────────────────────────────── */}
+        <div className="bg-[#186737] px-5 pt-5 pb-16">
           {loading ? (
             <MobileUserInfoSkeleton />
           ) : (
-            <div className="flex items-center gap-4 mb-6">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border-[3px] border-white/40 flex items-center justify-center overflow-hidden shadow-lg">
-                  <User className="w-10 h-10 text-white" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full" />
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center shrink-0">
+                <span className="text-white text-2xl font-black">{initials || <User className="w-8 h-8 text-white" />}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-white text-xl font-bold leading-tight">{customer?.name || "Guest"}</h2>
-                <p className="text-white/90 text-sm mt-1 truncate">{customer?.email || ""}</p>
-                <p className="text-white/80 text-xs mt-0.5">{customer?.country_code} {customer?.mobile_number || ""}</p>
+                <h2 className="text-white text-lg font-bold leading-tight truncate">{customer?.name || "Guest"}</h2>
+                <p className="text-white/75 text-xs mt-0.5 truncate">{customer?.email || ""}</p>
+                {customer?.mobile_number && (
+                  <p className="text-white/60 text-xs mt-0.5">{customer?.country_code} {customer?.mobile_number}</p>
+                )}
               </div>
-            </div>
-          )}
-
-          {/* Stats cards */}
-          {loading ? (
-            <MobileStatsSkeleton />
-          ) : (
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
-                <Package className="w-5 h-5 text-white mx-auto mb-1" />
-                <p className="text-white text-lg font-bold">41</p>
-                <p className="text-white/80 text-xs">Orders</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
-                <Heart className="w-5 h-5 text-white mx-auto mb-1" />
-                <p className="text-white text-lg font-bold">1</p>
-                <p className="text-white/80 text-xs">Wishlist</p>
-              </div>
-              {/* <div className="bg-white/10 backdrop-blur-sm rounded-[7px] p-3 text-center border border-white/20">
-                <DollarSign className="w-5 h-5 text-white mx-auto mb-1" />
-                <p className="text-white text-lg font-bold">$0.00</p>
-                <p className="text-white/80 text-[10px] leading-tight">Net Terms Credit</p>
-              </div> */}
+              <Link href="/dashboard/my-profile" className="shrink-0 bg-white/15 border border-white/25 rounded-xl px-3 py-1.5">
+                <span className="text-white text-xs font-semibold">Edit</span>
+              </Link>
             </div>
           )}
         </div>
 
-        {/* ── Content cards (overlap header) ───────────────────────────── */}
-        <div className="p-4 -mt-4 space-y-4">
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-[7px] p-4 shadow-md">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { Icon: ShoppingBag, label: "Orders",  href: "/dashboard/orders",  bg: "bg-blue-100",   color: "text-blue-600" },
-                // { Icon: Tag,         label: "Coupons", href: "/dashboard/coupons", bg: "bg-orange-100", color: "text-orange-600" },
-                { Icon: Heart,       label: "Wishlist",href: "/wishlist",           bg: "bg-red-100",    color: "text-red-600" },
-              ].map(({ Icon, label, href, bg, color }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="flex flex-col items-center gap-2 p-3 rounded-[7px] hover:bg-gray-50 transition-all active:scale-95"
-                >
-                  <div className={`w-12 h-12 rounded-full ${bg} ${color} flex items-center justify-center`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span className="text-xs font-medium text-gray-700">{label}</span>
-                </Link>
-              ))}
+        {/* ── Stats row (overlaps header) ───────────────────────────────── */}
+        <div className="px-4 -mt-8">
+          {loading ? (
+            <MobileStatsSkeleton />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <Link href="/dashboard/orders" className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3 active:scale-95 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <Package className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-xl font-black text-gray-900">41</p>
+                  <p className="text-xs text-gray-500 font-medium">Total Orders</p>
+                </div>
+              </Link>
+              <Link href="/wishlist" className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3 active:scale-95 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+                  <Heart className="w-5 h-5 text-rose-500" />
+                </div>
+                <div>
+                  <p className="text-xl font-black text-gray-900">1</p>
+                  <p className="text-xs text-gray-500 font-medium">Wishlist</p>
+                </div>
+              </Link>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Navigation menu */}
-          <div className="bg-white rounded-[7px] shadow-md overflow-hidden">
-            <div className="divide-y divide-gray-100">
-              {MOBILE_NAV_ITEMS.map(({ name, href, Icon }) => {
-                const active = isMenuItemActive(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`w-full flex items-center justify-between p-4 transition-all duration-200 ${
-                      active ? "bg-green-50" : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon
-                        size={20}
-                        className={active ? "text-[#186737]" : "text-gray-600"}
-                      />
-                      <span className={`text-sm font-medium ${active ? "text-[#186737]" : "text-gray-700"}`}>
-                        {name}
-                      </span>
-                    </div>
-                    <ChevronRight
-                      size={16}
-                      className={active ? "text-[#186737]" : "text-gray-400"}
-                    />
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+        {/* ── Navigation menu ───────────────────────────────────────────── */}
+        <div className="px-4 mt-4 space-y-2 pb-6">
+          {[
+            { name: "My Profile",          href: "/dashboard/my-profile", Icon: Settings,    bg: "bg-orange-100",  color: "text-orange-500" },
+            { name: "My Orders",           href: "/dashboard/orders",     Icon: ShoppingBag, bg: "bg-blue-100",    color: "text-blue-500" },
+            // { name: "Payments & Invoices", href: "/dashboard/payments",   Icon: CreditCard,  bg: "bg-amber-100",   color: "text-amber-500" },
+            { name: "My Wishlist",         href: "/wishlist",             Icon: Heart,       bg: "bg-rose-100",    color: "text-rose-500" },
+            { name: "Browsing History",    href: "/dashboard/browsing-history", Icon: History, bg: "bg-purple-100", color: "text-purple-500" },
+            { name: "Saved Documents",     href: "/dashboard/documents",  Icon: FolderOpen,  bg: "bg-teal-100",    color: "text-teal-500" },
+            { name: "Support Center",      href: "/dashboard/support",    Icon: Headphones,  bg: "bg-red-100",     color: "text-red-500" },
+          ].map(({ name, href, Icon, bg, color }) => {
+            const active = isMenuItemActive(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-3.5 bg-white rounded-2xl px-4 py-3.5 shadow-sm active:scale-[0.98] transition-all duration-150 ${active ? "ring-1 ring-[#186737]/30" : ""}`}
+              >
+                <div className={`w-10 h-10 rounded-xl ${active ? "bg-[#186737]" : bg} flex items-center justify-center shrink-0`}>
+                  <Icon className={`w-5 h-5 ${active ? "text-white" : color}`} />
+                </div>
+                <span className={`flex-1 text-sm font-semibold ${active ? "text-[#186737]" : "text-gray-800"}`}>{name}</span>
+                <ChevronRight size={16} className={active ? "text-[#186737]" : "text-gray-300"} />
+              </Link>
+            );
+          })}
 
           {/* Sign Out */}
           <button
@@ -212,19 +173,18 @@ export default function DashboardPage() {
               await dispatch(logoutUser());
               window.location.href = "/";
             }}
-            className="w-full flex items-center justify-center gap-3 p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-[7px] transition-all duration-200 active:scale-95 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full flex items-center gap-3.5 bg-white rounded-2xl px-4 py-3.5 shadow-sm active:scale-[0.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
           >
-            {loggingOut
-              ? <span className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-              : <LogOut className="w-5 h-5" />
-            }
-            <span className="text-sm font-semibold">Sign Out</span>
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+              {loggingOut
+                ? <span className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                : <LogOut className="w-5 h-5 text-red-500" />
+              }
+            </div>
+            <span className="flex-1 text-sm font-semibold text-red-500 text-left">Sign Out</span>
           </button>
 
-          {/* Footer */}
-          <div className="text-center pb-2">
-            <p className="text-xs text-gray-400">HorecaStore © {new Date().getFullYear()}</p>
-          </div>
+          <p className="text-center text-xs text-gray-400 pt-2">HorecaStore © {new Date().getFullYear()}</p>
         </div>
       </div>
 

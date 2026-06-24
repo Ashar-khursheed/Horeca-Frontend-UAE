@@ -18,6 +18,7 @@ export const apiUrls = {
   UPDATE_PROFILE: "frontend/customer/update-profile",
   NavigationAPI: "frontend-categories",
   FEATURED_PRODUCTS: "frontend/featured-categories-with-products",
+  FEATURED_CATEGORY_TABS: "frontend/featured-categories",
   FEATURED_BRAND_PRODUCTS: "frontend/featured-brands-with-products",
   BLOGS: "frontend/blogs",
   BLOG_CATEGORIES_WITH_BLOGS: "frontend/categories-with-blogs",
@@ -94,10 +95,18 @@ export const apiUrls = {
   SLIDER: (id: number) => `frontend/sliders/${id}`,
 
 
+  MADE_TO_ORDER: "frontend/made-to-orders",
+
   SQUARE_PAYMENT:"frontend/payment-square",
   PLACE_ORDER:"frontend/orders",
+  ADD_RECENT_PRODUCT: "frontend/recent-products/add",
+  GET_RECENT_PRODUCTS: (page: number) => `frontend/recent-products?page=${page}`,
+  GUEST_VIEW_PRODUCT: "frontend/guest/view-product",
+  GUEST_RECENT_PRODUCTS: (guestToken: string, page: number) => `frontend/guest/recent-products?guest_token=${guestToken}&page=${page}`,
   ORDER_DETAIL: (id: number) => `frontend/orders/${id}`,
   PAYMENT_HISTORY:"frontend/payments",
   SCREEN_TRANSACTION:"screen-transaction",
   SALE_CATEGORIES: "frontend/sale-categories",
+  CUSTOM_SCRIPTS: "frontend/custom-scripts",
+  PHONE_VALIDATE: "frontend/phone/validate",
 };

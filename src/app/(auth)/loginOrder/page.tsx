@@ -10,7 +10,7 @@ import { loginUser } from "@/store/slices/auth/authSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
-import { useLocationData } from "@/utils/locationStorage";
+import { useLocationData, setDefaultAddressCache, DefaultAddressCache } from "@/utils/locationStorage";
 import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
 import { guestCheckoutSchema, loginSchema } from "@/validation/schema";
 import { useFormik } from "formik";
@@ -26,6 +26,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -157,6 +158,18 @@ const clearGoogleStateCookie = () => {
 };
 
 // ── Login Panel ───────────────────────────────────────────────────────────────
+async function cacheDefaultAddress() {
+  try {
+    const res = await makeApiRequest<{ success: boolean; data: DefaultAddressCache[] }>(
+      apiUrls.GET_CUSTOMER_ADDRESS
+    );
+    const defaultAddr = res.data?.find((a) => a.is_default);
+    if (defaultAddr) setDefaultAddressCache(defaultAddr);
+  } catch {
+    // non-critical
+  }
+}
+
 function LoginPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -166,7 +179,8 @@ function LoginPanel() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleKey, setGoogleKey] = useState(0);
   const [apiError, setApiError] = useState("");
-
+  const country = useSelector((s: RootState) => s.country?.data);
+  console.log("qqqqqqqqqqqqq",country)
   useEffect(() => {
     clearGoogleStateCookie();
   }, []);
@@ -187,9 +201,12 @@ function LoginPanel() {
         method: "POST",
         data: { credential: credentialResponse.credential },
       });
-      setAuthToken(res.token);
-      localStorage.setItem("user", JSON.stringify(res.customer));
-      dispatch(setProfile(res.customer));
+     setAuthToken(res.token);
+      const profileRes = await makeApiRequest<{ success: boolean; customer: CustomerProfile }>(
+        apiUrls.GETMYPROFILE
+      );
+      localStorage.setItem("user", JSON.stringify(profileRes.customer));
+      dispatch(setProfile(profileRes.customer));
 
       // Sync guest wishlist & cart in parallel for maximum speed
       const syncPromises = [];
@@ -205,8 +222,11 @@ function LoginPanel() {
         await Promise.all(syncPromises);
       }
       await dispatch(fetchCounts());
-      const redirect = searchParams.get("redirect") ?? "/checkout";
-      router.push(redirect);
+      await cacheDefaultAddress();
+      // const redirect = searchParams.get("redirect") ?? "/checkout";
+      // router.push(redirect);
+       const redirect = searchParams.get("redirect") ?? "/cart";
+      window.location.href = redirect;
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
@@ -233,9 +253,12 @@ function LoginPanel() {
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
           await syncGuestCartAfterLogin();
         }
-        await dispatch(fetchCounts())
-        const redirect = searchParams.get("redirect") ?? "/checkout";
-        router.push(redirect);
+        await dispatch(fetchCounts());
+        await cacheDefaultAddress();
+        // const redirect = searchParams.get("redirect") ?? "/cart";
+        // router.push(redirect);
+         const redirect = searchParams.get("redirect") ?? "/cart";
+      window.location.href = redirect;
       } catch (err: unknown) {
         setApiError(
           typeof err === "string"
@@ -358,7 +381,7 @@ function LoginPanel() {
           </div>
         ) : (
           // <div className="w-full flex justify-center [&>div]:!w-full [&_iframe]:!w-full [&_iframe]:!min-w-full">
-          <div className="google-auth-btn">
+          <div className="google-auth-btn w-full">
             <GoogleLogin
               key={googleKey}
               onSuccess={handleGoogleSuccess}
@@ -421,6 +444,14 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
   const isoCode = locationFromRedux?.countryCode ?? "";
   const flagEmoji = isoCode ? getFlagEmoji(isoCode) : "🌍";
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
+  const isUSPhone = dialCode === "+1" || isoCode === "US";
+
+  const formatUSPhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
 
   const formik = useFormik({
     initialValues: { name: "", email: "", phone: "", consent: false },
@@ -439,7 +470,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         formData.append("password_confirmation", guestPassword);
         formData.append("type", "Private");
         formData.append("country_code", dialCode);
-        formData.append("mobile_number", values.phone);
+        formData.append("mobile_number", values.phone.replace(/\D/g, ""));
 
         await makeApiRequest(apiUrls.REGISTER, {
           method: "POST",
@@ -475,9 +506,11 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
+  const phoneValidation = usePhoneValidation(formik.values.phone.replace(/\D/g, ""), isoCode);
+
   const nameErr = !!(formik.touched.name && formik.errors.name);
   const emailErr = !!(formik.touched.email && formik.errors.email);
-  const phoneErr = !!(formik.touched.phone && formik.errors.phone);
+  const phoneErr = !!(formik.touched.phone && formik.errors.phone) || phoneValidation.isInvalid;
 
   if (!showForm) {
     return (
@@ -565,7 +598,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
                 <span className="text-xs text-gray-400 animate-pulse">...</span>
               ) : (
                 <>
-                  <span className="text-base leading-none">{flagEmoji}</span>
+                  <img src={country.data?.icon ?? ""} className="w-5 h-5" alt="" />
                   <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                     {dialCode}
                   </span>
@@ -577,22 +610,30 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
               name="phone"
               value={formik.values.phone}
               onChange={(e) => {
-                const v = e.target.value.replace(/\D/g, "");
-                formik.setFieldValue("phone", v);
+                const val = isUSPhone
+                  ? formatUSPhone(e.target.value)
+                  : e.target.value.replace(/\D/g, "");
+                formik.setFieldValue("phone", val);
               }}
               onBlur={formik.handleBlur}
-              placeholder="501234567"
+              placeholder={isUSPhone ? "(432) 423-4234" : "501234567"}
               inputMode="numeric"
-              maxLength={15}
+              maxLength={isUSPhone ? 14 : 15}
               className="flex-1 h-full px-3 text-sm outline-none bg-transparent placeholder:text-gray-400"
             />
           </div>
-          {detectedCountry && !phoneErr && (
+          {detectedCountry && !phoneErr && !phoneValidation.validating && (
             <p className="text-[11px] text-gray-400 mt-1">
               Detected: {detectedCountry}
             </p>
           )}
-          <FieldError msg={phoneErr ? formik.errors.phone : undefined} />
+          {phoneValidation.validating && !formik.errors.phone && (
+            <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
+          )}
+          <FieldError msg={formik.touched.phone && formik.errors.phone ? formik.errors.phone : undefined} />
+          {!formik.errors.phone && phoneValidation.isInvalid && (
+            <FieldError msg={phoneValidation.errorMsg} />
+          )}
         </div>
 
         {/* Consent */}

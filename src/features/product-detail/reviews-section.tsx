@@ -299,6 +299,7 @@ import {
     ThumbsUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import AddReviewModal from "@/components/add-review-modal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Review = {
@@ -318,6 +319,7 @@ type ReviewsSectionProps = {
   avgRating: number;
   reviews: Review[];
   ratingDist: RatingDist[];
+  productId: number;
 };
 
 // ─── Rating Stars ─────────────────────────────────────────────────────────────
@@ -513,10 +515,12 @@ export const ReviewsSection = ({
   avgRating,
   reviews,
   ratingDist,
+  productId,
 }: ReviewsSectionProps) => {
   const [reviewFilter, setReviewFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("top");
   const [helpfulVotes, setHelpfulVotes] = useState<Record<number, boolean>>({});
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const totalReviews = ratingDist.reduce((s, r) => s + r.count, 0);
 
   const filtered = reviews
@@ -529,11 +533,12 @@ export const ReviewsSection = ({
     });
 
   return (
-    // <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+    <>
+    {/* <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8"> */}
     <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] 2xl:grid-cols-[20%_80%] gap-4">
       {/* ── Left ─────────────────────────────────────────────────── */}
       <div className="space-y-6">
-        <div className="bg-[#f0f9f4] border border-[#c3e6d4] rounded-[7px] p-4 hidden">
+        {/* <div className="bg-[#f0f9f4] border border-[#c3e6d4] rounded-[7px] p-4">
           <p className="text-sm font-semibold text-gray-800 mb-1">
             Purchased this product?
           </p>
@@ -541,13 +546,16 @@ export const ReviewsSection = ({
             Share your honest review to help hotels, restaurants, and chefs make
             smarter choices.
           </p>
-          <button className="w-full bg-[#186737] hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2">
+          <button
+            onClick={() => setReviewModalOpen(true)}
+            className="w-full bg-[#186737] hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
+          >
             <MessageCircle size={15} strokeWidth={2} />
             Leave a Review
           </button>
-        </div>
+        </div> */}
 
-        <div>
+          {avgRating > 0 &&   <div>
           <div className="flex items-end gap-3 mb-3">
             <span className="text-5xl font-extrabold text-gray-900">
               {avgRating.toFixed(1)}
@@ -559,7 +567,7 @@ export const ReviewsSection = ({
               </p>
             </div>
           </div>
-          <div className="space-y-1.5">
+      <div className="space-y-1.5">
             {ratingDist.map(({ stars, count }) => {
               const pct = totalReviews
                 ? Math.round((count / totalReviews) * 100)
@@ -583,8 +591,10 @@ export const ReviewsSection = ({
                 </div>
               );
             })}
-          </div>
+          </div> 
+          
         </div>
+          }
 
         <div className="border border-gray-100 rounded-[7px] p-4 bg-gray-50">
           <p className="text-xs font-bold text-gray-700 mb-3">
@@ -606,6 +616,13 @@ export const ReviewsSection = ({
             ))}
           </ol>
         </div>
+         <button
+                  onClick={() => setReviewModalOpen(true)}
+                  className="bg-[#186737] md:hidden block px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageCircle size={15} strokeWidth={2} />
+                  Leave a Review
+                </button>
       </div>
 
       {/* ── Right ────────────────────────────────────────────────── */}
@@ -654,5 +671,12 @@ export const ReviewsSection = ({
         </div>
       </div>
     </div>
+
+    <AddReviewModal
+      isOpen={reviewModalOpen}
+      onClose={() => setReviewModalOpen(false)}
+      productId={productId}
+    />
+    </>
   );
 };

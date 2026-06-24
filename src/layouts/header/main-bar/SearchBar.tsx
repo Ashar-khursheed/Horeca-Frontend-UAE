@@ -23,6 +23,8 @@ export default function SearchBar({ searchData }: SearchBarProps) {
   const [liveData, setLiveData] = useState<SearchSuggestions["data"] | null>(
     null,
   );
+
+  console.log("liveDataliveData",liveData)
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +58,8 @@ export default function SearchBar({ searchData }: SearchBarProps) {
   const products = d?.products ?? [];
   const categories = d?.categories ?? [];
   const brands = d?.brands ?? [];
+
+  console.log("brandsbrandsbrands",brands)
 
   const fetchSearch = useCallback(async (query: string) => {
     if (!query.trim()) {

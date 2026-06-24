@@ -12,6 +12,8 @@ interface PageProps {
     cats?: string;
     min?: string;
     max?: string;
+    sort_by?: string;
+    sort_dir?: string;
   }>;
 }
 
@@ -23,6 +25,8 @@ export default async function SearchPage({ searchParams }: PageProps) {
     cats: catsParam,
     min: minParam,
     max: maxParam,
+    sort_by: sortBy,
+    sort_dir: sortDir,
   } = await searchParams;
   const page = Math.max(1, Number(pageParam));
 
@@ -69,10 +73,13 @@ export default async function SearchPage({ searchParams }: PageProps) {
           ...(Object.keys(appliedFilters).length
             ? { applied_filters: JSON.stringify(appliedFilters) }
             : {}),
+          ...(sortBy ? { sort_by: sortBy } : {}),
+          ...(sortDir ? { sort_dir: sortDir } : {}),
         },
         { revalidate: 60 },
       )
     : null;
+
 
   return (
     <Suspense>

@@ -3,12 +3,16 @@ import { ApiProduct, RawApiProduct } from "@/components/product-card";
 export type VariantItem = {
   product_id: number;
   sku: string;
+  attribute_id: string;
   attribute_value: string;
+  attribute_name: string;
   label: string;
+  type: string;
   selected: boolean;
   price: number;
   sale_price: number;
   images: string[];
+  url: string;
 };
 
 export type AccessoryItem = {

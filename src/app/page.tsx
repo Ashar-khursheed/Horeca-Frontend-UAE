@@ -3,9 +3,9 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
-import type { ApiCategory, FeaturedCategory } from "@/utils/types";
-import { cookies } from "next/headers";
-import { revalidate } from "@/utils";
+import type { ApiCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
+import type { ApiBlog } from "@/components/blog-card";
+import { cookies, headers } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Restaurant Supply Store & Commercial Equipment | HorecaStore",
@@ -13,53 +13,91 @@ export const metadata: Metadata = {
     "HorecaStore is a reliable restaurant supply store providing commercial equipment, restaurant supplies, cookware, refrigeration, and foodservice essentials.",
   robots: { index: false, follow: true },
   alternates: {
-    canonical: "https://www.horecastore.ae/",
+    canonical: `${process.env.NEXT_SITE_URL}/`,
   },
   openGraph: {
     title: "Buy Restaurant Supplies & Commercial Equipment – HorecaStore",
     description:
       "HorecaStore is your trusted Restaurant Supply Store & Commercial Equipment destination. Discover durable commercial kitchen tools, shop with confidence, and buy now to equip your business efficiently.",
-    url: "https://www.horecastore.ae/",
+    url: `${process.env.NEXT_SITE_URL}/`,
     type: "website",
   },
 };
 
-// export const dynamic = "force-dynamic";
-// export const revalidate = 3600;
 export default async function Page() {
-  const cookieStore = await cookies();
-  const isLoggedIn  = !!cookieStore.get("token")?.value;
+  // ── Single dynamic read for the entire page ──────────────────────────────────
+  // Reading cookies() and headers() here (once) is enough to opt this page into
+  // dynamic rendering. Passing these values explicitly to makeApiCallSSR means
+  // those helpers never call cookies()/headers() themselves — no redundant reads.
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const token       = cookieStore.get("token")?.value?.trim() ?? null;
+  const isLoggedIn  = !!token;
+  const countryCode =
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    "US";
 
-  const [slider1, slider2, categoryRes, featuredCategoriesRes, featuredProductsRes,featuredBrandProductsRes] = await Promise.all([
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: 3600 }),
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: 3600 }),
-    makeApiCallSSR<{ data: ApiCategory[] }>(
-      apiUrls.NavigationAPI,
-      { with_parent: false, is_featured: true },
-      { revalidate: 3600 },
+  const [
+    slider1,
+    slider2,
+    featuredCategoriesRes,
+    categoryTabsRes,
+    featuredBrandProductsRes,
+    blogsRes,
+  ] = await Promise.all([
+    makeApiCallSSR<{ items: SliderItem[] }>(
+      "frontend/sliders/1",
+      {},
+      { revalidate: 3600, countryCode },
     ),
+    makeApiCallSSR<{ items: SliderItem[] }>(
+      "frontend/sliders/2",
+      {},
+      { revalidate: 3600, countryCode },
+    ),
+    // Only the with_parent:true variant is consumed by ShopByCategories.
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: true, is_featured: true },
-      { revalidate: 3600 },
+      { revalidate: 3600, countryCode },
     ),
-    makeApiCallSSR<{ data: FeaturedCategory[] }>(
-      apiUrls.FEATURED_PRODUCTS,
+    makeApiCallSSR<{ data: FeaturedCategoryTab[] }>(
+      apiUrls.FEATURED_CATEGORY_TABS,
       {},
-      { revalidate: isLoggedIn ? 0 : 3600, withAuth: isLoggedIn },
+      { revalidate: isLoggedIn ? 0 : 3600, countryCode },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate: isLoggedIn ? 0 : 3600, withAuth: isLoggedIn },
+      { revalidate: isLoggedIn ? 0 : 3600, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
+    ),
+    // Blogs were previously fetched client-side inside a useEffect (waterfall).
+    // Fetching SSR here means the section is populated in the initial HTML.
+    makeApiCallSSR<{ data: ApiBlog[] }>(
+      apiUrls.BLOGS,
+      { per_page: 10, lang: "en", page: 1 },
+      { revalidate: 3600, countryCode },
     ),
   ]);
 
-  const sliderItems      = slider1?.items ?? [];
-  const sliderItemsTwo   = slider2?.items ?? [];
-  const featuredCategories = featuredCategoriesRes?.data ?? [];
-  const featuredProducts = featuredProductsRes?.data ?? [];
-  const featuredBrandProducts = featuredBrandProductsRes?.data ?? [];
+  const categoryTabs = categoryTabsRes?.data ?? [];
+
+  // First tab products — sequential because we need the tab id first.
+  const firstTabId = categoryTabs[0]?.id;
+  const initialProductsRes = firstTabId
+    ? await makeApiCallSSR<{ data: ApiProductRaw[] }>(
+        apiUrls.FEATURED_CATEGORY_TABS,
+        { category_id: firstTabId },
+        { revalidate: isLoggedIn ? 0 : 3600, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
+      )
+    : null;
+
+  const sliderItems             = slider1?.items ?? [];
+  const sliderItemsTwo          = slider2?.items ?? [];
+  const featuredCategories      = featuredCategoriesRes?.data ?? [];
+  const initialFeaturedProducts: ApiProductRaw[] = initialProductsRes?.data ?? [];
+  const featuredBrandProducts   = featuredBrandProductsRes?.data ?? [];
+  const blogs                   = blogsRes?.data ?? [];
 
   const homeSchema = {
     "@context": "https://schema.org",
@@ -149,7 +187,15 @@ export default async function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeSchema) }}
       />
       <main>
-        <HomePage sliderItems={sliderItems} sliderItemsTwo={sliderItemsTwo} featuredCategories={featuredCategories} featuredProducts={featuredProducts} featuredBrandProducts={featuredBrandProducts} />
+        <HomePage
+          sliderItems={sliderItems}
+          sliderItemsTwo={sliderItemsTwo}
+          featuredCategories={featuredCategories}
+          categoryTabs={categoryTabs}
+          initialFeaturedProducts={initialFeaturedProducts}
+          featuredBrandProducts={featuredBrandProducts}
+          blogs={blogs}
+        />
       </main>
     </>
   );

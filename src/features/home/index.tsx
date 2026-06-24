@@ -1,163 +1,53 @@
-// import { Suspense } from "react";
-// import Image from "next/image";
-// import SEOMainContent from "@/seo/seo-main-content";
-// import HeroBanner, { SliderItem } from "./hero-banner";
-// import ShopByCategories from "./shop-by-category";
-// import type { ApiCategory } from "@/utils/types";
-// import { FeaturedProductsSection } from "./feature-product/FeaturedProductsSection";
-// import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
-// import { BlogsSection } from "./BlogsSection";
-// import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
-// const ProductsSkeleton = () => (
-//   <div className="animate-pulse w-full bg-white py-5">
-//     <div className="global-container">
-//       <div className="h-7 bg-gray-200 rounded w-48 mb-4" />
-//       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-//         {Array.from({ length: 10 }).map((_, i) => (
-//           <div key={i} className="aspect-[3/4] bg-gray-200 rounded-[7px]" />
-//         ))}
-//       </div>
-//     </div>
-//   </div>
-// );
+// Server component — no "use client".
+//
+// Why this matters for performance:
+//   When this file had "use client", React bundled the ENTIRE import graph
+//   (Swiper, all section components, SEOMainContent, Image wrappers, etc.)
+//   into the initial JS payload, even for parts that need zero interactivity.
+//   Removing "use client" here means only explicitly-marked child components
+//   (HeroBanner, FeaturedProducts, FeaturedBrandsDynamic, BlogsCard) ship
+//   client-side JS. Everything else — SEOMainContent, ShopByCategories, the
+//   FoodTruck banner Image — is pure static HTML, cutting TBT significantly.
+//
+// Country detection + brand-product state update are isolated in
+// FeaturedBrandsDynamic so they don't force the whole page into a client tree.
+// Blogs are now fetched SSR in page.tsx and passed as a prop, eliminating the
+// useEffect waterfall that previously blocked the section until after hydration.
 
-// export const Home = ({
-//   sliderItems = [],
-//   sliderItemsTwo = [],
-//   featuredCategories = [],
-// }: {
-//   sliderItems?: SliderItem[];
-//   sliderItemsTwo?: SliderItem[];
-//   featuredCategories?: ApiCategory[];
-// }) => {
-//   return (
-//     <>
-//       <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
-// <SEOMainContent
-//   categorySlug="horeca-store"
-//   APIDATA={{
-//     title:
-//       "Your One-Stop Shop for Professional Kitchen & Hospitality Equipment",
-//     description:
-//       "HorecaStore is the UAE's leading B2B marketplace for hotels, restaurants, and cafes. Browse thousands of NSF & UL certified products — from commercial cooking equipment and refrigeration to smallwares and supplies. Get competitive pricing, fast delivery, and dedicated support for all your hospitality needs.",
-//   }}
-// />
-//       <ShopByCategories categories={featuredCategories} />
-
-//       {/* <Suspense fallback={<ProductsSkeleton />}> */}
-//         <FeaturedProductsSection />
-//       {/* </Suspense> */}
-
-//       <div className="w-full md:py-10 py-4">
-//         <div className="global-container">
-//           <div className="grid grid-cols-1">
-// <Image
-//   src={FoodTruckBanner}
-//   alt="Food Truck Banner"
-//   priority
-//   // loading="lazy"
-//   className="rounded-[7px] w-full h-auto"
-//   sizes="100vw"
-//   decoding="async"
-// />
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* <Suspense fallback={<ProductsSkeleton />}> */}
-//         <FeaturedBrandsSection />
-//       {/* </Suspense> */}
-
-//       {/* <Suspense fallback={<div className="h-48" />}> */}
-//         <BlogsSection />
-//       {/* </Suspense> */}
-//     </>
-//   );
-// };
-
-// export default Home;
-
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { BlogsCard } from "@/components/blog-card";
+import type { ApiBlog } from "@/components/blog-card";
 import SEOMainContent from "@/seo/seo-main-content";
 import FeaturedProducts from "./feature-product";
-import FeaturedBrands from "./features-brand";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
-import type { ApiCategory, FeaturedCategory } from "@/utils/types";
+import { FeaturedBrandsDynamic } from "./features-brand/FeaturedBrandsDynamic";
+import type { ApiCategory, ApiProductRaw, FeaturedCategory, FeaturedCategoryTab } from "@/utils/types";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
-import { makeApiRequest } from "@/apis/axios-instance";
-import { apiUrls } from "@/apis/api-endpoint";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchCountryByName, resetCountry } from "@/store/slices/country/countrySlice";
-import TaxInitializer from "@/components/TaxInitializer";
 
-// ── Component ──────────────────────────────────────────────────────────────────
 export const Home = ({
   sliderItems = [],
   sliderItemsTwo = [],
   featuredCategories = [],
-  featuredProducts = [],
+  categoryTabs = [],
+  initialFeaturedProducts = [],
   featuredBrandProducts = [],
+  blogs = [],
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
   featuredCategories?: ApiCategory[];
-  featuredProducts?: FeaturedCategory[];
+  categoryTabs?: FeaturedCategoryTab[];
+  initialFeaturedProducts?: ApiProductRaw[];
   featuredBrandProducts?: FeaturedCategory[];
+  blogs?: ApiBlog[];
 }) => {
-  const router   = useRouter();
-  const dispatch = useAppDispatch();
-  
-  const country = useAppSelector((s) => s.country.data);
-  const countryName = country?.name;
-  const [initialCountry, setInitialCountry] = useState<string | null>(null);
-
-  const [products,      setProducts]      = useState<FeaturedCategory[]>(featuredProducts);
-  const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>(featuredBrandProducts);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [blogs, setBlogs] = useState<any[]>([]);
-  console.log("blogsblogsblogsblogs",blogs)
-  useEffect(() => {
-    makeApiRequest<{ data: typeof blogs }>(apiUrls.BLOGS, {
-      params: { per_page: 10, lang: "en", page: 1 },
-    })
-      .then((res) => setBlogs(res?.data ?? []))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (countryName) {
-      if (!initialCountry) {
-        setInitialCountry(countryName);
-      } else if (countryName !== initialCountry) {
-        setInitialCountry(countryName);
-        // Client-side re-fetch products when country changes in Redux
-        Promise.all([
-          makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
-          makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
-        ])
-          .then(([fp, fbp]) => {
-            if (fp?.data) setProducts(fp.data);
-            if (fbp?.data) setBrandProducts(fbp.data);
-          })
-          .catch(() => {
-            router.refresh();
-          });
-      }
-    }
-  }, [countryName, initialCountry, router]);
-
-
-  console.log("productsproductsproducts", products);
-
   return (
     <>
-     <TaxInitializer />
+      {/* HeroBanner is "use client" for Swiper + financing modal state */}
       <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
+
+      {/* Pure server HTML — no interactivity needed */}
       <SEOMainContent
         categorySlug="Restaurant Supply Store for Commercial Kitchen Equipment & Supplies"
         APIDATA={{
@@ -167,8 +57,14 @@ export const Home = ({
             "HorecaStore is a leading restaurant supply store offering commercial kitchen equipment and foodservice supplies for restaurants, hotels, cafes, and catering businesses. Our extensive product range includes commercial refrigeration, cooking equipment, prep tables, cookware, cleaning supplies, and essential restaurant tools built for daily professional use. We focus on quality, performance, and long-term reliability to meet the demands of modern commercial kitchens. Whether you're launching a new restaurant or upgrading existing operations, HorecaStore provides cost-effective solutions backed by trusted brands and dependable delivery. Shop with confidence and equip your foodservice business with durable, industry-approved equipment designed to improve efficiency and productivity.",
         }}
       />
+
+      {/* Pure server HTML — links/images, no client JS */}
       <ShopByCategories categories={featuredCategories} />
-      <FeaturedProducts products={products} />
+
+      {/* "use client" for tab switching + client-side products fetch on tab change */}
+      <FeaturedProducts tabs={categoryTabs} initialProducts={initialFeaturedProducts} />
+
+      {/* Static banner image — server HTML */}
       <div className="w-full md:py-10 py-4">
         <div className="global-container">
           <div className="grid grid-cols-1">
@@ -183,9 +79,14 @@ export const Home = ({
           </div>
         </div>
       </div>
-      <FeaturedBrands products={brandProducts} />
+
+      {/* "use client" — handles country-detection + brand-tab state.
+          Renders SSR-provided initialProducts immediately, updates on country change. */}
+      <FeaturedBrandsDynamic initialProducts={featuredBrandProducts} />
+
+      {/* BlogsCard is "use client" for like/share interactions.
+          Blogs data arrives SSR (no useEffect waterfall). */}
       <BlogsCard showAll={false} blogs={blogs} />
-      {/* <NewsletterSection/> */}
     </>
   );
 };

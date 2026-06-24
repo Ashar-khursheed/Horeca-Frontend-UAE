@@ -14,6 +14,21 @@ type Options = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: Record<string, any>;
   withAuth?: boolean;
+  /**
+   * Pass the country code from the caller (read once per page/layout).
+   * When provided, makeApiCallSSR does NOT read headers() or cookies() —
+   * the function stays outside the dynamic-render boundary and its fetch
+   * responses are ISR-cacheable.
+   *
+   * When omitted, falls back to reading x-country-code / hc_cc at the
+   * cost of opting the call into dynamic rendering (legacy behaviour).
+   */
+  countryCode?: string;
+  /**
+   * Pass the auth Bearer token from the caller (read once per page).
+   * When provided together with withAuth: true, no extra cookies() read occurs.
+   */
+  authToken?: string;
 };
 
 export async function makeApiCallSSR<T = unknown>(
@@ -32,32 +47,34 @@ export async function makeApiCallSSR<T = unknown>(
       }
     }
 
-    let countryCode = "IN";
-    try {
-      const reqHeaders = await headers();
-      // x-country-code is injected by middleware (works on first visit too)
-      countryCode = reqHeaders.get("x-country-code")
-        ?? (await cookies()).get("hc_cc")?.value
-        ?? await getCountryCodeSSR(
-            reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim()
-          );
-    } catch {}
-    qs.set("force_country", countryCode);
+    // ── Country resolution ─────────────────────────────────────────────────────
+    // Prefer explicitly passed countryCode (caller read it once — no extra
+    // dynamic API call here). Fall back to reading headers/cookies only when
+    // the caller did not supply one (legacy path, makes the call dynamic).
+    let countryCode = options?.countryCode;
+    if (countryCode === undefined) {
+      try {
+        const reqHeaders = await headers();
+        countryCode =
+          reqHeaders.get("x-country-code") ??
+          (await cookies()).get("hc_cc")?.value ??
+          (await getCountryCodeSSR(
+            reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim(),
+          ));
+      } catch {}
+    }
+    if (countryCode) qs.set("force_country", countryCode);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url  = qs.toString() ? `${base}?${qs.toString()}` : base;
 
-    // console.log("[SSR API]", url);
-    // console.log("[SSR API] force_country:", countryCode);
-
-    // Auth token from cookie (only when withAuth: true)
+    // ── Auth header ────────────────────────────────────────────────────────────
+    // Use provided authToken when available to skip an extra cookies() read.
     let authHeader: Record<string, string> = {};
     if (options?.withAuth) {
-      const cookieStore = await cookies();
-      const token = cookieStore.get("token")?.value;
-      if (token) {
-        authHeader = { Authorization: `Bearer ${token}` };
-      }
+      const token =
+        options.authToken ?? (await cookies()).get("token")?.value;
+      if (token) authHeader = { Authorization: `Bearer ${token}` };
     }
 
     const method = options?.method ?? (options?.body ? "POST" : "GET");

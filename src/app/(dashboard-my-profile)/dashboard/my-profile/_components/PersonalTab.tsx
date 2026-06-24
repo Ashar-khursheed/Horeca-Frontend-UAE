@@ -11,13 +11,16 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { CustomerProfile, updateProfile } from "@/store/slices/my-profile/profileSlice";
 import { useAppSelector } from "@/store/hooks";
-import { AppDispatch } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import { updateProfileSchema } from "@/validation/schema";
 import { useFormik } from "formik";
-import { Building2, CheckCircle, ChevronDown, Mail, Phone, Search, Shield, User } from "lucide-react";
+import { Building2, ArrowLeft, CheckCircle, ChevronDown, Mail, Phone, Search, Shield, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Field, inputCls } from "./shared";
+import { useLocationData } from "@/utils/locationStorage";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 
 interface CountryOption {
   id: number;
@@ -28,10 +31,18 @@ interface CountryOption {
 
 export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) => {
   const dispatch      = useDispatch<AppDispatch>();
+  const router        = useRouter();
+  const searchParams  = useSearchParams();
+  const isFromCheckout = searchParams?.get("mode") === "checkout";
+  const locationData  = useLocationData();
+  const isoCode       = locationData?.countryCode ?? "";
   const detectedCountry = useAppSelector((s) => s.country.data);
   const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error">("idle");
   const [apiMessage, setApiMessage] = useState("");
-
+  const country       = useSelector((s: RootState) => s.country);
+  const countryId     = country?.data?.id as number | undefined;
+  const countryName   = (country?.data?.name as string) ?? "";
+  const countryIcon   = (country?.data?.icon as string) ?? "";
   // ── Country code dropdown state ──────────────────────────────────────────
   const [countries, setCountries]     = useState<CountryOption[]>([]);
   const [codeOpen, setCodeOpen]       = useState(false);
@@ -110,11 +121,15 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
     },
   });
 
+  const phoneValidation = usePhoneValidation(formik.values.mobile_number, isoCode);
+
   const hasErr = (f: keyof typeof formik.values) =>
     !!(formik.touched[f] && formik.errors[f]);
 
   return (
     <div className="space-y-5">
+      
+
       {/* Avatar */}
       <div className="flex items-center gap-5 p-5 bg-white rounded-[7px] border border-gray-100 shadow-sm">
         <div className="w-20 h-20 rounded-[7px] bg-[#186737] flex items-center justify-center shadow-md shrink-0">
@@ -140,7 +155,16 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
           </h3>
         </div>
 
-        <form onSubmit={formik.handleSubmit} noValidate>
+        <form
+          noValidate
+          onSubmit={(e) => {
+            if (phoneValidation.validating || phoneValidation.isInvalid) {
+              e.preventDefault();
+              return;
+            }
+            formik.handleSubmit(e);
+          }}
+        >
           <div className="p-5 space-y-4">
             {apiStatus === "success" && (
               <div className="flex items-start gap-3 p-3.5 rounded-[7px] bg-emerald-50 border border-emerald-200">
@@ -216,21 +240,26 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
               <Field label="Country Code" icon={Phone}>
                 <div ref={dropdownRef} className="relative">
                   {/* Trigger */}
-                  <button
+ <div className="flex gap-1.5 items-center cursor-not-allowed w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-gray-50 text-gray-600 cursor-default outline-none">
+                          <img src={countryIcon ?? ""} alt="country image" className="w-4 h-4" />
+                            <button
                     type="button"
                     onClick={() => { setCodeOpen((o) => !o); setCodeSearch(""); }}
-                    className={`${inputCls} flex items-center justify-between gap-2 text-left ${
-                      hasErr("country_code") ? "border-red-400 focus:ring-red-100" : ""
+                    className={` flex items-center !cursor-not-allowed justify-between gap-2 text-left ${
+                      hasErr("country_code") ? "border-red-400 focus:ring-red-100s" : "cursor-not-allowed"
                     }`}
                     disabled
                   >
                     <span className={formik.values.country_code ? "text-gray-900" : "text-gray-400"}>
                       {formik.values.country_code
-                        ? `${formik.values.country_code} (${countries.find((c) => c.phone_code === formik.values.country_code)?.name ?? ""})`
+                        ? `${formik.values.country_code}`
                         : "Select country code"}
                     </span>
-                    <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform ${codeOpen ? "rotate-180" : ""}`} />
+                    {/* <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform ${codeOpen ? "rotate-180" : ""}`} /> */}
                   </button>
+
+                        </div>
+               
 
                   {/* Dropdown */}
                   {codeOpen && (
@@ -284,18 +313,29 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   placeholder="501234567"
-                  className={`${inputCls} ${hasErr("mobile_number") ? "border-red-400 focus:ring-red-100" : ""}`}
+                  className={`${inputCls} ${hasErr("mobile_number") || phoneValidation.isInvalid ? "border-red-400 focus:ring-red-100" : ""}`}
                 />
+                {phoneValidation.validating && !hasErr("mobile_number") && (
+                  <p className="text-[11px] text-gray-400 mt-1 hidden">Validating...</p>
+                )}
                 {hasErr("mobile_number") && <p className="text-[11px] text-red-500 mt-1">{formik.errors.mobile_number}</p>}
+                {!hasErr("mobile_number") && phoneValidation.isInvalid && (
+                  <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
+                )}
               </Field>
             </div>
           </div>
 
           <div className="px-5 pb-5 flex items-center gap-3">
-            <button
+         <div className="">
+             <button
               type="submit"
-              disabled={formik.isSubmitting}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 bg-[#186737] hover:bg-[#145c30] text-white disabled:opacity-70 disabled:cursor-not-allowed"
+              disabled={formik.isSubmitting || phoneValidation.isInvalid || phoneValidation.validating}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-[7px] text-sm font-semibold transition-all duration-200 bg-[#186737] hover:bg-[#145c30] text-white disabled:opacity-70 ${
+                formik.isSubmitting || phoneValidation.isInvalid || phoneValidation.validating
+                  ? "!cursor-not-allowed opacity-70"
+                  : "cursor-pointer"
+              }`}
             >
               {formik.isSubmitting ? (
                 <>
@@ -304,6 +344,8 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
                 </>
               ) : "Save Changes"}
             </button>
+                
+         </div>
             <button
               type="button"
               onClick={() => { formik.resetForm(); setApiStatus("idle"); }}
@@ -311,7 +353,20 @@ export const PersonalTab = ({ customer }: { customer: CustomerProfile | null }) 
             >
               Cancel
             </button>
+
+<div className="ml-auto">
+          {isFromCheckout && (
+        <button
+          onClick={() => router.push("/checkout")}
+          className="flex items-center gap-1.5 text-sm font-semibold text-red-600 underline hover:underline"
+        >
+          {/* <ArrowLeft size={14} /> */}
+          Return to Checkout
+        </button>
+      )}
+</div>
           </div>
+          
         </form>
       </div>
     </div>

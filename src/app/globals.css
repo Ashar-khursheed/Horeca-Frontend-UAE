@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "swiper/swiper.css";
 @import "swiper/css/pagination";
+@import "swiper/css/effect-fade";
+@import "swiper/css/navigation";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -132,6 +134,11 @@
 
 body{
   font-family: var(--font-inter, "Inter", sans-serif);
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }
 @layer base {
   * {
@@ -432,6 +439,56 @@ img {
 
 
 
+/* ── Policy page HTML prose renderer ── */
+.policy-prose h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #186737;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.35;
+}
+.policy-prose h2:first-child {
+  margin-top: 0;
+}
+.policy-prose h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.policy-prose p {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.75;
+  margin-top: 0.625rem;
+}
+.policy-prose ul,
+.policy-prose ol {
+  margin-top: 0.625rem;
+  padding-left: 1.5rem;
+}
+.policy-prose ul { list-style-type: disc; }
+.policy-prose ol { list-style-type: decimal; }
+.policy-prose li {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.75;
+  margin-top: 0.3rem;
+}
+.policy-prose li > ul,
+.policy-prose li > ol {
+  margin-top: 0.3rem;
+}
+.policy-prose a {
+  color: #186737;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.policy-prose a:hover { color: #145c30; }
+.policy-prose strong { font-weight: 700; color: #374151; }
+
 .mega-sale-btn {
   background: linear-gradient(145deg, #ff3b0a, #ff0000);
   border-radius: 10px;
@@ -540,6 +597,9 @@ img {
 button{
   cursor: pointer;
 }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 
 .embla__viewport {

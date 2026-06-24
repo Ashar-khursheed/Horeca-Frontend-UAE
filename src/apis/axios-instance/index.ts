@@ -2,8 +2,8 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getCountryCodeClient } from "@/utils/country";
 
 const axiosInstance = axios.create({
-  // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://test-us.thehorecastore.co/api/",
-    baseURL: "/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://test-us.thehorecastore.co/api/",
+    // baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -64,12 +64,13 @@ axiosInstance.interceptors.request.use(
 );
 
 // ─── Response Interceptor ─────────────────────────────────────────────────────
-
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    const isAuthEndpoint = error.config?.url?.includes("/auth/");
-    if (error.response?.status === 401 && !isAuthEndpoint) {
+    const url = error.config?.url ?? "";
+    const isAuthEndpoint    = url.includes("/auth/");
+    const isPaymentEndpoint = url.includes("payments") || url.includes("screen-transaction") || url.includes("payment-history");
+    if (error.response?.status === 401 && !isAuthEndpoint && !isPaymentEndpoint) {
       removeAuthToken();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
@@ -79,6 +80,22 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+
+
+
+// axiosInstance.interceptors.response.use(
+//   (response) => response,
+//   (error: AxiosError) => {
+//     const isAuthEndpoint = error.config?.url?.includes("/auth/");
+//     if (error.response?.status === 401 && !isAuthEndpoint) {
+//       removeAuthToken();
+//       if (typeof window !== "undefined") {
+//         window.location.href = "/login";
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 // ─── Generic Request ──────────────────────────────────────────────────────────
 
 interface ApiRequestOptions {

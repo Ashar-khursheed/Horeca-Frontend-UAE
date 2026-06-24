@@ -34,6 +34,8 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
+import { cacheDefaultAddress } from "../login/page";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -82,7 +84,6 @@ function RegisterPageInner() {
   const searchParams = useSearchParams();
   const locationFromRedux = useLocationData();
   const country = useSelector((s: RootState) => s.country);
-  console.log("locationFromRedux",country?.data?.icon)
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -113,6 +114,23 @@ function RegisterPageInner() {
   const isoCode = locationFromRedux?.countryCode ?? "";
   const flagEmoji = isoCode ? getFlagEmoji(isoCode) : country?.data?.icon;
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
+  const isUSPhone = isoCode === "US" || dialCode === "+1";
+
+  const formatUSPhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isUSPhone) {
+      const formatted = formatUSPhone(e.target.value);
+      formik.setFieldValue("mobile_number", formatted);
+    } else {
+      formik.handleChange(e);
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -139,7 +157,7 @@ function RegisterPageInner() {
         formData.append("password_confirmation", values.password_confirmation);
         formData.append("type", values.type);
         formData.append("country_code", dialCode);
-        formData.append("mobile_number", values.mobile_number);
+        formData.append("mobile_number", values.mobile_number.replace(/\D/g, ""));
         if (values.type === "Business" && values.business_name) {
           formData.append("business_name", values.business_name.trim());
         }
@@ -180,6 +198,10 @@ function RegisterPageInner() {
     },
   });
 
+  const phoneValidation = usePhoneValidation(
+    formik.values.mobile_number.replace(/\D/g, ""),
+    isoCode
+  );
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (!credentialResponse.credential) {
@@ -197,10 +219,13 @@ function RegisterPageInner() {
         method: "POST",
         data: { credential: credentialResponse.credential },
       });
-      setAuthToken(res.token);
-      localStorage.setItem("user", JSON.stringify(res.customer));
-      dispatch(setProfile(res.customer));
-
+           setAuthToken(res.token);
+      const profileRes = await makeApiRequest<{ success: boolean; customer: CustomerProfile }>(
+        apiUrls.GETMYPROFILE
+      );
+      localStorage.setItem("user", JSON.stringify(profileRes.customer));
+      dispatch(setProfile(profileRes.customer));
+ await cacheDefaultAddress();
       // Sync guest wishlist & cart in parallel for maximum speed
       const syncPromises = [];
       const guestWishlist = localStorage.getItem("horeca_wishlist");
@@ -245,7 +270,15 @@ function RegisterPageInner() {
           <h1 className="text-2xl font-black text-gray-900 mb-1">Create Account</h1>
           <p className="text-sm text-gray-500 mb-6">Fill in your details to get started.</p>
 
-          <form onSubmit={formik.handleSubmit} noValidate className="space-y-4">
+          <form
+            noValidate
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (phoneValidation.isInvalid || phoneValidation.validating) return;
+              formik.handleSubmit(e);
+            }}
+          >
 
             {/* Row 1 – Type + Full Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -362,7 +395,7 @@ function RegisterPageInner() {
                 </label>
                 <div
                   className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${
-                    err("mobile_number")
+                    err("mobile_number") || phoneValidation.isInvalid
                       ? "border-red-400"
                       : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
                   }`}
@@ -385,20 +418,26 @@ function RegisterPageInner() {
                     type="tel"
                     name="mobile_number"
                     value={formik.values.mobile_number}
-                    onChange={formik.handleChange}
+                    onChange={handlePhoneChange}
                     onBlur={formik.handleBlur}
-                    placeholder="501234567"
+                    placeholder={isUSPhone ? "(432) 423-4234" : "501234567"}
                     inputMode="numeric"
                     className="flex-1 px-3 text-sm outline-none bg-white placeholder:text-gray-300"
                   />
                 </div>
-                {detectedCountry && !err("mobile_number") && (
+                {detectedCountry && !err("mobile_number") && !phoneValidation.isInvalid && !phoneValidation.validating && (
                   <p className="text-[11px] text-gray-400 mt-1">
                     Detected: {detectedCountry}
                   </p>
                 )}
+                {phoneValidation.validating && !err("mobile_number") && (
+                  <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
+                )}
                 {err("mobile_number") && (
                   <p className="text-[11px] text-red-500 mt-1">{err("mobile_number")}</p>
+                )}
+                {!err("mobile_number") && phoneValidation.isInvalid && (
+                  <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
                 )}
               </div>
             </div>
@@ -508,8 +547,8 @@ function RegisterPageInner() {
                   </div>
                   <span className="text-[11px] text-gray-500 leading-relaxed">
                     By submitting this form, you consent to receive promotional offers from Horecastore at the number provided. Consent is not a condition of purchase. Message &amp; data rates may apply. Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers aren&apos;t shared with third parties.{" "}
-                    <Link href="/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
-                    <Link href="/terms" className="text-[#186737] hover:underline">Terms and Conditions</Link>.
+                    <Link href="/pages/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
+                    <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">Terms and Conditions</Link>.
                   </span>
                 </label>
                 {err("consent") && (

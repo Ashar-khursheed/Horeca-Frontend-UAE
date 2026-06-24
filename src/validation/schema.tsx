@@ -38,8 +38,7 @@ export const registerSchema = Yup.object({
     .test("no-space", "Email cannot contain spaces.", (v) => !v || !v.includes(" "))
     .email("Enter a valid email address (e.g. you@example.com)."),
   mobile_number: Yup.string()
-    .required("Phone number is required.")
-    .matches(/^[0-9]{7,15}$/, "Enter a valid phone number (7–15 digits, numbers only)."),
+    .required("Phone number is required."),
   password: Yup.string()
     .required("Password is required.")
     .min(8, "Minimum 8 characters required.")
@@ -64,8 +63,7 @@ export const updateProfileSchema = Yup.object({
     .required("Country code is required.")
     .matches(/^\+?[0-9]{1,5}$/, "Enter a valid country code (e.g. +971)."),
   mobile_number: Yup.string()
-    .required("Mobile number is required.")
-    .matches(/^[0-9]{7,15}$/, "Enter a valid mobile number (7–15 digits)."),
+    .required("Mobile number is required."),
   type: Yup.string().required("Account type is required."),
   business_name: Yup.string().when("type", {
     is: "Business",
@@ -90,8 +88,7 @@ export const guestCheckoutSchema = Yup.object({
     .required("Email is required.")
     .email("Enter a valid email address."),
   phone: Yup.string()
-    .required("Phone number is required.")
-    .matches(/^[0-9]{7,15}$/, "Enter a valid phone number (7–15 digits, numbers only)."),
+    .required("Phone number is required."),
   consent: Yup.boolean().oneOf([true], "You must accept the terms to continue."),
 });
 
