@@ -143,8 +143,7 @@ function LoginPageInner() {
       dispatch(setProfile(res.user));
 
       const redirect = searchParams.get("redirect") ?? "/";
-      router.push(redirect);
-      router.refresh();
+      window.location.href = redirect;
 
       // Sync guest wishlist & cart in the background without blocking redirect
       const syncPromises = [];
@@ -185,8 +184,7 @@ function LoginPageInner() {
         ).unwrap();
 
         const redirect = searchParams.get("redirect") ?? "/";
-        router.push(redirect);
-        router.refresh();
+        window.location.href = redirect;
 
         // Sync guest wishlist & cart in background
         const syncPromises = [];
