@@ -17,6 +17,7 @@ export const apiUrls = {
   CHANGE_PASSWORD: "frontend/customer/change-password",
   UPDATE_PROFILE: "frontend/customer/update-profile",
   NavigationAPI: "frontend-categories",
+  NavigationAPIHOME: "frontend-categories?category_type=home",
   FEATURED_PRODUCTS: "frontend/featured-categories-with-products",
   FEATURED_CATEGORY_TABS: "frontend/featured-categories",
   FEATURED_BRAND_PRODUCTS: "frontend/featured-brands-with-products",

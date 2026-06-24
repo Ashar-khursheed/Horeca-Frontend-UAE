@@ -3,7 +3,7 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
-import type { ApiCategory, FeaturedCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
+import type { FeaturedCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
 import type { ApiBlog } from "@/components/blog-card";
 import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
@@ -41,7 +41,6 @@ export default async function Page() {
   const [
     slider1,
     slider2,
-    featuredCategoriesRes,
     categoryTabsRes,
     featuredBrandProductsRes,
     blogsRes,
@@ -54,13 +53,6 @@ export default async function Page() {
     makeApiCallSSR<{ items: SliderItem[] }>(
       "frontend/sliders/2",
       {},
-      { revalidate, countryCode },
-    ),
-    // Only the with_parent:true variant is consumed by ShopByCategories.
-    // The with_parent:false call that existed before was never read — removed.
-    makeApiCallSSR<{ data: ApiCategory[] }>(
-      apiUrls.NavigationAPI,
-      { with_parent: true, is_featured: true },
       { revalidate, countryCode },
     ),
     makeApiCallSSR<{ data: FeaturedCategoryTab[] }>(
@@ -96,7 +88,6 @@ export default async function Page() {
 
   const sliderItems             = slider1?.items ?? [];
   const sliderItemsTwo          = slider2?.items ?? [];
-  const featuredCategories      = featuredCategoriesRes?.data ?? [];
   const initialFeaturedProducts: ApiProductRaw[] = initialProductsRes?.data ?? [];
   const featuredBrandProducts   = featuredBrandProductsRes?.data ?? [];
   const blogs                   = blogsRes?.data ?? [];
@@ -192,7 +183,6 @@ export default async function Page() {
         <HomePage
           sliderItems={sliderItems}
           sliderItemsTwo={sliderItemsTwo}
-          featuredCategories={featuredCategories}
           categoryTabs={categoryTabs}
           initialFeaturedProducts={initialFeaturedProducts}
           featuredBrandProducts={featuredBrandProducts}

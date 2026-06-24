@@ -21,14 +21,13 @@ import FeaturedProducts from "./feature-product";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
 import { FeaturedBrandsDynamic } from "./features-brand/FeaturedBrandsDynamic";
-import type { ApiCategory, ApiProductRaw, FeaturedCategory, FeaturedCategoryTab } from "@/utils/types";
+import type { ApiProductRaw, FeaturedCategory, FeaturedCategoryTab } from "@/utils/types";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
 
 export const Home = ({
   sliderItems = [],
   sliderItemsTwo = [],
-  featuredCategories = [],
   categoryTabs = [],
   initialFeaturedProducts = [],
   featuredBrandProducts = [],
@@ -36,7 +35,6 @@ export const Home = ({
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
-  featuredCategories?: ApiCategory[];
   categoryTabs?: FeaturedCategoryTab[];
   initialFeaturedProducts?: ApiProductRaw[];
   featuredBrandProducts?: FeaturedCategory[];
@@ -59,7 +57,7 @@ export const Home = ({
       />
 
       {/* Pure server HTML — links/images, no client JS */}
-      <ShopByCategories categories={featuredCategories} />
+      <ShopByCategories />
 
       {/* "use client" for tab switching + client-side products fetch on tab change */}
       <FeaturedProducts tabs={categoryTabs} initialProducts={initialFeaturedProducts} />
