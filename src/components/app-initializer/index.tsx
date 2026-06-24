@@ -68,9 +68,9 @@ export default function AppInitializer() {
           localStorage.setItem("hc_country_code_time", now);
           document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
 
-          if (detected !== "US") {
-            localStorage.removeItem("horeca_tax_rate");
-          }
+          // if (detected !== "US") {
+          //   localStorage.removeItem("horeca_tax_rate");
+          // }
 
           if (detected !== currentCookie) {
             dispatch(resetCountry());
@@ -99,6 +99,15 @@ export default function AppInitializer() {
     window.addEventListener(LOCATION_EVENT, handler);
     return () => window.removeEventListener(LOCATION_EVENT, handler);
   }, [dispatch]);
+
+  // Remove tax rate on any click globally
+  // useEffect(() => {
+  //   const handleClick = () => {
+  //     localStorage.removeItem("horeca_tax_rate");
+  //   };
+  //   window.addEventListener("click", handleClick);
+  //   return () => window.removeEventListener("click", handleClick);
+  // }, []);
 
   // Profile: only fetch if token exists
   useEffect(() => {
