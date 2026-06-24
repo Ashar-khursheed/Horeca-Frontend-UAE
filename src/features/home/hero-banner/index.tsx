@@ -6,7 +6,7 @@ import FinancingModal from "@/components/financing-modal";
 import { Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Autoplay, EffectFade, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import NoImage from "@/assets/NoImage.jpg";
@@ -132,6 +132,17 @@ export const HeroBanner = ({
       ? sliderItemsTwo
       : FALLBACK_SLIDES;
 
+  const [isClient, setIsClient] = useState(false);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    setIsClient(true);
+    setWidth(window.innerWidth);
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <>
       <section className="global-container mt-3 sm:mt-6">
@@ -172,7 +183,7 @@ export const HeroBanner = ({
                           loading={index === 0 ? "eager" : "lazy"}
                           fetchPriority={index === 0 ? "high" : undefined}
                           sizes="(max-width: 1024px) 100vw, 70vw"
-                          quality={85}
+                          unoptimized
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                       </div>
@@ -188,7 +199,7 @@ export const HeroBanner = ({
                         loading={index === 0 ? "eager" : "lazy"}
                         fetchPriority={index === 0 ? "high" : undefined}
                         sizes="(max-width: 1024px) 100vw, 70vw"
-                        quality={85}
+                        unoptimized
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     </div>
@@ -261,75 +272,9 @@ export const HeroBanner = ({
               {/* <Link href="/starting-a-restaurant" className="no-underline"> */}
               <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
               {/* </Link> */}
-              <Swiper
-                id="hero-tablet"
-                modules={[Autoplay, Pagination, EffectFade]}
-                effect="fade"
-                fadeEffect={{ crossFade: true }}
-                autoplay={{
-                  delay: 3000,
-                  disableOnInteraction: false,
-                  pauseOnMouseEnter: true,
-                }}
-                pagination={{ clickable: true }}
-                loop={activeSlidesTwo.length > 1}
-                className="w-full h-full"
-              >
-                {activeSlidesTwo.map((item, index) => {
-                  const isValid = item.image?.startsWith("http");
-                  return (
-                    <SwiperSlide key={item.id}>
-                      {item.link ? (
-                        <Link
-                          href={item.link}
-                          className="block w-full h-full outline-none"
-                        >
-                          <div className="relative w-full h-full">
-                            <Image
-                              src={isValid ? item.image : NoImage}
-                              alt={item.title ?? "Banner"}
-                              fill
-                              className="object-covera"
-                              sizes="50vw"
-                              priority={index === 0}
-                              loading={index === 0 ? "eager" : "lazy"}
-                            />
-                            {isValid && (
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                            )}
-                          </div>
-                        </Link>
-                      ) : (
-                        <div className="relative w-full h-full">
-                          <Image
-                            src={isValid ? item.image : NoImage}
-                            alt={item.title ?? "Banner"}
-                            fill
-                            className="object-covera"
-                            sizes="50vw"
-                            priority={index === 0}
-                            loading={index === 0 ? "eager" : "lazy"}
-                          />
-                        </div>
-                      )}
-                    </SwiperSlide>
-                  );
-                })}
-              </Swiper>
-            </div>
-
-            {/* DESKTOP (lg+) — stacked layout */}
-            <div className="hidden lg:grid grid-rows-[auto_auto] h-full gap-3">
-              <div className="no-underline flex-11s bg-[#e2e8f033] flex justify-between items-center">
-                <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
-              </div>
-
-              <div
-                className="w-full rounded-[7px] overflow-hidden h-full "
-                style={{ aspectRatio: "875/380" }}
-              >
+              {isClient && width >= 640 && width < 1024 && (
                 <Swiper
-                  id="hero-desktop"
+                  id="hero-tablet"
                   modules={[Autoplay, Pagination, EffectFade]}
                   effect="fade"
                   fadeEffect={{ crossFade: true }}
@@ -357,9 +302,10 @@ export const HeroBanner = ({
                                 alt={item.title ?? "Banner"}
                                 fill
                                 className="object-covera"
-                                sizes="30vw"
+                                sizes="50vw"
                                 priority={index === 0}
                                 loading={index === 0 ? "eager" : "lazy"}
+                                unoptimized
                               />
                               {isValid && (
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -373,9 +319,10 @@ export const HeroBanner = ({
                               alt={item.title ?? "Banner"}
                               fill
                               className="object-covera"
-                              sizes="30vw"
+                              sizes="50vw"
                               priority={index === 0}
                               loading={index === 0 ? "eager" : "lazy"}
+                              unoptimized
                             />
                           </div>
                         )}
@@ -383,6 +330,78 @@ export const HeroBanner = ({
                     );
                   })}
                 </Swiper>
+              )}
+            </div>
+
+            {/* DESKTOP (lg+) — stacked layout */}
+            <div className="hidden lg:grid grid-rows-[auto_auto] h-full gap-3">
+              <div className="no-underline flex-11s bg-[#e2e8f033] flex justify-between items-center">
+                <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
+              </div>
+
+              <div
+                className="w-full rounded-[7px] overflow-hidden h-full "
+                style={{ aspectRatio: "875/380" }}
+              >
+                {isClient && width >= 1024 && (
+                  <Swiper
+                    id="hero-desktop"
+                    modules={[Autoplay, Pagination, EffectFade]}
+                    effect="fade"
+                    fadeEffect={{ crossFade: true }}
+                    autoplay={{
+                      delay: 3000,
+                      disableOnInteraction: false,
+                      pauseOnMouseEnter: true,
+                    }}
+                    pagination={{ clickable: true }}
+                    loop={activeSlidesTwo.length > 1}
+                    className="w-full h-full"
+                  >
+                    {activeSlidesTwo.map((item, index) => {
+                       const isValid = item.image?.startsWith("http");
+                       return (
+                        <SwiperSlide key={item.id}>
+                          {item.link ? (
+                            <Link
+                              href={item.link}
+                              className="block w-full h-full outline-none"
+                            >
+                              <div className="relative w-full h-full">
+                                <Image
+                                  src={isValid ? item.image : NoImage}
+                                  alt={item.title ?? "Banner"}
+                                  fill
+                                  className="object-covera"
+                                  sizes="30vw"
+                                  priority={index === 0}
+                                  loading={index === 0 ? "eager" : "lazy"}
+                                  unoptimized
+                                />
+                                {isValid && (
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                                )}
+                              </div>
+                            </Link>
+                          ) : (
+                            <div className="relative w-full h-full">
+                              <Image
+                                src={isValid ? item.image : NoImage}
+                                alt={item.title ?? "Banner"}
+                                fill
+                                className="object-covera"
+                                sizes="30vw"
+                                priority={index === 0}
+                                loading={index === 0 ? "eager" : "lazy"}
+                                unoptimized
+                              />
+                            </div>
+                          )}
+                        </SwiperSlide>
+                      );
+                    })}
+                  </Swiper>
+                )}
               </div>
             </div>
           </div>

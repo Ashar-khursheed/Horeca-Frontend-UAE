@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { parseScriptHtml } from "@/utils/parse-script-html";
+import { usePathname } from "next/navigation";
 
 interface CustomScript {
   id: number;
@@ -17,6 +18,7 @@ interface CustomScriptsRendererProps {
 
 export default function CustomScriptsRenderer({ scripts }: CustomScriptsRendererProps) {
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const scheduleScriptMounting = () => {
@@ -41,11 +43,31 @@ export default function CustomScriptsRenderer({ scripts }: CustomScriptsRenderer
 
   if (!mounted) return null;
 
+  const filteredScripts = scripts.filter((s) => {
+    if (!s.is_active) return false;
+
+    const code = (s.script_code || "").toLowerCase();
+    
+    // Check if the script belongs to a payment gateway or billing captcha
+    const isPaymentScript = 
+      code.includes("squarecdn.com") || 
+      code.includes("staxpayments.com") || 
+      code.includes("staxjs") || 
+      code.includes("square.js");
+
+    if (isPaymentScript) {
+      const isCheckoutOrPaymentPage = 
+        pathname.startsWith("/checkout") || 
+        pathname.startsWith("/payment");
+      return isCheckoutOrPaymentPage;
+    }
+
+    return true;
+  });
+
   return (
     <>
-      {scripts
-        .filter((s) => s.is_active)
-        .map((s, i) => parseScriptHtml(s.script_code, i))}
+      {filteredScripts.map((s, i) => parseScriptHtml(s.script_code, i))}
     </>
   );
 }
