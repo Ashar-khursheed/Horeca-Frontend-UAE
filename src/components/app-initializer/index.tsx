@@ -3,7 +3,6 @@
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
-import { hydrateCachedDefault } from "@/store/slices/customer-address/customerAddressSlice";
 import { AppDispatch } from "@/store/store";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -17,11 +16,6 @@ const DETECT_TTL     = 10 * 60 * 1000; // 10 minutes cache
 
 export default function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
-
-  // Hydrate default address cache from localStorage (must be after mount to avoid SSR mismatch)
-  useEffect(() => {
-    dispatch(hydrateCachedDefault());
-  }, [dispatch]);
 
   // Auto-logout: check 24h expiry on mount and schedule timer for remainder
   useEffect(() => {

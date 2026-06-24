@@ -3,7 +3,7 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
-import type { ApiCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
+import type { ApiCategory, FeaturedCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
 import type { ApiBlog } from "@/components/blog-card";
 import { cookies, headers } from "next/headers";
 
