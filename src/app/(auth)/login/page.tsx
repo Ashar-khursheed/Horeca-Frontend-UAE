@@ -27,7 +27,10 @@ import { setProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
 import { apiUrls } from "@/apis/api-endpoint";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { setDefaultAddressCache, DefaultAddressCache } from "@/utils/locationStorage";
+import {
+  setDefaultAddressCache,
+  DefaultAddressCache,
+} from "@/utils/locationStorage";
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -94,9 +97,10 @@ const clearGoogleStateCookie = () => {
 
 export async function cacheDefaultAddress() {
   try {
-    const res = await makeApiRequest<{ success: boolean; data: DefaultAddressCache[] }>(
-      apiUrls.GET_CUSTOMER_ADDRESS
-    );
+    const res = await makeApiRequest<{
+      success: boolean;
+      data: DefaultAddressCache[];
+    }>(apiUrls.GET_CUSTOMER_ADDRESS);
     const defaultAddr = res.data?.find((a) => a.is_default);
     if (defaultAddr) setDefaultAddressCache(defaultAddr);
   } catch {
@@ -135,9 +139,10 @@ function LoginPageInner() {
         data: { credential: credentialResponse.credential },
       });
       setAuthToken(res.token);
-      const profileRes = await makeApiRequest<{ success: boolean; customer: CustomerProfile }>(
-        apiUrls.GETMYPROFILE
-      );
+      const profileRes = await makeApiRequest<{
+        success: boolean;
+        customer: CustomerProfile;
+      }>(apiUrls.GETMYPROFILE);
       localStorage.setItem("user", JSON.stringify(profileRes.customer));
       dispatch(setProfile(profileRes.customer));
 
@@ -182,6 +187,8 @@ function LoginPageInner() {
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
 
+        router.push("/")
+
         // Sync guest wishlist & cart in parallel for maximum speed
         const syncPromises = [];
         const guestWishlist = localStorage.getItem("horeca_wishlist");
@@ -198,8 +205,8 @@ function LoginPageInner() {
 
         await cacheDefaultAddress();
 
-        const redirect = searchParams.get("redirect") ?? "/";
-        window.location.href = redirect;
+        // const redirect = searchParams.get("redirect") ?? "/";
+        // window.location.href = redirect;
       } catch (err: unknown) {
         const msg =
           typeof err === "string"
