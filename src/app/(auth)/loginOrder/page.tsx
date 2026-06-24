@@ -196,19 +196,20 @@ function LoginPanel() {
       const res = await makeApiRequest<{
         success: boolean;
         token: string;
-        customer: CustomerProfile;
+        user: CustomerProfile;
       }>(apiUrls.GOOGLE_AUTH, {
         method: "POST",
         data: { credential: credentialResponse.credential },
       });
-     setAuthToken(res.token);
-      const profileRes = await makeApiRequest<{ success: boolean; customer: CustomerProfile }>(
-        apiUrls.GETMYPROFILE
-      );
-      localStorage.setItem("user", JSON.stringify(profileRes.customer));
-      dispatch(setProfile(profileRes.customer));
+      setAuthToken(res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      dispatch(setProfile(res.user));
 
-      // Sync guest wishlist & cart in parallel for maximum speed
+      const redirect = searchParams.get("redirect") ?? "/cart";
+      router.push(redirect);
+      router.refresh();
+
+      // Run background tasks without blocking redirect
       const syncPromises = [];
       const guestWishlist = localStorage.getItem("horeca_wishlist");
       if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
@@ -219,14 +220,14 @@ function LoginPanel() {
         syncPromises.push(syncGuestCartAfterLogin());
       }
       if (syncPromises.length > 0) {
-        await Promise.all(syncPromises);
+        Promise.all(syncPromises)
+          .then(() => dispatch(fetchCounts()))
+          .catch(err => console.error("Sync error:", err));
+      } else {
+        dispatch(fetchCounts()).catch(err => console.error("Fetch counts error:", err));
       }
-      await dispatch(fetchCounts());
-      await cacheDefaultAddress();
-      // const redirect = searchParams.get("redirect") ?? "/checkout";
-      // router.push(redirect);
-       const redirect = searchParams.get("redirect") ?? "/cart";
-      window.location.href = redirect;
+
+      cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
@@ -245,20 +246,30 @@ function LoginPanel() {
         await dispatch(
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
+
+        const redirect = searchParams.get("redirect") ?? "/cart";
+        router.push(redirect);
+        router.refresh();
+
+        // Run background tasks without blocking redirect
+        const syncPromises = [];
         const guestWishlist = localStorage.getItem("horeca_wishlist");
         if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
-          await syncGuestWishlistAfterLogin();
+          syncPromises.push(syncGuestWishlistAfterLogin());
         }
         const guestCart = localStorage.getItem("horeca_cart");
         if (guestCart && JSON.parse(guestCart)?.length > 0) {
-          await syncGuestCartAfterLogin();
+          syncPromises.push(syncGuestCartAfterLogin());
         }
-        await dispatch(fetchCounts());
-        await cacheDefaultAddress();
-        // const redirect = searchParams.get("redirect") ?? "/cart";
-        // router.push(redirect);
-         const redirect = searchParams.get("redirect") ?? "/cart";
-      window.location.href = redirect;
+        if (syncPromises.length > 0) {
+          Promise.all(syncPromises)
+            .then(() => dispatch(fetchCounts()))
+            .catch(err => console.error("Sync error:", err));
+        } else {
+          dispatch(fetchCounts()).catch(err => console.error("Fetch counts error:", err));
+        }
+
+        cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
       } catch (err: unknown) {
         setApiError(
           typeof err === "string"
