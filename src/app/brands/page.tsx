@@ -107,49 +107,30 @@ export default function BrandsPage() {
       </nav>
 
       {/* Banner */}
-      <div className="relative w-full overflow-hidden">
-        {/* Skeleton — shown while image loads */}
-        {!bannerLoaded && (
-          <div className="w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-800 animate-pulse relative">
-            {/* shimmer sweep */}
-            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent" />
-            {/* text placeholder lines */}
-            <div className="absolute inset-0 flex items-center pl-8 md:pl-16">
-              <div className="space-y-2 md:space-y-3">
-                <div className="h-3 md:h-5 lg:h-7 w-40 md:w-64 lg:w-80 bg-gray-600 rounded" />
-                <div className="h-3 md:h-5 lg:h-7 w-32 md:w-52 lg:w-64 bg-gray-600 rounded" />
-                <div className="h-3 md:h-5 lg:h-7 w-24 md:w-44 lg:w-56 bg-gray-600 rounded" />
-                <div className="h-5 md:h-7 lg:h-9 w-20 md:w-28 lg:w-32 bg-gray-700 rounded mt-1" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Actual image */}
+      <div className="relative w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-200 overflow-hidden">
         <Image
           src={Banner}
           alt="Brands"
-          className={`w-full h-auto transition-opacity duration-500 ${bannerLoaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
-          onLoad={() => setBannerLoaded(true)}
+          fill
+          sizes="100vw"
+          className="object-cover"
           priority
         />
 
-        {/* Text overlay — only after image loads */}
-        {bannerLoaded && (
-          <div className="absolute inset-0 flex items-center pl-8 md:pl-16">
-            <div className="max-w-md space-y-1 md:space-y-2 lg:space-y-2">
-              <h1 className="text-[12px] md:text-2xl lg:text-[30px] font-bold text-yellow-400 leading-tight">
-                Get to Know Why Leading<br />Brands Choose Us as Their<br />Trusted Dealer
-              </h1>
-              <h2 className="text-white text-[8px] md:text-[12px] lg:text-[16px] mt-1.25 md:mt-3 lg:mt-4 md:block hidden">
-                Everything you need in one B2B integrated platform.<br />It&apos;s easier with Horecastore.
-              </h2>
-              <button type="button" className="bg-white text-red-600 font-semibold px-2 pt-0.5 pb-0.5 md:px-2 md:py-3 md:text-[12px] lg:text-lg text-[8px] rounded hover:bg-gray-100 transition">
-                Join Marketplace
-              </button>
-            </div>
+        {/* Text overlay */}
+        <div className="absolute inset-0 flex items-center pl-8 md:pl-16">
+          <div className="max-w-md space-y-1 md:space-y-2 lg:space-y-2">
+            <h1 className="text-[12px] md:text-2xl lg:text-[30px] font-bold text-yellow-400 leading-tight">
+              Get to Know Why Leading<br />Brands Choose Us as Their<br />Trusted Dealer
+            </h1>
+            <h2 className="text-white text-[8px] md:text-[12px] lg:text-[16px] mt-1.25 md:mt-3 lg:mt-4 md:block hidden">
+              Everything you need in one B2B integrated platform.<br />It&apos;s easier with Horecastore.
+            </h2>
+            <button type="button" className="bg-white text-red-600 font-semibold px-2 pt-0.5 pb-0.5 md:px-2 md:py-3 md:text-[12px] lg:text-lg text-[8px] rounded hover:bg-gray-100 transition">
+              Join Marketplace
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Hero */}
