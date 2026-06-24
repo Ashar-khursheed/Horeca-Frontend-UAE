@@ -27,7 +27,7 @@ export async function getCountryCodeSSR(userIp?: string, cookieValue?: string): 
 
 const CC_KEY      = "hc_country_code";
 const CC_TIME_KEY = "hc_country_code_time";
-const CC_TTL      = 60 * 60 * 1000; // 1 hour
+const CC_TTL      = 5 * 60 * 1000; // 5 minutes
 
 let isFetchingLocation = false;
 

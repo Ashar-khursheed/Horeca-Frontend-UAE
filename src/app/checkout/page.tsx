@@ -33,7 +33,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
-import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -181,7 +180,6 @@ export default function CheckoutPage() {
     setPhoneError("");
   };
 
-  const phoneValidation = usePhoneValidation(phone.replace(/\D/g, ""), isoCode);
 
   const fetchedRef = useRef(false);
   const taxFetchedZip = useRef<string | null>(null);
@@ -309,7 +307,7 @@ export default function CheckoutPage() {
           const parsed = JSON.parse(cached);
           if (parsed.zip === zip) {
             const cachedRate = parseFloat(
-              (parseFloat(parsed.combined_rate ?? "0") * 100).toFixed(4),
+              (parseFloat(parsed.combined_rate ?? "0") * 100).toFixed(2),
             );
             setCartSummary((prev) => {
               if (!prev) return prev;
@@ -346,7 +344,7 @@ export default function CheckoutPage() {
         .then((r) => r.json())
         .then((data) => {
           const newRate = parseFloat(
-            (parseFloat(data.combined_rate ?? "0") * 100).toFixed(4),
+            (parseFloat(data.combined_rate ?? "0") * 100).toFixed(2),
           );
           setCartSummary((prev) => {
             if (!prev) return prev;
@@ -493,6 +491,13 @@ export default function CheckoutPage() {
         const discountAmount =
           discount_type === "fixed" ? dv : (baseSubtotal * dv) / 100;
 
+        if (discountAmount > baseSubtotal) {
+          setCodeError(
+            `Coupon discount ($${dv.toFixed(2)}) exceeds your order subtotal ($${baseSubtotal.toFixed(2)}). This coupon cannot be applied.`,
+          );
+          return;
+        }
+
         const info = {
           coupon_id,
           coupon_code,
@@ -600,14 +605,8 @@ export default function CheckoutPage() {
     setOrderError(null);
 
     // 1. Phone check
-    if (!phone || phoneValidation.isInvalid || phoneValidation.validating) {
-      setPhoneError(
-        !phone
-          ? "Phone number is required"
-          : phoneValidation.isInvalid
-            ? phoneValidation.errorMsg || "Phone number is invalid"
-            : "Please wait for phone validation",
-      );
+    if (!phone) {
+      setPhoneError("Phone number is required");
       setTimeout(() => {
         const el = document.getElementById("phone-input");
         el?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -651,11 +650,8 @@ export default function CheckoutPage() {
     let token: any;
     try {
       token = await paymentHandleRef.current.getPaymentToken();
-    } catch (e: any) {
+    } catch {
       setOrderStep("idle");
-      setOrderError(
-        e?.message ?? "Please fill in your card details correctly.",
-      );
       return;
     }
     if (!token) {
@@ -761,7 +757,7 @@ export default function CheckoutPage() {
           />
           <div id="phone-field-wrapper">
             <div
-              className={`relative flex items-center w-full h-12 border rounded-md bg-white overflow-hidden ${phoneError || phoneValidation.isInvalid ? "border-red-400" : "border-gray-300"}`}
+              className={`relative flex items-center w-full h-12 border rounded-md bg-white overflow-hidden ${phoneError ? "border-red-400" : "border-gray-300"}`}
             >
               <div className="flex items-center gap-1.5 px-3 bg-white border-r border-gray-200 h-full shrink-0">
                 {country.loading ? (
@@ -794,14 +790,6 @@ export default function CheckoutPage() {
             </div>
             {phoneError && (
               <p className="text-[11px] text-red-500 mt-1">{phoneError}</p>
-            )}
-            {!phoneError && phoneValidation.validating && (
-              <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
-            )}
-            {!phoneError && phoneValidation.isInvalid && (
-              <p className="text-[11px] text-red-500 mt-1">
-                {phoneValidation.errorMsg}
-              </p>
             )}
           </div>
         </div>
@@ -1179,7 +1167,7 @@ export default function CheckoutPage() {
 
       {/*  MOBILE LAYOUT â€" step-based (hidden on lg+)  */}
       <div className="lg:hidden min-h-screen bg-gray-50">
-        {/* â"€â"€ Step indicator bar â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+        {/* â"€â"€ Step indicator bar */}
         <div className="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-0 max-w-sm mx-auto">
             {/* Step 1 */}
@@ -1266,19 +1254,8 @@ export default function CheckoutPage() {
                 type="button"
                 onClick={async () => {
                   // Phone validation
-                  if (
-                    !phone ||
-                    phoneValidation.isInvalid ||
-                    phoneValidation.validating
-                  ) {
-                    setPhoneError(
-                      !phone
-                        ? "Phone number is required"
-                        : phoneValidation.isInvalid
-                          ? phoneValidation.errorMsg ||
-                            "Phone number is invalid"
-                          : "Please wait for phone validation",
-                    );
+                  if (!phone) {
+                    setPhoneError("Phone number is required");
                     document
                       .getElementById("phone-field-wrapper")
                       ?.scrollIntoView({ behavior: "smooth", block: "center" });

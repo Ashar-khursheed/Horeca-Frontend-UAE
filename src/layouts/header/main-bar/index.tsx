@@ -524,23 +524,23 @@ export default function NavigationStatic({
                     <ProfileDropdown show={showProfile} />
                   </div>
                 ) : (
-                  <button className="flex items-center gap-2 px-2 py-1.5 rounded-[7px] hover:bg-gray-50 transition-colors group">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#186737]/10 transition-colors">
-                      <User
-                        size={16}
-                        className="text-gray-500 group-hover:text-[#186737] transition-colors"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1 items-start">
-                      <Link
-                        href="/login"
-                        className="text-[13px] text-black leading-none hover:text-[#186737] transition-colors"
-                      >
-                        Sign in
-                      </Link>
-                      {/* <Link href="/register" className="text-[13px] font-semibold text-gray-800 leading-tight hover:text-[#186737] transition-colors">Register</Link> */}
-                    </div>
-                  </button>
+                <Link
+  href="/login"
+  className="flex items-center gap-2 px-2 py-1.5 rounded-[7px] hover:bg-gray-50 transition-colors group"
+>
+  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#186737]/10 transition-colors">
+    <User
+      size={16}
+      className="text-gray-500 group-hover:text-[#186737] transition-colors"
+    />
+  </div>
+
+  <div className="flex flex-col gap-1 items-start">
+    <span className="text-[13px] text-black leading-none group-hover:text-[#186737] transition-colors">
+      Sign in
+    </span>
+  </div>
+</Link>
                 )}
 
                 <div className="w-px h-6 bg-gray-200 mx-1" />

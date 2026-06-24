@@ -54,6 +54,7 @@ interface OrderData {
   is_inside_delivery: number;
   tax_percentage: string;
   tax_amount: string;
+  discount?: string;
   total_amount: string;
   customer_address: string;
   currency: {
@@ -294,6 +295,7 @@ export default function PaymentSuccessPage() {
   const shippingTotal   = Number(order.shipping_charge);
   const taxAmount       = Number(order.tax_amount);
   const taxRate         = Number(order.tax_percentage) / 100;
+  const discount        = Number(order.discount ?? "0");
   const total           = Number(order.total_amount);
   const currencySymbol  = order.currency?.target_symbol ?? "$";
   const address       = parseAddress(order.customer_address ?? "");
@@ -564,6 +566,13 @@ export default function PaymentSuccessPage() {
                     <Row
                       label={`Tax (${(taxRate * 100).toFixed(2)}%)`}
                       value={`${currencySymbol}${usd(taxAmount)}`}
+                    />
+                  )}
+                  {discount > 0 && (
+                    <Row
+                      label="Discount"
+                      value={`-${currencySymbol}${usd(discount)}`}
+                      valueClass="text-[#186737] font-semibold"
                     />
                   )}
                   <div className="h-px bg-gray-100" />
