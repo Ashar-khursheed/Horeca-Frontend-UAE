@@ -185,7 +185,8 @@ function RegisterPageInner() {
           await Promise.all(syncPromises);
         }
 
-        window.location.href = "/";
+        router.push("/");
+        router.refresh();
       } catch (err: unknown) {
         const msg =
           (err as { response?: { data?: { message?: string } } })?.response
@@ -240,8 +241,8 @@ function RegisterPageInner() {
       }
 
       const redirect = searchParams.get("redirect") ?? "/";
-      window.location.href = redirect;
-      //  await cacheDefaultAddress();
+      router.push(redirect);
+      router.refresh();
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);

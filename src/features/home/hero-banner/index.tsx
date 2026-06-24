@@ -170,6 +170,7 @@ export const HeroBanner = ({
                           className="object-cover"
                           priority={index === 0}
                           loading={index === 0 ? "eager" : "lazy"}
+                          fetchPriority={index === 0 ? "high" : undefined}
                           sizes="(max-width: 1024px) 100vw, 70vw"
                           quality={85}
                         />
@@ -185,6 +186,7 @@ export const HeroBanner = ({
                         className="object-cover"
                         priority={index === 0}
                         loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : undefined}
                         sizes="(max-width: 1024px) 100vw, 70vw"
                         quality={85}
                       />

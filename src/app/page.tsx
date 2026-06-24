@@ -6,7 +6,6 @@ import { apiUrls } from "@/apis/api-endpoint";
 import type { FeaturedCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
 import type { ApiBlog } from "@/components/blog-card";
 import { cookies, headers } from "next/headers";
-import { revalidate } from "@/utils";
 
 export const metadata: Metadata = {
   title: "Restaurant Supply Store & Commercial Equipment | HorecaStore",
@@ -48,22 +47,22 @@ export default async function Page() {
     makeApiCallSSR<{ items: SliderItem[] }>(
       "frontend/sliders/1",
       {},
-      { revalidate, countryCode },
+      { revalidate: 3600, countryCode },
     ),
     makeApiCallSSR<{ items: SliderItem[] }>(
       "frontend/sliders/2",
       {},
-      { revalidate, countryCode },
+      { revalidate: 3600, countryCode },
     ),
     makeApiCallSSR<{ data: FeaturedCategoryTab[] }>(
       apiUrls.FEATURED_CATEGORY_TABS,
       {},
-      { revalidate, countryCode },
+      { revalidate: isLoggedIn ? 0 : 3600, countryCode },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
+      { revalidate: isLoggedIn ? 0 : 3600, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
     ),
     // Blogs were previously fetched client-side inside a useEffect (waterfall).
     // Fetching SSR here means the section is populated in the initial HTML.
@@ -82,7 +81,7 @@ export default async function Page() {
     ? await makeApiCallSSR<{ data: ApiProductRaw[] }>(
         apiUrls.FEATURED_CATEGORY_TABS,
         { category_id: firstTabId },
-        { revalidate, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
+        { revalidate: isLoggedIn ? 0 : 3600, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
       )
     : null;
 

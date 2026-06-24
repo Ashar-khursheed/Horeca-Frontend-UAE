@@ -133,20 +133,20 @@ function LoginPageInner() {
       const res = await makeApiRequest<{
         success: boolean;
         token: string;
-        customer: CustomerProfile;
+        user: CustomerProfile;
       }>(apiUrls.GOOGLE_AUTH, {
         method: "POST",
         data: { credential: credentialResponse.credential },
       });
       setAuthToken(res.token);
-      const profileRes = await makeApiRequest<{
-        success: boolean;
-        customer: CustomerProfile;
-      }>(apiUrls.GETMYPROFILE);
-      localStorage.setItem("user", JSON.stringify(profileRes.customer));
-      dispatch(setProfile(profileRes.customer));
+      localStorage.setItem("user", JSON.stringify(res.user));
+      dispatch(setProfile(res.user));
 
-      // Sync guest wishlist & cart in parallel for maximum speed
+      const redirect = searchParams.get("redirect") ?? "/";
+      router.push(redirect);
+      router.refresh();
+
+      // Sync guest wishlist & cart in the background without blocking redirect
       const syncPromises = [];
       const guestWishlist = localStorage.getItem("horeca_wishlist");
       if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
@@ -157,13 +157,10 @@ function LoginPageInner() {
         syncPromises.push(syncGuestCartAfterLogin());
       }
       if (syncPromises.length > 0) {
-        await Promise.all(syncPromises);
+        Promise.all(syncPromises).catch(err => console.error("Sync error:", err));
       }
 
-      await cacheDefaultAddress();
-
-      const redirect = searchParams.get("redirect") ?? "/";
-      window.location.href = redirect;
+      cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
@@ -187,9 +184,11 @@ function LoginPageInner() {
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
 
-        router.push("/")
+        const redirect = searchParams.get("redirect") ?? "/";
+        router.push(redirect);
+        router.refresh();
 
-        // Sync guest wishlist & cart in parallel for maximum speed
+        // Sync guest wishlist & cart in background
         const syncPromises = [];
         const guestWishlist = localStorage.getItem("horeca_wishlist");
         if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
@@ -200,13 +199,10 @@ function LoginPageInner() {
           syncPromises.push(syncGuestCartAfterLogin());
         }
         if (syncPromises.length > 0) {
-          await Promise.all(syncPromises);
+          Promise.all(syncPromises).catch(err => console.error("Sync error:", err));
         }
 
-        await cacheDefaultAddress();
-
-        // const redirect = searchParams.get("redirect") ?? "/";
-        // window.location.href = redirect;
+        cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
       } catch (err: unknown) {
         const msg =
           typeof err === "string"

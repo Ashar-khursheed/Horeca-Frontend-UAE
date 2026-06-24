@@ -1,27 +1,21 @@
 "use client";
 
-import { fetchCountryByName, resetCountry } from "@/store/slices/country/countrySlice";
+import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
 import { AppDispatch } from "@/store/store";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
-import { makeApiRequest } from "@/apis/axios-instance";
-import { FeaturedCategory } from "@/utils/types";
-import { apiUrls } from "@/apis/api-endpoint";
-import FeaturedProducts from "@/features/home/feature-product";
-import { useRouter } from "next/navigation";
 
-const AUTH_MAX_MS    = 259200 * 1000; // 72 hours
+const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
 const LOCATION_API   = "https://pim.thehorecastore.co/api/frontend/location";
 const LOCATION_EVENT = "hc_location_updated";
+const DETECT_KEY     = "hc_detect_time";
+const DETECT_TTL     = 10 * 60 * 1000; // 10 minutes cache
 
 export default function AppInitializer() {
-    const router   = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const [products,      setProducts]      = useState<FeaturedCategory[]>([]);
-  const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>([]);
 
   // Auto-logout: check 24h expiry on mount and schedule timer for remainder
   useEffect(() => {
@@ -38,76 +32,52 @@ export default function AppInitializer() {
     return () => clearTimeout(timer);
   }, [dispatch]);
 
-  // Location fetch (single call) — sets localStorage, cookie, dispatches country
+  // Location: detect and cache (with a 10-minute TTL) to avoid redundant requests on every mount
   useEffect(() => {
-    const DETECT_KEY = "hc_detect_time";
-    const DETECT_TTL = 10 * 1000;
-
+    const cached = getLocationData();
+    const detectTime = localStorage.getItem(DETECT_KEY);
     const currentCookie = document.cookie
       .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
-    const lastDetect = localStorage.getItem(DETECT_KEY);
-    const isCacheValid = lastDetect && Date.now() - Number(lastDetect) < DETECT_TTL;
 
-    if (isCacheValid && currentCookie) {
-      const cached = getLocationData();
-      if (cached?.country) dispatch(fetchCountryByName(cached.country));
+    const cacheValid = cached && detectTime && (Date.now() - Number(detectTime) < DETECT_TTL);
+
+    if (cacheValid && cached && currentCookie === cached.countryCode) {
+      if (cached.country) {
+        dispatch(fetchCountryByName(cached.country));
+      }
       return;
     }
 
+    // Cache is expired or missing. Fetch fresh location.
     fetch(LOCATION_API)
       .then((r) => r.json())
-      .then(async (data) => {
-        setLocationData(data);
-        if (data.country) dispatch(fetchCountryByName(data.country));
-
+      .then((data) => {
         if (data.status === "success" && data.countryCode) {
-          const detected = data.countryCode;
-          const now = Date.now().toString();
-          localStorage.setItem(DETECT_KEY, now);
-          localStorage.setItem("hc_country_code", detected);
-          localStorage.setItem("hc_country_code_time", now);
-          document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
-
-          // if (detected !== "US") {
-          //   localStorage.removeItem("horeca_tax_rate");
-          // }
-
-          if (detected !== currentCookie) {
-            dispatch(resetCountry());
-            try {
-              const [fp, fbp] = await Promise.all([
-                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
-                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
-              ]);
-              if (fp?.data) setProducts(fp.data);
-              if (fbp?.data) setBrandProducts(fbp.data);
-            } catch {
-              router.refresh();
-            }
+          setLocationData(data);
+          localStorage.setItem(DETECT_KEY, Date.now().toString());
+          localStorage.setItem("hc_country_code", data.countryCode);
+          localStorage.setItem("hc_country_code_time", Date.now().toString());
+          document.cookie = `hc_cc=${data.countryCode}; path=/; max-age=3600; SameSite=Lax`;
+          
+          if (data.country) {
+            dispatch(fetchCountryByName(data.country));
           }
         }
       })
       .catch(() => {});
-  }, [dispatch, router]);
+  }, [dispatch]);
 
-  // Re-trigger country fetch when location updates (e.g. after VPN change)
+  // Re-trigger country fetch when location updates (e.g. after manual change or VPN change)
   useEffect(() => {
     const handler = () => {
       const loc = getLocationData();
-      if (loc?.country) dispatch(fetchCountryByName(loc.country));
+      if (loc?.country) {
+        dispatch(fetchCountryByName(loc.country));
+      }
     };
     window.addEventListener(LOCATION_EVENT, handler);
     return () => window.removeEventListener(LOCATION_EVENT, handler);
   }, [dispatch]);
-
-  // Remove tax rate on any click globally
-  // useEffect(() => {
-  //   const handleClick = () => {
-  //     localStorage.removeItem("horeca_tax_rate");
-  //   };
-  //   window.addEventListener("click", handleClick);
-  //   return () => window.removeEventListener("click", handleClick);
-  // }, []);
 
   // Profile: only fetch if token exists
   useEffect(() => {
@@ -118,7 +88,6 @@ export default function AppInitializer() {
       dispatch(setLoading(false));
     }
   }, [dispatch]);
-
 
   return null;
 }

@@ -69,7 +69,7 @@ export const Home = ({
             <Image
               src={FoodTruckBanner}
               alt="Food Truck Banner"
-              priority
+              loading="lazy"
               className="rounded-[7px] w-full h-auto"
               sizes="100vw"
               decoding="async"
