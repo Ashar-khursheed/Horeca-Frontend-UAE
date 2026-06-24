@@ -428,27 +428,27 @@ export default function BlogDetailClient({
                 )}
 
                 {/* Sticky Form & CTA Container */}
-                <div className="lg:sticky lg:top-24 space-y-5 h-fit">
+                <div className="lg:sticky lg:top-14 xl:top-24 space-y-4 lg:space-y-3 xl:space-y-5 h-fit">
                   {/* Consultation Inquiry Form */}
                   <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
 
                   {/* Register CTA Card */}
-                  <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 text-white overflow-hidden relative">
+                  <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 lg:p-3 xl:p-5 text-white overflow-hidden relative">
                     <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
                     <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
                     <div className="relative">
                       {/* <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
                         <User size={18} className="text-white" />
                       </div> */}
-                      <h3 className="text-base font-extrabold mb-1 leading-snug">
+                      <h3 className="text-base lg:text-sm xl:text-base font-extrabold mb-1 leading-snug">
                         Join HorecaStore Today
                       </h3>
-                      <p className="text-white/75 text-xs leading-relaxed mb-4">
+                      <p className="text-white/75 text-xs lg:text-[11px] xl:text-xs leading-relaxed mb-4 lg:mb-3 xl:mb-4">
                         Get exclusive deals, track orders, and access premium commercial kitchen equipment.
                       </p>
                       <Link
                         href="/register"
-                        className="flex items-center justify-center gap-2 w-full bg-white text-[#186737] text-sm font-bold py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 group"
+                        className="flex items-center justify-center gap-2 w-full bg-white text-[#186737] text-sm font-bold py-2.5 lg:py-1.5 xl:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 group"
                       >
                         Create Free Account
                         <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
