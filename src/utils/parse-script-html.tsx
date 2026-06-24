@@ -38,6 +38,9 @@ export function parseScriptHtml(
   if (scriptM) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const attrs = parseAttrs(scriptM[1] ?? "") as any;
+    if (attrs.src && attrs.async === undefined && attrs.defer === undefined) {
+      attrs.defer = true;
+    }
     const content = scriptM[2] ?? "";
     if (content.trim()) {
       return (

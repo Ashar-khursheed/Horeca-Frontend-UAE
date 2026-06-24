@@ -12,7 +12,7 @@ import { WebVitals } from "@/components/web-vitals/web-vitals";
 import "./globals.css";
 import CountryDetector from "@/components/country-detector";
 import GlobalPrefetch from "@/components/global-prefetch";
-import { parseScriptHtml } from "@/utils/parse-script-html";
+import CustomScriptsRenderer from "@/components/custom-scripts-renderer";
 
 interface CustomScript {
   id: number;
@@ -79,25 +79,15 @@ export default async function RootLayout({
   const scripts = customScriptsData?.data;
 
   return (
-    <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className}>
+    <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className} suppressHydrationWarning>
       <head>
-        {scripts?.head_top.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
-        <link
-          rel="preconnect"
-          href="https://d2dy46c7t7z5ba.cloudfront.net"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://d1p9kdrbe10xzz.cloudfront.net"
-          crossOrigin="anonymous"
-        />
+        <CustomScriptsRenderer scripts={scripts?.head_top ?? []} />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
-        {scripts?.head_bottom.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
+        <CustomScriptsRenderer scripts={scripts?.head_bottom ?? []} />
       </head>
 
       <body suppressHydrationWarning>
-        {scripts?.body_top.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
+        <CustomScriptsRenderer scripts={scripts?.body_top ?? []} />
         <NextTopLoader
           color="#186737"
           height={4}
@@ -113,7 +103,7 @@ export default async function RootLayout({
             {children}
           </GlobalLayout>
         </NextIntlClientProvider>
-        {scripts?.body_bottom.filter((s) => s.is_active).map((s, i) => parseScriptHtml(s.script_code, i))}
+        <CustomScriptsRenderer scripts={scripts?.body_bottom ?? []} />
       </body>
     </html>
   );

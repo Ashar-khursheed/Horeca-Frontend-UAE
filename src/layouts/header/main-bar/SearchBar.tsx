@@ -322,6 +322,8 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                           <img
                             src={p.images.en[0]}
                             alt={p.name.en}
+                            width={62}
+                            height={62}
                             className="w-full h-full object-contain"
                             onClick={() => { setSearchFocused(false); router.push(p.url); }}
                           />
