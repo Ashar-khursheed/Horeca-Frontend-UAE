@@ -105,8 +105,6 @@ interface Props {
 }
 
 export default function BlogListClient({ categories }: Props) {
-  const [bannerLoaded, setBannerLoaded] = useState(false);
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Breadcrumb */}
@@ -127,16 +125,13 @@ export default function BlogListClient({ categories }: Props) {
       </nav>
 
       {/* Banner */}
-      <div className="relative w-full">
-        {!bannerLoaded && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse" style={{ minHeight: 220 }} />
-        )}
+      <div className="relative w-full overflow-hidden bg-gray-200" style={{ aspectRatio: "1920/500" }}>
         <Image
           src={BannerImg}
           alt="Blog Banner"
-          className={`w-full h-auto object-cover transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0"}`}
+          className="w-full h-full object-cover"
           priority
-          onLoad={() => setBannerLoaded(true)}
+          sizes="100vw"
         />
       </div>
 

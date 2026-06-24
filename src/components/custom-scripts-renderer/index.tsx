@@ -19,7 +19,24 @@ export default function CustomScriptsRenderer({ scripts }: CustomScriptsRenderer
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const scheduleScriptMounting = () => {
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        window.requestIdleCallback(() => {
+          setMounted(true);
+        }, { timeout: 1500 });
+      } else {
+        setTimeout(() => {
+          setMounted(true);
+        }, 800);
+      }
+    };
+
+    if (document.readyState === "complete") {
+      scheduleScriptMounting();
+    } else {
+      window.addEventListener("load", scheduleScriptMounting, { once: true });
+      return () => window.removeEventListener("load", scheduleScriptMounting);
+    }
   }, []);
 
   if (!mounted) return null;

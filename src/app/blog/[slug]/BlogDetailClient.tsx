@@ -21,6 +21,7 @@ import { ShareModal } from "@/components/share-modal";
 import BlogComments, { Comment as BlogComment } from "@/components/blog-comments";
 import Breadcrumb from "@/components/breadcum";
 import SeoContent from "@/seo/seo-content";
+import BlogSidebarForm from "@/components/blog-sidebar-form";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ApiBlogSeo {
@@ -455,6 +456,9 @@ export default function BlogDetailClient({
                     </Link>
                   </div>
                 </div>
+
+                {/* Consultation Inquiry Form */}
+                <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
 
               </div>
             </aside>
