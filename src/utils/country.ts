@@ -31,24 +31,41 @@ const CC_KEY      = "hc_country_code";
 const CC_TIME_KEY = "hc_country_code_time";
 const CC_TTL      = 60 * 60 * 1000; // 1 hour
 
+let isFetchingLocation = false;
+
 // Client: detects from browser (correct user IP), caches in localStorage + cookie
 export async function getCountryCodeClient(): Promise<string> {
   try {
     const cached     = localStorage.getItem(CC_KEY);
     const cachedTime = localStorage.getItem(CC_TIME_KEY);
-    if (cached && cachedTime && Date.now() - Number(cachedTime) < CC_TTL) {
+    const isValid    = cached && cachedTime && (Date.now() - Number(cachedTime) < CC_TTL);
+
+    if (isValid && cached) {
       return cached;
     }
-    const res  = await fetch(GEO_API);
-    const data: GeoResponse = await res.json();
-    if (data.status === "success" && data.countryCode) {
-      const code = data.countryCode;
-      localStorage.setItem(CC_KEY,      code);
-      localStorage.setItem(CC_TIME_KEY, Date.now().toString());
-      // Also set cookie so SSR can read it on next request
-      document.cookie = `${COOKIE_NAME}=${code}; path=/; max-age=3600; SameSite=Lax`;
-      return code;
+
+    // Cache is expired or missing. Fetch in the background and do not await it.
+    if (!isFetchingLocation) {
+      isFetchingLocation = true;
+      fetch(GEO_API)
+        .then((res) => res.json())
+        .then((data: GeoResponse) => {
+          if (data.status === "success" && data.countryCode) {
+            const code = data.countryCode;
+            localStorage.setItem(CC_KEY, code);
+            localStorage.setItem(CC_TIME_KEY, Date.now().toString());
+            document.cookie = `${COOKIE_NAME}=${code}; path=/; max-age=3600; SameSite=Lax`;
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          isFetchingLocation = false;
+        });
     }
-  } catch {}
-  return FALLBACK;
+
+    // Return cached (even if expired) or fallback immediately to avoid blocking requests
+    return cached || FALLBACK;
+  } catch {
+    return FALLBACK;
+  }
 }

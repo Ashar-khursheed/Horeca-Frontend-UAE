@@ -91,7 +91,7 @@ import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchCountryByName, resetCountry } from "@/store/slices/country/countrySlice";
 import TaxInitializer from "@/components/TaxInitializer";
 
@@ -111,6 +111,11 @@ export const Home = ({
 }) => {
   const router   = useRouter();
   const dispatch = useAppDispatch();
+  
+  const country = useAppSelector((s) => s.country.data);
+  const countryName = country?.name;
+  const [initialCountry, setInitialCountry] = useState<string | null>(null);
+
   const [products,      setProducts]      = useState<FeaturedCategory[]>(featuredProducts);
   const [brandProducts, setBrandProducts] = useState<FeaturedCategory[]>(featuredBrandProducts);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,49 +130,26 @@ export const Home = ({
   }, []);
 
   useEffect(() => {
-    const DETECT_KEY = "hc_detect_time";
-    const DETECT_TTL = 10 * 1000; // 10 seconds
-
-    const currentCookie = document.cookie
-      .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
-
-    const lastDetect  = localStorage.getItem(DETECT_KEY);
-    const isCacheValid = lastDetect && Date.now() - Number(lastDetect) < DETECT_TTL;
-
-    if (isCacheValid && currentCookie) return;
-
-    fetch("https://pim.thehorecastore.co/api/frontend/location")
-      .then(r => r.json())
-      .then(async data => {
-        if (data.status === "success" && data.countryCode) {
-          const detected = data.countryCode;
-          const now = Date.now().toString();
-          localStorage.setItem(DETECT_KEY,             now);
-          localStorage.setItem("hc_country_code",      detected);
-          localStorage.setItem("hc_country_code_time", now);
-          document.cookie = `hc_cc=${detected}; path=/; max-age=3600; SameSite=Lax`;
-
-          if (detected !== currentCookie) {
-            // Reset Redux country so it re-fetches with new force_country
-            dispatch(resetCountry());
-            dispatch(fetchCountryByName(data.country));
-
-            // Client-side re-fetch products — no SSR round-trip, ~300ms
-            try {
-              const [fp, fbp] = await Promise.all([
-                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
-                makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
-              ]);
-              if (fp?.data)  setProducts(fp.data);
-              if (fbp?.data) setBrandProducts(fbp.data);
-            } catch {
-              router.refresh(); // fallback
-            }
-          }
-        }
-      })
-      .catch(() => {});
-  }, [router]);
+    if (countryName) {
+      if (!initialCountry) {
+        setInitialCountry(countryName);
+      } else if (countryName !== initialCountry) {
+        setInitialCountry(countryName);
+        // Client-side re-fetch products when country changes in Redux
+        Promise.all([
+          makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_PRODUCTS),
+          makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS),
+        ])
+          .then(([fp, fbp]) => {
+            if (fp?.data) setProducts(fp.data);
+            if (fbp?.data) setBrandProducts(fbp.data);
+          })
+          .catch(() => {
+            router.refresh();
+          });
+      }
+    }
+  }, [countryName, initialCountry, router]);
 
 
   console.log("productsproductsproducts", products);
@@ -193,8 +175,7 @@ export const Home = ({
             <Image
               src={FoodTruckBanner}
               alt="Food Truck Banner"
-              priority
-              // loading="lazy"
+              loading="lazy"
               className="rounded-[7px] w-full h-auto"
               sizes="100vw"
               decoding="async"

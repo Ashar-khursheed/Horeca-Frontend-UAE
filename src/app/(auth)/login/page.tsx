@@ -135,7 +135,8 @@ function LoginPageInner() {
       }
 
       const redirect = searchParams.get("redirect") ?? "/";
-      window.location.href = redirect;
+      router.push(redirect);
+      router.refresh();
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
@@ -174,7 +175,8 @@ function LoginPageInner() {
         }
 
         const redirect = searchParams.get("redirect") ?? "/";
-        window.location.href = redirect;
+        router.push(redirect);
+        router.refresh();
       } catch (err: unknown) {
         const msg =
           typeof err === "string"

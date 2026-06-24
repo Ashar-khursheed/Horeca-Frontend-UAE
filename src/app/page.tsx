@@ -31,27 +31,27 @@ export default async function Page() {
   const isLoggedIn  = !!cookieStore.get("token")?.value;
 
   const [slider1, slider2, categoryRes, featuredCategoriesRes, featuredProductsRes,featuredBrandProductsRes] = await Promise.all([
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: revalidate }),
-    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: revalidate }),
+    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/1", {}, { revalidate: 3600 }),
+    makeApiCallSSR<{ items: SliderItem[] }>("frontend/sliders/2", {}, { revalidate: 3600 }),
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: false, is_featured: true },
-      { revalidate: revalidate },
+      { revalidate: 3600 },
     ),
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { with_parent: true, is_featured: true },
-      { revalidate: revalidate},
+      { revalidate: 3600 },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_PRODUCTS,
       {},
-      { revalidate: revalidate, withAuth: isLoggedIn },
+      { revalidate: isLoggedIn ? 0 : 3600, withAuth: isLoggedIn },
     ),
     makeApiCallSSR<{ data: FeaturedCategory[] }>(
       apiUrls.FEATURED_BRAND_PRODUCTS,
       {},
-      { revalidate: revalidate, withAuth: isLoggedIn },
+      { revalidate: isLoggedIn ? 0 : 3600, withAuth: isLoggedIn },
     ),
   ]);
 
