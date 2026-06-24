@@ -54,7 +54,7 @@ export default function CategoryCard({ categories = [] }: { categories?: ApiCate
 
       {/* TABLET + DESKTOP — uniform grid */}
       <div className="hidden sm:grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3">
-        {flat.slice(0, 16).map(({ cat, href }, i) => (
+        {flat.map(({ cat, href }, i) => (
           <Link
             key={cat.id}
             href={href}

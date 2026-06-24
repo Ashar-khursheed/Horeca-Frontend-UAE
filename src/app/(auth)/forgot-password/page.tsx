@@ -81,11 +81,15 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setApiError("");
     try {
-      await makeApiRequest("auth/forgot-password", {
+      const res = await makeApiRequest<{ success: boolean; message?: string }>("auth/forgot-password", {
         method: "POST",
         data: { email, type: "customer" },
       });
-      setSent(true);
+      if (res?.success === false) {
+        setApiError(res.message ?? "Something went wrong. Please try again.");
+      } else {
+        setSent(true);
+      }
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
