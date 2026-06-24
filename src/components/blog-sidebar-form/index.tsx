@@ -43,9 +43,14 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [captchaError, setCaptchaError] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const country = useSelector((s: RootState) => s.country?.data);
-  const countryCode = country?.phone_code ?? "+971"; // Fallback to UAE
+  const countryCode = isMounted && country?.phone_code ? country.phone_code : "+971"; // Fallback to UAE
 
   const formik = useFormik({
     initialValues: {
@@ -199,7 +204,7 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
             </label>
             <div className="relative flex items-center">
               <div className="absolute left-3 flex items-center gap-1 shrink-0 select-none">
-                {country?.icon && (
+                {isMounted && country?.icon && (
                   <img
                     src={country.icon}
                     alt=""
