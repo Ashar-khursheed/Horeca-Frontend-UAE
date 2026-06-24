@@ -3,7 +3,11 @@
 import { makeApiRequest } from "@/apis/axios-instance";
 import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
 import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
-import { updateProfile, placeOrderWithPayment, parseOrderError } from "./place-order-api";
+import {
+  updateProfile,
+  placeOrderWithPayment,
+  parseOrderError,
+} from "./place-order-api";
 import Breadcrumb from "@/components/breadcum";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -158,6 +162,7 @@ export default function CheckoutPage() {
   const [orderError, setOrderError] = useState<string | null>(null);
 
   const [phoneError, setPhoneError] = useState("");
+  const [addressStepError, setAddressStepError] = useState("");
 
   // US phone format & API validation
   const isoCode = getLocationData()?.countryCode ?? "";
@@ -231,8 +236,10 @@ export default function CheckoutPage() {
         if (isUS && mobile) {
           const digits = mobile.replace(/\D/g, "").slice(0, 10);
           let formatted = digits;
-          if (digits.length > 6) formatted = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-          else if (digits.length > 3) formatted = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+          if (digits.length > 6)
+            formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+          else if (digits.length > 3)
+            formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
           else if (digits.length) formatted = `(${digits}`;
           setPhone(formatted);
         } else {
@@ -594,8 +601,18 @@ export default function CheckoutPage() {
 
     // 1. Phone check
     if (!phone || phoneValidation.isInvalid || phoneValidation.validating) {
-      setPhoneError(!phone ? "Phone number is required" : phoneValidation.isInvalid ? (phoneValidation.errorMsg || "Phone number is invalid") : "Please wait for phone validation");
-      setTimeout(() => { const el = document.getElementById("phone-input"); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus(); }, 50);
+      setPhoneError(
+        !phone
+          ? "Phone number is required"
+          : phoneValidation.isInvalid
+            ? phoneValidation.errorMsg || "Phone number is invalid"
+            : "Please wait for phone validation",
+      );
+      setTimeout(() => {
+        const el = document.getElementById("phone-input");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.focus();
+      }, 50);
       return;
     }
     setPhoneError("");
@@ -604,36 +621,72 @@ export default function CheckoutPage() {
     if (addressCheckoutRef.current) {
       const ok = await addressCheckoutRef.current.validate();
       if (!ok) {
-        setOrderError("Please fill in your delivery address before placing your order.");
+        setOrderError(
+          "Please fill in your delivery address before placing your order.",
+        );
         setTimeout(() => {
-          const el = document.getElementById("address-street-input") ?? document.getElementById("shipping-address-section");
-          if (el) { window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 100, behavior: "smooth" }); (el as HTMLInputElement).focus?.(); }
+          const el =
+            document.getElementById("address-street-input") ??
+            document.getElementById("shipping-address-section");
+          if (el) {
+            window.scrollTo({
+              top: el.getBoundingClientRect().top + window.scrollY - 100,
+              behavior: "smooth",
+            });
+            (el as HTMLInputElement).focus?.();
+          }
         }, 50);
         return;
       }
     }
 
     // 3. Card tokenize (no API)
-    if (!paymentHandleRef.current) { setOrderError("Payment form is not ready. Please wait a moment and try again."); return; }
+    if (!paymentHandleRef.current) {
+      setOrderError(
+        "Payment form is not ready. Please wait a moment and try again.",
+      );
+      return;
+    }
     setOrderStep("card");
     let token: any;
-    try { token = await paymentHandleRef.current.getPaymentToken(); }
-    catch (e: any) { setOrderStep("idle"); setOrderError(e?.message ?? "Please fill in your card details correctly."); return; }
-    if (!token) { setOrderStep("idle"); setOrderError("Could not process card. Please try again."); return; }
+    try {
+      token = await paymentHandleRef.current.getPaymentToken();
+    } catch (e: any) {
+      setOrderStep("idle");
+      setOrderError(
+        e?.message ?? "Please fill in your card details correctly.",
+      );
+      return;
+    }
+    if (!token) {
+      setOrderStep("idle");
+      setOrderError("Could not process card. Please try again.");
+      return;
+    }
 
     setIsPlacingOrder(true);
     try {
       // 4. Profile update
       setOrderStep("profile");
-      await updateProfile({ firstName, lastName, email, phone, countryCode: countryCode as any ?? "" });
+      await updateProfile({
+        firstName,
+        lastName,
+        email,
+        phone,
+        countryCode: (countryCode as any) ?? "",
+      });
 
       // 5. Address save
       setOrderStep("address");
       const addressSaved = await addressCheckoutRef.current?.save();
       if (!addressSaved) {
         setOrderStep("idle");
-        setOrderError("Please fill in your delivery address before placing your order.");
-        document.getElementById("shipping-address-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setOrderError(
+          "Please fill in your delivery address before placing your order.",
+        );
+        document
+          .getElementById("shipping-address-section")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
 
@@ -641,10 +694,15 @@ export default function CheckoutPage() {
       const orderId = await placeOrderWithPayment({
         token,
         amount: Number(grandTotal.toFixed(2)),
-        firstName, lastName, email, phone,
-        countryCode: countryCode as any ?? "",
+        firstName,
+        lastName,
+        email,
+        phone,
+        countryCode: (countryCode as any) ?? "",
         rawProducts,
-        liftGate, residential, insideDelivery,
+        liftGate,
+        residential,
+        insideDelivery,
         ratePercent,
         cardDetails: paymentHandleRef.current?.getCardDetails(),
         onStep: setOrderStep,
@@ -652,7 +710,10 @@ export default function CheckoutPage() {
 
       setOrderStep("done");
       dispatch(fetchCounts() as any);
-      setTimeout(() => router.push(`/payment-success?orderID=${orderId}`), 1200);
+      setTimeout(
+        () => router.push(`/payment-success?orderID=${orderId}`),
+        1200,
+      );
     } catch (err: any) {
       setOrderStep("idle");
       setOrderError(parseOrderError(err));
@@ -697,10 +758,14 @@ export default function CheckoutPage() {
             disable
           />
           <div id="phone-field-wrapper">
-            <div className={`relative flex items-center w-full h-12 border rounded-md bg-white overflow-hidden ${phoneError || phoneValidation.isInvalid ? "border-red-400" : "border-gray-300"}`}>
+            <div
+              className={`relative flex items-center w-full h-12 border rounded-md bg-white overflow-hidden ${phoneError || phoneValidation.isInvalid ? "border-red-400" : "border-gray-300"}`}
+            >
               <div className="flex items-center gap-1.5 px-3 bg-white border-r border-gray-200 h-full shrink-0">
                 {country.loading ? (
-                  <span className="text-xs text-gray-400 animate-pulse">...</span>
+                  <span className="text-xs text-gray-400 animate-pulse">
+                    ...
+                  </span>
                 ) : (
                   <>
                     {country.data?.icon && (
@@ -732,7 +797,9 @@ export default function CheckoutPage() {
               <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
             )}
             {!phoneError && phoneValidation.isInvalid && (
-              <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
+              <p className="text-[11px] text-red-500 mt-1">
+                {phoneValidation.errorMsg}
+              </p>
             )}
           </div>
         </div>
@@ -957,81 +1024,87 @@ export default function CheckoutPage() {
     </div>
   );
 
-  const pricingBlock = (isCartLoading || isAddressSaving) ? (
-    <div className="space-y-3 animate-pulse mb-4">
-      {[80, 64, 56, 48].map((w) => (
-        <div key={w} className="flex justify-between items-center">
-          <div className="h-3 bg-gray-200 rounded" style={{ width: `${w}%` }} />
-          <div className="h-3 bg-gray-200 rounded w-16" />
+  const pricingBlock =
+    isCartLoading || isAddressSaving ? (
+      <div className="space-y-3 animate-pulse mb-4">
+        {[80, 64, 56, 48].map((w) => (
+          <div key={w} className="flex justify-between items-center">
+            <div
+              className="h-3 bg-gray-200 rounded"
+              style={{ width: `${w}%` }}
+            />
+            <div className="h-3 bg-gray-200 rounded w-16" />
+          </div>
+        ))}
+        <div className="h-px bg-gray-200 my-3" />
+        <div className="flex justify-between items-center pt-1">
+          <div className="h-4 bg-gray-200 rounded w-28" />
+          <div className="h-5 bg-gray-200 rounded w-24" />
         </div>
-      ))}
-      <div className="h-px bg-gray-200 my-3" />
-      <div className="flex justify-between items-center pt-1">
-        <div className="h-4 bg-gray-200 rounded w-28" />
-        <div className="h-5 bg-gray-200 rounded w-24" />
       </div>
-    </div>
-  ) : (
-    <>
-      <div className="space-y-2 text-sm mb-4">
-        <PriceRow
-          label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
-          value={`${currencySymbol}${usd(baseSubtotal)}`}
-        />
-        {codeApplied && (
-          <>
+    ) : (
+      <>
+        <div className="space-y-2 text-sm mb-4">
+          <PriceRow
+            label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
+            value={`${currencySymbol}${usd(baseSubtotal)}`}
+          />
+          {codeApplied && (
+            <>
+              <PriceRow
+                label="Discount"
+                value={`-${currencySymbol}${usd(discount)}`}
+                green
+              />
+              <PriceRow
+                label="Subtotal after discount"
+                value={`${currencySymbol}${usd(discountedSubtotal)}`}
+              />
+            </>
+          )}
+          {baseShipping > 0 && (
             <PriceRow
-              label="Discount"
-              value={`-${currencySymbol}${usd(discount)}`}
-              green
+              label={`Shipping & Handling${ratePercent > 0 ? ` ` : ""}`}
+              value={`${currencySymbol}${usd(baseShipping)}`}
             />
+          )}
+          {liftGate && (
             <PriceRow
-              label="Subtotal after discount"
-              value={`${currencySymbol}${usd(discountedSubtotal)}`}
+              label={`Lift Gate Service${ratePercent > 0 ? ` ` : ""}`}
+              value={`${currencySymbol}${usd(liftFee)}`}
             />
-          </>
-        )}
-        {baseShipping > 0 && (
-          <PriceRow
-            label={`Shipping & Handling${ratePercent > 0 ? ` ` : ""}`}
-            value={`${currencySymbol}${usd(baseShipping)}`}
-          />
-        )}
-        {liftGate && (
-          <PriceRow
-            label={`Lift Gate Service${ratePercent > 0 ? ` ` : ""}`}
-            value={`${currencySymbol}${usd(liftFee)}`}
-          />
-        )}
-        {residential && (
-          <PriceRow
-            label={`Residential Address${ratePercent > 0 ? `` : ""}`}
-            value={`${currencySymbol}${usd(resFee)}`}
-          />
-        )}
-        {insideDelivery && (
-          <PriceRow
-            label={`Inside Delivery${ratePercent > 0 ? ` ` : ""}`}
-            value={`${currencySymbol}${usd(insideFee)}`}
-          />
-        )}
-        {ratePercent > 0 && (
-          <PriceRow
-            label={`Tax (${ratePercent}%)`}
-            value={`${currencySymbol}${usd(totalTax)}`}
-          />
-        )}
-      </div>
-      <div className="h-px bg-gray-200 mb-4" />
-      <div className="flex items-center justify-between mb-4">
-        <span className="font-bold text-gray-900 text-base">Total Amount</span>
-        <span className="font-bold text-gray-900 text-xl">
-          {currencySymbol}
-          {usd(grandTotal)}
-        </span>
-      </div>
-    </>
-  );
+          )}
+          {residential && (
+            <PriceRow
+              label={`Residential Address${ratePercent > 0 ? `` : ""}`}
+              value={`${currencySymbol}${usd(resFee)}`}
+            />
+          )}
+          {insideDelivery && (
+            <PriceRow
+              label={`Inside Delivery${ratePercent > 0 ? ` ` : ""}`}
+              value={`${currencySymbol}${usd(insideFee)}`}
+            />
+          )}
+          {ratePercent > 0 && (
+            <PriceRow
+              label={`Tax (${ratePercent}%)`}
+              value={`${currencySymbol}${usd(totalTax)}`}
+            />
+          )}
+        </div>
+        <div className="h-px bg-gray-200 mb-4" />
+        <div className="flex items-center justify-between mb-4">
+          <span className="font-bold text-gray-900 text-base">
+            Total Amount
+          </span>
+          <span className="font-bold text-gray-900 text-xl">
+            {currencySymbol}
+            {usd(grandTotal)}
+          </span>
+        </div>
+      </>
+    );
 
   const placeOrderBtn = (
     <>
@@ -1167,7 +1240,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* â"€â"€ STEP 1: Contact + Address â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+        {/* â"€â"€ STEP 1: Contact + Address  */}
         {mobileStep === 1 && (
           <div className="px-4 py-5 space-y-1 pb-28">
             {/* Contact card */}
@@ -1182,9 +1255,33 @@ export default function CheckoutPage() {
 
             {/* Fixed bottom CTA */}
             <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
+              {addressStepError && (
+                <p className="text-xs text-red-500 mb-2 text-center">{addressStepError}</p>
+              )}
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  // Phone validation
+                  if (!phone || phoneValidation.isInvalid || phoneValidation.validating) {
+                    setPhoneError(
+                      !phone
+                        ? "Phone number is required"
+                        : phoneValidation.isInvalid
+                          ? phoneValidation.errorMsg || "Phone number is invalid"
+                          : "Please wait for phone validation",
+                    );
+                    document.getElementById("phone-field-wrapper")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    return;
+                  }
+                  setPhoneError("");
+
+                  // Address validation
+                  const valid = await addressCheckoutRef.current?.validate();
+                  if (!valid) {
+                    setAddressStepError("Please fill in all required address fields.");
+                    return;
+                  }
+                  setAddressStepError("");
                   setMobileStep(2);
                   window.scrollTo(0, 0);
                 }}
@@ -1197,7 +1294,7 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {/* â"€â"€ STEP 2: Cart + Payment â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+        {/* â"€â"€ STEP 2: Cart + Payment */}
         {mobileStep === 2 && (
           <div className="px-4 py-5 pb-36 space-y-4">
             {/* Cart items card */}
@@ -1219,13 +1316,12 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment form card */}
-            
 
             {/* Price summary card */}
             <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
               {pricingBlock}
             </div>
-<div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
               <h2 className="text-sm font-bold text-gray-800 mb-4">
                 Payment Details
               </h2>
@@ -1340,24 +1436,23 @@ export default function CheckoutPage() {
           </div>
 
           {/* â"€â"€ RIGHT â€" Order Summary  */}
-        <div className=" bg-[#fafafa] sticky top-0 ">
+          <div className=" bg-[#fafafa] sticky top-0 ">
             <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10 sticky top-0">
-            {cartBlock}
-            {discountBlock}
+              {cartBlock}
+              {discountBlock}
 
-            <div className="h-px bg-gray-200 my-4" />
-            {pricingBlock}
-            {/* {placeOrderBtn} */}
+              <div className="h-px bg-gray-200 my-4" />
+              {pricingBlock}
+              {/* {placeOrderBtn} */}
+            </div>
           </div>
         </div>
-        </div>
       </div>
-
     </>
   );
 }
 
-// â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// â"€â"€â"€ Sub-components 
 
 function Field({
   value,
