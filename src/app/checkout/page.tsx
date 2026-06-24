@@ -666,16 +666,6 @@ export default function CheckoutPage() {
 
     setIsPlacingOrder(true);
     try {
-      // 4. Profile update
-      setOrderStep("profile");
-      await updateProfile({
-        firstName,
-        lastName,
-        email,
-        phone,
-        countryCode: (countryCode as any) ?? "",
-      }, dispatch);
-
       // 5. Address save
       setOrderStep("address");
       const addressSaved = await addressCheckoutRef.current?.save();
@@ -689,6 +679,18 @@ export default function CheckoutPage() {
           ?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
+      // 4. Profile update
+      setOrderStep("profile");
+      await updateProfile(
+        {
+          firstName,
+          lastName,
+          email,
+          phone,
+          countryCode: (countryCode as any) ?? "",
+        },
+        dispatch,
+      );
 
       // 6. Payment + order + history (all in place-order-api.ts)
       const orderId = await placeOrderWithPayment({
@@ -1256,21 +1258,30 @@ export default function CheckoutPage() {
             {/* Fixed bottom CTA */}
             <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
               {addressStepError && (
-                <p className="text-xs text-red-500 mb-2 text-center">{addressStepError}</p>
+                <p className="text-xs text-red-500 mb-2 text-center">
+                  {addressStepError}
+                </p>
               )}
               <button
                 type="button"
                 onClick={async () => {
                   // Phone validation
-                  if (!phone || phoneValidation.isInvalid || phoneValidation.validating) {
+                  if (
+                    !phone ||
+                    phoneValidation.isInvalid ||
+                    phoneValidation.validating
+                  ) {
                     setPhoneError(
                       !phone
                         ? "Phone number is required"
                         : phoneValidation.isInvalid
-                          ? phoneValidation.errorMsg || "Phone number is invalid"
+                          ? phoneValidation.errorMsg ||
+                            "Phone number is invalid"
                           : "Please wait for phone validation",
                     );
-                    document.getElementById("phone-field-wrapper")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    document
+                      .getElementById("phone-field-wrapper")
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" });
                     return;
                   }
                   setPhoneError("");
@@ -1278,7 +1289,9 @@ export default function CheckoutPage() {
                   // Address validation
                   const valid = await addressCheckoutRef.current?.validate();
                   if (!valid) {
-                    setAddressStepError("Please fill in all required address fields.");
+                    setAddressStepError(
+                      "Please fill in all required address fields.",
+                    );
                     return;
                   }
                   setAddressStepError("");
@@ -1452,7 +1465,7 @@ export default function CheckoutPage() {
   );
 }
 
-// â"€â"€â"€ Sub-components 
+// â"€â"€â"€ Sub-components
 
 function Field({
   value,

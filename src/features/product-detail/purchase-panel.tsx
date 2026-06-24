@@ -22,6 +22,7 @@ import type { Accessory, AccessoryItem } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
 import AddToCartWidget from "@/components/add-to-cart";
 import { PriceComparisonCard } from "./price-comparison-card";
+import { ReportErrorModal } from "./report-error-modal";
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -68,6 +69,7 @@ export const PurchasePanel = ({
   >({});
   const [showErrors, setShowErrors] = useState(false);
   const locationState = useLocationData();
+  const [reportOpen, setReportOpen] = useState(false);
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
   useEffect(() => {
     try {
@@ -142,7 +144,6 @@ export const PurchasePanel = ({
               </div>
               <span className="text-sm text-gray-500 font-medium">/{unit}</span>
             </div>
-
             <PriceComparisonCard productData={productData} />
             {hasSale && (
               <p className="text-gray-400 text-sm line-through mt-0.5">
@@ -326,6 +327,21 @@ export const PurchasePanel = ({
           </div>
         </div>
       )}
+
+      <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
+        <span className="text-base text-gray-400">Spot something off?</span>
+        <button
+          onClick={() => setReportOpen(true)}
+          className="text-base text-red-700 font-semibold hover:underline transition"
+        >
+          Help us improve this page.
+        </button>
+      </div>
+      <ReportErrorModal
+        isOpen={reportOpen}
+        onClose={() => setReportOpen(false)}
+        productId={productData.id}
+      />
     </div>
   );
 };

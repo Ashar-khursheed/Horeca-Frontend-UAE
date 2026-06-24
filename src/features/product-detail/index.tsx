@@ -239,8 +239,12 @@ console.log("productDataproductDataproductDataproductData",productData)
               productData={productData}
             />
 
+
             <PriceComparisonCard productData={productData} />
+
+            
           </div>
+          
 
           <AlternateAiProducts
             similarProductsGuest={similarProductsGuest}

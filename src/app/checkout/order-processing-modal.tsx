@@ -5,22 +5,22 @@ import { AnimatePresence, motion } from "framer-motion";
 export type OrderStep =
   | "idle"
   | "card"
-  | "profile"
   | "address"
+  | "profile"
   | "payment"
   | "order"
   | "done";
 
 const STEPS: { key: OrderStep; label: string; subLabel: string }[] = [
   { key: "card",    label: "Validating card",        subLabel: "Checking your card details..." },
-  { key: "profile", label: "Saving information",     subLabel: "Updating your profile..." },
   { key: "address", label: "Confirming address",     subLabel: "Saving your delivery address..." },
+  { key: "profile", label: "Saving information",     subLabel: "Updating your profile..." },
   { key: "payment", label: "Processing payment",     subLabel: "Securely charging your card..." },
   { key: "order",   label: "Placing your order",     subLabel: "Finalising your order..." },
   { key: "done",    label: "Order placed!",          subLabel: "Redirecting to confirmation..." },
 ];
 
-const ORDER: OrderStep[] = ["card", "profile", "address", "payment", "order", "done"];
+const ORDER: OrderStep[] = ["card", "address", "profile",  "payment", "order", "done"];
 
 function stepIndex(step: OrderStep) {
   return ORDER.indexOf(step);

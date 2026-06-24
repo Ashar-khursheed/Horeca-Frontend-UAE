@@ -3,7 +3,7 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { getDefaultAddressCache, getLocationData } from "@/utils/locationStorage";
 import { getShippingCharge } from "@/utils/shipping";
 import type { OrderStep } from "./order-processing-modal";
-import { setProfile } from "@/store/slices/my-profile/profileSlice";
+import { updateProfile as updateProfileThunk } from "@/store/slices/my-profile/profileSlice";
 import type { AppDispatch } from "@/store/store";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
@@ -39,23 +39,13 @@ export async function updateProfile(
 ) {
   try {
     const user = JSON.parse(localStorage.getItem("user") ?? "{}");
-    const res = await makeApiRequest<{ customer: any }>(apiUrls.UPDATE_PROFILE, {
-      method: "POST",
-      data: {
-        name: `${params.firstName} ${params.lastName}`.trim(),
-        email: params.email,
-        mobile_number: params.phone.replace(/\D/g, ""),
-        country_code: params.countryCode || user.country_code || "",
-        type: user?.type,
-        business_name: user?.business_detail?.business_name,
-      },
-    });
-    // if (res?.customer) {
-    //   dispatch(setProfile(res.customer));
-    //   if (typeof window !== "undefined") {
-    //     localStorage.setItem("user", JSON.stringify(res.customer));
-    //   }
-    // }
+    await dispatch(updateProfileThunk({
+      name:          `${params.firstName} ${params.lastName}`.trim(),
+      country_code:  params.countryCode || user.country_code || "",
+      mobile_number: params.phone.replace(/\D/g, ""),
+      type:          user?.type || "Individual",
+      ...(user?.type === "Business" && { business_name: user?.business_detail?.business_name }),
+    })).unwrap();
   } catch {
     /* non-blocking */
   }

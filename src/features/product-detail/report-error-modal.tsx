@@ -5,7 +5,7 @@ import ReactDOM from "react-dom";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { useAppSelector } from "@/store/hooks";
 
-const MISTAKE_OPTIONS = [
+const TITLE_OPTIONS = [
   "Product Content",
   "Product Image",
   "Product Pricing",
@@ -22,30 +22,69 @@ interface ReportErrorModalProps {
 export function ReportErrorModal({ isOpen, onClose, productId }: ReportErrorModalProps) {
   const customer = useAppSelector((s) => s.profile.customer);
 
-  const [email,       setEmail]       = useState(customer?.email ?? "");
-  const [mistakeIn,   setMistakeIn]   = useState("");
-  const [notes,       setNotes]       = useState("");
-  const [submitting,  setSubmitting]  = useState(false);
-  const [submitted,   setSubmitted]   = useState(false);
-  const [error,       setError]       = useState("");
+  const [email,      setEmail]      = useState(customer?.email ?? "");
+  const [title,      setTitle]      = useState("");
+  const [problem,    setProblem]    = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted,  setSubmitted]  = useState(false);
+  const [errors,     setErrors]     = useState<Record<string, string>>({});
 
   if (!isOpen) return null;
 
+  const validate = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+
+    if (!email.trim()) {
+      errs.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errs.email = "Please enter a valid email address.";
+    }
+
+    if (!title) {
+      errs.title = "Please select an option.";
+    }
+
+    if (!problem.trim()) {
+      errs.problem = "Please describe the issue.";
+    } else if (problem.trim().length < 5) {
+      errs.problem = "Description must be at least 5 characters.";
+    }
+
+    return errs;
+  };
+
   const handleSubmit = async () => {
-    if (!email.trim() || !mistakeIn) {
-      setError("Please fill in all required fields.");
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
       return;
     }
-    setError("");
+    setErrors({});
     setSubmitting(true);
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const user  = typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user") ?? "{}")
+      : {};
+
+    const payload: Record<string, unknown> = {
+      product_id: String(productId),
+      email:      email.trim(),
+      title,
+      problem:    problem.trim(),
+    };
+    if (token && user?.id) {
+      payload.created_by = user.id;
+    }
+
     try {
-      await makeApiRequest("frontend/product-report", {
+      await makeApiRequest("frontend/product-errors", {
         method: "POST",
-        data: { product_id: productId, email, mistake_in: mistakeIn, notes },
+        data: payload,
       });
       setSubmitted(true);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setErrors({ submit: "Something went wrong. Please try again." });
     } finally {
       setSubmitting(false);
     }
@@ -53,11 +92,18 @@ export function ReportErrorModal({ isOpen, onClose, productId }: ReportErrorModa
 
   const handleClose = () => {
     setSubmitted(false);
-    setMistakeIn("");
-    setNotes("");
-    setError("");
+    setTitle("");
+    setProblem("");
+    setErrors({});
     onClose();
   };
+
+  const fieldCls = (err?: string) =>
+    `w-full border rounded-[7px] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 transition ${
+      err
+        ? "border-red-400 focus:border-red-400 focus:ring-red-100"
+        : "border-gray-300 focus:border-[#186737] focus:ring-[#186737]/10"
+    }`;
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
@@ -86,6 +132,12 @@ export function ReportErrorModal({ isOpen, onClose, productId }: ReportErrorModa
               </div>
               <p className="text-gray-800 font-semibold text-base">Thank you for your feedback!</p>
               <p className="text-gray-500 text-sm mt-1">We&apos;ll review it and make improvements.</p>
+              <button
+                onClick={handleClose}
+                className="mt-5 px-6 py-2 bg-[#186737] text-white text-sm font-semibold rounded-[7px] hover:bg-[#145c30] transition"
+              >
+                Close
+              </button>
             </div>
           ) : (
             <>
@@ -97,41 +149,60 @@ export function ReportErrorModal({ isOpen, onClose, productId }: ReportErrorModa
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded-[7px] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) setErrors((p) => ({ ...p, email: "" }));
+                  }}
+                  placeholder="your@email.com"
+                  className={fieldCls(errors.email)}
                 />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
 
-              {/* Mistake in */}
+              {/* Title */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   There appears to be a mistake in <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={mistakeIn}
-                  onChange={(e) => setMistakeIn(e.target.value)}
-                  className="w-full border border-gray-300 rounded-[7px] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 appearance-none bg-white"
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (errors.title) setErrors((p) => ({ ...p, title: "" }));
+                  }}
+                  className={`${fieldCls(errors.title)} appearance-none bg-white`}
                 >
                   <option value="">Select Option</option>
-                  {MISTAKE_OPTIONS.map((opt) => (
+                  {TITLE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>{opt}</option>
                   ))}
                 </select>
+                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
               </div>
 
-              {/* Notes */}
+              {/* Problem */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Additional Notes</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Describe the Issue <span className="text-red-500">*</span>
+                </label>
                 <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  value={problem}
+                  onChange={(e) => {
+                    setProblem(e.target.value);
+                    if (errors.problem) setErrors((p) => ({ ...p, problem: "" }));
+                  }}
                   rows={3}
-                  placeholder="Describe the issue (optional)…"
-                  className="w-full border border-gray-300 rounded-[7px] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 resize-none"
+                  placeholder="Please describe the error in detail…"
+                  className={`${fieldCls(errors.problem)} resize-none`}
                 />
+                {errors.problem && <p className="text-red-500 text-xs mt-1">{errors.problem}</p>}
               </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {errors.submit && (
+                <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-[7px] px-3 py-2">
+                  {errors.submit}
+                </p>
+              )}
             </>
           )}
         </div>
@@ -150,7 +221,7 @@ export function ReportErrorModal({ isOpen, onClose, productId }: ReportErrorModa
               disabled={submitting}
               className="flex-1 bg-[#186737] text-white py-2.5 rounded-[7px] text-sm font-semibold hover:bg-[#145c30] transition disabled:opacity-60"
             >
-              {submitting ? "Submitting…" : "Submit"}
+              {submitting ? "Submitting…" : "Submit Report"}
             </button>
           </div>
         )}
