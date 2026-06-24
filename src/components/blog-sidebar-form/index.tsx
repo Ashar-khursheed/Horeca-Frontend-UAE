@@ -131,12 +131,12 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
   });
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-4 lg:p-3 xl:p-5">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-4 lg:p-3 lg:py-4 xl:p-5">
       <div className="mb-3 lg:mb-2 xl:mb-4">
         <h3 className="text-base lg:text-sm xl:text-base font-extrabold text-gray-900 leading-snug">
           Request a Consultation
         </h3>
-        <p className="text-gray-500 text-xs lg:text-[10px] xl:text-xs mt-1 lg:mt-0.5 xl:mt-1">
+        <p className="text-gray-500 text-xs lg:hidden xl:block mt-1 xl:mt-1">
           Have questions? Fill out the form below and our kitchen experts will contact you.
         </p>
       </div>
@@ -156,7 +156,7 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
           </button>
         </div>
       ) : (
-        <form onSubmit={formik.handleSubmit} className="space-y-3 lg:space-y-1.5 xl:space-y-3.5">
+        <form onSubmit={formik.handleSubmit} className="space-y-3 lg:space-y-2 xl:space-y-3.5">
           {formMessage?.type === "error" && (
             <div className="text-xs px-3 py-2 rounded-md bg-red-50 text-red-700 border border-red-150">
               {formMessage.text}
@@ -172,7 +172,7 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
               type="text"
               id="blog_full_name"
               placeholder="e.g. John Doe"
-              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1.5 xl:py-2 px-3 text-xs rounded-lg placeholder:text-gray-300 bg-white text-gray-900"
+              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1 xl:py-2 px-3 lg:px-2 text-xs lg:text-[11px] rounded-lg placeholder:text-gray-300 bg-white text-gray-900"
               {...formik.getFieldProps("full_name")}
             />
             {formik.touched.full_name && formik.errors.full_name && (
@@ -189,7 +189,7 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
               type="email"
               id="blog_email"
               placeholder="e.g. you@example.com"
-              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1.5 xl:py-2 px-3 text-xs rounded-lg placeholder:text-gray-300 bg-white text-gray-900"
+              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1 xl:py-2 px-3 lg:px-2 text-xs lg:text-[11px] rounded-lg placeholder:text-gray-300 bg-white text-gray-900"
               {...formik.getFieldProps("email")}
             />
             {formik.touched.email && formik.errors.email && (
@@ -203,7 +203,7 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
               Phone Number <span className="text-red-500">*</span>
             </label>
             <div className="relative flex items-center">
-              <div className="absolute left-3 flex items-center gap-1 shrink-0 select-none">
+              <div className="absolute left-3 lg:left-2.5 flex items-center gap-1 shrink-0 select-none">
                 {isMounted && country?.icon && (
                   <img
                     src={country.icon}
@@ -211,13 +211,13 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
                     className="w-4 h-3 object-cover rounded-sm"
                   />
                 )}
-                <span className="text-xs text-gray-500 font-medium">{countryCode}</span>
+                <span className="text-xs lg:text-[11px] text-gray-500 font-medium">{countryCode}</span>
               </div>
               <input
                 type="tel"
                 id="blog_phone"
                 placeholder="50 123 4567"
-                className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1.5 xl:py-2 pl-16 pr-3 text-xs rounded-lg placeholder:text-gray-300 bg-white text-gray-900"
+                className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1 xl:py-2 pl-16 lg:pl-14 pr-3 lg:pr-2 text-xs lg:text-[11px] rounded-lg placeholder:text-gray-300 bg-white text-gray-900"
                 {...formik.getFieldProps("phone")}
               />
             </div>
@@ -231,11 +231,11 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
             <label htmlFor="blog_notes" className="block text-xs lg:text-[10px] xl:text-xs font-semibold text-gray-700 mb-1 lg:mb-0.5 xl:mb-1">
               Notes <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
-            <textarea
+            <input
+              type="text"
               id="blog_notes"
-              rows={2}
               placeholder="Tell us about your project..."
-              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1.5 xl:py-2 px-3 text-xs rounded-lg placeholder:text-gray-300 bg-white text-gray-900 resize-none"
+              className="w-full border border-gray-200 outline-none transition-all focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/10 py-2 lg:py-1 xl:py-2 px-3 lg:px-2 text-xs lg:text-[11px] rounded-lg placeholder:text-gray-300 bg-white text-gray-900"
               {...formik.getFieldProps("notes")}
             />
           </div>
@@ -244,7 +244,7 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
           {RECAPTCHA_ENABLED && (
             <div className="mt-1 scale-90 lg:scale-75 xl:scale-90 origin-left">
               <ReCAPTCHA
-                sitekey="6LewWvIrAAAAAHWqkx3qesrZpYSrwDa6v8y68AVO"
+                sitekey="6LewWvIrAAAAAHWqkx3qespZpYSrwDa6v8y68AVO"
                 onChange={(token: string | null) => {
                   setRecaptchaToken(token);
                   if (token) setCaptchaError(false);
@@ -260,7 +260,7 @@ export default function BlogSidebarForm({ type = "Blog Form" }: BlogSidebarFormP
           <button
             type="submit"
             disabled={loader}
-            className="w-full bg-[#186737] hover:bg-[#145c30] text-white font-bold py-2.5 lg:py-2 xl:py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all duration-200 disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow-md mt-1"
+            className="w-full bg-[#186737] hover:bg-[#145c30] text-white font-bold py-2.5 lg:py-1.5 xl:py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all duration-200 disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow-md mt-1"
           >
             {loader ? (
               <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
