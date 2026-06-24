@@ -183,7 +183,6 @@ export const HeroBanner = ({
                           loading={index === 0 ? "eager" : "lazy"}
                           fetchPriority={index === 0 ? "high" : undefined}
                           sizes="(max-width: 1024px) 100vw, 70vw"
-                          unoptimized
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                       </div>
@@ -199,7 +198,6 @@ export const HeroBanner = ({
                         loading={index === 0 ? "eager" : "lazy"}
                         fetchPriority={index === 0 ? "high" : undefined}
                         sizes="(max-width: 1024px) 100vw, 70vw"
-                        unoptimized
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                     </div>
@@ -305,7 +303,6 @@ export const HeroBanner = ({
                                 sizes="50vw"
                                 priority={index === 0}
                                 loading={index === 0 ? "eager" : "lazy"}
-                                unoptimized
                               />
                               {isValid && (
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -322,7 +319,6 @@ export const HeroBanner = ({
                               sizes="50vw"
                               priority={index === 0}
                               loading={index === 0 ? "eager" : "lazy"}
-                              unoptimized
                             />
                           </div>
                         )}
@@ -376,7 +372,6 @@ export const HeroBanner = ({
                                   sizes="30vw"
                                   priority={index === 0}
                                   loading={index === 0 ? "eager" : "lazy"}
-                                  unoptimized
                                 />
                                 {isValid && (
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -393,7 +388,6 @@ export const HeroBanner = ({
                                 sizes="30vw"
                                 priority={index === 0}
                                 loading={index === 0 ? "eager" : "lazy"}
-                                unoptimized
                               />
                             </div>
                           )}
