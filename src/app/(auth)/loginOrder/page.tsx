@@ -206,8 +206,7 @@ function LoginPanel() {
       dispatch(setProfile(res.user));
 
       const redirect = searchParams.get("redirect") ?? "/cart";
-      router.push(redirect);
-      router.refresh();
+      window.location.href = redirect;
 
       // Run background tasks without blocking redirect
       const syncPromises = [];
@@ -248,8 +247,7 @@ function LoginPanel() {
         ).unwrap();
 
         const redirect = searchParams.get("redirect") ?? "/cart";
-        router.push(redirect);
-        router.refresh();
+        window.location.href = redirect;
 
         // Run background tasks without blocking redirect
         const syncPromises = [];

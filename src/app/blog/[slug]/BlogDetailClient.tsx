@@ -21,6 +21,7 @@ import { ShareModal } from "@/components/share-modal";
 import BlogComments, { Comment as BlogComment } from "@/components/blog-comments";
 import Breadcrumb from "@/components/breadcum";
 import SeoContent from "@/seo/seo-content";
+import BlogSidebarForm from "@/components/blog-sidebar-form";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ApiBlogSeo {
@@ -354,8 +355,8 @@ export default function BlogDetailClient({
             </article>
 
             {/* ── Sidebar ── */}
-            <aside className="lg:col-span-4 min-w-0">
-              <div className=" space-y-5">
+            <aside className="lg:col-span-4 min-w-0 lg:flex lg:flex-col lg:h-full">
+              <div className="space-y-5 lg:flex-1">
 
                 {/* TOC — desktop */}
                 {toc.length > 0 && (
@@ -426,33 +427,39 @@ export default function BlogDetailClient({
                   </div>
                 )}
 
-                {/* Register CTA Card */}
-                <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 text-white overflow-hidden relative">
-                  <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
-                  <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
-                  <div className="relative">
-                    {/* <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
-                      <User size={18} className="text-white" />
-                    </div> */}
-                    <h3 className="text-base font-extrabold mb-1 leading-snug">
-                      Join HorecaStore Today
-                    </h3>
-                    <p className="text-white/75 text-xs leading-relaxed mb-4">
-                      Get exclusive deals, track orders, and access premium commercial kitchen equipment.
-                    </p>
-                    <Link
-                      href="/register"
-                      className="flex items-center justify-center gap-2 w-full bg-white text-[#186737] text-sm font-bold py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 group"
-                    >
-                      Create Free Account
-                      <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="flex items-center justify-center gap-1 w-full mt-2 text-white/70 hover:text-white text-xs font-medium transition-colors"
-                    >
-                      Already have an account? Sign in
-                    </Link>
+                {/* Sticky Form & CTA Container */}
+                <div className="lg:sticky lg:top-24 space-y-5 h-fit">
+                  {/* Consultation Inquiry Form */}
+                  <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
+
+                  {/* Register CTA Card */}
+                  <div className="bg-gradient-to-br from-[#186737] to-[#22a34e] rounded-2xl p-5 text-white overflow-hidden relative">
+                    <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+                    <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+                    <div className="relative">
+                      {/* <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                        <User size={18} className="text-white" />
+                      </div> */}
+                      <h3 className="text-base font-extrabold mb-1 leading-snug">
+                        Join HorecaStore Today
+                      </h3>
+                      <p className="text-white/75 text-xs leading-relaxed mb-4">
+                        Get exclusive deals, track orders, and access premium commercial kitchen equipment.
+                      </p>
+                      <Link
+                        href="/register"
+                        className="flex items-center justify-center gap-2 w-full bg-white text-[#186737] text-sm font-bold py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 group"
+                      >
+                        Create Free Account
+                        <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                      </Link>
+                      <Link
+                        href="/login"
+                        className="flex items-center justify-center mt-2 w-full text-white/70 hover:text-white text-xs font-medium transition-colors"
+                      >
+                        Already have an account? Sign in
+                      </Link>
+                    </div>
                   </div>
                 </div>
 

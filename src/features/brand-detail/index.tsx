@@ -6,7 +6,7 @@ import ProductCard, { type RawApiProduct } from "@/components/product-card";
 import SeoContent, { type SeoApiData } from "@/seo/seo-content";
 import { ChevronLeft, ChevronRight, Globe, Home } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -284,6 +284,19 @@ export default function BrandDetailFeature({
   const [products, setProducts] = useState<RawApiProduct[]>(initProducts);
   const [pagination, setPagination] = useState<Pagination>(initPagination);
   const [loadingPage, setLoadingPage] = useState(false);
+  const productsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedCategoryUrl && productsRef.current) {
+      const offset = 100; // Offset for sticky header
+      const elementPosition = productsRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - offset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "auto"
+      });
+    }
+  }, [selectedCategoryUrl]);
 
   const selectedCategory = selectedCategoryUrl
     ? categories.find((c) => c.url === selectedCategoryUrl)
@@ -431,7 +444,7 @@ export default function BrandDetailFeature({
       )}
 
       {/* Products */}
-      <section className="mt-3">
+      <section ref={productsRef} className="mt-3" id="brand-products-section">
         <div className="global-container py-6">
           <h2 className="text-base md:text-lg font-bold text-gray-900 mb-4">
             {selectedCategoryName

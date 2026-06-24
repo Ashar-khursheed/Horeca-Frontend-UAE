@@ -53,6 +53,11 @@ function CommentItem({
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleReply = async () => {
     if (!replyText.trim()) return;
@@ -75,7 +80,9 @@ function CommentItem({
               <span className="text-sm font-semibold text-gray-900">
                 {comment.creator?.name ?? "Anonymous"}
               </span>
-              <span className="text-xs text-gray-400">{formatTimeAgo(comment.created_at)}</span>
+              <span className="text-xs text-gray-400">
+                {mounted ? formatTimeAgo(comment.created_at) : ""}
+              </span>
             </div>
             <p className="text-sm text-gray-700 leading-relaxed">{comment.comment}</p>
           </div>
@@ -123,7 +130,9 @@ function CommentItem({
                   <span className="text-xs font-semibold text-gray-900">
                     {reply.creator?.name ?? "Anonymous"}
                   </span>
-                  <span className="text-[11px] text-gray-400">{formatTimeAgo(reply.created_at)}</span>
+                  <span className="text-[11px] text-gray-400">
+                    {mounted ? formatTimeAgo(reply.created_at) : ""}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-700 leading-relaxed">{reply.comment}</p>
               </div>
@@ -152,6 +161,7 @@ export default function BlogComments({
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isLoggedIn = !!customer;
@@ -168,6 +178,7 @@ export default function BlogComments({
   };
 
   useEffect(() => {
+    setIsMounted(true);
     if (initialComments === undefined) {
       fetchComments();
     }
@@ -213,7 +224,9 @@ export default function BlogComments({
       </h2>
 
       {/* Comment form */}
-      {profileLoading ? null : isLoggedIn ? (
+      {!isMounted || profileLoading ? (
+        <div className="mb-6 h-[160px] bg-white border border-gray-100 rounded-[12px] animate-pulse" />
+      ) : isLoggedIn ? (
         <div className="mb-6 bg-white border border-gray-200 rounded-[12px] p-4">
           <div className="flex gap-3">
             <div className="w-9 h-9 rounded-full bg-[#186737]/10 flex items-center justify-center shrink-0 text-[#186737] font-bold text-xs">

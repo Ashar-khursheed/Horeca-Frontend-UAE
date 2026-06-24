@@ -40,7 +40,7 @@ export default async function ShopByCategories() {
         <div className="sm:hidden overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
           <div className="grid grid-rows-2 grid-flow-col gap-x-3 gap-y-3 w-max">
             {categories.map((cat) => {
-              const href = `/${cat.parent_slug}/${cat.slug}`;
+              const href = `/${cat.super_parent_slug}/${cat.slug}`;
               const name = typeof cat.name === "string" ? cat.name : cat.name.en;
               return (
                 <Link key={cat.id} href={href} className="group flex flex-col items-center w-17">
@@ -67,7 +67,7 @@ export default async function ShopByCategories() {
         {/* Desktop — uniform grid */}
         <div className="hidden sm:grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3">
           {categories.map((cat, i) => {
-            const href = `/${cat.parent_slug}/${cat.slug}`;
+            const href = `/${cat.super_parent_slug}/${cat.slug}`;
             const name = typeof cat.name === "string" ? cat.name : cat.name.en;
             return (
               <Link

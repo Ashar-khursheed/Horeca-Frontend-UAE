@@ -81,8 +81,15 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className} suppressHydrationWarning>
       <head>
-        <CustomScriptsRenderer scripts={scripts?.head_top ?? []} />
+        <link rel="preconnect" href="https://d1p9kdrbe10xzz.cloudfront.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://d1p9kdrbe10xzz.cloudfront.net" />
+        <link rel="preconnect" href="https://pim.thehorecastore.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
+        <link rel="preconnect" href="https://web.squarecdn.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://web.squarecdn.com" />
+        <link rel="preconnect" href="https://staxjs.staxpayments.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://staxjs.staxpayments.com" />
+        <CustomScriptsRenderer scripts={scripts?.head_top ?? []} />
         <CustomScriptsRenderer scripts={scripts?.head_bottom ?? []} />
       </head>
 
