@@ -329,12 +329,12 @@ export const PurchasePanel = ({
       )}
 
       <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
-        <span className="text-base text-gray-400">Spot something off?</span>
+        {/* <span className="text-base text-gray-400">Spot something off?</span> */}
         <button
           onClick={() => setReportOpen(true)}
-          className="text-base text-red-700 font-semibold hover:underline transition"
+          className="text-base text-red-500 font-semibold hover:underline transition"
         >
-          Help us improve this page.
+        Spot something off? Help us improve this page.
         </button>
       </div>
       <ReportErrorModal

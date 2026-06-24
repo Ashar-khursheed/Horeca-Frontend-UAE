@@ -149,7 +149,7 @@ export default async function LocationCityPage({ params }: PageProps) {
   const res = await makeApiCallSSR<HorecaPageResponse>(
     apiUrls.HORECA_PAGE_BY_SLUG(state, city),
     {},
-    { revalidate: 0 },
+    { revalidate: 3600 },
   );
 
   if (!res?.success || !res?.data || !res.data.is_active) notFound();

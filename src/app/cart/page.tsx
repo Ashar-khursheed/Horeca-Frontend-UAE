@@ -302,13 +302,63 @@ export default function CartPage() {
     }
   };
 
-  // ── Saved-for-later items ─────────────────────────────────────────────────
-  const savedItems: SavedItem[] = isLoggedIn
-    ? sflApiEntries.map(apiToSavedItem)
-    : sflGuestItems.map((g) => apiToSavedItem(g.rawProduct));
+  // ── Saved-for-later items (exclude products already in cart) ─────────────
+  const cartProductIds = new Set<number>(
+    isLoggedIn
+      ? rawProducts.map((p: any) => p.product_id ?? p.id)
+      : reduxGuestItems.map((i: any) => i.id),
+  );
 
-  const handleAddSavedToCart = (_id: number) => {
-    // TODO: wire to add-to-cart flow
+  const savedItems: SavedItem[] = (
+    isLoggedIn
+      ? sflApiEntries.map(apiToSavedItem)
+      : sflGuestItems.map((g) => apiToSavedItem(g.rawProduct))
+  ).filter((item) => !cartProductIds.has(item.id));
+
+  const handleAddSavedToCart = async (id: number) => {
+    const location = getLocationData();
+
+    if (isLoggedIn) {
+      // Find raw SFL entry for vendor_id
+      const entry = sflApiEntries.find((e: any) => (e.product_id ?? e.id) === id);
+      const vendorId = entry?.vendor_id ?? entry?.product?.vendor_id ?? 1;
+
+      try {
+        await makeApiRequest(apiUrls.CART_ADD, {
+          method: "POST",
+          data: {
+            country: location?.country ?? "",
+            product_id: id,
+            vendor_id: vendorId,
+            quantity: 1,
+          },
+        });
+        // Remove from save-for-later after adding to cart
+        await dispatch(removeSaveForLater({ productId: id }));
+        // Refresh both lists
+        dispatch(fetchCart(location?.country ?? ""));
+        dispatch(fetchSaveForLater());
+        dispatch(fetchCounts() as any);
+      } catch {
+        // silently ignore
+      }
+    } else {
+      // Guest: find saved item and add to local cart
+      const guestEntry = sflGuestItems.find((g) => g.productId === id);
+      if (guestEntry) {
+        dispatch(
+          hydrateCart(),
+        );
+        dispatch(
+          toggleGuestSaveItem({
+            productId: id,
+            quantity: guestEntry.quantity,
+            vendorId: guestEntry.vendorId,
+            rawProduct: guestEntry.rawProduct,
+          }),
+        );
+      }
+    }
   };
 
   const handleRemoveSaved = async (id: number) => {

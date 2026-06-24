@@ -14,7 +14,7 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { ShareButtons } from "./_components/share-buttons";
@@ -91,6 +91,8 @@ function parseAddress(raw: string) {
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
+    const router = useRouter();
+
   const orderID = searchParams.get("orderID");
 
   const [order,   setOrder]   = useState<OrderData | null>(null);
@@ -119,6 +121,21 @@ export default function PaymentSuccessPage() {
       }
     })();
   }, [orderID]);
+
+  useEffect(() => {
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = () => {
+      router.replace("/");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [router]);
+
 
   if (loading) {
     return (
@@ -466,7 +483,7 @@ export default function PaymentSuccessPage() {
                           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                             <Truck size={11} className="text-[#186737]" />
                             {itemShipping === 0 ? (
-                              <span className="text-[#186737] font-semibold">Free Shipping</span>
+                              <span className="text-[#186737] font-semibold">Free Charges Apply</span>
                             ) : (
                               `Shipping: ${currencySymbol}${usd(itemShipping)}`
                             )}

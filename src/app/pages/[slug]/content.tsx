@@ -24,6 +24,7 @@ import Link from "next/link";
 import SEOMainContent from "@/seo/seo-main-content";
 import type { NavPage, ParsedContent, ContentSection } from "./page";
 import Breadcrumb from "@/components/breadcum";
+import CTA from "@/components/cta";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -111,7 +112,7 @@ function SectionCard({ section }: { section: ContentSection }) {
   return (
     <div
       id={section.id}
-      className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-4"
+      className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden scroll-mt-4"
     >
       <div className={`px-5 py-4 border-b ${theme.border} bg-linear-to-r ${theme.header} flex items-center gap-3`}>
         <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${theme.iconBg}`}>
@@ -176,7 +177,7 @@ export function PolicyPageContent({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-11 h-11 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-[7px] bg-white/15 border border-white/25 flex items-center justify-center shrink-0">
                 <HeroIcon size={20} className="text-white" />
               </div>
               <span className="text-white/60 text-xs font-semibold uppercase tracking-widest">
@@ -203,14 +204,14 @@ export function PolicyPageContent({
       </div>
 
       {/* ── Body ───────────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
+        <div className="flex flex-col lg:flex-row gap-8 items-start ">
 
           {/* ── Sidebar ──────────────────────────────────────────────────── */}
-          <aside className="w-full lg:w-60 shrink-0 lg:sticky lg:top-6 space-y-3">
+          <aside className="w-full lg:w-80 shrink-0 sticky top-6 space-y-3">
 
             {/* Policy navigation */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
                 <FileText size={12} className="text-[#186737]" />
                 <span className="text-xs font-bold text-gray-900 uppercase tracking-wide">All Policies</span>
@@ -243,7 +244,7 @@ export function PolicyPageContent({
 
             {/* In-page sections quick-jump */}
             {sections.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
                   <Info size={12} className="text-gray-400" />
                   <span className="text-xs font-bold text-gray-900 uppercase tracking-wide">On this page</span>
@@ -267,17 +268,8 @@ export function PolicyPageContent({
             )}
 
             {/* Contact CTA */}
-            <div className="bg-[#f0f9f4] border border-[#c3e6d4] rounded-xl p-4">
-              <p className="text-sm font-bold text-gray-900">Need help?</p>
-              <p className="text-xs text-gray-500 mt-1 mb-3 leading-relaxed">Our team is ready to answer any policy questions.</p>
-              <Link
-                href="/pages/contact-us"
-                className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg bg-[#186737] text-white text-xs font-bold hover:bg-[#145c30] transition-colors"
-              >
-                <HelpCircle size={12} />
-                Contact Support
-              </Link>
-            </div>
+           
+            <CTA/>
           </aside>
 
           {/* ── Content ──────────────────────────────────────────────────── */}
@@ -294,7 +286,7 @@ export function PolicyPageContent({
             ))}
 
             {/* Bottom CTA */}
-            <div className="bg-linear-to-br from-[#186737] to-[#0f4523] rounded-xl p-8 text-white text-center mt-2">
+            <div className="bg-linear-to-br from-[#186737] to-[#0f4523] rounded-[7px] p-8 text-white text-center mt-2">
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-white/15 border border-white/25 flex items-center justify-center">
                 <HelpCircle size={24} className="text-white" />
               </div>

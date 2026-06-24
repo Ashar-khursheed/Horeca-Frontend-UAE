@@ -33,6 +33,7 @@ import {
   toggleGuestWishlistItem,
 } from "@/store/slices/wishlist/wishlistSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { removeSaveForLater } from "@/store/slices/save-for-later/saveForLaterSlice";
 import {
   getShippingCharge,
   getShippingChargeFromAddress,
@@ -104,6 +105,7 @@ export const AddToCartWidget = ({
   const cartItems = useAppSelector((s) => s.cart.items);
   const apiEntries = useAppSelector((s) => s.cart.apiEntries);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
+  const sflIds = useAppSelector((s) => s.saveForLater.ids);
   const location = useLocationData();
 
   // ── Normalise product fields ─────────────────────────────────────────────
@@ -300,6 +302,10 @@ export const AddToCartWidget = ({
         );
         dispatch(fetchCounts() as any);
         if (!itemId) resolveCartItemId().catch(() => {});
+        // If this product is in save-for-later, remove it automatically
+        if (sflIds.includes(product.id)) {
+          dispatch(removeSaveForLater({ productId: product.id }));
+        }
         // Notify parent immediately after successful add (before flash)
         onAddSuccess?.();
       } catch {
