@@ -14,40 +14,39 @@ const ipCache = new Map<string, { country: string; expires: number }>();
 const IP_CACHE_MS = 10 * 60 * 1000; // 10 minutes
 
 async function resolveCountryCode(request: NextRequest): Promise<string> {
-  // Vercel/Cloudflare inject geo header — zero latency, no API call needed
+  // 1. CDN headers — zero latency, 100% accurate on production
   const geoCountry = request.headers.get("x-vercel-ip-country")
     ?? request.headers.get("cf-ipcountry");
   if (geoCountry && geoCountry !== "XX") return geoCountry;
 
-  // Check actual IP first so VPN changes are picked up immediately
+  // 2. Cookie check — avoids slow API calls for returning visitors
+  const cookieCountry = request.cookies.get("hc_cc")?.value;
+  if (cookieCountry) return cookieCountry;
+
+  // 3. Fallback to GeoIP by client IP (only when not localhost)
   const forwarded = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
   const userIp    = forwarded?.split(",")[0]?.trim();
-
   const isLocalhost = !userIp || userIp === "::1" || userIp === "127.0.0.1";
 
-  if (!isLocalhost) {
-    const cached = ipCache.get(userIp!);
+  if (!isLocalhost && userIp) {
+    const cached = ipCache.get(userIp);
     if (cached && Date.now() < cached.expires) return cached.country;
 
     try {
       // 400ms hard timeout — never block the request more than this
       const controller = new AbortController();
       const tid = setTimeout(() => controller.abort(), 400);
-      const res  = await fetch(`https://pim.thehorecastore.co/api/frontend/location`, {
+      const res  = await fetch(`http://ip-api.com/json/${userIp}?fields=status,countryCode`, {
         signal: controller.signal,
       });
       clearTimeout(tid);
       const data = await res.json();
       if (data.status === "success" && data.countryCode) {
-        ipCache.set(userIp!, { country: data.countryCode, expires: Date.now() + IP_CACHE_MS });
+        ipCache.set(userIp, { country: data.countryCode, expires: Date.now() + IP_CACHE_MS });
         return data.countryCode;
       }
     } catch {}
   }
-
-  // Cookie as last resort only when IP is not resolvable
-  const cookieCountry = request.cookies.get("hc_cc")?.value;
-  if (cookieCountry) return cookieCountry;
 
   return "US";
 }
