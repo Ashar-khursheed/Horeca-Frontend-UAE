@@ -34,11 +34,9 @@ let isFetchingLocation = false;
 // Client: detects from browser (correct user IP), caches in localStorage + cookie
 export async function getCountryCodeClient(): Promise<string> {
   try {
-    const isLocalhost = typeof window !== "undefined" && 
-      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
     const cached     = localStorage.getItem(CC_KEY);
     const cachedTime = localStorage.getItem(CC_TIME_KEY);
-    const isValid    = !isLocalhost && cached && cachedTime && (Date.now() - Number(cachedTime) < CC_TTL);
+    const isValid    = cached && cachedTime && (Date.now() - Number(cachedTime) < CC_TTL);
 
     if (isValid && cached) {
       return cached;
