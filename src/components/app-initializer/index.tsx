@@ -34,12 +34,15 @@ export default function AppInitializer() {
 
   // Location: detect and cache (with a 10-minute TTL) to avoid redundant requests on every mount
   useEffect(() => {
+    const isLocalhost = typeof window !== "undefined" && 
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
     const cached = getLocationData();
     const detectTime = localStorage.getItem(DETECT_KEY);
     const currentCookie = document.cookie
       .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
 
-    const cacheValid = cached && detectTime && (Date.now() - Number(detectTime) < DETECT_TTL);
+    // Bypass cache on localhost so developers toggling VPN see changes instantly on refresh
+    const cacheValid = !isLocalhost && cached && detectTime && (Date.now() - Number(detectTime) < DETECT_TTL);
 
     if (cacheValid && cached && currentCookie === cached.countryCode) {
       if (cached.country) {
