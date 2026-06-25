@@ -745,11 +745,7 @@ export const ReviewsSection = ({
           </div>
 
           <div className="">
-            {filtered.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">
-                No reviews for this rating.
-              </p>
-            ) : (
+            {filtered.length > 0 && (
               <ReviewSlider
                 reviews={filtered}
                 helpfulVotes={helpfulVotes}

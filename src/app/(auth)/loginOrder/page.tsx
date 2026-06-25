@@ -197,8 +197,7 @@ function LoginPanel() {
       localStorage.setItem("user", JSON.stringify(res.user));
       dispatch(setProfile(res.user));
 
-      const redirect = searchParams.get("redirect") ?? "/cart";
-      window.location.href = redirect;
+     
 
       // Run background tasks without blocking redirect
       const syncPromises = [];
@@ -219,6 +218,9 @@ function LoginPanel() {
       }
 
       cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
+
+       const redirect = searchParams.get("redirect") ?? "/cart";
+      window.location.href = redirect;
     } catch {
       setApiError("Google login failed. Please try again.");
       setGoogleLoading(false);
