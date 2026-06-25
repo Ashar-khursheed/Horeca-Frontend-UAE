@@ -90,12 +90,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     robots: { index: seo?.indexing ?? true, follow: true },
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL}/${categorySlug}/${subCategorySlug}/${productSlug}`,
+      canonical: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/${categorySlug}/${subCategorySlug}/${productSlug}`,
     },
     openGraph: {
       title: ogTitle,
       description: ogDesc,
-      url: `${process.env.NEXT_SITE_URL}${product.url}`,
+      url: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}${product.url}`,
       images: ogImg
         ? [{ url: ogImg }]
         : firstImg
