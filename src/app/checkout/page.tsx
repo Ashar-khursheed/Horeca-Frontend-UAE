@@ -33,6 +33,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
+import { Modal } from "@/components/ui/modal";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -135,6 +136,10 @@ export default function CheckoutPage() {
   const [liftGate, setLiftGate] = useState(false);
   const [residential, setResidential] = useState(false);
   const [insideDelivery, setInsideDelivery] = useState(false);
+  const [showShippingPolicyModal, setShowShippingPolicyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState(false);
 
   // â"€â"€ Derived state
   const hasAddress =
@@ -604,6 +609,12 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
+    // 0. Terms check
+    if (!termsAccepted) {
+      setTermsError(true);
+      return;
+    }
+
     // 1. Phone check
     if (!phone) {
       setPhoneError("Phone number is required");
@@ -1053,10 +1064,20 @@ export default function CheckoutPage() {
             </>
           )}
           {baseShipping > 0 && (
-            <PriceRow
-              label={`Shipping & Handling${ratePercent > 0 ? ` ` : ""}`}
-              value={`${currencySymbol}${usd(baseShipping)}`}
-            />
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 flex items-center gap-1">
+                Shipping &amp; Handling
+                <button
+                  type="button"
+                  onClick={() => setShowShippingPolicyModal(true)}
+                  className="w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors leading-none"
+                  aria-label="Shipping policy info"
+                >
+                  ?
+                </button>
+              </span>
+              <span className="font-medium text-gray-800">{currencySymbol}{usd(baseShipping)}</span>
+            </div>
           )}
           {liftGate && (
             <PriceRow
@@ -1116,6 +1137,34 @@ export default function CheckoutPage() {
           <p className="text-sm text-red-700">{orderError}</p>
         </div>
       )}
+      <div className={`flex items-start gap-3 p-3 rounded-md border mb-4 ${termsError ? "border-red-400 bg-red-50" : "border-gray-200"}`}>
+        <input
+          id="terms-checkbox-desktop"
+          type="checkbox"
+          checked={termsAccepted}
+          onChange={(e) => {
+            setTermsAccepted(e.target.checked);
+            if (e.target.checked) setTermsError(false);
+          }}
+          className="mt-0.5 w-4 h-4 shrink-0 accent-[#186737] cursor-pointer"
+        />
+        <div>
+          <label htmlFor="terms-checkbox-desktop" className="text-sm text-gray-700 cursor-pointer">
+            Please read our Terms and conditions before proceeding with the payments.
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowTermsModal(true)}
+            className="flex items-center gap-1 text-[#186737] text-sm font-medium hover:underline mt-0.5"
+          >
+            Terms and Conditions
+            <span className="w-4 h-4 rounded-full border border-[#186737] text-[10px] font-bold flex items-center justify-center leading-none">?</span>
+          </button>
+          {termsError && (
+            <p className="text-xs text-red-500 mt-1">⚠ Please accept the terms and conditions to proceed</p>
+          )}
+        </div>
+      </div>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-4">
         <Link
           href="/cart"
@@ -1325,6 +1374,34 @@ export default function CheckoutPage() {
             </div>
             {/* Fixed bottom Place Order CTA */}
             <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
+              <div className={`flex items-start gap-3 p-3 rounded-md border mb-3 ${termsError ? "border-red-400 bg-red-50" : "border-gray-200"}`}>
+                <input
+                  id="terms-checkbox-mobile"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked);
+                    if (e.target.checked) setTermsError(false);
+                  }}
+                  className="mt-0.5 w-4 h-4 shrink-0 accent-[#186737] cursor-pointer"
+                />
+                <div>
+                  <label htmlFor="terms-checkbox-mobile" className="text-xs text-gray-700 cursor-pointer">
+                    Please read our Terms and conditions before proceeding with the payments.
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowTermsModal(true)}
+                    className="flex items-center gap-1 text-[#186737] text-xs font-medium hover:underline mt-0.5"
+                  >
+                    Terms and Conditions
+                    <span className="w-3.5 h-3.5 rounded-full border border-[#186737] text-[9px] font-bold flex items-center justify-center leading-none">?</span>
+                  </button>
+                  {termsError && (
+                    <p className="text-[11px] text-red-500 mt-0.5">⚠ Please accept the terms and conditions to proceed</p>
+                  )}
+                </div>
+              </div>
               {orderError && (
                 <div className="mb-2 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
                   <svg
@@ -1396,6 +1473,116 @@ export default function CheckoutPage() {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={showShippingPolicyModal}
+        onClose={() => setShowShippingPolicyModal(false)}
+        title="Freight Delivery & Inspection Policy"
+        width="max-w-4xl"
+      >
+        <div className="prose prose-sm max-w-none text-gray-700 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4 sticky top-0 z-10">
+            <p className="text-yellow-800 font-semibold">
+              ⚠️ Important: You or any person receiving the delivery on your
+              behalf must thoroughly inspect the shipment before signing.
+            </p>
+          </div>
+          <p className="text-gray-900 font-medium">
+            Please carefully follow the step-by-step instructions below. By
+            following these steps, you may be eligible to file a claim in case of
+            damaged items.
+          </p>
+          <div className="bg-red-50 border border-red-200 p-3 rounded-md">
+            <p className="text-red-700 font-semibold">
+              TheHorecaStore.com will not be responsible for any shipment that is
+              signed for without complete inspection.
+            </p>
+            <p className="text-red-600 text-sm mt-1">
+              You should never feel pressured by the delivery driver to sign
+              unless you are fully satisfied with the condition of your order.
+            </p>
+          </div>
+          <h4 className="text-base font-bold text-gray-900 mt-6 flex items-center gap-2">
+            <span className="bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
+            Standard Freight Delivery Policy
+          </h4>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Standard freight delivery means the driver will deliver your order to the edge of the truck only.</li>
+            <li>If you select Standard Delivery, you are responsible for unloading the shipment.</li>
+            <li>The driver may park the truck at the closest safe location, such as a loading dock or delivery entrance.</li>
+            <li>The driver will not unload the freight or bring it inside your premises.</li>
+          </ul>
+          <h4 className="text-base font-bold text-gray-900 mt-6 flex items-center gap-2">
+            <span className="bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
+            Inspect Outer Packaging Before Signing
+          </h4>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Carefully examine the external packaging for any visible damage.</li>
+            <li>If you notice dents, tears, broken pallets, or crushed boxes, <strong className="text-red-600">do not accept the shipment</strong>.</li>
+            <li>Inform the driver that you are refusing delivery due to visible damage.</li>
+            <li><strong className="text-red-600">Do not sign the delivery receipt for damaged shipments.</strong></li>
+          </ul>
+          <h4 className="text-base font-bold text-gray-900 mt-6 flex items-center gap-2">
+            <span className="bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
+            Signing for the Delivery
+          </h4>
+          <p className="font-semibold text-gray-900">You may sign for the shipment only after:</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Fully inspecting all items</li>
+            <li>Confirming there is no major damage or missing parts</li>
+          </ul>
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mt-4">
+            <p className="font-bold text-red-900 mb-2">⚠️ Critical Warning:</p>
+            <p className="text-red-800 text-sm mb-2">Once a shipment is signed and accepted:</p>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-red-700">
+              <li>The customer becomes responsible for any freight claims</li>
+              <li>TheHorecaStore.com is not obligated to replace or compensate for transit damage</li>
+            </ul>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        title="Order & Delivery Acknowledgement"
+        width="max-w-4xl"
+      >
+        <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
+          <h3 className="text-lg font-bold text-gray-900">
+            Order &amp; Delivery Acknowledgement
+          </h3>
+          <p>
+            This Order &amp; Delivery Acknowledgement (&quot;Declaration&quot;) is entered into
+            by the undersigned Customer and The HorecaStore INC, with its
+            registered office in Houston, Texas, United States.
+          </p>
+          <p>
+            By placing an order and/or signing this Declaration, the Customer
+            confirms that they have read, understood, and agreed to the following
+            terms:
+          </p>
+          <h4 className="text-base font-semibold text-gray-900 mt-4">
+            1. Order Confirmation &amp; Scope
+          </h4>
+          <p>
+            All products, services, and delivery options included in the order are
+            limited strictly to what is stated on the invoice and order
+            confirmation. No verbal assurances, assumptions, or third-party
+            statements shall be considered binding unless expressly documented in
+            writing by The HorecaStore INC.
+          </p>
+          <h4 className="text-base font-semibold text-gray-900 mt-4">
+            2. Delivery Type &amp; Access
+          </h4>
+          <p>
+            Unless explicitly stated and paid for on the invoice, delivery is
+            curbside delivery only. Any movement of the product beyond the curb,
+            driveway, gate, threshold, or building entrance constitutes inside
+            delivery and is not included unless purchased separately.
+          </p>
+        </div>
+      </Modal>
 
       {/* â DESKTOP LAYOUT â€" 2-column (hidden on mobile) */}
       <div className="hidden lg:block global-container bg-white">

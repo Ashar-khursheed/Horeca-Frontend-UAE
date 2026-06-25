@@ -240,8 +240,7 @@ function LoginPanel() {
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
 
-        const redirect = searchParams.get("redirect") ?? "/cart";
-        window.location.href = redirect;
+       
 
         // Run background tasks without blocking redirect
         const syncPromises = [];
@@ -260,7 +259,8 @@ function LoginPanel() {
         } else {
           dispatch(fetchCounts()).catch(err => console.error("Fetch counts error:", err));
         }
-
+ const redirect = searchParams.get("redirect") ?? "/cart";
+        window.location.href = redirect;
         cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
       } catch (err: unknown) {
         setApiError(
