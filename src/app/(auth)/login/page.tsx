@@ -142,8 +142,7 @@ function LoginPageInner() {
       localStorage.setItem("user", JSON.stringify(res.user));
       dispatch(setProfile(res.user));
 
-      const redirect = searchParams.get("redirect") ?? "/";
-      window.location.href = redirect;
+     
 
       // Sync guest wishlist & cart in the background without blocking redirect
       const syncPromises = [];
@@ -158,7 +157,8 @@ function LoginPageInner() {
       if (syncPromises.length > 0) {
         Promise.all(syncPromises).catch(err => console.error("Sync error:", err));
       }
-
+ const redirect = searchParams.get("redirect") ?? "/";
+      window.location.href = redirect;
       cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
     } catch {
       setApiError("Google login failed. Please try again.");

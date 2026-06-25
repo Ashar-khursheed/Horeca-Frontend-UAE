@@ -16,7 +16,11 @@ import { PurchasePanel } from "./purchase-panel";
 import { QASection } from "./qa-section";
 import { ReviewsSection } from "./reviews-section";
 import { SpecificationsSection } from "./specifications-section";
-import type { ProductDetailResponse, ProductReview, VariantItem } from "./types";
+import type {
+  ProductDetailResponse,
+  ProductReview,
+  VariantItem,
+} from "./types";
 import { useLocationData } from "@/utils/locationStorage";
 import { ReportErrorModal } from "./report-error-modal";
 import AddReviewModal from "@/components/add-review-modal";
@@ -62,7 +66,7 @@ const ProductDetailPage = ({
   const benefitsFeatures = productData.benefits_features ?? [];
   const state = useLocationData();
   const router = useRouter();
-console.log("productDataproductDataproductDataproductData",productData)
+  console.log("productDataproductDataproductDataproductData", productData);
   useEffect(() => {
     if (!productData.id) return;
     const token = localStorage.getItem("token");
@@ -75,23 +79,29 @@ console.log("productDataproductDataproductDataproductData",productData)
       makeApiRequest(apiUrls.GUEST_VIEW_PRODUCT, {
         method: "POST",
         data: { product_id: String(productData.id) },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      }).then((res: any) => {
-        if (res?.guest_token) {
-          localStorage.setItem("guest_token", res.guest_token);
-        }
-      }).catch(() => {});
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      })
+        .then((res: any) => {
+          if (res?.guest_token) {
+            localStorage.setItem("guest_token", res.guest_token);
+          }
+        })
+        .catch(() => {});
     }
   }, [productData.id]);
 
   const supplier = productData.suppliers?.[0] ?? null;
   const activePrice =
     productData.sale_price > 0 ? productData.sale_price : productData.price;
-  const unit = resolveAttr(productData.selling_type?.attribute_value_unit) || "Each";
+  const unit =
+    resolveAttr(productData.selling_type?.attribute_value_unit) || "Each";
   const currencySymbol = productData.currency?.symbol ?? "";
   const brand =
-    resolveAttr(productData.attributes?.find((a) => resolveAttr(a.attribute_name) === "Manufacturer")
-      ?.attribute_value) ?? "";
+    resolveAttr(
+      productData.attributes?.find(
+        (a) => resolveAttr(a.attribute_name) === "Manufacturer",
+      )?.attribute_value,
+    ) ?? "";
 
   const allSpecs = (productData.attributes ?? []).map((a) => {
     const attrVal = resolveAttr(a.attribute_value);
@@ -206,7 +216,9 @@ console.log("productDataproductDataproductDataproductData",productData)
               variantGroups={variantGroups}
               selectedVariants={selectedVariants}
               onSelectVariant={selectVariant}
-              variants={(productData.variants ?? []) as import("./types").VariantItem[]}
+              variants={
+                (productData.variants ?? []) as import("./types").VariantItem[]
+              }
               parentId={productData.id}
               activePrice={activePrice}
               activeOriginal={productData.price}
@@ -240,12 +252,8 @@ console.log("productDataproductDataproductDataproductData",productData)
               productData={productData}
             />
 
-
             <PriceComparisonCard productData={productData} />
-
-            
           </div>
-          
 
           <AlternateAiProducts
             similarProductsGuest={similarProductsGuest}
@@ -294,43 +302,42 @@ console.log("productDataproductDataproductDataproductData",productData)
           )}
 
           {/* {avgRating > 0 && ( */}
-            <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-              {/* Mobile: accordion header */}
-              <button
-                className="md:hidden w-full flex items-center justify-between px-6 py-4 text-left"
-                onClick={() => setOpenReviews((v) => !v)}
-              >
+          <div className="mt-3 bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+            {/* Mobile: accordion header */}
+            <button
+              className="md:hidden w-full flex items-center justify-between px-6 py-4 text-left"
+              onClick={() => setOpenReviews((v) => !v)}
+            >
+              <h2 className="heading-font-size font-bold text-gray-900">
+                Customer Ratings &amp; Reviews
+              </h2>
+              {openReviews ? (
+                <ChevronUp size={18} className="text-gray-500 shrink-0" />
+              ) : (
+                <ChevronDown size={18} className="text-gray-500 shrink-0" />
+              )}
+            </button>
+            {/* Desktop: static header */}
+            <div className="hidden md:flex px-6 py-4 border-b border-gray-300 flex-col sm:flex-row sm:items-center gap-4 justify-between">
+              <div>
                 <h2 className="heading-font-size font-bold text-gray-900">
                   Customer Ratings &amp; Reviews
                 </h2>
-                {openReviews ? (
-                  <ChevronUp size={18} className="text-gray-500 shrink-0" />
-                ) : (
-                  <ChevronDown size={18} className="text-gray-500 shrink-0" />
-                )}
-              </button>
-              {/* Desktop: static header */}
-              <div className="hidden md:flex px-6 py-4 border-b border-gray-300 flex-col sm:flex-row sm:items-center gap-4 justify-between">
-                <div>
-                  <h2 className="heading-font-size font-bold text-gray-900">
-                    Customer Ratings &amp; Reviews
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Real reviews from hotels, restaurants, and chefs who&apos;ve
-                    used this product.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setReviewModalOpen(true)}
-                  className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
-                >
-                  <MessageCircle size={15} strokeWidth={2} />
-                  Leave a Review
-                </button>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Real reviews from hotels, restaurants, and chefs who&apos;ve
+                  used this product.
+                </p>
               </div>
-              <div
-                className={`p-6 ${openReviews ? "block" : "hidden"} md:block`}
+              <button
+                onClick={() => setReviewModalOpen(true)}
+                className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
               >
+                <MessageCircle size={15} strokeWidth={2} />
+                Leave a Review
+              </button>
+            </div>
+            {reviews.length > 0 && (
+              <div className={`p-6 ${openReviews ? "block" : "hidden"} md:block`}>
                 <ReviewsSection
                   avgRating={avgRating}
                   reviews={reviews}
@@ -338,7 +345,8 @@ console.log("productDataproductDataproductDataproductData",productData)
                   productId={productData.id}
                 />
               </div>
-            </div>
+            )}
+          </div>
           {/* )} */}
 
           {qaItems.length > 0 && (
@@ -372,13 +380,11 @@ console.log("productDataproductDataproductDataproductData",productData)
             </div>
           )}
 
-       
-
           <RecommendedProducts
             productSlug={productData.url.split("/").pop() ?? ""}
           />
           <RecentlyViewedSection excludeId={productData.id} container={false} />
-   {/* Report error trigger */}
+          {/* Report error trigger */}
           {/* <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
             <span className="text-sm text-gray-400">Spot something off?</span>
             <button
