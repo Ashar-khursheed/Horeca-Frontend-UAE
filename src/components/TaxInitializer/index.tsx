@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useLocationData, DEFAULT_ADDRESS_EVENT } from "@/utils/locationStorage";
-import { setTaxRate, TAX_STORAGE_KEY, type TaxRateData } from "@/store/slices/tax/taxSlice";
+import { setTaxRate, clearTaxRate, TAX_STORAGE_KEY, type TaxRateData } from "@/store/slices/tax/taxSlice";
 import type { AppDispatch } from "@/store/store";
 
 const TAX_API_BASE = "https://pim.thehorecastore.co/api/frontend/tax/rate";
@@ -53,11 +53,22 @@ export default function TaxInitializer() {
   }, []);
 
   useEffect(() => {
-    // Only run for US locations
-    if (!location || location.countryCode !== "US") return;
-
-    // Require hc_default_address with all required fields before calling tax API
     const defaultAddress = getDefaultAddress();
+
+    // If a default address is saved and it's NOT United States → clear tax globally
+    if (defaultAddress) {
+      const isUS = defaultAddress.country?.toLowerCase().includes("united states");
+      if (!isUS) {
+        localStorage.removeItem(TAX_STORAGE_KEY);
+        dispatch(clearTaxRate());
+        return;
+      }
+    } else {
+      // No saved address → fall back to IP-based location
+      if (!location || location.countryCode !== "US") return;
+    }
+
+    // At this point address is US (or no address but IP is US)
     if (!defaultAddress) return;
 
     const zip  = defaultAddress.zip_code;

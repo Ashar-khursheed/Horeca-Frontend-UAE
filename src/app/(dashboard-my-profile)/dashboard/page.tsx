@@ -50,9 +50,9 @@ const STATS = [
 const QUICK_ACTIONS = [
   { icon: ShoppingBag, label: "My Orders",             desc: "Track, manage, or reorder past purchases. View delivery status and history.",                   link: "/dashboard/orders",   linkLabel: "View Orders",      iconBg: "bg-blue-50",   iconColor: "text-blue-500" },
   // { icon: FileText,    label: "My Quotes",              desc: "Create or download self-generated quotations. Request custom pricing.",                         link: "/dashboard/quotes",   linkLabel: "View Quotes",      iconBg: "bg-purple-50", iconColor: "text-purple-500" },
-  { icon: CreditCard,  label: "Payments & Invoices",    desc: "View invoices, credit terms, and make payments. Manage billing history.",                       link: "/dashboard/payments", linkLabel: "Payment Center",   iconBg: "bg-amber-50",  iconColor: "text-amber-500" },
+  // { icon: CreditCard,  label: "Payments & Invoices",    desc: "View invoices, credit terms, and make payments. Manage billing history.",                       link: "/dashboard/payments", linkLabel: "Payment Center",   iconBg: "bg-amber-50",  iconColor: "text-amber-500" },
   { icon: Settings,    label: "Account Settings",       desc: "Update business info, contacts, preferences and notification settings.",                        link: "/dashboard/my-profile",linkLabel: "Edit Profile",    iconBg: "bg-orange-50", iconColor: "text-orange-500" },
-  { icon: FolderOpen,  label: "Saved Docs & Compliance",desc: "Upload VAT/Trade Licenses, W9 or certificates. Manage business documents.",                    link: "/dashboard/documents",linkLabel: "Manage Documents", iconBg: "bg-teal-50",   iconColor: "text-teal-500" },
+  { icon: FolderOpen,  label: "Saved Docs & Compliance",desc: "Upload VAT/Trade Licenses, W9 or certificates. Manage business documents.",                    link: "/dashboard/my-profile#business",linkLabel: "Manage Documents", iconBg: "bg-teal-50",   iconColor: "text-teal-500" },
   { icon: Headphones,  label: "Support Center",         desc: "Need help? Open a ticket or contact support. Access our knowledge base.",                       link: "/dashboard/support",  linkLabel: "Get Support",      iconBg: "bg-rose-50",   iconColor: "text-rose-500" },
 ];
 

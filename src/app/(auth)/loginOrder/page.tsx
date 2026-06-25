@@ -114,16 +114,8 @@ function ConsentCheckbox({
           purchase. Message &amp; data rates may apply. Message frequency
           varies. Unsubscribe by replying STOP. Reply HELP for help. Phone
           numbers aren&apos;t shared with third parties.{" "}
-          <Link
-            href="/privacy-policy"
-            className="text-[#186737] hover:underline"
-          >
-            Privacy Policy
-          </Link>{" "}
-          &amp;{" "}
-          <Link href="/terms" className="text-[#186737] hover:underline">
-            Terms and condition
-          </Link>
+              <Link href="/pages/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
+                    <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">Terms and Conditions</Link>.
         </span>
       </label>
       {error && <p className="text-xs font-semibold text-red-500 mt-1">{error}</p>}

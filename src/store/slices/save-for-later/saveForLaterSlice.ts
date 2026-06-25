@@ -198,7 +198,9 @@ const saveForLaterSlice = createSlice({
         state.toggling.push(productId);
         // Optimistic: remove immediately
         state.ids = state.ids.filter((id) => id !== productId);
-        state.apiEntries = state.apiEntries.filter((e) => e.product_id !== productId);
+        state.apiEntries = state.apiEntries.filter(
+          (e) => (e.id ?? e.product_id) !== productId,
+        );
       })
       .addCase(removeSaveForLater.fulfilled, (state, action) => {
         state.toggling = state.toggling.filter((id) => id !== action.payload.productId);

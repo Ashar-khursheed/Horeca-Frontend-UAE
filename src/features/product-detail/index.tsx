@@ -127,6 +127,7 @@ console.log("productDataproductDataproductDataproductData",productData)
     title: "",
     body: r.comment,
     helpful: 0,
+    images: r.images,
   }));
 
   const ratingDist = [5, 4, 3, 2, 1].map((stars) => ({
@@ -378,7 +379,7 @@ console.log("productDataproductDataproductDataproductData",productData)
           />
           <RecentlyViewedSection excludeId={productData.id} container={false} />
    {/* Report error trigger */}
-          <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
+          {/* <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
             <span className="text-sm text-gray-400">Spot something off?</span>
             <button
               onClick={() => setReportOpen(true)}
@@ -386,7 +387,7 @@ console.log("productDataproductDataproductDataproductData",productData)
             >
               Help us improve this page.
             </button>
-          </div>
+          </div> */}
           <AddReviewModal
             isOpen={reviewModalOpen}
             onClose={() => setReviewModalOpen(false)}

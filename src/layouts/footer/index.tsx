@@ -4,17 +4,16 @@
 import FinancingModal from "@/components/financing-modal";
 import { ApiCategory, ApiCategoryName } from "@/features/category";
 import {
-    ArrowUpRight,
-    ChevronDown,
-    ChevronUp,
-    Facebook,
-    Instagram,
-    Linkedin,
-    Mail,
-    MapPin,
-    Phone,
-    Twitter,
-    Youtube,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  Youtube
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
@@ -54,11 +53,11 @@ const SUPPORT_LINKS: LinkItem[] = [
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-  { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-  { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
-  { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-  { icon: Youtube, href: "https://youtube.com", label: "YouTube" },
+  { icon: Facebook, href: process.env.NEXT_FACEBOOK_LINK, label: "Facebook" },
+  // { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+  { icon: Instagram, href: process.env.NEXT_INSTAGRAM_LINK, label: "Instagram" },
+  { icon: Linkedin, href: process.env.NEXT_LINKEDIN_LINK, label: "LinkedIn" },
+  { icon: Youtube, href: process.env.NEXT_YOUTUBE_LINK, label: "YouTube" },
 ];
 
 // ─── Category Accordion (Mobile) ─────────────────────────────────────────────

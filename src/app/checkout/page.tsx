@@ -709,7 +709,7 @@ export default function CheckoutPage() {
       setOrderStep("done");
       dispatch(fetchCounts() as any);
       setTimeout(
-        () => router.push(`/payment-success?orderID=${orderId}`),
+        () => router.replace(`/payment-success?orderID=${orderId}`),
         1200,
       );
     } catch (err: any) {
