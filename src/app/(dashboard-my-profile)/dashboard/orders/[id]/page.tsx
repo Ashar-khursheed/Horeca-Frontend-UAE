@@ -2,7 +2,9 @@
 
 import { makeApiRequest } from "@/apis/axios-instance";
 import CTA from "@/components/cta";
-import { useInvoiceDownload, InvoiceHiddenTemplate } from "@/components/download-invoice";
+import { useInvoiceDownload } from "@/components/download-invoice";
+// import HorecaInvoicePDF from "@/components/invoice/first-page";
+// import { PDFDownloadLink } from "@react-pdf/renderer";
 
 import {
   AlertCircle,
@@ -307,7 +309,7 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<ApiOrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const { handleDownload, loadings, invoiceRef } = useInvoiceDownload(order);
+  const { handleDownload, loadings } = useInvoiceDownload(order as any);
 
   useEffect(() => {
     if (!id) return;
@@ -461,10 +463,24 @@ export default function OrderDetailPage() {
               <RotateCcw size={14} />
               Return
             </Link> */}
-            {/* <button className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20">
-              <Download size={14} />
-              Download Invoice
-            </button> */}
+            <button
+              onClick={handleDownload}
+              disabled={loadings}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loadings ? (
+                <><Loader2 size={14} className="animate-spin" /> Generating…</>
+              ) : (
+                <><Download size={14} /> Download Invoice</>
+              )}
+            </button>
+{/* 
+            <PDFDownloadLink
+  document={<HorecaInvoicePDF order={order} />}
+  fileName={`invoice-${order.order_number}.pdf`}
+>
+  Download Invoice
+</PDFDownloadLink> */}
           </div>
         </div>
       </div>
@@ -903,45 +919,11 @@ export default function OrderDetailPage() {
             </div>
           )}
 <CTA/>
-          {/* Need Help */}
-          {/* <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-[7px] bg-[#f0f9f4] border border-[#c3e6d4] flex items-center justify-center shrink-0">
-                <Headphones size={17} className="text-[#186737]" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900">Need Help?</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  Our team is here to help with your order.
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-              <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
-                <MessageCircle size={13} />
-                Chat Now
-              </button>
-              <button className="flex items-center w-full justify-center gap-1.5 py-2.5 rounded-[7px] border border-[#186737] text-[#186737] text-xs font-semibold hover:bg-[#f0f9f4] transition-colors">
-                <a href="tel:+18664467322" className="flex gap-1.5">
-                  {" "}
-                  <Phone size={13} />
-                  Call Now
-                </a>
-              </button>
-              <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] bg-gray-50 text-gray-600 text-xs font-semibold hover:bg-gray-100 transition-colors">
-                <Star size={13} />
-                Rate Order
-              </button>
-              <button className="flex items-center justify-center gap-1.5 py-2.5 rounded-[7px] bg-gray-50 text-gray-600 text-xs font-semibold hover:bg-gray-100 transition-colors">
-                <AlertCircle size={13} />
-                Report Issue
-              </button>
-            </div>
-          </div> */}
+         
         </div>
       </div>
     </div>
-  {/* <InvoiceHiddenTemplate order={order} invoiceRef={invoiceRef} /> */}
+  {/* <InvoiceHiddenTemplate order={order} invoiceRef={invoiceRef as any} /> */}
     </>
 
   );
