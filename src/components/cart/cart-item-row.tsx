@@ -72,7 +72,7 @@ export default function CartItemRow({
     <div className="flex gap-3 sm:gap-4 group">
       {/* Image */}
       <Link
-        href="/"
+      href={item.url}
         className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-[7px] bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center"
       >
         {hasSale && (

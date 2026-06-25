@@ -28,8 +28,10 @@ export default function NewsletterForm() {
         });
         setSuccess(true);
         resetForm();
-      } catch {
-        setServerError("Something went wrong. Please try again.");
+      } catch (err: any) {
+        const msg: string =
+          err?.response?.data?.message ?? err?.message ?? "";
+        setServerError(msg || "Something went wrong. Please try again.");
       } finally {
         setSubmitting(false);
       }

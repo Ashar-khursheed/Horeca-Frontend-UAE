@@ -120,7 +120,10 @@ const localItemToCartItem = (item: any): CartItem => ({
   isFixed: item.isFixed ?? false,
   currencySymbol:
     item.currencySymbol ?? item.rawProduct?.currency?.symbol ?? "$",
-  selectedAccessories: item.selectedAccessories ?? [],
+  selectedAccessories: (item.selectedAccessories ?? []).map((a: any) => ({
+    ...a,
+    price: parseFloat(String(a.price ?? 0)) || 0,
+  })),
   inWishlist: false,
 });
 
@@ -211,17 +214,6 @@ export default function CartPage() {
       localStorage.removeItem("discount_type");
   },[])
 
-  // Re-fetch when items are added — debounced so rapid adds collapse into one call
-  useEffect(() => {
-    if (!initialized || !isLoggedIn || lastAddedAt === 0) return;
-    if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current);
-    refetchTimerRef.current = setTimeout(() => {
-      const location = getLocationData();
-      dispatch(fetchCart(location?.country ?? ""));
-    }, 400);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastAddedAt]);
-
   // Derive display items from Redux (logged-in) or local state (guest)
   const defaultAddr = getDefaultAddressCache();
   const location = getLocationData();
@@ -243,6 +235,69 @@ export default function CartPage() {
     : reduxGuestItems.map((item) => ({
         ...localItemToCartItem(item),
       }));
+
+  // Google Analytics view_cart event
+  useEffect(() => {
+    if (!Array.isArray(cartItems) || cartItems.length === 0) return;
+    const w = window as any;
+    if (w.viewCartEventFired) return;
+    w.viewCartEventFired = true;
+    w.dataLayer = w.dataLayer || [];
+
+    const sendViewCartEvent = () => {
+      const totalValue = cartItems.reduce(
+        (sum, item) => sum + item.price * item.qty,
+        0,
+      );
+
+      const eventData = {
+        currency: "USD",
+        value: totalValue,
+        items: cartItems.map((item, index) => ({
+          item_id: item.modelNo || String(item.id),
+          item_name: item.name || "Unknown Product",
+          index,
+          item_brand: "",
+          item_category: "",
+          item_list_id: String(item.id),
+          item_list_name: item.name || "Unknown Product",
+          item_variant: "",
+          location_id: String(item.vendorId || ""),
+          price: item.price,
+          quantity: item.qty,
+        })),
+      };
+
+      if (w.gtag) w.gtag("event", "view_cart", eventData);
+    };
+
+    if (!w.gtagLoaded) {
+      const script = document.createElement("script");
+      script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
+      script.async = true;
+      document.head.appendChild(script);
+      script.onload = () => {
+        w.gtag = function () { w.dataLayer.push(arguments); };
+        w.gtag("js", new Date());
+        w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
+        w.gtagLoaded = true;
+        sendViewCartEvent();
+      };
+    } else {
+      sendViewCartEvent();
+    }
+  }, [cartItems]);
+
+  // Re-fetch when items are added — debounced so rapid adds collapse into one call
+  useEffect(() => {
+    if (!initialized || !isLoggedIn || lastAddedAt === 0) return;
+    if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current);
+    refetchTimerRef.current = setTimeout(() => {
+      const location = getLocationData();
+      dispatch(fetchCart(location?.country ?? ""));
+    }, 400);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastAddedAt]);
 
   const loading =
     !initialized ||
@@ -538,7 +593,7 @@ export default function CartPage() {
           cannot be undone.
         </p>
       </Modal>
-      {/* <TaxInitializer /> */}
+      <TaxInitializer />
       <CartBreadcrumb />
       <main className="min-h-screen bg-gray-50/60">
         <div className="global-container py-6 sm:py-8">

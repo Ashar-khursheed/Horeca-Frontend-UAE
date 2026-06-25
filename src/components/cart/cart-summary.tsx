@@ -39,7 +39,7 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const currencySymbol = cartItems[0]?.currencySymbol ?? "$";
   const subtotal = cartItems.reduce((s, c) => {
     const accessoriesTotal = (c.selectedAccessories ?? []).reduce(
-      (a, acc) => a + acc.price,
+      (a, acc) => a + (parseFloat(String(acc.price ?? 0)) || 0),
       0,
     );
     return s + (c.price + accessoriesTotal) * c.qty;
@@ -49,12 +49,15 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const taxable = subtotal - promoDiscount;
   // Fall back to localStorage when Redux taxData is null (e.g. on refresh)
   const effectiveTaxData = taxData ?? getTaxRateData() ?? undefined;
-  const taxRate    = effectiveTaxData ? (parseFloat(effectiveTaxData.combined_rate) || 0) : 0;
-  const ratePercent = taxRate > 0 ? parseFloat((taxRate * 100).toFixed(4)) : 0;
-  const taxOnProducts = taxable * taxRate;
-  const taxOnShipping = shippingTotal * taxRate;
-  const totalTax   = taxOnProducts + taxOnShipping;
-  const grandTotal = taxable + shippingTotal + totalTax;
+  // Round rate to 2 decimal places (same as checkout page) so tax amounts match exactly
+  const ratePercent    = effectiveTaxData
+    ? parseFloat((parseFloat(effectiveTaxData.combined_rate || "0") * 100).toFixed(2))
+    : 0;
+  const taxRate        = ratePercent / 100;
+  const taxOnProducts  = taxable * taxRate;
+  const taxOnShipping  = shippingTotal * taxRate;
+  const totalTax       = taxOnProducts + taxOnShipping;
+  const grandTotal     = taxable + shippingTotal + totalTax;
   const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
 
   // ── Build summary object ───────────────────────────────────────────────────

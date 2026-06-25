@@ -53,11 +53,11 @@ const SUPPORT_LINKS: LinkItem[] = [
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Facebook, href: process.env.NEXT_FACEBOOK_LINK, label: "Facebook" },
+  { icon: Facebook, href: process.env.NEXT_PUBLIC_FACEBOOK_LINK, label: "Facebook" },
   // { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-  { icon: Instagram, href: process.env.NEXT_INSTAGRAM_LINK, label: "Instagram" },
-  { icon: Linkedin, href: process.env.NEXT_LINKEDIN_LINK, label: "LinkedIn" },
-  { icon: Youtube, href: process.env.NEXT_YOUTUBE_LINK, label: "YouTube" },
+  { icon: Instagram, href: process.env.NEXT_PUBLIC_INSTAGRAM_LINK, label: "Instagram" },
+  { icon: Linkedin, href: process.env.NEXT_PUBLIC_LINKEDIN_LINK, label: "LinkedIn" },
+  { icon: Youtube, href: process.env.NEXT_PUBLIC_YOUTUBE_LINK, label: "YouTube" },
 ];
 
 // ─── Category Accordion (Mobile) ─────────────────────────────────────────────

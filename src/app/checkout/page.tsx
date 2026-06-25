@@ -467,6 +467,53 @@ export default function CheckoutPage() {
   const isCartLoading =
     isLoggedIn && (apiStatus === "idle" || apiStatus === "loading");
 
+  // Google Analytics begin_checkout event
+  useEffect(() => {
+    if (!Array.isArray(cartItems) || cartItems.length === 0) return;
+    const w = window as any;
+    if (w.beginCheckoutEventFired) return;
+    w.beginCheckoutEventFired = true;
+    w.dataLayer = w.dataLayer || [];
+
+    const sendBeginCheckoutEvent = () => {
+      const eventData = {
+        currency: "USD",
+        value: grandTotal,
+        items: cartItems.map((item: any, index: number) => ({
+          item_id: item.modelNo || item.sku || String(item.id),
+          item_name: item.name || "Unknown Product",
+          index,
+          item_brand: "",
+          item_category: "",
+          item_list_id: String(item.id),
+          item_list_name: item.name || "Unknown Product",
+          item_variant: "",
+          location_id: String(item.vendorId || ""),
+          price: item.price,
+          quantity: item.qty,
+        })),
+      };
+
+      if (w.gtag) w.gtag("event", "begin_checkout", eventData);
+    };
+
+    if (!w.gtagLoaded) {
+      const script = document.createElement("script");
+      script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
+      script.async = true;
+      document.head.appendChild(script);
+      script.onload = () => {
+        w.gtag = function () { w.dataLayer.push(arguments); };
+        w.gtag("js", new Date());
+        w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
+        w.gtagLoaded = true;
+        sendBeginCheckoutEvent();
+      };
+    } else {
+      sendBeginCheckoutEvent();
+    }
+  }, [cartItems, grandTotal]);
+
   const handleApplyCode = async () => {
     if (!code.trim()) {
       setCodeError("Please enter a coupon code");
