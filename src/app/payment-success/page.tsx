@@ -112,6 +112,21 @@ export default function PaymentSuccessPage() {
         ]);
         if ((res as any)?.success && (res as any)?.data) {
           setOrder((res as any).data);
+          // ── Clear all cart/checkout/coupon/tax cache after successful order ──
+          const KEYS = [
+            "horeca_cart",        // guest cart items
+            "hc_cart_summary",    // pricing summary
+            "hc_coupon",          // coupon code
+            "coupon_id",
+            "discount_value",
+            "discount_type",
+            "horeca_tax_rate",    // tax rate data
+          ];
+          KEYS.forEach((k) => localStorage.removeItem(k));
+          // Reset GTM one-shot flags so next visit fires fresh events
+          const w = window as any;
+          w.viewCartEventFired     = false;
+          w.beginCheckoutEventFired = false;
         } else {
           setError(true);
         }

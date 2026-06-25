@@ -14,6 +14,8 @@ import {
   fetchCart,
   hydrateCart,
   resetApiStatus,
+  clearCart,
+  clearApiEntries,
 } from "@/store/slices/cart/cartSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
@@ -766,6 +768,9 @@ export default function CheckoutPage() {
 
       setOrderStep("done");
       dispatch(fetchCounts() as any);
+      // Clear Redux cart so "Added!" badges reset on all product cards
+      dispatch(clearApiEntries());
+      dispatch(clearCart());
       setTimeout(
         () => router.replace(`/payment-success?orderID=${orderId}`),
         1200,
