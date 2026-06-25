@@ -251,6 +251,7 @@ export default async function SubCategorySlugPage({
  
 
   if (!subCategoryPageRes?.success) notFound();
+  if (!navigationRes || !navigationRes.data?.length) notFound();
 
   return (
     <div>

@@ -121,6 +121,21 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
 
   if (!productData?.data) notFound()
 
+  // Validate that categorySlug and subCategorySlug match the product's actual URL
+  // Product URL format: /categorySlug/subCategorySlug/productSlug
+  const productUrl = productData.data.url ?? ""
+  const urlParts = productUrl.replace(/^\//, "").split("/")
+  const expectedCategory = urlParts[0]
+  const expectedSubCategory = urlParts[1]
+
+  if (
+    expectedCategory &&
+    expectedSubCategory &&
+    (categorySlug !== expectedCategory || subCategorySlug !== expectedSubCategory)
+  ) {
+    notFound()
+  }
+
   const schema = productData.data.seo?.seo_schema
 
 
