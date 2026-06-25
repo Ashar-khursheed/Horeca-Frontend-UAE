@@ -6,6 +6,7 @@ import { logoutUser } from "@/store/slices/auth/authSlice";
 import { AppDispatch } from "@/store/store";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
 
 const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
@@ -16,6 +17,7 @@ const DETECT_TTL     = 10 * 60 * 1000; // 10 minutes cache
 
 export default function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   // Auto-logout: check 24h expiry on mount and schedule timer for remainder
   useEffect(() => {
@@ -34,12 +36,15 @@ export default function AppInitializer() {
 
   // Location: detect and cache (with a 10-minute TTL) to avoid redundant requests on every mount
   useEffect(() => {
+    const isLocalhost = typeof window !== "undefined" && 
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
     const cached = getLocationData();
     const detectTime = localStorage.getItem(DETECT_KEY);
     const currentCookie = document.cookie
       .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
 
-    const cacheValid = cached && detectTime && (Date.now() - Number(detectTime) < DETECT_TTL);
+    // Bypass cache on localhost so developers toggling VPN see changes instantly on refresh
+    const cacheValid = !isLocalhost && cached && detectTime && (Date.now() - Number(detectTime) < DETECT_TTL);
 
     if (cacheValid && cached && currentCookie === cached.countryCode) {
       if (cached.country) {
@@ -53,6 +58,8 @@ export default function AppInitializer() {
       .then((r) => r.json())
       .then((data) => {
         if (data.status === "success" && data.countryCode) {
+          const hasChanged = currentCookie !== data.countryCode;
+
           setLocationData(data);
           localStorage.setItem(DETECT_KEY, Date.now().toString());
           localStorage.setItem("hc_country_code", data.countryCode);
@@ -62,10 +69,14 @@ export default function AppInitializer() {
           if (data.country) {
             dispatch(fetchCountryByName(data.country));
           }
+
+          if (hasChanged) {
+            router.refresh();
+          }
         }
       })
       .catch(() => {});
-  }, [dispatch]);
+  }, [dispatch, router]);
 
   // Re-trigger country fetch when location updates (e.g. after manual change or VPN change)
   useEffect(() => {

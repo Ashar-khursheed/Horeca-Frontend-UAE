@@ -98,10 +98,9 @@ const logos = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const inputCls = (err?: string) =>
-  `w-full h-11 rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-300 bg-white px-4 ${
-    err
-      ? "border-red-400 focus:ring-2 focus:ring-red-100"
-      : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+  `w-full h-11 rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-300 bg-white px-4 ${err
+    ? "border-red-400 focus:ring-2 focus:ring-red-100"
+    : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
   }`;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -192,7 +191,7 @@ export default function ContactUsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="relative w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-200 overflow-hidden">
+      <div className="relative w-full h-[120px] md:h-[220px] lg:h-[400px] bg-gray-200 overflow-hidden">
         <Image
           src={BannerContact}
           alt="Contact Us Banner"
@@ -388,11 +387,10 @@ export default function ContactUsPage() {
                       Phone Number
                     </label>
                     <div
-                      className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${
-                        errors.phone
-                          ? "border-red-400"
-                          : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
-                      }`}
+                      className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${errors.phone
+                        ? "border-red-400"
+                        : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
+                        }`}
                     >
                       <div className="flex items-center px-3 bg-white border-r border-gray-200 shrink-0">
                         {/* <Phone size={13} className="text-gray-400 mr-1.5" /> */}
@@ -459,11 +457,10 @@ export default function ContactUsPage() {
                   <select
                     value={form.topic}
                     onChange={(e) => { set("topic", e.target.value); clr("topic"); }}
-                    className={`w-full h-11 rounded-[9px] border text-sm outline-none transition-all bg-white px-4 ${
-                      errors.topic
-                        ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                        : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                    } ${!form.topic ? "text-black" : "text-gray-800"}`}
+                    className={`w-full h-11 rounded-[9px] border text-sm outline-none transition-all bg-white px-4 ${errors.topic
+                      ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                      : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+                      } ${!form.topic ? "text-black" : "text-gray-800"}`}
                   >
                     <option value="" disabled>Select a topic</option>
                     <option value="order">Order Related</option>
@@ -528,11 +525,10 @@ export default function ContactUsPage() {
                     }}
                     placeholder="Describe your issue or inquiry in detail..."
                     rows={5}
-                    className={`w-full rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-300 bg-white px-4 py-3 resize-none ${
-                      errors.message
-                        ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                        : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                    }`}
+                    className={`w-full rounded-[9px] border text-sm outline-none transition-all placeholder:text-gray-300 bg-white px-4 py-3 resize-none ${errors.message
+                      ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                      : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+                      }`}
                   />
                   {errors.message && (
                     <p className="text-[11px] text-red-500 mt-1">
@@ -565,8 +561,8 @@ export default function ContactUsPage() {
                     </div>
                   </div>
                   <span className="text-[11px] text-gray-500 leading-relaxed">
-                  <p className="text-sm">By submitting this form, you consent to receive promotional offers from Horecastore at the number provided. Consent is not a condition of purchase. Message &amp; data rates may apply. Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers aren't shared with third parties.  <Link href="/pages/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
-                    <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">Terms and Conditions</Link>.</p>
+                    <p className="text-sm">By submitting this form, you consent to receive promotional offers from Horecastore at the number provided. Consent is not a condition of purchase. Message &amp; data rates may apply. Message frequency varies. Unsubscribe by replying STOP. Reply HELP for help. Phone numbers aren't shared with third parties.  <Link href="/pages/privacy-policy" className="text-[#186737] hover:underline">Privacy Policy</Link>{" "}&amp;{" "}
+                      <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">Terms and Conditions</Link>.</p>
                   </span>
                 </label>
                 {errors.consent && (
@@ -772,7 +768,7 @@ export default function ContactUsPage() {
                   href="mailto:sales@thehorecastore.com"
                   className="text-xs text-[#186737] hover:underline break-all"
                 >
-              sales@thehorecastore.com
+                  sales@thehorecastore.com
                 </a>
               </div>
             </div>
@@ -848,11 +844,10 @@ export default function ContactUsPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all duration-200 ${
-                  activeTab === tab
-                    ? "bg-[#186737] text-white border-[#186737] shadow-sm"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-[#186737] hover:text-[#186737]"
-                }`}
+                className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all duration-200 ${activeTab === tab
+                  ? "bg-[#186737] text-white border-[#186737] shadow-sm"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-[#186737] hover:text-[#186737]"
+                  }`}
               >
                 {tab}
               </button>

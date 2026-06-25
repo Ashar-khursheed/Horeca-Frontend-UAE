@@ -114,6 +114,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
         <input
           ref={inputRef}
           type="text"
+          aria-label="Search products"
           value={searchQuery}
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && goToSearch()}
@@ -128,6 +129,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
           ) : (
             <button
               onClick={clearQuery}
+              aria-label="Clear search query"
               className="shrink-0 text-black hover:text-gray-600 transition-colors"
             >
               <X size={15} />
@@ -135,6 +137,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
           ))}
         <button
           onClick={() => goToSearch()}
+          aria-label="Submit search"
           className="bg-[#186737] text-white rounded-full w-7 h-7 flex items-center justify-center shrink-0 hover:bg-[#145c2e] transition-colors"
           disabled={!searchQuery}
         >
