@@ -120,7 +120,7 @@ export default function NotFound() {
         It looks like this page is unavailable. Try using the search bar or
         looking through one of these links below. Still need help?{" "}
         <a
-          href="mailto:support@horecastore.ae"
+          href="mailto:sales@thehorecastore.com"
           className="text-[#186737] font-semibold hover:underline"
         >
           Live Chat With Us!

@@ -87,8 +87,6 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />
         <link rel="preconnect" href="https://web.squarecdn.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://web.squarecdn.com" />
-        <link rel="preconnect" href="https://staxjs.staxpayments.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://staxjs.staxpayments.com" />
         <CustomScriptsRenderer scripts={scripts?.head_top ?? []} />
         <CustomScriptsRenderer scripts={scripts?.head_bottom ?? []} />
       </head>
