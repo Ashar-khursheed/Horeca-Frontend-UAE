@@ -107,7 +107,10 @@ export default function BrandsPage() {
       </nav>
 
       {/* Banner */}
-      <div className="relative w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-200 overflow-hidden">
+      <div
+        className="relative w-full h-[120px] sm:h-auto bg-gray-200 overflow-hidden"
+        style={{ aspectRatio: "1920 / 500" }}
+      >
         <Image
           src={Banner}
           alt="Brands"

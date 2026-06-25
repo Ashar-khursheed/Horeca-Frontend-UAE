@@ -162,7 +162,10 @@ export default function CategoriesPage({
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
         {APIDATA?.banner_image_detail?.image_url ? (
-          <div className="relative w-full h-[120px] md:h-[220px] lg:h-[400px] bg-gray-200 overflow-hidden">
+          <div
+            className="relative w-full h-[120px] sm:h-auto bg-gray-200 overflow-hidden"
+            style={{ aspectRatio: "8000 / 1875" }}
+          >
             <Image
               src={APIDATA.banner_image_detail.image_url}
               alt={APIDATA.banner_image_detail?.alt || "Category banner"}
