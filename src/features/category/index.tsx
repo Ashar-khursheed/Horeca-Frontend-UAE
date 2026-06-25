@@ -145,9 +145,9 @@ export default function CategoriesPage({
   const APIDATA = categoryPage?.category_page;
   const seoAPIDATA = APIDATA
     ? {
-        title: APIDATA.title ?? undefined,
-        description: APIDATA.description ?? undefined,
-      }
+      title: APIDATA.title ?? undefined,
+      description: APIDATA.description ?? undefined,
+    }
     : undefined;
   const randomProducts = categoryPage?.random_products ?? [];
   const crumbs = [
@@ -161,21 +161,21 @@ export default function CategoriesPage({
     <>
       <Breadcrumb crumbs={crumbs} />
       <main className="min-h-screens bg-gray-50">
-          {APIDATA?.banner_image_detail?.image_url ? (
-            <div className="relative w-full h-[120px] md:h-[220px] lg:h-[300px] bg-gray-200 overflow-hidden">
-              <Image
-                src={APIDATA.banner_image_detail.image_url}
-                alt={APIDATA.banner_image_detail?.alt || "Category banner"}
-                fill
-                sizes="100vw"
-                className="object-cover"
-                priority
-              />
-            </div>
-          ) : (
-            <div className="w-full h-45 md:h-80 bg-gray-100" />
-          )}
-      
+        {APIDATA?.banner_image_detail?.image_url ? (
+          <div className="relative w-full h-[120px] md:h-[220px] lg:h-[400px] bg-gray-200 overflow-hidden">
+            <Image
+              src={APIDATA.banner_image_detail.image_url}
+              alt={APIDATA.banner_image_detail?.alt || "Category banner"}
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
+          </div>
+        ) : (
+          <div className="w-full h-45 md:h-80 bg-gray-100" />
+        )}
+
         <div className="">
           <SEOMainContent APIDATA={seoAPIDATA} categorySlug={categorySlug} />
         </div>
@@ -350,10 +350,10 @@ export default function CategoriesPage({
                       </div> */}
           </div>
         </section>
-     
-     {/* <div className="global-contaier"> */}
-         <RecentlyViewedSection container={true} />
-     {/* </div> */}
+
+        {/* <div className="global-contaier"> */}
+        <RecentlyViewedSection container={true} />
+        {/* </div> */}
 
         <section className="md:py-7 py-3">
           <div className="global-container">
@@ -435,7 +435,7 @@ export default function CategoriesPage({
         <div className="bg-white md:py-10 py-3 pb-0">
           <SeoContent dataAPI={categoryPage?.seo} />
         </div>
-       </main>
+      </main>
     </>
   );
 }

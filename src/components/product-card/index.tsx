@@ -195,12 +195,14 @@ export const QuantityCounter = ({
     <button
       onClick={onDecrement}
       disabled={count <= min}
+      aria-label="Decrease quantity"
       className="w-10 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
     >
       <Minus size={15} className="text-[#4B5563]" strokeWidth={2} />
     </button>
     <input
       type="text"
+      aria-label="Quantity"
       value={count}
       disabled={isFixed}
       onChange={(e) => {
@@ -212,6 +214,7 @@ export const QuantityCounter = ({
     <button
       onClick={onIncrement}
       disabled={count >= 99}
+      aria-label="Increase quantity"
       className="w-10 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
     >
       <Plus size={15} className="text-[#4B5563]" strokeWidth={2} />
@@ -444,6 +447,7 @@ export const ProductCard = ({
         <button
           onClick={handleWishlist}
           disabled={isToggling}
+          aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
           className="absolute top-2.5 right-2.5 z-10 w-[36px] h-[36px] bg-white rounded-full border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 disabled:opacity-60"
         >
           <Heart

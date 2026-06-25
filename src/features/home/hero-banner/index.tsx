@@ -176,7 +176,7 @@ export const HeroBanner = ({
                       <div className="relative w-full h-full">
                         <Image
                           src={banner.image}
-                          alt={banner.title ?? "Banner"}
+                          alt={banner.title && banner.title !== "null" ? banner.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
                           fill
                           className="object-cover"
                           priority={index === 0}
@@ -191,7 +191,7 @@ export const HeroBanner = ({
                     <div className="relative w-full h-full">
                       <Image
                         src={banner.image}
-                        alt={banner.title ?? "Banner"}
+                        alt={banner.title && banner.title !== "null" ? banner.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
                         fill
                         className="object-cover"
                         priority={index === 0}
@@ -297,7 +297,7 @@ export const HeroBanner = ({
                             <div className="relative w-full h-full">
                               <Image
                                 src={isValid ? item.image : NoImage}
-                                alt={item.title ?? "Banner"}
+                                alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
                                 fill
                                 className="object-covera"
                                 sizes="50vw"
@@ -313,7 +313,7 @@ export const HeroBanner = ({
                           <div className="relative w-full h-full">
                             <Image
                               src={isValid ? item.image : NoImage}
-                              alt={item.title ?? "Banner"}
+                              alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
                               fill
                               className="object-covera"
                               sizes="50vw"
@@ -366,7 +366,7 @@ export const HeroBanner = ({
                               <div className="relative w-full h-full">
                                 <Image
                                   src={isValid ? item.image : NoImage}
-                                  alt={item.title ?? "Banner"}
+                                  alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
                                   fill
                                   className="object-covera"
                                   sizes="30vw"
@@ -382,7 +382,7 @@ export const HeroBanner = ({
                             <div className="relative w-full h-full">
                               <Image
                                 src={isValid ? item.image : NoImage}
-                                alt={item.title ?? "Banner"}
+                                alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
                                 fill
                                 className="object-covera"
                                 sizes="30vw"

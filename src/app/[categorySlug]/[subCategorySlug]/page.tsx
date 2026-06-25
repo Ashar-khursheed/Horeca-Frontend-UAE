@@ -66,12 +66,12 @@ export async function generateMetadata({
     description: seo.meta_description ?? undefined,
     robots: { index: seo.indexing ?? true, follow: true },
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL}/${categorySlug}/${subCategorySlug}`,
+      canonical: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/${categorySlug}/${subCategorySlug}`,
     },
     openGraph: {
       title: seo.og_title ?? seo.meta_title ?? undefined,
       description: seo.og_description ?? seo.meta_description ?? undefined,
-      url: `${process.env.NEXT_SITE_URL}/${categorySlug}/${subCategorySlug}`,
+      url: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/${categorySlug}/${subCategorySlug}`,
       images:
         seo.og_image_url && seo.og_image_url !== "null"
           ? [
@@ -251,6 +251,7 @@ export default async function SubCategorySlugPage({
  
 
   if (!subCategoryPageRes?.success) notFound();
+  if (!navigationRes || !navigationRes.data?.length) notFound();
 
   return (
     <div>

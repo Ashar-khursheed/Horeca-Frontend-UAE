@@ -110,4 +110,5 @@ export const apiUrls = {
   SALE_CATEGORIES: "frontend/sale-categories",
   CUSTOM_SCRIPTS: "frontend/custom-scripts",
   PHONE_VALIDATE: "frontend/phone/validate",
+  PRODUCT_QUESTION: "frontend/product-questions",
 };

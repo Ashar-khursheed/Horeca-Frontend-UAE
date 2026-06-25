@@ -88,6 +88,7 @@ export const fetchAddresses = createAsyncThunk(
       const res = await makeApiRequest<{ success: boolean; data: CustomerAddress[] }>(
         apiUrls.GET_CUSTOMER_ADDRESS
       );
+      syncDefaultToCache(res.data);
       return res.data;
     } catch (err: unknown) {
       const msg =

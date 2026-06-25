@@ -41,10 +41,13 @@ export const fetchCountryByName = createAsyncThunk(
     }
   },
   {
-    // Only call API if data is not already loaded or loading
-    condition: (_, { getState }) => {
+    // Only call API if data is not already loaded or if the country has changed
+    condition: (countryName, { getState }) => {
+      if (!countryName) return false;
       const state = getState() as { country: CountryState };
-      return !state.country.data && !state.country.loading;
+      const currentCountry = state.country.data?.name;
+      const isDifferent = !currentCountry || currentCountry.toLowerCase() !== countryName.toLowerCase();
+      return isDifferent && !state.country.loading;
     },
   }
 );

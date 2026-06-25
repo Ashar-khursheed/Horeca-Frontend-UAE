@@ -90,12 +90,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     robots: { index: seo?.indexing ?? true, follow: true },
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL}/${categorySlug}/${subCategorySlug}/${productSlug}`,
+      canonical: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/${categorySlug}/${subCategorySlug}/${productSlug}`,
     },
     openGraph: {
       title: ogTitle,
       description: ogDesc,
-      url: `${process.env.NEXT_SITE_URL}${product.url}`,
+      url: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}${product.url}`,
       images: ogImg
         ? [{ url: ogImg }]
         : firstImg
@@ -120,6 +120,21 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
   ])
 
   if (!productData?.data) notFound()
+
+  // Validate that categorySlug and subCategorySlug match the product's actual URL
+  // Product URL format: /categorySlug/subCategorySlug/productSlug
+  const productUrl = productData.data.url ?? ""
+  const urlParts = productUrl.replace(/^\//, "").split("/")
+  const expectedCategory = urlParts[0]
+  const expectedSubCategory = urlParts[1]
+
+  if (
+    expectedCategory &&
+    expectedSubCategory &&
+    (categorySlug !== expectedCategory || subCategorySlug !== expectedSubCategory)
+  ) {
+    notFound()
+  }
 
   const schema = productData.data.seo?.seo_schema
 
