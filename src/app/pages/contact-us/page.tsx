@@ -191,7 +191,10 @@ export default function ContactUsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="relative w-full h-[120px] md:h-[220px] lg:h-[400px] bg-gray-200 overflow-hidden">
+      <div
+        className="relative w-full h-[120px] sm:h-auto bg-gray-200 overflow-hidden"
+        style={{ aspectRatio: "1920 / 500" }}
+      >
         <Image
           src={BannerContact}
           alt="Contact Us Banner"
