@@ -367,7 +367,7 @@ console.log("productDataproductDataproductDataproductData",productData)
                 </p>
               </div>
               <div className={`p-6 ${openFaq ? "block" : "hidden"} md:block`}>
-                <QASection items={qaItems} />
+                <QASection items={qaItems} productId={productData.id} />
               </div>
             </div>
           )}

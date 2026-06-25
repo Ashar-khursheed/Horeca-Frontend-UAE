@@ -1,5 +1,6 @@
 "use client";
 
+import AddToCartWidget from "@/components/add-to-cart";
 import {
   Select,
   SelectContent,
@@ -7,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLocationData } from "@/utils/locationStorage";
 import {
   ChevronRight,
   FileText,
@@ -18,11 +20,9 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Accessory, AccessoryItem } from "./types";
-import { useLocationData } from "@/utils/locationStorage";
-import AddToCartWidget from "@/components/add-to-cart";
 import { PriceComparisonCard } from "./price-comparison-card";
 import { ReportErrorModal } from "./report-error-modal";
+import type { Accessory, AccessoryItem } from "./types";
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -328,15 +328,17 @@ export const PurchasePanel = ({
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
-        {/* <span className="text-base text-gray-400">Spot something off?</span> */}
+      {/* <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
+        <span className="text-base text-gray-400">Spot something off?</span>
         <button
           onClick={() => setReportOpen(true)}
           className="text-base text-red-500 font-semibold hover:underline transition"
         >
         Spot something off? Help us improve this page.
         </button>
-      </div>
+      </div> */}
+      <p className="mt-[18px] flex"     onClick={() => setReportOpen(true)}><span className="text-[18px] px-[0px] hover:underline text-[#A6131D] cursor-pointer">Spot something off?<br /> Help us improve this page.</span></p>
+
       <ReportErrorModal
         isOpen={reportOpen}
         onClose={() => setReportOpen(false)}
