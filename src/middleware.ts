@@ -76,8 +76,9 @@ export async function middleware(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
-  // Also set cookie so future requests skip the API call
-  if (!request.cookies.get("hc_cc")?.value) {
+  // Also set/update cookie so future requests skip the API call and stay in sync
+  const existingCookie = request.cookies.get("hc_cc")?.value;
+  if (!existingCookie || existingCookie !== countryCode) {
     response.cookies.set("hc_cc", countryCode, { maxAge: 60 * 60 * 24 * 3, path: "/", sameSite: "lax" });
   }
 
