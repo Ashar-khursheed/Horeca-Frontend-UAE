@@ -288,7 +288,7 @@ const S = StyleSheet.create({
     paddingHorizontal: 8,
     paddingTop: 4,
     paddingBottom: 6,
-    textAlign: "right",
+    textAlign: "center",
     fontSize: 6.5,
     fontFamily: "Helvetica-Bold",
   },
@@ -632,45 +632,43 @@ const TermsOfSale = () => (
 );
 
 const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: string }) => {
-  const subtotal = Number(order.amount);
-  const discount = Number(order.discount);
-  const additional = Number(order.additional_discount_amount);
-  const additionalPct = Number(order.additional_discount_percentage ?? 0);
+  const subtotal       = Number(order.amount);
+  const discount       = Number(order.discount);
+  const additional     = Number(order.additional_discount_amount);
+  const additionalPct  = Number(order.additional_discount_percentage ?? 0);
   const additionalType = order.additional_discount_type;
   const additionalReason = order.additional_discount_reason;
-  const chequeDiscount = Number(order.cheque_discount ?? 0);
+  const chequeDiscount    = Number(order.cheque_discount ?? 0);
   const chequeDiscountPct = Number(order.cheque_discount_percentage ?? 0);
-  const hasDiscount = discount > 0;
-  const hasAdditional = additional > 0;
-  const hasCheque = order.pay_with_cheque === 1 && chequeDiscount > 0;
+  const hasDiscount    = discount > 0;
+  const hasAdditional  = additional > 0;
+  const hasCheque      = order.pay_with_cheque === 1 && chequeDiscount > 0;
+  const anyDiscount    = hasDiscount || hasAdditional || hasCheque;
+  const subtotalAfterAll = subtotal - discount - additional - chequeDiscount;
   const total = Number(order.total_amount);
 
-  const subtotalAfterCoupon = subtotal - discount;
-  const subtotalAfterAll = subtotal - discount - additional - chequeDiscount;
+  const bold = { fontFamily: "Helvetica-Bold" as const };
 
   return (
     <View style={S.totalsBox}>
       <View style={S.totalsBody}>
-        {/* Subtotal */}
+
+        {/* 1. INVOICE SUBTOTAL */}
         <View style={S.totalsRow}>
-          <Text style={S.totalsLabel}>INVOICE SUBTOTAL</Text>
+          <Text style={S.totalsLabel}>Invoice Subtotal</Text>
           <Text style={S.totalsValue}>${toUSD(subtotal)}</Text>
         </View>
 
-        {/* Coupon */}
-        {/* {hasDiscount && (
+        {/* 2. Coupon Discount */}
+        {hasDiscount && (
           <>
-            <View style={S.totalsRow}>
-              <Text style={[S.totalsLabel, S.totalsRed]}>Coupon Discount</Text>
-              <Text style={S.totalsRed}>- ${toUSD(discount)}</Text>
-            </View>
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
-              <Text style={S.totalsLabel}>Subtotal After Coupon</Text>
-              <Text style={[S.totalsValue, { fontFamily: "Helvetica-Bold" }]}>${toUSD(subtotalAfterCoupon)}</Text>
+              <Text style={[S.totalsLabel, S.totalsRed]}>Coupon Discount</Text>
+              <Text style={[S.totalsValue, S.totalsRed]}>- ${toUSD(discount)}</Text>
             </View>
           </>
-        )} */}
+        )}
 
         {/* Additional Discount */}
         {hasAdditional && (
@@ -690,21 +688,8 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
                   </Text>
                 ) : null}
               </View>
-              <Text style={{ fontSize: 7.5, color: "#B45309", fontFamily: "Helvetica-Bold" }}>
+              <Text style={{ fontSize: 7.5, color: "#B45309", ...bold }}>
                 - ${toUSD(additional)}
-              </Text>
-            </View>
-          </>
-        )}
-
-        {/* Invoice After Discounts (no cheque) */}
-        {(hasDiscount || hasAdditional) && !hasCheque && (
-          <>
-            <View style={S.totalsDivider} />
-            <View style={S.totalsRow}>
-              <Text style={S.totalsLabel}>Subtotal After Discounts</Text>
-              <Text style={[S.totalsValue, { fontFamily: "Helvetica-Bold" }]}>
-                ${toUSD(subtotal - discount - additional)}
               </Text>
             </View>
           </>
@@ -718,77 +703,77 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
               <Text style={[S.totalsLabel, S.totalsGreen]}>
                 Check Discount ({chequeDiscountPct.toFixed(1)}%)
               </Text>
-              <Text style={S.totalsGreen}>- ${toUSD(chequeDiscount)}</Text>
+              <Text style={[S.totalsGreen]}>- ${toUSD(chequeDiscount)}</Text>
             </View>
           </>
         )}
 
-        {/* Subtotal after ALL discounts with cheque */}
-        {(hasDiscount || hasAdditional) && hasCheque && (
+        {/* 3. Subtotal After Discounts */}
+        {anyDiscount && (
           <>
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
-              <Text style={S.totalsLabel}>Subtotal After All Discounts</Text>
-              <Text style={[S.totalsValue, { fontFamily: "Helvetica-Bold" }]}>
-                ${toUSD(subtotalAfterAll)}
-              </Text>
+              <Text style={[S.totalsLabel, bold]}>Subtotal After Discounts</Text>
+              <Text style={[S.totalsValue, bold]}>${toUSD(subtotalAfterAll)}</Text>
             </View>
           </>
         )}
 
-        {/* Inside Delivery */}
+        {/* 4. Inside Delivery */}
         {order.is_inside_delivery === 1 && (
           <>
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
-              <Text style={S.totalsLabel}>Inside Delivery</Text>
-              <Text style={S.totalsValue}>$249.00</Text>
+              <Text style={[S.totalsLabel, bold]}>Inside Delivery</Text>
+              <Text style={[S.totalsValue, bold]}>$249.00</Text>
             </View>
           </>
         )}
 
-        {/* Lift Gate */}
+        {/* 5. Lift Gate */}
         {order.is_lift_gate === 1 && (
           <>
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
-              <Text style={S.totalsLabel}>Lift Gate Delivery</Text>
-              <Text style={S.totalsValue}>$75.00</Text>
+              <Text style={[S.totalsLabel, bold]}>Lift Gate Delivery</Text>
+              <Text style={[S.totalsValue, bold]}>$75.00</Text>
             </View>
           </>
         )}
 
-        {/* Residential */}
+        {/* 6. Residential */}
         {order.is_residential_address === 1 && (
           <>
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
-              <Text style={S.totalsLabel}>Residential Address Fee</Text>
-              <Text style={S.totalsValue}>$199.00</Text>
+              <Text style={[S.totalsLabel, bold]}>Residential Address Fee</Text>
+              <Text style={[S.totalsValue, bold]}>$199.00</Text>
             </View>
           </>
         )}
 
-        {/* Shipping */}
+        {/* 7. Shipping */}
         <View style={S.totalsDivider} />
         <View style={S.totalsRow}>
-          <Text style={S.totalsLabel}>Shipping</Text>
-          <Text style={S.totalsValue}>${toUSD(order.shipping_charge)}</Text>
+          <Text style={[S.totalsLabel, bold]}>Shipping Charges</Text>
+          <Text style={[S.totalsValue, bold]}>${toUSD(order.shipping_charge)}</Text>
         </View>
 
-        {/* Tax */}
+        {/* 8. Tax */}
+        <View style={S.totalsDivider} />
         <View style={S.totalsRow}>
-          <Text style={S.totalsLabel}>
+          <Text style={[S.totalsLabel, bold]}>
             Sales Tax {Number(order.tax_percentage).toFixed(2)}%
           </Text>
-          <Text style={S.totalsValue}>${toUSD(order.tax_amount)}</Text>
+          <Text style={[S.totalsValue, bold]}>${toUSD(order.tax_amount)}</Text>
         </View>
+
       </View>
 
-      {/* Net Total Bar */}
+      {/* 9. NET TOTAL Bar */}
       <View style={S.totalsNetBar}>
         <Text style={S.totalsNetText}>NET TOTAL INCL. SALES TAX</Text>
-        <Text style={S.totalsNetText}>{currency} {toUSD(total)}</Text>
+        <Text style={S.totalsNetText}>{currency}{toUSD(total)}</Text>
       </View>
 
       {/* Amount in words */}
@@ -872,7 +857,10 @@ export const InvoicePdfDocument = ({ order }: InvoicePdfDocumentProps) => {
   const paymentMode =
     order.pay_with_cheque === 1
       ? "Check"
-      : (order.payments[0]?.payment_mode ?? "");
+      : (() => {
+          const mode = order.payments[0]?.payment_mode ?? order.payment_mode ?? "";
+          return mode.toLowerCase() === "square" ? "Credit Debit Card" : (mode || "Credit Debit Card");
+        })();
 
   const allProducts = order.order_products ?? [];
   const n = allProducts.length;
