@@ -10,7 +10,7 @@ import type { ProductDetailResponse } from '@/features/product-detail/types'
 import { cookies } from 'next/headers'
 import { revalidate } from '@/utils'
 import { SITE_URL } from '@/utils/site-url'
-import { robotsFromIndexing } from '@/utils/seo-robots'
+import { liveProductRobots, UNAVAILABLE_PAGE_ROBOTS } from '@/utils/seo-robots'
 
 interface PageProps {
   params: Promise<{
@@ -73,7 +73,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const res = await fetchProduct(productSlug, locale, false)
   const product = res?.data
-  if (!product) return { title: productSlug }
+  if (!product) {
+    return { title: productSlug, robots: UNAVAILABLE_PAGE_ROBOTS }
+  }
 
   const seo = product.seo
 
@@ -90,7 +92,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: title ?? undefined,
     description,
-    robots: robotsFromIndexing(seo?.indexing),
+    robots: liveProductRobots(),
     alternates: {
       canonical: `${SITE_URL}/${categorySlug}/${subCategorySlug}/${productSlug}`,
     },

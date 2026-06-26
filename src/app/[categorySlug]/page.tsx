@@ -7,6 +7,7 @@ import type { ApiCategory, ApiCategoryPage } from "@/utils/types";
 import type { ApiBrand } from "@/components/brands-section";
 import { cookies } from "next/headers";
 import { revalidate } from "@/utils";
+import { SITE_URL } from "@/utils/site-url";
 import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 
 
@@ -34,12 +35,12 @@ export async function generateMetadata({
     description: seo.meta_description?.en ?? undefined,
     robots: { index: seo.indexing ?? true, follow: true },
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/${categorySlug}`,
+      canonical: `${SITE_URL}/${categorySlug}`,
     },
     openGraph: {
       title: seo.og_title?.en ?? seo.meta_title?.en ?? undefined,
       description: seo.og_description?.en ?? seo.meta_description?.en ?? undefined,
-      url: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/${categorySlug}`,
+      url: `${SITE_URL}/${categorySlug}`,
       images:
         seo.og_image_url?.en && seo.og_image_url.en !== "null"
           ? [{ url: seo.og_image_url.en, alt: seo.banner_image_alt_text?.en ?? undefined }]
