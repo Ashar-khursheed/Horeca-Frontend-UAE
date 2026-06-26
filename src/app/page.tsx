@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "Restaurant Supply Store & Commercial Equipment | HorecaStore",
   description:
     "HorecaStore is a reliable restaurant supply store providing commercial equipment, restaurant supplies, cookware, refrigeration, and foodservice essentials.",
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
   alternates: {
     canonical: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/`,
   },
