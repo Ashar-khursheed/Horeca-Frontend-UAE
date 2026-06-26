@@ -10,7 +10,7 @@ import type { ProductDetailResponse } from '@/features/product-detail/types'
 import { cookies } from 'next/headers'
 import { revalidate } from '@/utils'
 import { SITE_URL } from '@/utils/site-url'
-import { PRODUCT_ROBOTS } from '@/utils/seo-robots'
+import { robotsFromIndexing } from '@/utils/seo-robots'
 
 interface PageProps {
   params: Promise<{
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: title ?? undefined,
     description,
-    robots: PRODUCT_ROBOTS,
+    robots: robotsFromIndexing(seo?.indexing),
     alternates: {
       canonical: `${SITE_URL}/${categorySlug}/${subCategorySlug}/${productSlug}`,
     },
