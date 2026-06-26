@@ -46,6 +46,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import TaxInitializer from "@/components/TaxInitializer";
 import { COUPON_KEY } from "../../checkout/page";
+import { trackGtmEvent } from "@/utils/gtm";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -243,53 +244,32 @@ export default function CartPage() {
   // Google Analytics view_cart event
   useEffect(() => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) return;
-    const w = window as any;
+    const w = window as Window & { viewCartEventFired?: boolean };
     if (w.viewCartEventFired) return;
     w.viewCartEventFired = true;
-    w.dataLayer = w.dataLayer || [];
 
-    const sendViewCartEvent = () => {
-      const totalValue = cartItems.reduce(
-        (sum, item) => sum + item.price * item.qty,
-        0,
-      );
+    const totalValue = cartItems.reduce(
+      (sum, item) => sum + item.price * item.qty,
+      0,
+    );
 
-      const eventData = {
-        currency: "USD",
-        value: totalValue,
-        items: cartItems.map((item, index) => ({
-          item_id: item.modelNo || String(item.id),
-          item_name: item.name || "Unknown Product",
-          index,
-          item_brand: "",
-          item_category: "",
-          item_list_id: String(item.id),
-          item_list_name: item.name || "Unknown Product",
-          item_variant: "",
-          location_id: String(item.vendorId || ""),
-          price: item.price,
-          quantity: item.qty,
-        })),
-      };
-
-      if (w.gtag) w.gtag("event", "view_cart", eventData);
-    };
-
-    if (!w.gtagLoaded) {
-      const script = document.createElement("script");
-      script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
-      script.async = true;
-      document.head.appendChild(script);
-      script.onload = () => {
-        w.gtag = function () { w.dataLayer.push(arguments); };
-        w.gtag("js", new Date());
-        w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
-        w.gtagLoaded = true;
-        sendViewCartEvent();
-      };
-    } else {
-      sendViewCartEvent();
-    }
+    void trackGtmEvent("view_cart", {
+      currency: "USD",
+      value: totalValue,
+      items: cartItems.map((item, index) => ({
+        item_id: item.modelNo || String(item.id),
+        item_name: item.name || "Unknown Product",
+        index,
+        item_brand: "",
+        item_category: "",
+        item_list_id: String(item.id),
+        item_list_name: item.name || "Unknown Product",
+        item_variant: "",
+        location_id: String(item.vendorId || ""),
+        price: item.price,
+        quantity: item.qty,
+      })),
+    });
   }, [cartItems]);
 
   // Re-fetch when items are added — debounced so rapid adds collapse into one call

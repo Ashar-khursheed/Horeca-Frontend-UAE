@@ -78,23 +78,13 @@ export const FeaturedProducts = ({
             ))}
           </div>
         ) : (
-          <>
-            {/* MOBILE — horizontal scroll */}
-            <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
-              {displayProducts.map((product) => (
-                <div key={product.id} className="shrink-0 w-[175px]">
-                  <ProductCard product={product as any} />
-                </div>
-              ))}
-            </div>
-
-            {/* TABLET + DESKTOP — grid */}
-            <div className={generateDynamicCSSProductCard}>
-              {displayProducts.map((product) => (
-                <ProductCard key={product.id} product={product as any} />
-              ))}
-            </div>
-          </>
+          <div className="flex sm:grid gap-3 overflow-x-auto sm:overflow-visible hide-scrollbar max-sm:pb-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 4xl:grid-cols-6">
+            {displayProducts.map((product) => (
+              <div key={product.id} className="shrink-0 w-[175px] sm:w-auto">
+                <ProductCard product={product as any} />
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

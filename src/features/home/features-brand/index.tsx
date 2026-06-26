@@ -1,7 +1,6 @@
 "use client";
 
 import ProductCard from "@/components/product-card";
-import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
 import { useLocale } from "next-intl";
 import { useState } from "react";
 import { FeaturedCategory, LocalizedString } from "@/utils/types";
@@ -65,21 +64,10 @@ export const FeaturedBrands = ({
             Desktop : 5-col grid
         ────────────────────────────────────────────────────────────────*/}
 
-        {/* MOBILE — horizontal scroll */}
-        <div className="flex sm:hidden gap-3 overflow-x-auto hide-scrollbar md:px-4 pb-2">
+        <div className="flex sm:grid gap-3 overflow-x-auto sm:overflow-visible hide-scrollbar max-sm:pb-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 4xl:grid-cols-6">
           {featuredProducts.map((product) => (
-            <div key={product.id} className="shrink-0 w-[175px]">
+            <div key={product.id} className="shrink-0 w-[175px] sm:w-auto">
               <ProductCard product={product as any} />
-            </div>
-          ))}
-        </div>
-
-        {/* TABLET + DESKTOP — grid */}
-        {/* <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-5 2xl:grid-cols-6  3xl:grid-cols-6 gap-3"> */}
-        <div className={generateDynamicCSSProductCard}>
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="shrink-0">
-              <ProductCard key={product.id} product={product as any} />
             </div>
           ))}
         </div>

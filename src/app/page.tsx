@@ -3,11 +3,11 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
-import type { FeaturedCategory, FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
-import type { ApiBlog } from "@/components/blog-card";
+import type { FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
 import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
+import { trimFeaturedProducts } from "@/utils/homepage-payload";
 
 export const metadata: Metadata = {
   title: "Restaurant Supply Store & Commercial Equipment | HorecaStore",
@@ -49,8 +49,6 @@ export default async function Page() {
     slider1,
     slider2,
     categoryTabsRes,
-    featuredBrandProductsRes,
-    blogsRes,
   ] = await Promise.all([
     makeApiCallSSR<{ items: SliderItem[] }>(
       "frontend/sliders/1",
@@ -66,18 +64,6 @@ export default async function Page() {
       apiUrls.FEATURED_CATEGORY_TABS,
       {},
       { revalidate: isLoggedIn ? 0 : revalidate, countryCode },
-    ),
-    makeApiCallSSR<{ data: FeaturedCategory[] }>(
-      apiUrls.FEATURED_BRAND_PRODUCTS,
-      {},
-      { revalidate: isLoggedIn ? 0 : revalidate, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
-    ),
-    // Blogs were previously fetched client-side inside a useEffect (waterfall).
-    // Fetching SSR here means the section is populated in the initial HTML.
-    makeApiCallSSR<{ data: ApiBlog[] }>(
-      apiUrls.BLOGS,
-      { per_page: 10, lang: "en", page: 1 },
-      { revalidate: revalidate, countryCode },
     ),
   ]);
 
@@ -95,9 +81,7 @@ export default async function Page() {
 
   const sliderItems             = slider1?.items ?? [];
   const sliderItemsTwo          = slider2?.items ?? [];
-  const initialFeaturedProducts: ApiProductRaw[] = initialProductsRes?.data ?? [];
-  const featuredBrandProducts   = featuredBrandProductsRes?.data ?? [];
-  const blogs                   = blogsRes?.data ?? [];
+  const initialFeaturedProducts = trimFeaturedProducts(initialProductsRes?.data ?? []);
 
   const homeSchema = {
     "@context": "https://schema.org",
@@ -192,8 +176,6 @@ export default async function Page() {
           sliderItemsTwo={sliderItemsTwo}
           categoryTabs={categoryTabs}
           initialFeaturedProducts={initialFeaturedProducts}
-          featuredBrandProducts={featuredBrandProducts}
-          blogs={blogs}
         />
       </main>
     </>

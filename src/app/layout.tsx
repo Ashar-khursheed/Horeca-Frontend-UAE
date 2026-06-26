@@ -80,8 +80,6 @@ export default async function RootLayout({
   const searchDataRes = searchData;
   const scripts = customScriptsData?.data;
 
-  console.log("customScriptsDatacustomScriptsDatacustomScriptsData",scripts)
-
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className} suppressHydrationWarning>
       <head>

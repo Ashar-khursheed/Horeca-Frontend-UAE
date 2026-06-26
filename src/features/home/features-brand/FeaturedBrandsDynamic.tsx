@@ -7,18 +7,33 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { FeaturedBrands } from "./index";
 import type { FeaturedCategory } from "@/utils/types";
+import { trimFeaturedBrands } from "@/utils/homepage-payload";
 
-export function FeaturedBrandsDynamic({
-  initialProducts,
-}: {
-  initialProducts: FeaturedCategory[];
-}) {
-  const [products, setProducts] = useState(initialProducts);
+export function FeaturedBrandsDynamic() {
+  const [products, setProducts] = useState<FeaturedCategory[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const country = useAppSelector((s) => s.country.data);
   const countryName = country?.name;
   const [initialCountry, setInitialCountry] = useState<string | null>(null);
+
+  const loadProducts = () =>
+    makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS)
+      .then((res) => {
+        if (res?.data) {
+          setProducts(trimFeaturedBrands(res.data));
+        }
+      })
+      .catch(() => {
+        router.refresh();
+      })
+      .finally(() => setLoading(false));
+
+  useEffect(() => {
+    loadProducts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (countryName) {
@@ -26,19 +41,26 @@ export function FeaturedBrandsDynamic({
         setInitialCountry(countryName);
       } else if (countryName !== initialCountry) {
         setInitialCountry(countryName);
-        // Swap in country-correct products if country changes
-        makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS)
-          .then((res) => {
-            if (res?.data) {
-              setProducts(res.data);
-            }
-          })
-          .catch(() => {
-            router.refresh();
-          });
+        loadProducts();
       }
     }
-  }, [countryName, initialCountry, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countryName, initialCountry]);
+
+  if (loading) {
+    return (
+      <section className="w-full bg-white py-5">
+        <div className="global-container">
+          <div className="h-8 w-40 bg-slate-100 rounded animate-pulse mb-4" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-56 bg-slate-100 rounded animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return <FeaturedBrands products={products} />;
 }

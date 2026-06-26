@@ -37,6 +37,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
 import { Modal } from "@/components/ui/modal";
+import { trackGtmEvent } from "@/utils/gtm";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -475,48 +476,27 @@ export default function CheckoutPage() {
   // Google Analytics begin_checkout event
   useEffect(() => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) return;
-    const w = window as any;
+    const w = window as Window & { beginCheckoutEventFired?: boolean };
     if (w.beginCheckoutEventFired) return;
     w.beginCheckoutEventFired = true;
-    w.dataLayer = w.dataLayer || [];
 
-    const sendBeginCheckoutEvent = () => {
-      const eventData = {
-        currency: "USD",
-        value: grandTotal,
-        items: cartItems.map((item: any, index: number) => ({
-          item_id: item.modelNo || item.sku || String(item.id),
-          item_name: item.name || "Unknown Product",
-          index,
-          item_brand: "",
-          item_category: "",
-          item_list_id: String(item.id),
-          item_list_name: item.name || "Unknown Product",
-          item_variant: "",
-          location_id: String(item.vendorId || ""),
-          price: item.price,
-          quantity: item.qty,
-        })),
-      };
-
-      if (w.gtag) w.gtag("event", "begin_checkout", eventData);
-    };
-
-    if (!w.gtagLoaded) {
-      const script = document.createElement("script");
-      script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
-      script.async = true;
-      document.head.appendChild(script);
-      script.onload = () => {
-        w.gtag = function () { w.dataLayer.push(arguments); };
-        w.gtag("js", new Date());
-        w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
-        w.gtagLoaded = true;
-        sendBeginCheckoutEvent();
-      };
-    } else {
-      sendBeginCheckoutEvent();
-    }
+    void trackGtmEvent("begin_checkout", {
+      currency: "USD",
+      value: grandTotal,
+      items: cartItems.map((item: any, index: number) => ({
+        item_id: item.modelNo || item.sku || String(item.id),
+        item_name: item.name || "Unknown Product",
+        index,
+        item_brand: "",
+        item_category: "",
+        item_list_id: String(item.id),
+        item_list_name: item.name || "Unknown Product",
+        item_variant: "",
+        location_id: String(item.vendorId || ""),
+        price: item.price,
+        quantity: item.qty,
+      })),
+    });
   }, [cartItems, grandTotal]);
 
   const handleApplyCode = async () => {

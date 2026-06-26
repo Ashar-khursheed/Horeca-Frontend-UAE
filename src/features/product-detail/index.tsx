@@ -23,6 +23,7 @@ import type {
 } from "./types";
 import { useLocationData } from "@/utils/locationStorage";
 import { ReportErrorModal } from "./report-error-modal";
+import { trackGtmEvent } from "@/utils/gtm";
 import AddReviewModal from "@/components/add-review-modal";
 import { PriceComparisonCard } from "./price-comparison-card";
 import RecentlyViewedSection from "../category/recently-viewed-section";
@@ -92,8 +93,6 @@ const ProductDetailPage = ({
   // GTM view_item event
   useEffect(() => {
     if (!productData.id) return;
-    const w = window as any;
-    w.dataLayer = w.dataLayer || [];
 
     const price = productData.sale_price > 0 ? productData.sale_price : productData.price;
     const sku = productData.sku ?? "";
@@ -101,7 +100,7 @@ const ProductDetailPage = ({
     const currency = productData.currency?.symbol || "AED";
     const vendorId = productData.suppliers?.[0]?.vendor_id ?? "";
 
-    const eventData = {
+    void trackGtmEvent("view_item", {
       currency,
       value: price,
       items: [
@@ -119,27 +118,7 @@ const ProductDetailPage = ({
           quantity: 1,
         },
       ],
-    };
-
-    const send = () => {
-      if (w.gtag) w.gtag("event", "view_item", eventData);
-    };
-
-    if (!w.gtagLoaded) {
-      const script = document.createElement("script");
-      script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
-      script.async = true;
-      document.head.appendChild(script);
-      script.onload = () => {
-        w.gtag = function () { w.dataLayer.push(arguments); };
-        w.gtag("js", new Date());
-        w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
-        w.gtagLoaded = true;
-        send();
-      };
-    } else {
-      send();
-    }
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productData.id]);
 

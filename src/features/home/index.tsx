@@ -11,17 +11,15 @@
 //
 // Country detection + brand-product state update are isolated in
 // FeaturedBrandsDynamic so they don't force the whole page into a client tree.
-// Blogs are now fetched SSR in page.tsx and passed as a prop, eliminating the
-// useEffect waterfall that previously blocked the section until after hydration.
+// Blogs load client-side after first paint to keep the homepage HTML smaller.
 
-import { BlogsCard } from "@/components/blog-card";
-import type { ApiBlog } from "@/components/blog-card";
 import SEOMainContent from "@/seo/seo-main-content";
 import FeaturedProducts from "./feature-product";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
 import { FeaturedBrandsDynamic } from "./features-brand/FeaturedBrandsDynamic";
-import type { ApiProductRaw, FeaturedCategory, FeaturedCategoryTab } from "@/utils/types";
+import { HomeBlogsSection } from "./HomeBlogsSection";
+import type { ApiProductRaw, FeaturedCategoryTab } from "@/utils/types";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
 
@@ -30,15 +28,11 @@ export const Home = ({
   sliderItemsTwo = [],
   categoryTabs = [],
   initialFeaturedProducts = [],
-  featuredBrandProducts = [],
-  blogs = [],
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
   categoryTabs?: FeaturedCategoryTab[];
   initialFeaturedProducts?: ApiProductRaw[];
-  featuredBrandProducts?: FeaturedCategory[];
-  blogs?: ApiBlog[];
 }) => {
   return (
     <>
@@ -80,11 +74,9 @@ export const Home = ({
 
       {/* "use client" — handles country-detection + brand-tab state.
           Renders SSR-provided initialProducts immediately, updates on country change. */}
-      <FeaturedBrandsDynamic initialProducts={featuredBrandProducts} />
+      <FeaturedBrandsDynamic />
 
-      {/* BlogsCard is "use client" for like/share interactions.
-          Blogs data arrives SSR (no useEffect waterfall). */}
-      <BlogsCard showAll={false} blogs={blogs} />
+      <HomeBlogsSection />
     </>
   );
 };

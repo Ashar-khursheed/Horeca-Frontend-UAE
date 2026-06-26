@@ -43,6 +43,7 @@ import Loader from "../Loader";
 import { AddToCartWidgetProps } from "@/features/product-detail/types";
 import GetAQuoteModal from "@/components/get-a-quote-modal";
 import { getCartId } from "@/utils/cartId";
+import { trackGtmEvent } from "@/utils/gtm";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -89,10 +90,7 @@ function fireAddToCartGTM(params: {
   vendorId: number;
   currencySymbol: string;
 }) {
-  const w = window as any;
-  w.dataLayer = w.dataLayer || [];
-
-  const eventData = {
+  void trackGtmEvent("add_to_cart", {
     currency: params.currencySymbol || "AED",
     value: params.price * params.quantity,
     items: [
@@ -110,27 +108,7 @@ function fireAddToCartGTM(params: {
         quantity: params.quantity,
       },
     ],
-  };
-
-  const send = () => {
-    if (w.gtag) w.gtag("event", "add_to_cart", eventData);
-  };
-
-  if (!w.gtagLoaded) {
-    const script = document.createElement("script");
-    script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
-    script.async = true;
-    document.head.appendChild(script);
-    script.onload = () => {
-      w.gtag = function () { w.dataLayer.push(arguments); };
-      w.gtag("js", new Date());
-      w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
-      w.gtagLoaded = true;
-      send();
-    };
-  } else {
-    send();
-  }
+  });
 }
 
 // ─── Module-level hydration guard ────────────────────────────────────────────
