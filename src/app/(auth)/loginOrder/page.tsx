@@ -173,7 +173,6 @@ function LoginPanel() {
   const [googleKey, setGoogleKey] = useState(0);
   const [apiError, setApiError] = useState("");
   const country = useSelector((s: RootState) => s.country?.data);
-  console.log("qqqqqqqqqqqqq",country)
   useEffect(() => {
     clearGoogleStateCookie();
   }, []);

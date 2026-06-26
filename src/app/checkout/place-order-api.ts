@@ -73,14 +73,17 @@ function buildProducts(rawProducts: any[]) {
   );
   return rawProducts.map((cp: any) => {
     const qty = Number(cp.quantity) || 1;
-    const own = Number(cp.product?.shippingCharge) || 0;
+    const own =
+      Number(cp.shipping_charge) ||
+      Number(cp.product?.shipping_charge) ||
+      0;
     return {
       product_id: cp.product_id ?? cp.id,
       vendor_id: cp.vendor_product_supplier?.vendor_id,
       quantity: qty,
       shipping_charge: own > 0 ? own * qty : (deliveryCharge ?? 0) * qty,
       unit_price: parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
-      accessory_item_ids: (cp.accessories_options_details ?? []).map((a: any) => a.item_id),
+      accessory_item_ids: (cp.accessory_charges ?? []).map((a: any) => a.id),
     };
   });
 }
