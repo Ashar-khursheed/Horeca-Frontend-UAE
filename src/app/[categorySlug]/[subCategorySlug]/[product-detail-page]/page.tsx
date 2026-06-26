@@ -9,6 +9,8 @@ import ProductJsonLd from '@/features/product-detail/json-ld-schema'
 import type { ProductDetailResponse } from '@/features/product-detail/types'
 import { cookies } from 'next/headers'
 import { revalidate } from '@/utils'
+import { SITE_URL } from '@/utils/site-url'
+import { PRODUCT_ROBOTS } from '@/utils/seo-robots'
 
 interface PageProps {
   params: Promise<{
@@ -88,14 +90,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: title ?? undefined,
     description,
-    robots: { index: seo?.indexing ?? true, follow: true },
+    robots: PRODUCT_ROBOTS,
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/${categorySlug}/${subCategorySlug}/${productSlug}`,
+      canonical: `${SITE_URL}/${categorySlug}/${subCategorySlug}/${productSlug}`,
     },
     openGraph: {
       title: ogTitle,
       description: ogDesc,
-      url: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}${product.url}`,
+      url: `${SITE_URL}${product.url}`,
       images: ogImg
         ? [{ url: ogImg }]
         : firstImg
