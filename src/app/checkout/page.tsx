@@ -346,7 +346,7 @@ export default function CheckoutPage() {
       taxFetchedZip.current = zip;
 
       fetch(
-        `https://pim.thehorecastore.co/api/frontend/tax/rate?zip=${zip}&country=US&city=${city}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/frontend/tax/rate?zip=${zip}&country=US&city=${city}`,
       )
         .then((r) => r.json())
         .then((data) => {
