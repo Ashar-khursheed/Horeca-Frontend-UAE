@@ -38,13 +38,6 @@ const getFlagEmoji = (isoCode: string): string =>
     .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
     .join("");
 
-// Auto-generate a secure random password for guest registration
-const generateGuestPassword = () => {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
-  return Array.from({ length: 16 }, () =>
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
-};
 
 // ── Google Icon ───────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
@@ -455,25 +448,33 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
       setLoading(true);
       setApiError("");
       try {
-        const guestPassword = generateGuestPassword();
         const formData = new FormData();
         formData.append("name", values.name.trim());
         formData.append("email", values.email.trim());
-        formData.append("password", guestPassword);
-        formData.append("password_confirmation", guestPassword);
+        // formData.append("password", guestPassword);
+        // formData.append("password_confirmation", guestPassword);
         formData.append("type", "Private");
         formData.append("country_code", dialCode);
         formData.append("is_guest", String(true));
         formData.append("mobile_number", values.phone.replace(/\D/g, ""));
 
-        await makeApiRequest(apiUrls.REGISTER, {
+       const res = await makeApiRequest<{ success: boolean; message?: string; plain_password?: string }>(apiUrls.REGISTER, {
           method: "POST",
           data: formData,
         });
 
-        // Auto-login after registration
+        if (!res.success) {
+          setApiError(res.message ?? "Registration failed. Please try again.");
+          return;
+        }
+
+        // Auto-login after registration — use API-generated password
+        if (!res.plain_password) {
+          setApiError("Registration succeeded but no password returned. Please login manually.");
+          return;
+        }
         await dispatch(
-          loginUser({ email: values.email.trim(), password: guestPassword })
+          loginUser({ email: values.email.trim(), password: res.plain_password })
         ).unwrap();
 
         // Sync guest wishlist & cart
