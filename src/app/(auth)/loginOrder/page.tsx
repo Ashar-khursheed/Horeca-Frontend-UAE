@@ -200,7 +200,6 @@ function LoginPanel() {
 
      
 
-      // Run background tasks without blocking redirect
       const syncPromises = [];
       const guestWishlist = localStorage.getItem("horeca_wishlist");
       if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
@@ -211,16 +210,12 @@ function LoginPanel() {
         syncPromises.push(syncGuestCartAfterLogin());
       }
       if (syncPromises.length > 0) {
-        Promise.all(syncPromises)
-          .then(() => dispatch(fetchCounts()))
-          .catch(err => console.error("Sync error:", err));
-      } else {
-        dispatch(fetchCounts()).catch(err => console.error("Fetch counts error:", err));
+        await Promise.all(syncPromises);
       }
-
+      await dispatch(fetchCounts());
       cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
 
-     const redirect = searchParams.get("redirect") ??     `/cart/${getCartId()}`;
+      const redirect = searchParams.get("redirect") ?? `/cart/${getCartId()}`;
       window.location.href = redirect;
     } catch {
       setApiError("Google login failed. Please try again.");
@@ -243,7 +238,6 @@ function LoginPanel() {
 
        
 
-        // Run background tasks without blocking redirect
         const syncPromises = [];
         const guestWishlist = localStorage.getItem("horeca_wishlist");
         if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
@@ -254,15 +248,12 @@ function LoginPanel() {
           syncPromises.push(syncGuestCartAfterLogin());
         }
         if (syncPromises.length > 0) {
-          Promise.all(syncPromises)
-            .then(() => dispatch(fetchCounts()))
-            .catch(err => console.error("Sync error:", err));
-        } else {
-          dispatch(fetchCounts()).catch(err => console.error("Fetch counts error:", err));
+          await Promise.all(syncPromises);
         }
- const redirect = searchParams.get("redirect") ??  `/cart/${getCartId()}`;
-        window.location.href = redirect;
+        await dispatch(fetchCounts());
         cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
+        const redirect = searchParams.get("redirect") ?? `/cart/${getCartId()}`;
+        window.location.href = redirect;
       } catch (err: unknown) {
         setApiError(
           typeof err === "string"
@@ -446,7 +437,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
 
   const dialCode = country.data?.phone_code ?? "";
   const isoCode = locationFromRedux?.countryCode ?? "";
-  const flagEmoji = isoCode ? getFlagEmoji(isoCode) : "🌍";
+
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
   const isUSPhone = dialCode === "+1" || isoCode === "US";
 
