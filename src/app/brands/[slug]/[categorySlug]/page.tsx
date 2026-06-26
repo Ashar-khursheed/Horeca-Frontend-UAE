@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import { productDetailRevalidate } from "@/utils";
+import { SITE_URL } from "@/utils/site-url";
 import BrandDetailFeature, {
   type BrandDetailResponse,
   type BrandCategoryProductsResponse,
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${catName} - ${brandName}`,
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL}/brands/${slug}/${categorySlug}`,
+      canonical: `${SITE_URL}/brands/${slug}/${categorySlug}`,
     },
   };
 }

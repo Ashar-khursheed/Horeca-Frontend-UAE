@@ -1,12 +1,14 @@
+import { SITE_URL } from "@/utils/site-url";
+
 export const BLOG_SEO = {
   title: "Commercial Kitchen Equipment Tips & Guides | HorecaStore",
   meta_description:
     "Explore the HorecaStore blog for expert hospitality tips, industry insights, and practical advice to help hotels and restaurants improve daily operations.",
-  indexing: false,
+  indexing: true,
   og_title: "Expert Commercial Kitchen Equipment Tips – HorecaStore Guide",
   og_description:
     "Discover expert Commercial Kitchen Equipment Tips & Guides from HorecaStore. Learn how to choose, maintain, and optimize your kitchen tools—read now and improve your foodservice operations today.",
-  canonical_url: `${process.env.NEXT_SITE_URL}/blog`,
+  canonical_url: `${SITE_URL}/blog`,
 };
 
 export const BLOG_SCHEMA = {

@@ -7,6 +7,7 @@ import type { FeaturedCategory, FeaturedCategoryTab, ApiProductRaw } from "@/uti
 import type { ApiBlog } from "@/components/blog-card";
 import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
+import { SITE_URL } from "@/utils/site-url";
 
 export const metadata: Metadata = {
   title: "Restaurant Supply Store & Commercial Equipment | HorecaStore",
@@ -14,14 +15,20 @@ export const metadata: Metadata = {
     "HorecaStore is a reliable restaurant supply store providing commercial equipment, restaurant supplies, cookware, refrigeration, and foodservice essentials.",
   robots: { index: true, follow: true },
   alternates: {
-    canonical: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/`,
+    canonical: `${SITE_URL}/`,
   },
   openGraph: {
     title: "Buy Restaurant Supplies & Commercial Equipment – HorecaStore",
     description:
       "HorecaStore is your trusted Restaurant Supply Store & Commercial Equipment destination. Discover durable commercial kitchen tools, shop with confidence, and buy now to equip your business efficiently.",
-    url: `${process.env.NEXT_SITE_URL || "https://www.thehorecastore.com"}/`,
+    url: `${SITE_URL}/`,
     type: "website",
+    images: [
+      {
+        url: `${SITE_URL}/images/logo/11_Sep_2025_logo.png`,
+        alt: "HorecaStore",
+      },
+    ],
   },
 };
 

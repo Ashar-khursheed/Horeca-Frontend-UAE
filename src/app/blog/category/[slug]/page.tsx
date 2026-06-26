@@ -6,6 +6,7 @@ import type { ApiBlog } from "@/components/blog-card";
 import type { BlogCategory } from "@/app/blog/page";
 import CategoryPageClient from "./CategoryPageClient";
 import { revalidate } from "@/utils";
+import { SITE_URL } from "@/utils/site-url";
 
 // export const revalidate = 3600;
 export const dynamicParams = true;
@@ -61,13 +62,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description:
       category.description ||
       `Browse all ${category.name} articles and tips on HorecaStore.`,
+    robots: { index: true, follow: true },
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL}/blog/category/${slug}`,
+      canonical: `${SITE_URL}/blog/category/${slug}`,
     },
     openGraph: {
       title: `${category.name} Blogs | HorecaStore`,
       description: category.description || `Browse all ${category.name} articles on HorecaStore.`,
-      url: `${process.env.NEXT_SITE_URL}/blog/category/${slug}`,
+      url: `${SITE_URL}/blog/category/${slug}`,
       type: "website",
     },
   };

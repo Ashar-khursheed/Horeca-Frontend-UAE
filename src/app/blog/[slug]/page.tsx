@@ -5,6 +5,7 @@ import { apiUrls } from "@/apis/api-endpoint";
 import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
 import { revalidate } from "@/utils";
+import { SITE_URL } from "@/utils/site-url";
 
 // ISR — revalidate every hour
 // export const revalidate = 3600;
@@ -79,7 +80,7 @@ export async function generateMetadata({
   const title = seo?.title_tag || seo?.meta_title || blog.title;
   const description = seo?.meta_description || blog.title;
   const ogImage = seo?.og_image_url || blog.thumbnail || blog.desktop_banner;
-  const canonical = seo?.url || blog.url;
+  const canonicalUrl = `${SITE_URL}/blog/${slug}`;
 
   return {
     title,
@@ -87,12 +88,12 @@ export async function generateMetadata({
     keywords: seo?.primary_keyword ?? undefined,
     robots: seo?.indexing === false ? "noindex, nofollow" : "index, follow",
     alternates: {
-      canonical: `${process.env.NEXT_SITE_URL}${canonical}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title: seo?.og_title || title,
       description: seo?.og_description || description,
-      url: `${process.env.NEXT_SITE_URL}${canonical}`,
+      url: canonicalUrl,
       type: "article",
       images: ogImage ? [{ url: ogImage, alt: blog.title }] : [],
     },

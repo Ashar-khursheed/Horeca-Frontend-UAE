@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/utils/site-url";
 
 export default function robots(): MetadataRoute.Robots {
   // Staging pe sab bots block karo
@@ -55,6 +56,6 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: "psbot", disallow: "/" },
       { userAgent: "yahoo-blogs/v3.9", disallow: "/" },
     ],
-    sitemap: "https://www.thehorecastore.com/sitemap.xml",
+    sitemap: `${SITE_URL}/sitemap-index.xml`,
   };
 }
