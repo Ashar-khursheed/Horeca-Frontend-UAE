@@ -271,6 +271,16 @@ interface SearchProduct {
     min_quantity?: number;
     is_fixed?: boolean | number;
   }[];
+  accessories?: {
+    id: number;
+    name: { en?: string; ar?: string } | string;
+    is_required: number;
+    accessory_item: {
+      id: number;
+      name: { en?: string; ar?: string } | string;
+      price: number | string;
+    }[];
+  }[];
 }
 
 interface SearchCategory {

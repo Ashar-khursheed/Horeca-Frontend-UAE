@@ -76,7 +76,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
           ...(sortBy ? { sort_by: sortBy } : {}),
           ...(sortDir ? { sort_dir: sortDir } : {}),
         },
-        { revalidate: 60 },
+        { revalidate: 0 },
       )
     : null;
 

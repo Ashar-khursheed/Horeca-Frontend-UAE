@@ -82,6 +82,13 @@ function mapProduct(p: SearchProduct): ApiProduct {
     return_policy: s0?.return_policy ?? "",
     isRequired: p.isRequired ?? false,
     suppliers: p.suppliers ?? [],
+    accessories: (p.accessories ?? []).map((acc) => ({
+      ...acc,
+      accessory_item: acc.accessory_item.map((item) => ({
+        ...item,
+        price: Number(item.price),
+      })),
+    })),
   };
 }
 

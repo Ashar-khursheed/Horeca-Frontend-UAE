@@ -69,6 +69,17 @@ export interface ApiProduct {
     min_quantity?: number;
     is_fixed?: boolean | number;
   }[];
+  
+   accessories?: {
+    id: number;
+    name: LS | { en?: string; ar?: string };
+    is_required: number;
+    accessory_item: {
+      id: number;
+      name: LS | { en?: string; ar?: string };
+      price: number;
+    }[];
+  }[];
 }
 
 export interface RawApiProduct {
@@ -266,6 +277,7 @@ export const ProductCard = ({
   onAddedToCart,
 }: ProductCardProps) => {
   const locale = useLocale();
+  console.log("dsdasdsadsa", product)
   const dispatch = useAppDispatch();
   // ── Country from Redux (client-side currency conversion) ─────────────
   const country = useAppSelector((s) => s.country.data);
