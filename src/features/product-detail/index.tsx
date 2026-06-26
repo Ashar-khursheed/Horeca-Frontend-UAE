@@ -66,7 +66,6 @@ const ProductDetailPage = ({
   const benefitsFeatures = productData.benefits_features ?? [];
   const state = useLocationData();
   const router = useRouter();
-  console.log("productDataproductDataproductDataproductData", productData);
   useEffect(() => {
     if (!productData.id) return;
     const token = localStorage.getItem("token");
@@ -88,6 +87,60 @@ const ProductDetailPage = ({
         })
         .catch(() => {});
     }
+  }, [productData.id]);
+
+  // GTM view_item event
+  useEffect(() => {
+    if (!productData.id) return;
+    const w = window as any;
+    w.dataLayer = w.dataLayer || [];
+
+    const price = productData.sale_price > 0 ? productData.sale_price : productData.price;
+    const sku = productData.sku ?? "";
+    const itemName = typeof productData.name === "string" ? productData.name : (productData.name as any)?.en ?? "";
+    const currency = productData.currency?.symbol || "AED";
+    const vendorId = productData.suppliers?.[0]?.vendor_id ?? "";
+
+    const eventData = {
+      currency,
+      value: price,
+      items: [
+        {
+          item_id: sku || String(productData.id),
+          item_name: itemName || "Unknown Product",
+          index: 0,
+          item_brand: "",
+          item_category: categorySlug || "",
+          item_list_id: String(productData.id),
+          item_list_name: itemName || "Unknown Product",
+          item_variant: "",
+          location_id: String(vendorId),
+          price,
+          quantity: 1,
+        },
+      ],
+    };
+
+    const send = () => {
+      if (w.gtag) w.gtag("event", "view_item", eventData);
+    };
+
+    if (!w.gtagLoaded) {
+      const script = document.createElement("script");
+      script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
+      script.async = true;
+      document.head.appendChild(script);
+      script.onload = () => {
+        w.gtag = function () { w.dataLayer.push(arguments); };
+        w.gtag("js", new Date());
+        w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
+        w.gtagLoaded = true;
+        send();
+      };
+    } else {
+      send();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productData.id]);
 
   const supplier = productData.suppliers?.[0] ?? null;

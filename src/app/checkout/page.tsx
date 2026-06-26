@@ -25,6 +25,7 @@ import {
   getDefaultAddressCache,
   getLocationData,
 } from "@/utils/locationStorage";
+import { getCartId } from "@/utils/cartId";
 import {
   getShippingCharge,
   getShippingChargeFromAddress,
@@ -291,7 +292,10 @@ export default function CheckoutPage() {
     // Otherwise fall back to the address flat-rate × qty
     const newTotalShipping = (rawProducts as any[]).reduce((sum, cp) => {
       const qty = Number(cp.quantity) || 1;
-      const productOwn = Number(cp.product?.shippingCharge) || 0;
+      const productOwn =
+        Number(cp.shipping_charge) ||
+        Number(cp.product?.shipping_charge) ||
+        0;
       const itemShipping =
         productOwn > 0 ? productOwn * qty : flatRatePerUnit * qty;
       return sum + itemShipping;
@@ -1219,7 +1223,7 @@ export default function CheckoutPage() {
       </div>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-4">
         <Link
-          href="/cart"
+          href={`/cart/${getCartId()}`}
           className="flex items-center gap-1 text-[#186737] text-sm hover:underline font-medium"
         >
           <ChevronRight size={14} className="rotate-180" /> Return to cart

@@ -42,6 +42,7 @@ import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
 import { AddToCartWidgetProps } from "@/features/product-detail/types";
 import GetAQuoteModal from "@/components/get-a-quote-modal";
+import { getCartId } from "@/utils/cartId";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -77,6 +78,60 @@ const getToken = (): string | null => {
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
+
+// ─── GTM add_to_cart event ────────────────────────────────────────────────────
+function fireAddToCartGTM(params: {
+  id: number;
+  name: string;
+  sku: string;
+  price: number;
+  quantity: number;
+  vendorId: number;
+  currencySymbol: string;
+}) {
+  const w = window as any;
+  w.dataLayer = w.dataLayer || [];
+
+  const eventData = {
+    currency: params.currencySymbol || "AED",
+    value: params.price * params.quantity,
+    items: [
+      {
+        item_id: params.sku || String(params.id),
+        item_name: params.name || "Unknown Product",
+        index: 0,
+        item_brand: "",
+        item_category: "",
+        item_list_id: String(params.id),
+        item_list_name: params.name || "Unknown Product",
+        item_variant: "",
+        location_id: String(params.vendorId || ""),
+        price: params.price,
+        quantity: params.quantity,
+      },
+    ],
+  };
+
+  const send = () => {
+    if (w.gtag) w.gtag("event", "add_to_cart", eventData);
+  };
+
+  if (!w.gtagLoaded) {
+    const script = document.createElement("script");
+    script.src = "https://www.googletagmanager.com/gtag/js?id=GTM-KZNMLW32";
+    script.async = true;
+    document.head.appendChild(script);
+    script.onload = () => {
+      w.gtag = function () { w.dataLayer.push(arguments); };
+      w.gtag("js", new Date());
+      w.gtag("config", "GTM-KZNMLW32", { debug_mode: true });
+      w.gtagLoaded = true;
+      send();
+    };
+  } else {
+    send();
+  }
+}
 
 // ─── Module-level hydration guard ────────────────────────────────────────────
 let cartHydrated = false;
@@ -306,6 +361,7 @@ export const AddToCartWidget = ({
         if (sflIds.includes(product.id)) {
           dispatch(removeSaveForLater({ productId: product.id }));
         }
+        fireAddToCartGTM({ id: product.id, name, sku: product.sku ?? "", price: activePrice, quantity: count, vendorId, currencySymbol });
         // Notify parent immediately after successful add (before flash)
         onAddSuccess?.();
       } catch {
@@ -351,6 +407,7 @@ export const AddToCartWidget = ({
           rawProduct: product,
         } as Parameters<typeof addItem>[0]),
       );
+      fireAddToCartGTM({ id: product.id, name, sku: product.sku ?? "", price: activePrice, quantity: count, vendorId, currencySymbol });
       onAddSuccess?.();
     }
 
@@ -433,6 +490,7 @@ export const AddToCartWidget = ({
 
         // If no real ID yet, resolve in background
         if (!itemId) resolveCartItemId().catch(() => {});
+        fireAddToCartGTM({ id: product.id, name, sku: product.sku ?? "", price: activePrice, quantity: minQty, vendorId, currencySymbol });
       } catch {
         // silent
       }
@@ -481,6 +539,7 @@ export const AddToCartWidget = ({
           rawProduct: product,
         } as Parameters<typeof addItem>[0]),
       );
+      fireAddToCartGTM({ id: product.id, name, sku: product.sku ?? "", price: activePrice, quantity: minQty, vendorId, currencySymbol });
       onAddSuccess?.();
     }
 
@@ -677,7 +736,7 @@ export const AddToCartWidget = ({
           {/* Add To Cart / Request Quote Button */}
           {isAddedState ? (
             <Link
-              href="/cart"
+            href={`/cart/${getCartId()}`}
               className={`${computedButtonClass} w-fulls flex items-center justify-center gap-1.5 group`}
             >
               {iconShow && <CheckCircle size={13} strokeWidth={2} />}
@@ -728,7 +787,7 @@ export const AddToCartWidget = ({
         <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
           {isAddedState && !isQuote ? (
             <Link
-              href="/cart"
+                  href={`/cart/${getCartId()}`}
               className={`flex-1 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors group ${isWishlist ? "h-10 px-3" : "h-8.5"} `}
             >
               {iconShow && <CheckCircle size={13} strokeWidth={2} />}

@@ -45,6 +45,7 @@ import type { SearchSuggestions } from "@/utils/types";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "./SearchBar";
+import { getCartId } from "@/utils/cartId";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CategoryName {
@@ -563,7 +564,7 @@ export default function NavigationStatic({
                 </Link>
 
                 {/* Cart */}
-                <Link href="/cart">
+                <Link     href={`/cart/${getCartId()}`}>
                   <button className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] transition-colors text-white rounded-[7px] pl-3 pr-4 h-10">
                     <div className="relative">
                       <ShoppingCart size={18} />

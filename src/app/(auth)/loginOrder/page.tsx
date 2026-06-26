@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
+import { getCartId } from "@/utils/cartId";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -219,7 +220,7 @@ function LoginPanel() {
 
       cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
 
-       const redirect = searchParams.get("redirect") ?? "/cart";
+     const redirect = searchParams.get("redirect") ??     `/cart/${getCartId()}`;
       window.location.href = redirect;
     } catch {
       setApiError("Google login failed. Please try again.");
@@ -259,7 +260,7 @@ function LoginPanel() {
         } else {
           dispatch(fetchCounts()).catch(err => console.error("Fetch counts error:", err));
         }
- const redirect = searchParams.get("redirect") ?? "/cart";
+ const redirect = searchParams.get("redirect") ??  `/cart/${getCartId()}`;
         window.location.href = redirect;
         cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
       } catch (err: unknown) {
@@ -496,7 +497,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         }
         await dispatch(fetchCounts())
         onSuccess();
-        router.push("/cart");
+        router.push( `/cart/${getCartId()}`);
       } catch (err: unknown) {
         const msg =
           (err as { response?: { data?: { message?: string } } })?.response

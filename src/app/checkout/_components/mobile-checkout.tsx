@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import { Switch } from '@/components/ui/switch'
 import type { MobileCheckoutProps } from './types'
+import { getCartId } from '@/utils/cartId'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -62,7 +63,7 @@ export function MobileCheckout(props: MobileCheckoutProps) {
             </button>
           ) : (
             <Link
-              href="/cart"
+           href={`/cart/${getCartId()}`}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
             >
               <ArrowLeft size={20} className="text-gray-700" />

@@ -29,6 +29,7 @@ import {
   getDefaultAddressCache,
   getLocationData,
 } from "@/utils/locationStorage";
+import { getCartId } from "@/utils/cartId";
 import { getShippingCharge } from "@/utils/shipping";
 import {
   ArrowRight,
@@ -44,7 +45,7 @@ import { usePerPage } from "@/hooks/usePerPage";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import TaxInitializer from "@/components/TaxInitializer";
-import { COUPON_KEY } from "../checkout/page";
+import { COUPON_KEY } from "../../checkout/page";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -175,6 +176,9 @@ export default function CartPage() {
 
   const cartShippingCharge = useAppSelector((s) => s.cart.cartShippingCharge);
 
+  const [cartId] = useState<string>(() =>
+    typeof window !== "undefined" ? getCartId() : "",
+  );
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [shipmentOpen, setShipmentOpen] = useState(true);
