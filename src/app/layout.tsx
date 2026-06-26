@@ -13,6 +13,7 @@ import "./globals.css";
 import CountryDetector from "@/components/country-detector";
 import GlobalPrefetch from "@/components/global-prefetch";
 import CustomScriptsRenderer from "@/components/custom-scripts-renderer";
+import ForceClear from "@/components/force-clear";
 
 interface CustomScript {
   id: number;
@@ -104,6 +105,7 @@ export default async function RootLayout({
         />
         <NextIntlClientProvider messages={messages}>
           <GlobalLayout navItemData={navItemData} searchData={searchDataRes}>
+            <ForceClear />
             <WebVitals />
             <CountryDetector />
             <GlobalPrefetch />
