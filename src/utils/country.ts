@@ -1,4 +1,4 @@
-const GEO_API = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/frontend/location`;
+const GEO_API = `${process.env.NEXT_PUBLIC_API_BASE_URL}/frontend/location`;
 const FALLBACK = "IN";
 const COOKIE_NAME = "hc_cc";
 

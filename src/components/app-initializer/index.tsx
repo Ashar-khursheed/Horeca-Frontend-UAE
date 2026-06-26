@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
 
 const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
-const LOCATION_API   = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/frontend/location`;
+const LOCATION_API   = `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/location`;
 const LOCATION_EVENT = "hc_location_updated";
 const DETECT_KEY     = "hc_detect_time";
 const DETECT_TTL     = 10 * 60 * 1000; // 10 minutes cache

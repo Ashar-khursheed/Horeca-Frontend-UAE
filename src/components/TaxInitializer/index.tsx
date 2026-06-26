@@ -6,7 +6,7 @@ import { useLocationData, DEFAULT_ADDRESS_EVENT } from "@/utils/locationStorage"
 import { setTaxRate, clearTaxRate, TAX_STORAGE_KEY, type TaxRateData } from "@/store/slices/tax/taxSlice";
 import type { AppDispatch } from "@/store/store";
 
-const TAX_API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/frontend/tax/rate`;
+const TAX_API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/tax/rate`;
 const DEFAULT_ADDRESS_KEY = "hc_default_address";
 
 interface DefaultAddress {

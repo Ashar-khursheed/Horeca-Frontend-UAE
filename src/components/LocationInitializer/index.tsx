@@ -7,7 +7,7 @@ export default function LocationInitializer() {
     // // Already cached — skip API call
     // if (getLocationData()) return;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/frontend/location`)
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/location`)
       .then((res) => res.json())
       .then((data) => { setLocationData(data); })
       .catch(() => {});
