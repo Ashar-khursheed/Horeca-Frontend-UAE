@@ -64,6 +64,7 @@ async function processSquarePayment(token: string, amount: number) {
 
 // ── Build products array ──────────────────────────────────────────────────────
 function buildProducts(rawProducts: any[]) {
+  console.log("aspodasjdasdjasdfasu",rawProducts)
   const defaultAddr = getDefaultAddressCache();
   const location = getLocationData();
   const deliveryCharge = getShippingCharge(
@@ -83,7 +84,7 @@ function buildProducts(rawProducts: any[]) {
       quantity: qty,
       shipping_charge: own > 0 ? own * qty : (deliveryCharge ?? 0) * qty,
       unit_price: parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
-      accessory_item_ids: (cp.accessory_charges ?? []).map((a: any) => a.id),
+      accessory_item_ids: (cp.accessory_charges ?? []).map((a: any) => a.accessory_item_id),
     };
   });
 }

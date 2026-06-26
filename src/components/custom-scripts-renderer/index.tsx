@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { parseScriptHtml } from "@/utils/parse-script-html";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 interface CustomScript {
@@ -16,58 +15,72 @@ interface CustomScriptsRendererProps {
   scripts: CustomScript[];
 }
 
+function injectScript(code: string, placement: "head" | "body") {
+  const container =
+    placement === "head" ? document.head : document.body;
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = code.trim();
+
+  wrapper.querySelectorAll("script").forEach((oldScript) => {
+    const newScript = document.createElement("script");
+
+    Array.from(oldScript.attributes).forEach((attr) => {
+      newScript.setAttribute(attr.name, attr.value);
+    });
+
+    if (oldScript.src) {
+      newScript.async = oldScript.async ?? true;
+    } else {
+      newScript.textContent = oldScript.textContent;
+    }
+
+    container.appendChild(newScript);
+  });
+}
+
 export default function CustomScriptsRenderer({ scripts }: CustomScriptsRendererProps) {
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
-    const scheduleScriptMounting = () => {
-      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-        window.requestIdleCallback(() => {
-          setMounted(true);
-        }, { timeout: 1500 });
+    const schedule = (fn: () => void) => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(fn, { timeout: 1500 });
       } else {
-        setTimeout(() => {
-          setMounted(true);
-        }, 800);
+        setTimeout(fn, 800);
       }
     };
 
+    const run = () => {
+      scripts.forEach((s) => {
+        if (!s.is_active) return;
+
+        const code = (s.script_code || "").toLowerCase();
+        const isPaymentScript =
+          code.includes("squarecdn.com") ||
+          code.includes("staxpayments.com") ||
+          code.includes("staxjs") ||
+          code.includes("square.js");
+
+        if (isPaymentScript) {
+          const isCheckoutOrPaymentPage =
+            pathname.startsWith("/checkout") ||
+            pathname.startsWith("/payment");
+          if (!isCheckoutOrPaymentPage) return;
+        }
+
+        const placement = s.placement?.includes("head") ? "head" : "body";
+        injectScript(s.script_code, placement);
+      });
+    };
+
     if (document.readyState === "complete") {
-      scheduleScriptMounting();
+      schedule(run);
     } else {
-      window.addEventListener("load", scheduleScriptMounting, { once: true });
-      return () => window.removeEventListener("load", scheduleScriptMounting);
+      window.addEventListener("load", () => schedule(run), { once: true });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!mounted) return null;
-
-  const filteredScripts = scripts.filter((s) => {
-    if (!s.is_active) return false;
-
-    const code = (s.script_code || "").toLowerCase();
-    
-    // Check if the script belongs to a payment gateway or billing captcha
-    const isPaymentScript = 
-      code.includes("squarecdn.com") || 
-      code.includes("staxpayments.com") || 
-      code.includes("staxjs") || 
-      code.includes("square.js");
-
-    if (isPaymentScript) {
-      const isCheckoutOrPaymentPage = 
-        pathname.startsWith("/checkout") || 
-        pathname.startsWith("/payment");
-      return isCheckoutOrPaymentPage;
-    }
-
-    return true;
-  });
-
-  return (
-    <>
-      {filteredScripts.map((s, i) => parseScriptHtml(s.script_code, i))}
-    </>
-  );
+  return null;
 }

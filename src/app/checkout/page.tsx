@@ -109,6 +109,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const rawProducts = useAppSelector((s: any) => s.cart.rawProducts);
+  console.log("rawProductsrawProductsrawProducts",rawProducts)
   const guestItems = useAppSelector((s: any) => s.cart.items);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
   const addresses = useAppSelector((s) => s.customerAddress.addresses);
@@ -116,7 +117,6 @@ export default function CheckoutPage() {
   const country = useAppSelector((s) => s.country);
   const paymentHandleRef = useRef<CheckoutPaymentHandle | null>(null);
   const addressCheckoutRef = useRef<AddressCheckoutHandle | null>(null);
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [cartSummary, setCartSummary] = useState<CartSummaryCache | null>(null);
   const [email, setEmail] = useState("");
