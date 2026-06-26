@@ -779,7 +779,7 @@ export const ProductCard = ({
         {/* Add To Cart — open modal if required accessories exist */}
         <div
           onClickCapture={(e) => {
-            if (hasRequiredAccessories && !accessoryModalOpen) {
+            if (hasRequiredAccessories && !accessoryModalOpen && !isQuote) {
               e.stopPropagation();
               setAccessoryModalOpen(true);
             }

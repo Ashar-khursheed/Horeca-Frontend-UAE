@@ -1,18 +1,20 @@
 "use client";
 
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import { setAuthToken } from "@/apis/axios-instance";
-import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
 import { apiUrls } from "@/apis/api-endpoint";
-import { makeApiRequest } from "@/apis/axios-instance";
+import { makeApiRequest, setAuthToken } from "@/apis/axios-instance";
 import Loader from "@/components/Loader";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { loginUser } from "@/store/slices/auth/authSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
+import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { CustomerProfile, setProfile } from "@/store/slices/my-profile/profileSlice";
 import { AppDispatch, RootState } from "@/store/store";
+import { getCartId } from "@/utils/cartId";
+import { DefaultAddressCache, setDefaultAddressCache, useLocationData } from "@/utils/locationStorage";
 import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
-import { useLocationData, setDefaultAddressCache, DefaultAddressCache } from "@/utils/locationStorage";
 import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
 import { guestCheckoutSchema, loginSchema } from "@/validation/schema";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { useFormik } from "formik";
 import {
   Eye,
@@ -25,9 +27,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { usePhoneValidation } from "@/hooks/usePhoneValidation";
-import { getCartId } from "@/utils/cartId";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
 
@@ -464,6 +463,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         formData.append("password_confirmation", guestPassword);
         formData.append("type", "Private");
         formData.append("country_code", dialCode);
+        formData.append("is_guest", String(true));
         formData.append("mobile_number", values.phone.replace(/\D/g, ""));
 
         await makeApiRequest(apiUrls.REGISTER, {
