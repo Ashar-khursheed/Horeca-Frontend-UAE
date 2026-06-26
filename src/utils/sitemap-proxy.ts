@@ -1,3 +1,5 @@
+import { revalidate } from ".";
+
 const API = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://test-us.thehorecastore.co/api/"
 ).replace(/([^/])$/, "$1/");
@@ -5,7 +7,7 @@ const API = (
 export async function proxyXml(backendPath: string): Promise<Response> {
   try {
     const res = await fetch(`${API}${backendPath}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: revalidate },
     });
     if (!res.ok) {
       return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>`, {

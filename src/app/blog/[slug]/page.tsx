@@ -4,9 +4,10 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
+import { revalidate } from "@/utils";
 
 // ISR — revalidate every hour
-export const revalidate = 3600;
+// export const revalidate = 3600;
 
 // New slugs not in generateStaticParams are SSR'd on-demand, then cached
 export const dynamicParams = true;
@@ -69,7 +70,7 @@ export async function generateMetadata({
   const blog = await makeApiCallSSR<ApiBlogDetail>(
     apiUrls.BLOG_SINGLE(slug),
     {},
-    { revalidate: 3600 },
+    { revalidate: revalidate },
   );
 
   if (!blog) return { title: "Blog Not Found" };

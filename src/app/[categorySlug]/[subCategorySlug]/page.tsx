@@ -10,8 +10,9 @@ import {
 } from "@/utils/types";
 import { cookies } from "next/headers";
 import ProductJsonLd from "@/features/product-detail/json-ld-schema";
+import { revalidate } from "@/utils";
 
-export const revalidate = 3600;
+
 
 interface PageProps {
   params: Promise<{ categorySlug: string; subCategorySlug: string }>;
@@ -52,7 +53,7 @@ export async function generateMetadata({
     apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
     {},
     {
-      revalidate: 3600,
+      revalidate: revalidate,
       method: "POST",
       body: buildFilterBody(subCategorySlug),
     },

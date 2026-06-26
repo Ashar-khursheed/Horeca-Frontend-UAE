@@ -5,8 +5,9 @@ import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiBlog } from "@/components/blog-card";
 import type { BlogCategory } from "@/app/blog/page";
 import CategoryPageClient from "./CategoryPageClient";
+import { revalidate } from "@/utils";
 
-export const revalidate = 3600;
+// export const revalidate = 3600;
 export const dynamicParams = true;
 
 interface PageProps {
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const res = await makeApiCallSSR<CategoryBlogsResponse>(
     apiUrls.BLOG_CATEGORY_BLOGS(slug),
     { lang: "en", page: 1, per_page: 1 },
-    { revalidate: 3600 }
+    { revalidate: revalidate }
   );
 
   const category = res?.category;

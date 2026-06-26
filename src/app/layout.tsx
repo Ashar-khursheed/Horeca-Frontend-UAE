@@ -14,6 +14,7 @@ import CountryDetector from "@/components/country-detector";
 import GlobalPrefetch from "@/components/global-prefetch";
 import CustomScriptsRenderer from "@/components/custom-scripts-renderer";
 import ForceClear from "@/components/force-clear";
+import { revalidate } from "@/utils";
 
 interface CustomScript {
   id: number;
@@ -62,17 +63,17 @@ export default async function RootLayout({
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       {},
-      { revalidate: 3600, countryCode },
+      { revalidate: revalidate, countryCode },
     ),
     makeApiCallSSR<SearchSuggestions>(
       apiUrls.SEARCH,
       { query: "true", page: 1, length: 5 },
-      { revalidate: 3600, countryCode },
+      { revalidate: revalidate, countryCode },
     ),
     makeApiCallSSR<CustomScriptsResponse>(
       apiUrls.CUSTOM_SCRIPTS,
       {},
-      { revalidate: 3600, countryCode },
+      { revalidate: revalidate, countryCode },
     ),
   ]);
   const navItemData = navData?.data ?? [];

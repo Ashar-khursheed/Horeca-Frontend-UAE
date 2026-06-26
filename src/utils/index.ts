@@ -4,5 +4,5 @@ export const slugToTitle = (slug: string) =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
-export const revalidate = 3600;
-export const productDetailRevalidate = 3600;
+export const revalidate = 0;
+export const productDetailRevalidate = 0;

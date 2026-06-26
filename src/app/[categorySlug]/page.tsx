@@ -59,7 +59,7 @@ export default async function CategorySlugPage({ params }: PageProps) {
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { slug: categorySlug, with_parent: false },
-      { revalidate: 3600 },
+      { revalidate: revalidate },
     ),
     makeApiCallSSR<{ success: boolean; data: ApiCategoryPage }>(
       apiUrls.MAIN_CATEGPRY_PAGES(categorySlug),

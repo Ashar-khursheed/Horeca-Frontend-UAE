@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { PolicyPageContent } from "./content";
+import { revalidate } from "@/utils";
 
 // ─── Shared types (imported by content.tsx) ───────────────────────────────────
 
@@ -143,7 +144,7 @@ export async function generateMetadata({
   const res = await makeApiCallSSR<StaticPageResponse>(
     `frontend/static-pages/${slug}`,
     undefined,
-    { revalidate: 3600 }
+    { revalidate: revalidate }
   );
 
   if (!res?.success || !res.data) {
@@ -194,12 +195,12 @@ export default async function PolicyPage({
 
   const [listRes, pageRes] = await Promise.all([
     makeApiCallSSR<StaticPageListResponse>("frontend/static-pages", undefined, {
-      revalidate: 3600,
+      revalidate: revalidate,
     }),
     makeApiCallSSR<StaticPageResponse>(
       `frontend/static-pages/${slug}`,
       undefined,
-      { revalidate: 3600 }
+      { revalidate: revalidate }
     ),
   ]);
 

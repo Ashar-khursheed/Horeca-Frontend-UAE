@@ -5,6 +5,7 @@ import { apiUrls } from "@/apis/api-endpoint";
 import LocationPageClient from "@/features/location/LocationPageClient";
 import type { LocationPageData } from "@/features/location/LocationPageClient";
 import type { RawApiProduct } from "@/components/product-card";
+import { revalidate } from "@/utils";
 
 interface PageProps {
   params: Promise<{ state: string; city: string }>;
@@ -114,7 +115,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const res = await makeApiCallSSR<HorecaPageResponse>(
     apiUrls.HORECA_PAGE_BY_SLUG(state, city),
     {},
-    { revalidate: 3600 },
+    { revalidate: revalidate },
   );
 
   if (!res?.success || !res?.data) return { title: "Page Not Found" };
@@ -149,7 +150,7 @@ export default async function LocationCityPage({ params }: PageProps) {
   const res = await makeApiCallSSR<HorecaPageResponse>(
     apiUrls.HORECA_PAGE_BY_SLUG(state, city),
     {},
-    { revalidate: 3600 },
+    { revalidate: revalidate },
   );
 
   if (!res?.success || !res?.data || !res.data.is_active) notFound();
