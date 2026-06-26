@@ -538,7 +538,15 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
         We&apos;ll use this to confirm your order.
       </p>
 
-      <form onSubmit={formik.handleSubmit} noValidate className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (phoneValidation.isInvalid || phoneValidation.validating) return;
+          formik.handleSubmit(e);
+        }}
+        noValidate
+        className="space-y-4"
+      >
         {/* Name */}
         <div>
           <div className="relative">
@@ -604,7 +612,7 @@ function GuestPanel({ onSuccess }: { onSuccess: () => void }) {
               type="tel"
               name="phone"
               value={formik.values.phone}
-              onChange={(e) => {
+              onChange={(e:any) => {
                 const val = isUSPhone
                   ? formatUSPhone(e.target.value)
                   : e.target.value.replace(/\D/g, "");

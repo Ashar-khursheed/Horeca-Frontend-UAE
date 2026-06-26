@@ -109,7 +109,6 @@ export default function CheckoutPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const rawProducts = useAppSelector((s: any) => s.cart.rawProducts);
-  console.log("rawProductsrawProductsrawProducts",rawProducts)
   const guestItems = useAppSelector((s: any) => s.cart.items);
   const apiStatus = useAppSelector((s) => s.cart.apiStatus);
   const addresses = useAppSelector((s) => s.customerAddress.addresses);
@@ -123,7 +122,7 @@ export default function CheckoutPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState();
+  const [countryCode, setCountryCode] = useState(country?.data?.phone_code ?? undefined);
   const [code, setCode] = useState("");
   const [codeApplied, setCodeApplied] = useState(false);
   const [codeError, setCodeError] = useState("");
@@ -232,7 +231,7 @@ export default function CheckoutPage() {
       if (raw) {
         const user = JSON.parse(raw);
         setEmail(user.email ?? "");
-        const code = user.country_code ?? "";
+        const code = user.country_code || country?.data?.phone_code || "";
         const mobile = user.mobile_number ?? "";
         setCountryCode(code);
 
