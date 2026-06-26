@@ -53,13 +53,12 @@ const SUPPORT_LINKS: LinkItem[] = [
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Facebook, href: process.env.NEXT_PUBLIC_FACEBOOK_LINK, label: "Facebook" },
+  { icon: Facebook, href: "https://www.facebook.com/horecastoreamerica", label: "Facebook" },
   // { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-  { icon: Instagram, href: process.env.NEXT_PUBLIC_INSTAGRAM_LINK, label: "Instagram" },
-  { icon: Linkedin, href: process.env.NEXT_PUBLIC_LINKEDIN_LINK, label: "LinkedIn" },
-  { icon: Youtube, href: process.env.NEXT_PUBLIC_YOUTUBE_LINK, label: "YouTube" },
+  { icon: Instagram, href: "https://www.instagram.com/horecastoreamerica", label: "Instagram" },
+  { icon: Linkedin, href: "https://www.linkedin.com/company/horecastoreamerica/", label: "LinkedIn" },
+  { icon: Youtube, href: "https://www.youtube.com/@horecastoreinternational", label: "YouTube" },
 ];
-
 // ─── Category Accordion (Mobile) ─────────────────────────────────────────────
 const CategoryAccordion = ({ category, locale }: { category: ApiCategory; locale: string }) => {
   const [open, setOpen] = useState(false);
@@ -466,3 +465,6 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
 };
 
 export default Footer;
+
+
+
