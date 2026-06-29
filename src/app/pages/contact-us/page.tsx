@@ -715,7 +715,7 @@ export default function ContactUsPage() {
                   HorecaStore Showroom
                 </p>
                 <p className="text-xs text-gray-500">
-                  6802 Bissonet Street, Ste A · Houston, Texas 77074
+                8800 Bissonnet Street, Ste A, Houston, Texas 77074
                 </p>
               </div>
 
