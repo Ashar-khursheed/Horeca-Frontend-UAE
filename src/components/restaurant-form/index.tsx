@@ -678,7 +678,7 @@ function RestaurantForm({ onClose, type }: RestaurantFormProps) {
                 alt="India"
                 className="absolute left-3 w-5 h-4 object-cover rounded-sm"
               />
-              <span className="absolute left-10 text-sm text-gray-600 font-medium select-none">+91</span>
+              <span className="absolute left-10 text-sm text-gray-600 font-medium select-none">{country?.phone_code}</span>
               <input
                 type="text"
                 id="phone"

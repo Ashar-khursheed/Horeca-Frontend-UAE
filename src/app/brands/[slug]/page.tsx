@@ -19,20 +19,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     { revalidate: productDetailRevalidate },
   );
 
-  const seo   = data?.seo?.current_translation;
+  const seo   = data?.seo;
   const brand = data?.brand;
 
+  const safe = (v?: string | null) => (!v || v === "undefined" ? undefined : v);
+
+  const titleTag  = safe(seo?.title_tag?.en);
+  const metaTitle = safe(seo?.meta_title?.en);
+  const metaDesc  = safe(seo?.meta_description?.en);
+  const ogTitle   = safe(seo?.og_title?.en) ?? metaTitle;
+  const ogDesc    = safe(seo?.og_description?.en) ?? metaDesc;
+  const bannerImg = safe(seo?.banner_image_url?.en);
+  const bannerAlt = safe(seo?.banner_image_alt_text?.en);
+
   return {
-    title:       seo?.title_tag ?? seo?.meta_title ?? brand?.name?.en ?? slug,
-    description: seo?.meta_description ?? undefined,
-    robots: {index: true, follow: true} ,
+    title:       titleTag ?? metaTitle ?? brand?.name?.en ?? slug,
+    description: metaDesc ?? undefined,
+    robots: { index: true, follow: true },
     alternates: { canonical: `${SITE_URL}/brands/${slug}` },
     openGraph: {
-      title:       seo?.og_title && seo.og_title !== "undefined" ? seo.og_title : (seo?.meta_title ?? undefined),
-      description: seo?.og_description && seo.og_description !== "undefined" ? seo.og_description : (seo?.meta_description ?? undefined),
+      title:       ogTitle ?? undefined,
+      description: ogDesc  ?? undefined,
       url:  `${SITE_URL}/brands/${slug}`,
       type: "website",
-      images: seo?.banner_image_url ? [{ url: seo.banner_image_url, alt: seo.banner_image_alt_text ?? "" }] : undefined,
+      images: bannerImg ? [{ url: bannerImg, alt: bannerAlt ?? "" }] : undefined,
     },
   };
 }
