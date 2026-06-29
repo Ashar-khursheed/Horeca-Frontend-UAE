@@ -110,22 +110,21 @@ export async function generateMetadata({
 export default async function BlogDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const [blog, commentsRes] = await Promise.all([
-    makeApiCallSSR<ApiBlogDetail>(
-      apiUrls.BLOG_SINGLE(slug),
-      {},
-      { revalidate: 0 },
-    ),
-    makeApiCallSSR<CommentsResponse>(
-      apiUrls.BLOG_COMMENTS(slug),
-      {},
-      { revalidate: 60 },
-    ),
-  ]);
-
-  const initialComments = commentsRes?.data?.comments ?? [];
+  const blog = await makeApiCallSSR<ApiBlogDetail>(
+    apiUrls.BLOG_SINGLE(slug),
+    {},
+    { revalidate: 0 },
+  );
 
   if (!blog) notFound();
+
+  const commentsRes = await makeApiCallSSR<CommentsResponse>(
+    apiUrls.BLOG_COMMENTS(blog.id),
+    {},
+    { revalidate: 60 },
+  );
+
+  const initialComments = commentsRes?.data?.comments ?? undefined;
 
   return (
     <>
