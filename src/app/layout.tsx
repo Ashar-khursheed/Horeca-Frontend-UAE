@@ -15,6 +15,7 @@ import GlobalPrefetch from "@/components/global-prefetch";
 import CustomScriptsRenderer from "@/components/custom-scripts-renderer";
 import ForceClear from "@/components/force-clear";
 import { revalidate } from "@/utils";
+import PostHogProvider from "@/components/posthog-provider";
 
 interface CustomScript {
   id: number;
@@ -102,15 +103,17 @@ export default async function RootLayout({
           easing="ease"
           showSpinner={false}
         />
-        <NextIntlClientProvider messages={messages}>
-          <GlobalLayout navItemData={navItemData} searchData={searchDataRes}>
-            <ForceClear />
-            <WebVitals />
-            <CountryDetector />
-            <GlobalPrefetch />
-            {children}
-          </GlobalLayout>
-        </NextIntlClientProvider>
+        <PostHogProvider>
+          <NextIntlClientProvider messages={messages}>
+            <GlobalLayout navItemData={navItemData} searchData={searchDataRes}>
+              <ForceClear />
+              <WebVitals />
+              <CountryDetector />
+              <GlobalPrefetch />
+              {children}
+            </GlobalLayout>
+          </NextIntlClientProvider>
+        </PostHogProvider>
         <CustomScriptsRenderer scripts={scripts?.body_bottom ?? []} />
       </body>
     </html>
