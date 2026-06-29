@@ -295,28 +295,53 @@
 //   console.log(`✓ llms.txt → ${siteLines.length} lines`);
 
 //   // ════════════════════════════════════════════════════════════════════════════
-//   // FILE 2: llms-products.txt — all product URLs
+//   // FILE 2: llms-products.txt — full catalog (brands, categories, blog, products)
 //   // ════════════════════════════════════════════════════════════════════════════
+
+//   const brandUrls    = sections["Brands"]    ?? [];
+//   const categoryUrls = sections["Categories"] ?? [];
+//   const blogUrls     = sections["Blog"]       ?? [];
+
 //   const prodLines = [
-//     `# TheHorecaStore — All Products`,
+//     `# TheHorecaStore — Full Catalog`,
 //     ``,
-//     `> Complete product catalog for TheHorecaStore.com`,
+//     `> Complete catalog for TheHorecaStore.com — brands, categories, blog, and all products.`,
 //     ``,
 //     `- Base URL: ${SITE}`,
 //     `- Generated: ${now}`,
 //     `- Total Products: ${productUrls.length}`,
-//     ``,
-//     `## Products (${productUrls.length})`,
+//     `- Total Brands: ${brandUrls.length}`,
+//     `- Total Categories: ${categoryUrls.length}`,
+//     `- Total Blog Posts: ${blogUrls.length}`,
 //     ``,
 //   ];
 
+//   if (brandUrls.length) {
+//     prodLines.push(`## Brands (${brandUrls.length})`, ``);
+//     for (const url of brandUrls) prodLines.push(`- [${urlToLabel(url)}](${url})`);
+//     prodLines.push(``);
+//   }
+
+//   if (categoryUrls.length) {
+//     prodLines.push(`## Categories (${categoryUrls.length})`, ``);
+//     for (const url of categoryUrls) prodLines.push(`- [${urlToLabel(url)}](${url})`);
+//     prodLines.push(``);
+//   }
+
+//   if (blogUrls.length) {
+//     prodLines.push(`## Blog (${blogUrls.length})`, ``);
+//     for (const url of blogUrls) prodLines.push(`- [${urlToLabel(url)}](${url})`);
+//     prodLines.push(``);
+//   }
+
+//   prodLines.push(`## Products (${productUrls.length})`, ``);
 //   for (const url of productUrls) {
 //     prodLines.push(`- [${urlToLabel(url)}](${url})`);
 //   }
 //   prodLines.push(``);
 
 //   await write("llms-products.txt", prodLines);
-//   console.log(`✓ llms-products.txt → ${productUrls.length} products`);
+//   console.log(`✓ llms-products.txt → ${brandUrls.length} brands, ${categoryUrls.length} categories, ${blogUrls.length} blog, ${productUrls.length} products`);
 // }
 
 // main().catch((err) => {

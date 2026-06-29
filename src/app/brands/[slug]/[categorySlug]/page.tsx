@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical: `${SITE_URL}/brands/${slug}/${categorySlug}`,
     },
+     robots: {index: true, follow: true} ,
   };
 }
 

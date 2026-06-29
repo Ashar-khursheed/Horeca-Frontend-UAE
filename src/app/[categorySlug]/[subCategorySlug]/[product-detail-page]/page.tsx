@@ -92,7 +92,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: title ?? undefined,
     description,
-    robots: liveProductRobots(),
+    // robots: liveProductRobots(),
+    robots: {index: true, follow: true} ,
     alternates: {
       canonical: `${SITE_URL}/${categorySlug}/${subCategorySlug}/${productSlug}`,
     },

@@ -33,7 +33,7 @@ export async function generateMetadata({
   return {
     title: seo.meta_title?.en ?? seo.title_tag?.en ?? categorySlug,
     description: seo.meta_description?.en ?? undefined,
-    robots: { index: seo.indexing ?? true, follow: true },
+    robots: {index: true, follow: true} ,
     alternates: {
       canonical: `${SITE_URL}/${categorySlug}`,
     },

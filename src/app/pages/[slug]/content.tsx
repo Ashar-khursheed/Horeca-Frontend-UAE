@@ -208,7 +208,7 @@ export function PolicyPageContent({
         <div className="flex flex-col lg:flex-row gap-8 items-start ">
 
           {/* ── Sidebar ──────────────────────────────────────────────────── */}
-          <aside className="w-full lg:w-80 shrink-0 sticky top-6 space-y-3">
+          <aside className="w-full lg:w-80 shrink-0  space-y-3">
 
             {/* Policy navigation */}
             <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">

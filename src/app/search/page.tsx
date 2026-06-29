@@ -3,6 +3,8 @@ import { apiUrls } from "@/apis/api-endpoint";
 import SearchFeature from "@/features/search";
 import type { SearchSuggestions } from "@/utils/types";
 import { Suspense } from "react";
+import { SITE_URL } from "@/utils/site-url";
+import { Metadata } from "next";
 
 interface PageProps {
   searchParams: Promise<{
@@ -16,6 +18,14 @@ interface PageProps {
     sort_dir?: string;
   }>;
 }
+
+export const metadata: Metadata = {
+  title: "Search | HorecaStore",
+  description: "Search commercial kitchen equipment and restaurant supplies at HorecaStore.",
+  robots: { index: false, follow: true },
+  alternates: { canonical: `${SITE_URL}/search` },
+};
+
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const {

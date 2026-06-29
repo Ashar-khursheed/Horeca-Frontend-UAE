@@ -4,14 +4,13 @@
 > We supply commercial kitchen equipment, refrigeration, smallwares, and more across the United States.
 
 - Base URL: https://www.thehorecastore.com
-- Generated: 2026-06-25
+- Generated: 2026-06-29
 - Products file: https://www.thehorecastore.com/llms-products.txt
 - Language: English
 
-## Main Pages (12)
+## Main Pages (11)
 
 - [Home](https://www.thehorecastore.com/)
-- [Cart](https://www.thehorecastore.com/cart)
 - [Checkout](https://www.thehorecastore.com/checkout)
 - [Create Quotation](https://www.thehorecastore.com/create-quotation)
 - [Faq](https://www.thehorecastore.com/faq)

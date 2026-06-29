@@ -768,7 +768,7 @@ export default function CheckoutPage() {
 
   const crumbs = [
     { label: "Home", href: "/" },
-    { label: "Cart", href: "/cart" },
+    { label: "Cart", href: `/cart/${getCartId()}` },
     { label: "Checkout", href: null },
   ];
 

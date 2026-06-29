@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title:       seo?.title_tag ?? seo?.meta_title ?? brand?.name?.en ?? slug,
     description: seo?.meta_description ?? undefined,
-    robots: { index: data?.seo?.indexing ?? true, follow: true },
+    robots: {index: true, follow: true} ,
     alternates: { canonical: `${SITE_URL}/brands/${slug}` },
     openGraph: {
       title:       seo?.og_title && seo.og_title !== "undefined" ? seo.og_title : (seo?.meta_title ?? undefined),

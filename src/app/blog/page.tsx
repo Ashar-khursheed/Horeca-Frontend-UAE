@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: BLOG_SEO.title,
     description: BLOG_SEO.meta_description,
-    robots: { index: BLOG_SEO.indexing, follow: true },
+   robots: {index: true, follow: true} ,
     alternates: { canonical: BLOG_SEO.canonical_url },
     openGraph: {
       title: BLOG_SEO.og_title,

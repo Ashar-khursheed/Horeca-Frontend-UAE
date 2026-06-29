@@ -66,7 +66,7 @@ export async function generateMetadata({
   return {
     title: seo.meta_title ?? seo.title_tag ?? subCategorySlug,
     description: seo.meta_description ?? undefined,
-    robots: { index: seo.indexing ?? true, follow: true },
+    robots: {index: true, follow: true} ,
     alternates: {
       canonical: `${SITE_URL}/${categorySlug}/${subCategorySlug}`,
     },

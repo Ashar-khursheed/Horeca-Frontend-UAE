@@ -3,9 +3,9 @@ import { SITE_URL } from "@/utils/site-url";
 
 export default function robots(): MetadataRoute.Robots {
   // Staging pe sab bots block karo
-  if (process.env.NEXT_PUBLIC_IS_STAGING === "true") {
-    return { rules: { userAgent: "*", disallow: "/" } };
-  }
+  // if (process.env.NEXT_PUBLIC_IS_STAGING === "true") {
+  //   return { rules: { userAgent: "*", disallow: "/" } };
+  // }
 
   return {
     rules: [

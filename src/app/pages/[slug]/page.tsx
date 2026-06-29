@@ -166,6 +166,7 @@ export async function generateMetadata({
   return {
     title: metaTitle,
     description: metaDesc,
+     robots: {index: true, follow: true} ,
     openGraph: {
       title: ogTitle,
       description: ogDesc,
