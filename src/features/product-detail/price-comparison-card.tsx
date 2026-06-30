@@ -39,7 +39,7 @@ export function PriceComparisonCard({ productData }: Props) {
     n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <div className="bg-white mt-3 border border-gray-200 rounded-[7px] p-4 shadow-sm">
+    <div className="bg-white mt-3 border border-gray-200 rounded-[7px] p-4 shadow-sm ">
       {/* Header */}
       <p className="text-xs font-bold text-black tracking-widest uppercase mb-3">
         Price Comparison

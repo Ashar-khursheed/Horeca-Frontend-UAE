@@ -337,7 +337,7 @@ export const PurchasePanel = ({
         Spot something off? Help us improve this page.
         </button>
       </div> */}
-      <p className="mt-[18px] flex"     onClick={() => setReportOpen(true)}><span className="text-[18px] px-[0px] hover:underline text-[#A6131D] cursor-pointer">Spot something off?<br /> Help us improve this page.</span></p>
+      <p className="mt-[18px] flex"     onClick={() => setReportOpen(true)}><span className="md:text-[18px] text-[12px] px-[0px] hover:underline text-[#A6131D] cursor-pointer">Spot something off?<br /> Help us improve this page.</span></p>
 
       <ReportErrorModal
         isOpen={reportOpen}

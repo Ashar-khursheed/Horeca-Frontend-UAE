@@ -284,7 +284,9 @@ const ProductDetailPage = ({
               productData={productData}
             />
 
-            <PriceComparisonCard productData={productData} />
+           <div className="md:hidden block">
+             <PriceComparisonCard productData={productData} />
+           </div>
           </div>
 
           <AlternateAiProducts
