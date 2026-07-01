@@ -82,8 +82,7 @@ export const ProductInfo = ({
   const isQuote = !!product?.quote_available;
 
   const [openBenefits, setOpenBenefits] = useState<Set<number>>(new Set([0]));
-  const [selectedAccessory, setSelectedAccessory] =
-    useState<AccessoryItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Record<number, AccessoryItem | null>>({});
   const locationState = useLocationData();
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
 
@@ -216,20 +215,14 @@ export const ProductInfo = ({
               {acc.name}
             </p>
             <Select
-              value={selectedAccessory?.id?.toString() ?? "none"}
+              value={selectedItems[acc.id]?.id?.toString() ?? ""}
               onValueChange={(val) => {
-                if (val === "none") {
-                  setSelectedAccessory(null);
-                  return;
-                }
-                setSelectedAccessory(
-                  acc.accessory_item.find((it) => it.id.toString() === val) ??
-                    null,
-                );
+                const item = acc.accessory_item.find((it) => it.id.toString() === val) ?? null;
+                setSelectedItems((prev) => ({ ...prev, [acc.id]: item }));
               }}
             >
               <SelectTrigger className="w-full h-10 text-sm border-gray-200 focus:ring-[#186737] focus:border-[#186737]">
-                <SelectValue placeholder="Select warranty…" />
+                <SelectValue placeholder={`Select ${acc.name}…`} />
               </SelectTrigger>
               <SelectContent>
                 {acc.accessory_item.map((item) => (
@@ -252,7 +245,7 @@ export const ProductInfo = ({
               isQuote ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"
             }`}
             accessoryItemIds={
-              selectedAccessory ? [selectedAccessory.id] : undefined
+              Object.values(selectedItems).filter(Boolean).map((it) => it!.id)
             }
           />
         )}
