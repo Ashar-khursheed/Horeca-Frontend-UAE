@@ -134,7 +134,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: blog.seo.schema }}
         />
       )}
-      <BlogDetailClient blog={blog} initialComments={initialComments} />
+      <BlogDetailClient blog={blog} initialComments={initialComments ?? []} />
     </>
   );
 }

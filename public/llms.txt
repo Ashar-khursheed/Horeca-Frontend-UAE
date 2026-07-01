@@ -4,7 +4,7 @@
 > We supply commercial kitchen equipment, refrigeration, smallwares, and more across the United States.
 
 - Base URL: https://www.thehorecastore.com
-- Generated: 2026-06-29
+- Generated: 2026-07-01
 - Products file: https://www.thehorecastore.com/llms-products.txt
 - Language: English
 
@@ -900,6 +900,10 @@
 - [Saniserv](https://www.thehorecastore.com/brands/saniserv)
 - [Victoria Arduino](https://www.thehorecastore.com/brands/victoria-arduino)
 - [Spaceman](https://www.thehorecastore.com/brands/spaceman)
+
+## Other (1)
+
+- [Bestsellers](https://www.thehorecastore.com/bestsellers)
 
 ## Authentication
 
