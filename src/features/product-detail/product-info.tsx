@@ -83,8 +83,15 @@ export const ProductInfo = ({
 
   const [openBenefits, setOpenBenefits] = useState<Set<number>>(new Set([0]));
   const [selectedItems, setSelectedItems] = useState<Record<number, AccessoryItem | null>>({});
+  const [showErrors, setShowErrors] = useState(false);
   const locationState = useLocationData();
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
+
+  const requiredUnmet = accessories.filter(
+    (acc) => acc.is_required === 1 && !selectedItems[acc.id],
+  );
+  const canAddToCart = requiredUnmet.length === 0;
+  const selectedItemIds = Object.values(selectedItems).filter(Boolean).map((it) => it!.id);
 
   useEffect(() => {
     try {
@@ -205,49 +212,69 @@ export const ProductInfo = ({
         )}
 
         {/* Accessories */}
-        {accessories.map((acc) => (
-          <div key={acc.id} className="mb-4">
-            <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
-              <ShieldCheck
-                size={16}
-                className="text-[#186737] shrink-0 mt-0.5"
-              />
-              {acc.name}
-            </p>
-            <Select
-              value={selectedItems[acc.id]?.id?.toString() ?? ""}
-              onValueChange={(val) => {
-                const item = acc.accessory_item.find((it) => it.id.toString() === val) ?? null;
-                setSelectedItems((prev) => ({ ...prev, [acc.id]: item }));
-              }}
-            >
-              <SelectTrigger className="w-full h-10 text-sm border-gray-200 focus:ring-[#186737] focus:border-[#186737]">
-                <SelectValue placeholder={`Select ${acc.name}…`} />
-              </SelectTrigger>
-              <SelectContent>
-                {acc.accessory_item.map((item) => (
-                  <SelectItem key={item?.id} value={item?.id?.toString()}>
-                    {formatAccessoryName(item?.name)} — +{fmtPrice(item?.price)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ))}
+        {accessories.map((acc) => {
+          const isRequired = acc.is_required === 1;
+          const hasError = showErrors && isRequired && !selectedItems[acc.id];
+          return (
+            <div key={acc.id} className="mb-4">
+              <p className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1.5">
+                <ShieldCheck
+                  size={16}
+                  className={`shrink-0 mt-0.5 ${isRequired ? "text-red-500" : "text-[#186737]"}`}
+                />
+                <span className="capitalize">{acc.name}</span>
+                {isRequired && (
+                  <span className="text-red-500 text-xs font-normal">*</span>
+                )}
+              </p>
+              <Select
+                value={selectedItems[acc.id]?.id?.toString() ?? ""}
+                onValueChange={(val) => {
+                  const item = acc.accessory_item.find((it) => it.id.toString() === val) ?? null;
+                  setSelectedItems((prev) => ({ ...prev, [acc.id]: item }));
+                  if (val) setShowErrors(false);
+                }}
+              >
+                <SelectTrigger className={`w-full h-10 text-sm focus:ring-[#186737] focus:border-[#186737] ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`}>
+                  <SelectValue placeholder={`Select ${acc.name}…`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {acc.accessory_item.map((item) => (
+                    <SelectItem key={item?.id} value={item?.id?.toString()}>
+                      {formatAccessoryName(item?.name)} — +{fmtPrice(item?.price)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasError && (
+                <p className="text-xs text-red-500 mt-1">
+                  Please select {acc.name} before adding to cart
+                </p>
+              )}
+            </div>
+          );
+        })}
 
         {/* Add to Cart / Request Quote via widget */}
         {product && (
-          <AddToCartWidget
-            product={product}
-            showCounter={true}
-            iconShow={true}
-            buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${
-              isQuote ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"
-            }`}
-            accessoryItemIds={
-              Object.values(selectedItems).filter(Boolean).map((it) => it!.id)
-            }
-          />
+          <div
+            onClickCapture={(e) => {
+              if (!canAddToCart) {
+                e.stopPropagation();
+                setShowErrors(true);
+              }
+            }}
+          >
+            <AddToCartWidget
+              product={product}
+              showCounter={true}
+              iconShow={true}
+              buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${
+                isQuote ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"
+              }`}
+              accessoryItemIds={selectedItemIds}
+            />
+          </div>
         )}
       </div>
 
