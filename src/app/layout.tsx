@@ -16,6 +16,7 @@ import CustomScriptsRenderer from "@/components/custom-scripts-renderer";
 import ForceClear from "@/components/force-clear";
 import { revalidate } from "@/utils";
 import PostHogProvider from "@/components/posthog-provider";
+import { redirect } from "next/navigation";
 
 interface CustomScript {
   id: number;
@@ -59,6 +60,17 @@ export default async function RootLayout({
     reqHeaders.get("x-country-code") ??
     cookieStore.get("hc_cc")?.value ??
     "US";
+
+  // ── Redirect lookup ────────────────────────────────────────────────────────
+  const pathname = reqHeaders.get("x-pathname");
+  if (pathname && pathname !== "/") {
+    const redirectRes = await makeApiCallSSR<{ success: boolean; to: string }>(
+      `redirects/from${pathname}`,
+      {},
+      { revalidate: 300, countryCode },
+    );
+    if (redirectRes?.success && redirectRes?.to) redirect(redirectRes.to);
+  }
 
   const [navData, searchData, customScriptsData] = await Promise.all([
     makeApiCallSSR<{ data: ApiCategory[] }>(

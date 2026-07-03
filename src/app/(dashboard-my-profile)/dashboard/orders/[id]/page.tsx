@@ -51,6 +51,16 @@ interface PaymentEntry {
   payment_details?: { receipt_url?: string };
 }
 
+interface AccessoryCharge {
+  id: number;
+  accessory_item_id: number;
+  accessory_item_name: string;
+  accessory_item_price: string;
+  product_accessory_id: number;
+  product_accessory_name: string;
+  amount: string;
+}
+
 interface ApiOrderProduct {
   id: number;
   quantity: number;
@@ -58,6 +68,8 @@ interface ApiOrderProduct {
   status: string;
   is_returnable: string;
   expected_shipping_date: string;
+  accessory_item_charge?: string;
+  accessory_charges?: AccessoryCharge[];
   product_supplier: { delivery_days: string; return_policy: string };
   product: {
     id: number;
@@ -508,6 +520,8 @@ export default function OrderDetailPage() {
                 const warranty = item.product.warranty_attribute?.en ?? "";
                 const deliveryDays = item.product_supplier?.delivery_days ?? "";
                 const lineTotal = Number(item.unit_price) * item.quantity;
+                const accessories = item.accessory_charges ?? [];
+                const accessoryTotal = Number(item.accessory_item_charge ?? 0);
 
                 return (
                   <div
@@ -583,15 +597,44 @@ export default function OrderDetailPage() {
                               </span>
                             )}
                           </div>
+
+                          {accessories.length > 0 && (
+                            <div className="mt-3 border border-gray-100 rounded-[7px] bg-gray-50/60 divide-y divide-gray-100">
+                              <p className="px-3 py-1.5 text-[11px] font-bold text-gray-500">
+                                Accessories
+                              </p>
+                              {accessories.map((acc) => (
+                                <div
+                                  key={acc.id}
+                                  className="flex items-center justify-between gap-3 px-3 py-1.5"
+                                >
+                                  <span className="text-[11px] text-gray-600">
+                                    <span className="text-gray-400">
+                                      {acc.product_accessory_name}:
+                                    </span>{" "}
+                                    {acc.accessory_item_name.replace(/^"|"$/g, "")}
+                                  </span>
+                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
+                                    {sym}{fmt(Number(acc.amount))}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
 
                         <div className="shrink-0 text-right">
                           <p className="text-base font-bold text-gray-900">
-                            {sym}{fmt(lineTotal)}
+                            {sym}{fmt(lineTotal + accessoryTotal)}
                           </p>
                           {item.quantity > 1 && (
                             <p className="text-[11px] text-gray-400 mt-0.5">
                               {sym}{fmt(Number(item.unit_price))} each
+                            </p>
+                          )}
+                          {accessoryTotal > 0 && (
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              incl. {sym}{fmt(accessoryTotal)} accessories
                             </p>
                           )}
                         </div>

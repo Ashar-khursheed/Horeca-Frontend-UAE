@@ -40,6 +40,8 @@ export default async function BrandCategoryPage({ params }: PageProps) {
     makeApiCallSSR<BrandCategoryProductsResponse>(apiUrls.BRAND_CATEGORY_PRODUCTS(slug, categorySlug), {}, { revalidate: productDetailRevalidate }),
   ]);
 
+   console.log("BrandDetailPage data:", brandData);
+
   if (!brandData?.success || !brandData?.brand) notFound();
 
   return (

@@ -100,7 +100,11 @@ const extractToc = (blocks: { value: string }[]): { id: string; text: string }[]
   blocks.forEach((block) => {
     let match;
     while ((match = headingRe.exec(block.value)) !== null) {
-      const rawText = match[1].replace(/<[^>]+>/g, "").trim();
+      const rawText = match[1]
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
       if (!rawText) continue;
       const id = rawText
         .toLowerCase()

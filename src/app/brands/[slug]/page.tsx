@@ -61,6 +61,8 @@ export default async function BrandDetailPage({ params }: PageProps) {
     ? JSON.stringify(schemaObj)
     : undefined;
 
+   
+
   if (!data?.success || !data?.brand) notFound();
 
   return (

@@ -75,6 +75,7 @@ export async function middleware(request: NextRequest) {
   const countryCode   = await resolveCountryCode(request);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-country-code", countryCode);
+  requestHeaders.set("x-pathname", pathname);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 

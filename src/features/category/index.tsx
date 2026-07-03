@@ -400,7 +400,7 @@ export default function CategoriesPage({
                   </p>
                 </div>
                 <div className="grid md:grid-cols-2 grid-cols-1 md:gap-8 max-w-5xl mx-auto">
-                  <Accordion type="single" collapsible defaultValue={`faq-0`} className="space-y-2">
+                  <Accordion type="single" collapsible className="space-y-2">
                     {left.map((f: any, i: number) => (
                       <AccordionItem key={f.id ?? i} value={`faq-${i}`} className="border border-gray-100 rounded-[7px] px-4 shadow-sm">
                         <AccordionTrigger className="text-sm font-semibold text-gray-900 py-4 text-left">

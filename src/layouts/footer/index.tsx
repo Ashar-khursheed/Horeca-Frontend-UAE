@@ -25,6 +25,9 @@ const getName = (name: ApiCategoryName | string, locale: string): string => {
   return locale === "ar" ? (name.ar || name.en) : (name.en || name.ar);
 };
 
+const getCategoryHref = (cat: ApiCategory): string =>
+  cat.slug === "shop-by-brands" ? "/brands" : `/${cat.slug}`;
+
 interface LinkItem {
   label: string;
   href: string;
@@ -38,9 +41,9 @@ const QUICK_LINKS: LinkItem[] = [
   { label: "Financing Options", href: "#", isModal: true, modalTitle: "Financing Options" },
   { label: "Request a Quote", href: "#", isModal: true, modalTitle: "Request a Quote" },
   { label: "Track Your Order", href: "/track-order" },
-  { label: "Returns & Refunds", href: "/pages/return-policy" },
-  { label: "Warranty Info", href: "/pages/extended-warranty" },
-  { label: "Blog & Resources", href: "/blog" },
+  // { label: "Returns & Refunds", href: "/pages/return-policy" },
+  // { label: "Warranty Info", href: "/pages/extended-warranty" },
+  // { label: "Blog & Resources", href: "/blog" },
 ];
 
 const SUPPORT_LINKS: LinkItem[] = [
@@ -50,6 +53,13 @@ const SUPPORT_LINKS: LinkItem[] = [
   { label: "Shipping Policy", href: "/pages/shipping-policy" },
   { label: "Terms of Service", href: "/pages/cancellation-policy" },
   { label: "Privacy Policy", href: "/pages/privacy-policy" },
+];
+
+const BRAND_LINKS: LinkItem[] = [
+  { label: "True Refrigeration", href: "/brands/true-refrigeration" },
+  { label: "Medal Equipment", href: "/brands/medal-equipment-authorised-dealer" },
+  { label: "Manitowoc", href: "/brands/manitowoc" },
+  { label: "Arctic Air", href: "/brands/arctic-air" },
 ];
 
 const SOCIAL_LINKS = [
@@ -77,17 +87,27 @@ const CategoryAccordion = ({ category, locale }: { category: ApiCategory; locale
       </button>
       {open && (
         <div className="pb-3 pl-2 flex flex-col gap-1.5">
-          {category.children?.map((child) => (
-            <Link
-              key={child.id}
-              href={`/${category.slug}/${child.slug}`}
-              className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
-            >
-              {getName(child.name, locale)}
-            </Link>
-          ))}
+          {category.slug === "shop-by-brands"
+            ? BRAND_LINKS.map((brand) => (
+                <Link
+                  key={brand.href}
+                  href={brand.href}
+                  className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
+                >
+                  {brand.label}
+                </Link>
+              ))
+            : category.children?.slice(0, 5).map((child) => (
+                <Link
+                  key={child.id}
+                  href={`/${category.slug}/${child.slug}`}
+                  className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors"
+                >
+                  {getName(child.name, locale)}
+                </Link>
+              ))}
           <Link
-            href={`/${category.slug}`}
+            href={getCategoryHref(category)}
             className="text-[12px] font-semibold text-[#186737] flex items-center gap-1 mt-1"
           >
             View All <ArrowUpRight className="w-3 h-3" />
@@ -149,11 +169,23 @@ const LinksAccordion = ({
   );
 };
 
+// ─── Footer Category Picks — top 5, Tableware swapped for Shop By Brands ────
+const getFooterCategories = (navItemData: ApiCategory[]): ApiCategory[] => {
+  const brandsCategory = navItemData.find((c) => c.slug === "shop-by-brands");
+  const rest = navItemData.filter(
+    (c) => c.slug !== "tableware" && c.slug !== "shop-by-brands",
+  );
+  const picks = rest.slice(0, brandsCategory ? 4 : 5);
+  if (brandsCategory) picks.push(brandsCategory);
+  return picks;
+};
+
 // ─── Main Footer ──────────────────────────────────────────────────────────────
 export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
   const locale = useLocale();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
+  const footerCategories = getFooterCategories(navItemData);
 
   const openModal = (title: string) => {
     setModalTitle(title);
@@ -223,28 +255,39 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
       ══════════════════════════════════════════ */}
       <div className="global-container py-10 hidden md:block">
         <div className="grid grid-cols-3 lg:grid-cols-5 gap-8">
-          {navItemData.slice(0, 5).map((cat, index) => (
+          {footerCategories.map((cat, index) => (
             <div key={cat.id} className={index >= 3 ? "hidden lg:block" : ""}>
-              <Link href={`/${cat.slug}`} className="group flex items-center gap-1 mb-4">
+              <Link href={getCategoryHref(cat)} className="group flex items-center gap-1 mb-4">
                 <h3 className="text-sm font-bold text-gray-900 group-hover:text-[#186737] transition-colors">
                   {getName(cat.name, locale)}
                 </h3>
                 <ArrowUpRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#186737] transition-colors opacity-0 group-hover:opacity-100" />
               </Link>
               <ul className="flex flex-col gap-2">
-                {cat.children?.map((child) => (
-                  <li key={child.id}>
-                    <Link
-                      href={`/${cat.slug}/${child.slug}`}
-                      className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors leading-relaxed"
-                    >
-                      {getName(child.name, locale)}
-                    </Link>
-                  </li>
-                ))}
+                {cat.slug === "shop-by-brands"
+                  ? BRAND_LINKS.map((brand) => (
+                      <li key={brand.href}>
+                        <Link
+                          href={brand.href}
+                          className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors leading-relaxed"
+                        >
+                          {brand.label}
+                        </Link>
+                      </li>
+                    ))
+                  : cat.children?.slice(0, 5).map((child) => (
+                      <li key={child.id}>
+                        <Link
+                          href={`/${cat.slug}/${child.slug}`}
+                          className="text-[13px] text-gray-500 hover:text-[#186737] transition-colors leading-relaxed"
+                        >
+                          {getName(child.name, locale)}
+                        </Link>
+                      </li>
+                    ))}
                 <li>
                   <Link
-                    href={`/${cat.slug}`}
+                    href={getCategoryHref(cat)}
                     className="text-[12px] font-semibold text-[#186737] flex items-center gap-1 mt-1 hover:underline"
                   >
                     View All <ArrowUpRight className="w-3 h-3" />
@@ -265,7 +308,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-3 pb-1">
           Browse Categories
         </p>
-        {navItemData.slice(0, 5).map((cat) => (
+        {footerCategories.map((cat) => (
           <CategoryAccordion key={cat.id} category={cat} locale={locale} />
         ))}
 
