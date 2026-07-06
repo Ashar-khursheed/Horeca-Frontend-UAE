@@ -41,7 +41,11 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
-
+export const metadata = {
+  verification: {
+    google: "i5Slm2IXBKQSZSie_4ILsRhWAc_6JkL3oK54tUM76K8",
+  },
+};
 export default async function RootLayout({
   children,
 }: {

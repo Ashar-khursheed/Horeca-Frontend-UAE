@@ -387,11 +387,11 @@ function LoginPanel() {
 
       <p className="text-center text-[11px] text-gray-500 mt-5 leading-relaxed">
         By registering you agree to the user{" "}
-        <Link href="/terms" className="text-[#186737] hover:underline">
+        <Link href="/pages/refund-policy" className="text-[#186737] hover:underline">
           Terms &amp; Conditions
         </Link>{" "}
         and{" "}
-        <Link href="/privacy-policy" className="text-[#186737] hover:underline">
+        <Link  href="/pages/privacy-policy" className="text-[#186737] hover:underline">
           Privacy Policy
         </Link>
       </p>

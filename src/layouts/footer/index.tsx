@@ -97,7 +97,7 @@ const CategoryAccordion = ({ category, locale }: { category: ApiCategory; locale
                   {brand.label}
                 </Link>
               ))
-            : category.children?.slice(0, 5).map((child) => (
+            : category.children?.slice(0, 4).map((child) => (
                 <Link
                   key={child.id}
                   href={`/${category.slug}/${child.slug}`}
@@ -275,7 +275,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                         </Link>
                       </li>
                     ))
-                  : cat.children?.slice(0, 5).map((child) => (
+                  : cat.children?.slice(0, 4).map((child) => (
                       <li key={child.id}>
                         <Link
                           href={`/${cat.slug}/${child.slug}`}
