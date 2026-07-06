@@ -41,14 +41,14 @@ const QUICK_LINKS: LinkItem[] = [
   { label: "Financing Options", href: "#", isModal: true, modalTitle: "Financing Options" },
   { label: "Request a Quote", href: "#", isModal: true, modalTitle: "Request a Quote" },
   { label: "Track Your Order", href: "/track-order" },
-  // { label: "Returns & Refunds", href: "/pages/return-policy" },
-  // { label: "Warranty Info", href: "/pages/extended-warranty" },
-  // { label: "Blog & Resources", href: "/blog" },
+  { label: "Returns & Refunds", href: "/pages/return-policy" },
+  { label: "Warranty Info", href: "/pages/extended-warranty" },
+  { label: "Blog & Resources", href: "/blog" },
 ];
 
 const SUPPORT_LINKS: LinkItem[] = [
   { label: "Help Center", href: "/pages/contact-us" },
-  // { label: "Contact Us", href: "/contact" },
+  { label: "Contact Us", href: "/contact" },
   { label: "FAQs", href: "/faq" },
   { label: "Shipping Policy", href: "/pages/shipping-policy" },
   { label: "Terms of Service", href: "/pages/cancellation-policy" },
