@@ -2,15 +2,18 @@
 
 import AddToCartWidget from "@/components/add-to-cart";
 import type { RawApiProduct } from "@/components/product-card";
-import type { SearchSuggestions } from "@/utils/types";
+import type { SearchProduct, SearchSuggestions } from "@/utils/types";
+import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const productHref = (p: SearchProduct) =>
+  p.url?.startsWith("/") ? p.url : `/${p.parent_category_url_resolved}/${p.url}`;
+
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://test-us.thehorecastore.co/api/";
+  "https://nlpus.thehorecastore.co/";
 
 interface SearchBarProps {
   searchData?: SearchSuggestions | null;
@@ -67,11 +70,13 @@ export default function SearchBar({ searchData }: SearchBarProps) {
     }
     setLoading(true);
     try {
-      const url = `${API_BASE}frontend/search?query=${encodeURIComponent(query.trim())}&page=1&length=5`;
+      const url = `${API_BASE}search?query=${encodeURIComponent(query.trim())}&page=1&length=5`;
       const res = await fetch(url);
+
       if (!res.ok) throw new Error("search failed");
-      const json: SearchSuggestions = await res.json();
-      setLiveData(json.data ?? null);
+      const raw: NlpSearchResponse = await res.json();
+      const adapted = toSearchSuggestions(raw);
+      setLiveData(adapted.data ?? null);
     } catch {
       // silently keep previous data
     } finally {
@@ -183,8 +188,8 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                     {products.slice(0, 5).map((p, i) => (
                       <li key={i}>
                         <Link
-                          href={p.url}
-                            onClick={() => { setSearchFocused(false); router.push(p.url); }}
+                          href={productHref(p)}
+                            onClick={() => { setSearchFocused(false); router.push(productHref(p)); }}
                           // onMouseDown={() => goToSearch(p.name.en)}
                           className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white hover:shadow-sm transition-all group"
                         >
@@ -326,14 +331,14 @@ export default function SearchBar({ searchData }: SearchBarProps) {
                             width={62}
                             height={62}
                             className="w-full h-full object-contain"
-                            onClick={() => { setSearchFocused(false); router.push(p.url); }}
+                            onClick={() => { setSearchFocused(false); router.push(productHref(p)); }}
                           />
                         )}
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                         <p
                           className="text-[11px] xl:text-[11.5px] 2xl:text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors"
-                          onClick={() => { setSearchFocused(false); router.push(p.url); }}
+                          onClick={() => { setSearchFocused(false); router.push(productHref(p)); }}
                         >
                           {p.name.en}
                         </p>

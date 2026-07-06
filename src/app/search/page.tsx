@@ -1,10 +1,11 @@
-import { makeApiCallSSR } from "@/apis/ssr-fetch";
-import { apiUrls } from "@/apis/api-endpoint";
 import SearchFeature from "@/features/search";
 import type { SearchSuggestions } from "@/utils/types";
+import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
 import { Suspense } from "react";
 import { SITE_URL } from "@/utils/site-url";
 import { Metadata } from "next";
+
+const NLP_SEARCH_API = "https://nlpus.thehorecastore.co/search";
 
 interface PageProps {
   searchParams: Promise<{
@@ -26,6 +27,24 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/search` },
 };
 
+async function fetchSearchResults(
+  params: Record<string, string | number | undefined>,
+): Promise<SearchSuggestions | null> {
+  try {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+    }
+    const res = await fetch(`${NLP_SEARCH_API}?${qs.toString()}`, {
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as NlpSearchResponse;
+    return toSearchSuggestions(json);
+  } catch {
+    return null;
+  }
+}
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const {
@@ -74,22 +93,19 @@ export default async function SearchPage({ searchParams }: PageProps) {
   }
 
   const searchResult = q.trim()
-    ? await makeApiCallSSR<SearchSuggestions>(
-        apiUrls.SEARCH,
-        {
-          query: q.trim(),
-          page,
-          length: 20,
-          ...(Object.keys(appliedFilters).length
-            ? { applied_filters: JSON.stringify(appliedFilters) }
-            : {}),
-          ...(sortBy ? { sort_by: sortBy } : {}),
-          ...(sortDir ? { sort_dir: sortDir } : {}),
-        },
-        { revalidate: 0 },
-      )
+    ? await fetchSearchResults({
+        query: q.trim(),
+        page,
+        length: 20,
+        ...(Object.keys(appliedFilters).length
+          ? { applied_filters: JSON.stringify(appliedFilters) }
+          : {}),
+        ...(sortBy ? { sort_by: sortBy } : {}),
+        ...(sortDir ? { sort_dir: sortDir } : {}),
+      })
     : null;
 
+    console.log("SearchPage searchResult:", searchResult);
 
   return (
     <Suspense>
