@@ -36,9 +36,10 @@ export default async function BlogPage() {
   const categories = await makeApiCallSSR<BlogCategory[]>(
     apiUrls.BLOG_CATEGORIES_WITH_BLOGS,
     { lang: "en" },
-    { revalidate: 60 }
+    { revalidate: 0 }
   );
 
+  console.log("BlogPage categories:", categories);
   return (
     <>
       <ProductJsonLd schema={BLOG_SCHEMA} />

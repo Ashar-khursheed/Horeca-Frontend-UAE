@@ -664,7 +664,7 @@ export default function ContactUsPage() {
                   href="tel:+18664467322"
                   className="flex items-center gap-2 text-sm font-semibold text-[#186737] hover:underline"
                 >
-                  <Phone size={13} /> +1 (866) 446-7322
+                  <Phone size={13} />  (866) 446-7322
                 </a>
                 {/* <a
                   href="tel:+18664467323"

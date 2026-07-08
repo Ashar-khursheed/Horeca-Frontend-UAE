@@ -4,7 +4,7 @@
 > We supply commercial kitchen equipment, refrigeration, smallwares, and more across the United States.
 
 - Base URL: https://www.thehorecastore.com
-- Generated: 2026-07-07
+- Generated: 2026-07-08
 - Products file: https://www.thehorecastore.com/llms-products.txt
 - Language: English
 
@@ -515,7 +515,7 @@
 - [Fry Dump Stations](https://www.thehorecastore.com/restaurant-equipment/fry-dump-stations)
 - [Used Glass Chillers And Frosters](https://www.thehorecastore.com/used-restaurant-equipment/used-glass-chillers-and-frosters)
 
-## Blog (311)
+## Blog (312)
 
 - [Horeca Store Your One Stop Destination For Hotel Restaurant Supplies Equipment](https://www.thehorecastore.com/blog/horeca-store-your-one-stop-destination-for-hotel-restaurant-supplies-equipment)
 - [How To Set Up Your Hotel Housekeeping Trolley The Right Way](https://www.thehorecastore.com/blog/how-to-set-up-your-hotel-housekeeping-trolley-the-right-way)
@@ -828,6 +828,7 @@
 - [Haccp Compliant Kitchen Setup A Beginners Guide For New Owners](https://www.thehorecastore.com/blog/haccp-compliant-kitchen-setup-a-beginners-guide-for-new-owners)
 - [Complete Home Bar Cocktail Station Equipment Checklist For 2026](https://www.thehorecastore.com/blog/complete-home-bar-cocktail-station-equipment-checklist-for-2026)
 - [Menu Engineering 101 How Equipment Choices Affect Food Cost](https://www.thehorecastore.com/blog/menu-engineering-101-how-equipment-choices-affect-food-cost)
+- [Draft Beer System Setup Kegerators Lines And Tap Towers Explained](https://www.thehorecastore.com/blog/draft-beer-system-setup-kegerators-lines-and-tap-towers-explained)
 
 ## Brands (110)
 

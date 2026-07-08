@@ -399,7 +399,7 @@ export default function NavigationStatic({
                 <button
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => setShowContact((v) => !v)}
-                  className={`flex items-center gap-1 xl:gap-1.5 border rounded-full px-2 xl:px-2.5 2xl:px-3 h-10 transition-colors group ${showContact ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
+                  className={`flex items-center gap-1 xl:gap-1.5 border rounded-full px-2 xl:px-2.5 2xl:px-3 h-10 transition-colors group   ${showContact ? "border-[#186737]" : "border-gray-200 hover:border-[#186737]"}`}
                 >
                   <div className="w-6 h-6 rounded-full bg-[#186737]/10 flex items-center justify-center shrink-0">
                     <Phone size={12} className="text-[#186737]" />
@@ -408,8 +408,8 @@ export default function NavigationStatic({
                     <span className="text-[10px] text-gray-400 leading-none">
                       Call Us
                     </span>
-                    <span className="text-[10px] xl:text-[11px] 2xl:text-xs font-semibold text-gray-800 leading-tight group-hover:text-[#186737] transition-colors">
-                      +1 (866) 446-7322
+                    <span className="text-[10px] xl:text-[11px] 2xl:text-xs font-semibold text-green-900 leading-tight group-hover:text-[#186737] transition-colors">
+                      (866) 446-7322
                     </span>
                   </div>
                   <ChevronDown

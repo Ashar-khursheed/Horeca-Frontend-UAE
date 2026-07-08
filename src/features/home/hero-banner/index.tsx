@@ -79,7 +79,7 @@ const CTACard = ({ onQuoteClick }: { onQuoteClick: () => void }) => (
                   href="tel:+18664467322"
                   className="text-[#186737] 2xl:text-base text-[13px] underline font-bold"
                 >
-                  +1 (866) 446-7322
+                   (866) 446-7322
                 </a>
               </div>
               <div>

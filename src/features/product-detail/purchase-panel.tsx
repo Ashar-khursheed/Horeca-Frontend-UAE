@@ -276,7 +276,7 @@ export const PurchasePanel = ({
               className="flex items-center gap-1.5 mt-2 text-[#186737] font-bold text-sm hover:underline"
             >
               <Phone size={13} />
-              +1 (866) 446-7322
+               (866) 446-7322
             </a>
           </div>
         </div>

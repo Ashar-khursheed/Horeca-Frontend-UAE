@@ -52,7 +52,7 @@ const CTA = () => {
           {/* Text */}
           <div className="flex items-center gap-2">
             <span className="text-[12.5px] font-bold text-white">Call Now</span>
-            <span className="text-[12px] font-semibold text-white/80">+1 (866) 446-7322</span>
+            <span className="text-[12px] font-semibold text-white/80">(866) 446-7322</span>
           </div>
 
           {/* Arrow circle */}

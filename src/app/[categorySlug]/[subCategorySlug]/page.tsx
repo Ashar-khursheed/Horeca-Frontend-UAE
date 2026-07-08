@@ -252,7 +252,6 @@ export default async function SubCategorySlugPage({
         : undefined;
 
 
-        
 
   if (!subCategoryPageRes?.success) notFound();
   if (!navigationRes || !navigationRes.data?.length) notFound();
