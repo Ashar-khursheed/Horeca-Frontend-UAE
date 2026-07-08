@@ -27,8 +27,11 @@
 // export default Header;
 
 
+"use client";
+
 import BottomNav from "@/components/bottom-nav";
 import type { SearchSuggestions } from "@/utils/types";
+import { useEffect, useRef, useState } from "react";
 import NavigationStatic from "./main-bar";
 import DropdownPanel from "./navigation";
 import TopBar from "./top-bar";
@@ -38,13 +41,38 @@ interface HeaderProps {
   searchData?: SearchSuggestions | null;
 }
 
-const Header = ({ navItemData = [], searchData }: HeaderProps) => (
-  <header className="w-full z-50 ">
-    <TopBar />
-    <NavigationStatic navItemData={navItemData as any} searchData={searchData} />
-    <DropdownPanel navItemData={navItemData} />
-    <BottomNav />
-  </header>
-);
+const Header = ({ navItemData = [], searchData }: HeaderProps) => {
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  // Measure the header's own height so the spacer below can reserve the
+  // right amount of space — height varies per breakpoint (TopBar hidden on
+  // mobile, BottomNav shown on mobile), so it can't be a fixed pixel value.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setHeaderHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <>
+      <header
+        ref={headerRef}
+        className="w-full fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-300"
+      >
+        <TopBar />
+        <NavigationStatic navItemData={navItemData as any} searchData={searchData} />
+        <DropdownPanel navItemData={navItemData} />
+        <BottomNav />
+      </header>
+      {/* Spacer — keeps page content from sitting under the now-fixed header */}
+      <div style={{ height: headerHeight }} />
+    </>
+  );
+};
 
 export default Header;

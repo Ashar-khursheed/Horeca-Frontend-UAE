@@ -288,7 +288,7 @@ export default function NavigationStatic({
     <>
       <div className="w-full font-sans">
         {/* ── Main Nav ──────────────────────────────────────────────────────── */}
-        <div className="md:bg-white bg-gray-50 nav-shadows sticky top-0 z-40">
+        <div className="md:bg-white bg-gray-50 nav-shadows z-40">
           <div className="global-container mx-auto px-4 lg:px-6">
             <div className="flex items-center justify-between gap-3 lg:gap-4 xl:gap-3 2xl:gap-5 h-[68px]">
               {/* ── Logo ── */}
