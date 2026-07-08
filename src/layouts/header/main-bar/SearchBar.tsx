@@ -4,6 +4,8 @@ import AddToCartWidget from "@/components/add-to-cart";
 import type { RawApiProduct } from "@/components/product-card";
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
 import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
+import { apiUrls } from "@/apis/api-endpoint";
+import { makeApiRequest } from "@/apis/axios-instance";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,17 +17,20 @@ const productHref = (p: SearchProduct) =>
 const API_BASE =
   "https://nlpus.thehorecastore.co/";
 
-interface SearchBarProps {
-  searchData?: SearchSuggestions | null;
-}
-
-export default function SearchBar({ searchData }: SearchBarProps) {
+export default function SearchBar() {
   const router = useRouter();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [liveData, setLiveData] = useState<SearchSuggestions["data"] | null>(
     null,
   );
+  // Default/trending suggestions shown before the user types anything —
+  // fetched lazily on first focus instead of via SSR, so it only hits the
+  // backend for visitors who actually open the search box.
+  const [defaultData, setDefaultData] = useState<SearchSuggestions["data"] | null>(
+    null,
+  );
+  const defaultFetchedRef = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,11 +60,27 @@ export default function SearchBar({ searchData }: SearchBarProps) {
     return () => document.removeEventListener("nav-hover", close);
   }, []);
 
-  // Active data: live results if available, otherwise SSR initial data
-  const d = liveData ?? searchData?.data;
+  // Active data: live typed-query results if available, otherwise the
+  // lazily-fetched default/trending suggestions
+  const d = liveData ?? defaultData;
   const products = d?.products ?? [];
   const categories = d?.categories ?? [];
   const brands = d?.brands ?? [];
+
+  const handleFocus = () => {
+    setSearchFocused(true);
+    if (defaultFetchedRef.current) return;
+    defaultFetchedRef.current = true;
+    setLoading(true);
+    makeApiRequest<SearchSuggestions>(apiUrls.SEARCH, {
+      params: { query: "true", page: 1, length: 5 },
+    })
+      .then((res) => setDefaultData(res?.data ?? null))
+      .catch(() => {
+        defaultFetchedRef.current = false; // allow retry on next focus
+      })
+      .finally(() => setLoading(false));
+  };
 
 
   const fetchSearch = useCallback(async (query: string) => {
@@ -123,7 +144,7 @@ export default function SearchBar({ searchData }: SearchBarProps) {
           onKeyDown={(e) => e.key === "Enter" && goToSearch()}
           placeholder="Search 100,000+ products trusted by hotels & restaurants..."
           className="flex-1 bg-white text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
-          onFocus={() => setSearchFocused(true)}
+          onFocus={handleFocus}
           onBlur={() => setSearchFocused(false)}
         />
         {searchQuery &&

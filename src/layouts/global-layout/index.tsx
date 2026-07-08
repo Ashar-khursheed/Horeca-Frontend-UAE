@@ -8,7 +8,7 @@ import { Provider } from "react-redux";
 import { usePathname } from "next/navigation";
 import Footer from "../footer";
 import Header from "../header";
-import type { ApiCategory, SearchSuggestions } from "@/utils/types";
+import type { ApiCategory } from "@/utils/types";
 
 function ScrollToTop() {
   const pathname = usePathname();
@@ -21,16 +21,15 @@ function ScrollToTop() {
 interface GlobalLayoutProps {
   children: React.ReactNode;
   navItemData?: ApiCategory[];
-  searchData?: SearchSuggestions | null;
 }
 
-const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, navItemData, searchData }) => {
+const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, navItemData }) => {
   return (
     <Provider store={store}>
       <ScrollToTop />
       <AppInitializer />
       <TaxInitializer />
-      <Header navItemData={navItemData} searchData={searchData} />
+      <Header navItemData={navItemData} />
       {children}
       <Footer navItemData={navItemData ?? []} />
     </Provider>

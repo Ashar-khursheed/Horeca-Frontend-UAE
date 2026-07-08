@@ -115,7 +115,7 @@ Paragraph.displayName = "Paragraph";
 // ─── Main SeoContent Component ────────────────────────────────────────────────
 
 export default function SeoContent({ dataAPI }: { dataAPI?: any | null }) {
-  console.log("dataAPIdataAPIdataAPI",dataAPI)
+
   const locale = useLocale();
   if (!dataAPI) return null;;
 

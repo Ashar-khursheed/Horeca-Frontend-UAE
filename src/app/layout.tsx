@@ -1,7 +1,7 @@
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import GlobalLayout from "@/layouts/global-layout";
-import type { ApiCategory, SearchSuggestions } from "@/utils/types";
+import type { ApiCategory } from "@/utils/types";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Inter } from "next/font/google";
@@ -66,25 +66,41 @@ export default async function RootLayout({
     "US";
 
   // ── Redirect lookup ────────────────────────────────────────────────────────
-  // const pathname = reqHeaders.get("x-pathname");
-  // if (pathname && pathname !== "/") {
-  //   const redirectRes = await makeApiCallSSR<{ success: boolean; to: string }>(
-  //     `redirects/from${pathname}`,
-  //     {},
-  //     { revalidate: 300, countryCode },
-  //   );
-  //   if (redirectRes?.success && redirectRes?.to) redirect(redirectRes.to);
-  // }
+  // Skip app feature routes — their paths embed per-session/dynamic tokens
+  // (e.g. /cart/<generated-guest-id>) that will never match a configured
+  // CMS redirect, so looking them up just wastes an uncacheable backend call
+  // on every single visit.
+  const NO_REDIRECT_LOOKUP_PREFIXES = [
+    "/cart",
+    "/checkout",
+    "/payment",
+    "/wishlist",
+    "/track-order",
+    "/create-quotation",
+    "/dashboard",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/search",
+  ];
+  const pathname = reqHeaders.get("x-pathname");
+  const skipRedirectLookup =
+    !pathname ||
+    pathname === "/" ||
+    NO_REDIRECT_LOOKUP_PREFIXES.some((p) => pathname.startsWith(p));
+  if (!skipRedirectLookup) {
+    const redirectRes = await makeApiCallSSR<{ success: boolean; to: string }>(
+      `redirects/from${pathname}`,
+      {},
+      { revalidate: 300, countryCode },
+    );
+    if (redirectRes?.success && redirectRes?.to) redirect(redirectRes.to);
+  }
 
-  const [navData, searchData, customScriptsData] = await Promise.all([
+  const [navData, customScriptsData] = await Promise.all([
     makeApiCallSSR<{ data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       {},
-      { revalidate: revalidate, countryCode },
-    ),
-    makeApiCallSSR<SearchSuggestions>(
-      apiUrls.SEARCH,
-      { query: "true", page: 1, length: 5 },
       { revalidate: revalidate, countryCode },
     ),
     makeApiCallSSR<CustomScriptsResponse>(
@@ -94,7 +110,6 @@ export default async function RootLayout({
     ),
   ]);
   const navItemData = navData?.data ?? [];
-  const searchDataRes = searchData;
   const scripts = customScriptsData?.data;
 
   return (
@@ -121,7 +136,7 @@ export default async function RootLayout({
         />
         <PostHogProvider>
           <NextIntlClientProvider messages={messages}>
-            <GlobalLayout navItemData={navItemData} searchData={searchDataRes}>
+            <GlobalLayout navItemData={navItemData}>
               <ForceClear />
               <WebVitals />
               <CountryDetector />

@@ -41,7 +41,6 @@ import {
 } from "@/store/slices/wishlist/wishlistSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useLocationData } from "@/utils/locationStorage";
-import type { SearchSuggestions } from "@/utils/types";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "./SearchBar";
@@ -162,10 +161,8 @@ function MobileNavItem({ item, depth = 0, onClose, rootSlug, parentSlug }: Mobil
 // ══════════════════════════════════════════════════════════════════════════════
 export default function NavigationStatic({
   navItemData = [],
-  searchData,
 }: {
   navItemData?: Category[];
-  searchData?: SearchSuggestions | null;
 }) {
   const reduxCustomer = useSelector((s: any) => s.profile.customer);
   const locationData = useLocationData();
@@ -389,7 +386,7 @@ export default function NavigationStatic({
               </div>
 
               {/* ── Search ── */}
-              <SearchBar searchData={searchData} />
+              <SearchBar />
 
               {/* ── Phone / Contact Dropdown (xl only) ── */}
               <div

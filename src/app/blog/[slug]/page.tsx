@@ -4,11 +4,11 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
-import { revalidate } from "@/utils";
+import { revalidate as fetchRevalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
 
 // ISR — revalidate every hour
-// export const revalidate = 3600;
+export const revalidate = 3600;
 
 // New slugs not in generateStaticParams are SSR'd on-demand, then cached
 export const dynamicParams = true;
@@ -71,7 +71,7 @@ export async function generateMetadata({
   const blog = await makeApiCallSSR<ApiBlogDetail>(
     apiUrls.BLOG_SINGLE(slug),
     {},
-    { revalidate: revalidate },
+    { revalidate: fetchRevalidate },
   );
 
   if (!blog) return { title: "Blog Not Found" };
@@ -113,7 +113,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
   const blog = await makeApiCallSSR<ApiBlogDetail>(
     apiUrls.BLOG_SINGLE(slug),
     {},
-    { revalidate: revalidate },
+    { revalidate: fetchRevalidate },
   );
 
   if (!blog) notFound();

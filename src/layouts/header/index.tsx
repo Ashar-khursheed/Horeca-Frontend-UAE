@@ -30,7 +30,6 @@
 "use client";
 
 import BottomNav from "@/components/bottom-nav";
-import type { SearchSuggestions } from "@/utils/types";
 import { useEffect, useRef, useState } from "react";
 import NavigationStatic from "./main-bar";
 import DropdownPanel from "./navigation";
@@ -38,10 +37,9 @@ import TopBar from "./top-bar";
 
 interface HeaderProps {
   navItemData?: unknown[];
-  searchData?: SearchSuggestions | null;
 }
 
-const Header = ({ navItemData = [], searchData }: HeaderProps) => {
+const Header = ({ navItemData = [] }: HeaderProps) => {
   const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -65,7 +63,7 @@ const Header = ({ navItemData = [], searchData }: HeaderProps) => {
         className="w-full fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-300"
       >
         <TopBar />
-        <NavigationStatic navItemData={navItemData as any} searchData={searchData} />
+        <NavigationStatic navItemData={navItemData as any} />
         <DropdownPanel navItemData={navItemData} />
         <BottomNav />
       </header>
