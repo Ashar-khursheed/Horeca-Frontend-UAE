@@ -8,7 +8,7 @@ import {
   InnerCategoryPageResponse,
   ProductsListingResponse,
 } from "@/utils/types";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
@@ -50,6 +50,12 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { categorySlug, subCategorySlug } = await params;
 
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    "US";
+
   const res = await makeApiCallSSR<InnerCategoryPageResponse>(
     apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
     {},
@@ -57,6 +63,7 @@ export async function generateMetadata({
       revalidate: revalidate,
       method: "POST",
       body: buildFilterBody(subCategorySlug),
+      countryCode,
     },
   );
 
@@ -99,8 +106,12 @@ export default async function SubCategorySlugPage({
   params,
   searchParams,
 }: PageProps) {
-  const cookieStore = await cookies();
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
   const isLoggedIn = !!cookieStore.get("token")?.value;
+  const countryCode =
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    "US";
   const { categorySlug, subCategorySlug } = await params;
   const {
     parent,
@@ -216,7 +227,7 @@ export default async function SubCategorySlugPage({
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { slug: categorySlug, with_parent: false },
-      { revalidate: revalidate, withAuth: isLoggedIn },
+      { revalidate: revalidate, withAuth: isLoggedIn, countryCode },
     ),
     makeApiCallSSR<InnerCategoryPageResponse>(
       apiUrls.INNER_CATEGORY_PAGES_WITH_FILTER,
@@ -225,6 +236,7 @@ export default async function SubCategorySlugPage({
         revalidate: revalidate,
         method: "POST",
         body: filtersBody,
+        countryCode,
       },
     ),
     makeApiCallSSR<ProductsListingResponse>(
@@ -234,6 +246,7 @@ export default async function SubCategorySlugPage({
         revalidate: revalidate,
         method: "POST",
         body: productsBody,
+        countryCode,
       },
     ),
   ]);

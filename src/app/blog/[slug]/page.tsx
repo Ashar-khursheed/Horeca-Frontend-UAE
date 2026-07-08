@@ -113,7 +113,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
   const blog = await makeApiCallSSR<ApiBlogDetail>(
     apiUrls.BLOG_SINGLE(slug),
     {},
-    { revalidate: 0 },
+    { revalidate: revalidate },
   );
 
   if (!blog) notFound();

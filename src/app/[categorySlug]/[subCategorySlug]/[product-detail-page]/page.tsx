@@ -7,7 +7,7 @@ import { makeApiCallSSR } from '@/apis/ssr-fetch'
 import ProductDetailPage from '@/features/product-detail'
 import ProductJsonLd from '@/features/product-detail/json-ld-schema'
 import type { ProductDetailResponse } from '@/features/product-detail/types'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { revalidate } from '@/utils'
 import { SITE_URL } from '@/utils/site-url'
 import { liveProductRobots, UNAVAILABLE_PAGE_ROBOTS } from '@/utils/seo-robots'
@@ -20,25 +20,25 @@ interface PageProps {
   }>
 }
 
-async function fetchProduct(slug: string, locale: string, withAuth: boolean) {
+async function fetchProduct(slug: string, locale: string, withAuth: boolean, countryCode: string) {
   return makeApiCallSSR<{ data: ProductDetailResponse }>(
     apiUrls.PRODUCT_DETAIL(slug),
     { lang: locale },
-    { revalidate: revalidate, withAuth },
+    { revalidate: revalidate, withAuth, countryCode },
   )
 }
-async function fetchSimilarProductsForGuestUser(slug: string, locale: string, withAuth: boolean) {
+async function fetchSimilarProductsForGuestUser(slug: string, locale: string, withAuth: boolean, countryCode: string) {
   return makeApiCallSSR<{ data: any[] }>(
     apiUrls.SIMILAR_PRODUCTS_FOR_GUEST_USERS(slug),
     { lang: locale },
-    { revalidate: revalidate, withAuth },
+    { revalidate: revalidate, withAuth, countryCode },
   )
 }
-async function fetchAlternateProducts(slug: string, locale: string, withAuth: boolean) {
+async function fetchAlternateProducts(slug: string, locale: string, withAuth: boolean, countryCode: string) {
   return makeApiCallSSR<{ data: any[] }>(
     apiUrls.ALTERNATE_PRODUCTS_FOR_AUTHENTIC_USERS(slug),
     { lang: locale },
-    { revalidate: revalidate, withAuth },
+    { revalidate: revalidate, withAuth, countryCode },
   )
 }
 // const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://test-us.thehorecastore.co/api"
@@ -71,7 +71,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { 'product-detail-page': productSlug, categorySlug, subCategorySlug } = await params
   const locale = await getLocale()
 
-  const res = await fetchProduct(productSlug, locale, false)
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()])
+  const countryCode =
+    reqHeaders.get('x-country-code') ??
+    cookieStore.get('hc_cc')?.value ??
+    'US'
+
+  const res = await fetchProduct(productSlug, locale, false, countryCode)
   const product = res?.data
   if (!product) {
     return { title: productSlug, robots: UNAVAILABLE_PAGE_ROBOTS }
@@ -113,15 +119,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailSlugPage({ params }: PageProps) {
   const { 'product-detail-page': productSlug, categorySlug, subCategorySlug } = await params
-    const cookieStore = await cookies();
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
   const isLoggedIn  = !!cookieStore.get("token")?.value;
-  // console.log("Received params:", { categorySlug, subCategorySlug, productSlug })
+  const countryCode =
+    reqHeaders.get('x-country-code') ??
+    cookieStore.get('hc_cc')?.value ??
+    'US'
   const locale = await getLocale()
 
   const [productData, similarProductsGuest, alternateProducts] = await Promise.all([
-    fetchProduct(productSlug, locale, isLoggedIn),
-    fetchSimilarProductsForGuestUser(productSlug, locale, isLoggedIn),
-    fetchAlternateProducts(productSlug, locale, isLoggedIn),
+    fetchProduct(productSlug, locale, isLoggedIn, countryCode),
+    fetchSimilarProductsForGuestUser(productSlug, locale, isLoggedIn, countryCode),
+    fetchAlternateProducts(productSlug, locale, isLoggedIn, countryCode),
   ])
 
   if (!productData?.data) notFound()

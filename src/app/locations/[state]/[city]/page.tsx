@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cookies, headers } from "next/headers";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import LocationPageClient from "@/features/location/LocationPageClient";
@@ -112,10 +113,13 @@ function mapApiResponse(d: HorecaPageApiData): LocationPageData {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { state, city } = await params;
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
   const res = await makeApiCallSSR<HorecaPageResponse>(
     apiUrls.HORECA_PAGE_BY_SLUG(state, city),
     {},
-    { revalidate: revalidate },
+    { revalidate: revalidate, countryCode },
   );
 
   if (!res?.success || !res?.data) return { title: "Page Not Found" };
@@ -147,10 +151,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function LocationCityPage({ params }: PageProps) {
   const { state, city } = await params;
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
   const res = await makeApiCallSSR<HorecaPageResponse>(
     apiUrls.HORECA_PAGE_BY_SLUG(state, city),
     {},
-    { revalidate: revalidate },
+    { revalidate: revalidate, countryCode },
   );
 
   if (!res?.success || !res?.data || !res.data.is_active) notFound();

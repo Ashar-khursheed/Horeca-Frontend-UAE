@@ -5,7 +5,7 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiCategory, ApiCategoryPage } from "@/utils/types";
 import type { ApiBrand } from "@/components/brands-section";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
 import ProductJsonLd from "@/features/product-detail/json-ld-schema";
@@ -20,10 +20,16 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { categorySlug } = await params;
 
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    "US";
+
   const res = await makeApiCallSSR<{ success: boolean; data: ApiCategoryPage }>(
     apiUrls.MAIN_CATEGPRY_PAGES(categorySlug),
     {},
-    { revalidate: revalidate },
+    { revalidate: revalidate, countryCode },
   );
 
   const seo = res?.data?.seo;
@@ -54,23 +60,27 @@ export async function generateMetadata({
 
 export default async function CategorySlugPage({ params }: PageProps) {
   const { categorySlug } = await params;
-  const cookieStore = await cookies();
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
   const isLoggedIn  = !!cookieStore.get("token")?.value;
+  const countryCode =
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    "US";
   const [navigationRes, categoryPageRes, brandsRes] = await Promise.all([
     makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
       apiUrls.NavigationAPI,
       { slug: categorySlug, with_parent: false },
-      { revalidate: revalidate },
+      { revalidate: revalidate, countryCode },
     ),
     makeApiCallSSR<{ success: boolean; data: ApiCategoryPage }>(
       apiUrls.MAIN_CATEGPRY_PAGES(categorySlug),
       {},
-      { revalidate: revalidate, withAuth: isLoggedIn },
+      { revalidate: revalidate, withAuth: isLoggedIn, countryCode },
     ),
     makeApiCallSSR<{ success: boolean; data: ApiBrand[] }>(
       apiUrls.BRANDS,
       { category_id: categorySlug },
-      { revalidate: revalidate },
+      { revalidate: revalidate, countryCode },
     ),
   ]);
 

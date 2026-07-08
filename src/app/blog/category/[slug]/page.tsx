@@ -84,7 +84,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const res = await makeApiCallSSR<CategoryBlogsResponse>(
     apiUrls.BLOG_CATEGORY_BLOGS(slug),
     { lang: "en", page, per_page: 20 },
-    { revalidate: 0 }
+    { revalidate: revalidate }
   );
   if (!res?.category) notFound();
 

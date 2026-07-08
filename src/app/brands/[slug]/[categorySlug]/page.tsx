@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cookies, headers } from "next/headers";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import { productDetailRevalidate } from "@/utils";
@@ -15,9 +16,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, categorySlug } = await params;
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
   const [brandData, catData] = await Promise.all([
-    makeApiCallSSR<BrandDetailResponse>(apiUrls.BRAND_BY_SLUG(slug), {}, { revalidate: productDetailRevalidate }),
-    makeApiCallSSR<BrandCategoryProductsResponse>(apiUrls.BRAND_CATEGORY_PRODUCTS(slug, categorySlug), {}, { revalidate: productDetailRevalidate }),
+    makeApiCallSSR<BrandDetailResponse>(apiUrls.BRAND_BY_SLUG(slug), {}, { revalidate: productDetailRevalidate, countryCode }),
+    makeApiCallSSR<BrandCategoryProductsResponse>(apiUrls.BRAND_CATEGORY_PRODUCTS(slug, categorySlug), {}, { revalidate: productDetailRevalidate, countryCode }),
   ]);
 
   const brandName = brandData?.brand?.name?.en ?? slug;
@@ -34,10 +38,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BrandCategoryPage({ params }: PageProps) {
   const { slug, categorySlug } = await params;
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
 
   const [brandData, catData] = await Promise.all([
-    makeApiCallSSR<BrandDetailResponse>(apiUrls.BRAND_BY_SLUG(slug), {}, { revalidate: productDetailRevalidate }),
-    makeApiCallSSR<BrandCategoryProductsResponse>(apiUrls.BRAND_CATEGORY_PRODUCTS(slug, categorySlug), {}, { revalidate: productDetailRevalidate }),
+    makeApiCallSSR<BrandDetailResponse>(apiUrls.BRAND_BY_SLUG(slug), {}, { revalidate: productDetailRevalidate, countryCode }),
+    makeApiCallSSR<BrandCategoryProductsResponse>(apiUrls.BRAND_CATEGORY_PRODUCTS(slug, categorySlug), {}, { revalidate: productDetailRevalidate, countryCode }),
   ]);
 
    console.log("BrandDetailPage data:", brandData);

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cookies, headers } from "next/headers";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import { apiUrls } from "@/apis/api-endpoint";
 import { productDetailRevalidate } from "@/utils";
@@ -13,10 +14,13 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
   const data = await makeApiCallSSR<BrandDetailResponse>(
     apiUrls.BRAND_BY_SLUG(slug),
     {},
-    { revalidate: productDetailRevalidate },
+    { revalidate: productDetailRevalidate, countryCode },
   );
 
   const seo   = data?.seo;
@@ -49,10 +53,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BrandDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  const countryCode =
+    reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
   const data = await makeApiCallSSR<BrandDetailResponse>(
     apiUrls.BRAND_BY_SLUG(slug),
     { page: 1 },
-    { revalidate: productDetailRevalidate },
+    { revalidate: productDetailRevalidate, countryCode },
   );
     const schemaObj = data?.seo?.seo_schema?.en;
   const schema: string | null | undefined = typeof schemaObj === "string"
