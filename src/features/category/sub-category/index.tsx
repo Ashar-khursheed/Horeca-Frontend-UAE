@@ -218,6 +218,17 @@ export default function SubCategoryPage({
     min: initMin,
     max: initMax,
   });
+
+  // Whenever a filter change triggers an SSR refetch, the backend returns a new
+  // price min/max for the filtered result set (apiPriceMin/apiPriceMax below).
+  // Keep the slider synced to that — otherwise it keeps showing the range from
+  // before the filter change, which can now fall outside the new min/max bounds.
+  const isFirstPriceSync = useRef(true);
+  useEffect(() => {
+    if (isFirstPriceSync.current) { isFirstPriceSync.current = false; return; }
+    setPriceRange({ min: apiPriceMin, max: apiPriceMax });
+  }, [apiPriceMin, apiPriceMax]);
+
   const [selectedBrands, setSelectedBrands] =
     useState<{ id: number; name: string }[]>(initBrands);
   const [selectedRangeFilters, setSelectedRangeFilters] =
