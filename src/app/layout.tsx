@@ -66,15 +66,15 @@ export default async function RootLayout({
     "US";
 
   // ── Redirect lookup ────────────────────────────────────────────────────────
-  const pathname = reqHeaders.get("x-pathname");
-  if (pathname && pathname !== "/") {
-    const redirectRes = await makeApiCallSSR<{ success: boolean; to: string }>(
-      `redirects/from${pathname}`,
-      {},
-      { revalidate: 300, countryCode },
-    );
-    if (redirectRes?.success && redirectRes?.to) redirect(redirectRes.to);
-  }
+  // const pathname = reqHeaders.get("x-pathname");
+  // if (pathname && pathname !== "/") {
+  //   const redirectRes = await makeApiCallSSR<{ success: boolean; to: string }>(
+  //     `redirects/from${pathname}`,
+  //     {},
+  //     { revalidate: 300, countryCode },
+  //   );
+  //   if (redirectRes?.success && redirectRes?.to) redirect(redirectRes.to);
+  // }
 
   const [navData, searchData, customScriptsData] = await Promise.all([
     makeApiCallSSR<{ data: ApiCategory[] }>(
