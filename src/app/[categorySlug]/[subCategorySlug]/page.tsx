@@ -251,12 +251,7 @@ export default async function SubCategorySlugPage({
         ? JSON.stringify(schemaObj)
         : undefined;
 
-  console.log("filtersBodyfiltersBodyfiltersBody", {
-          filtersBody,
-          subCategoryPage,
-          productsBody,
-          productsRes,
-        });
+
 
   if (!subCategoryPageRes?.success) notFound();
   if (!navigationRes || !navigationRes.data?.length) notFound();

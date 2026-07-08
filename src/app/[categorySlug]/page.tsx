@@ -88,7 +88,7 @@ export default async function CategorySlugPage({ params }: PageProps) {
     ? JSON.stringify(schemaObj)
     : undefined;
     
-    console.log("subCategoryPagesubCategoryPage", categoryPage)
+
 
   if (!categoryPageRes?.success && categories.length === 0) notFound();
 

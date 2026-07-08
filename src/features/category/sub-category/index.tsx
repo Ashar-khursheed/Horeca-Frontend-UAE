@@ -29,7 +29,7 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { useLocale } from "next-intl";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import { Navigation } from "swiper/modules";
@@ -145,7 +145,6 @@ export default function SubCategoryPage({
   currentPage?: number;
 }) {
   const locale = useLocale();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const filterAPIData = subCategoryPage?.filters;
   const rangeFiltersData = subCategoryPage?.rangeFilters;
@@ -254,7 +253,7 @@ export default function SubCategoryPage({
   const [displayPage, setDisplayPage]   = useState(currentPage);
   const [isFetching, setIsFetching]     = useState(false);
 
-  // When SSR re-renders (triggered by router.replace), sync new productsData into display state
+  // Sync productsData into display state if a real navigation re-mounts with fresh SSR props
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
@@ -308,8 +307,11 @@ export default function SubCategoryPage({
       const qs = parts.join("&");
       window.scrollTo({ top: 0, behavior: "smooth" });
 
-      // Update URL via Next.js router so router cache stays in sync (fixes filter state on back navigation)
-      router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
+      // Update the URL bar directly via the History API (not router.replace) — this page reads
+      // searchParams, which makes it fully dynamic, so router.replace would trigger a full
+      // server round-trip (generateMetadata + all SSR fetches) on every filter/pagination click,
+      // on top of the client fetch below. That doubled backend load on large paginated catalogs.
+      window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
 
       // Build API body
       const appliedFilters = {
@@ -371,7 +373,6 @@ export default function SubCategoryPage({
       selectedFixedFilters,
       subCategorySlug,
       unitMap,
-      router,
     ],
   );
 
