@@ -39,7 +39,7 @@ interface HeaderProps {
 }
 
 const Header = ({ navItemData = [], searchData }: HeaderProps) => (
-  <header className="w-full fixed top-0 z-50 ">
+  <header className="w-full z-50 ">
     <TopBar />
     <NavigationStatic navItemData={navItemData as any} searchData={searchData} />
     <DropdownPanel navItemData={navItemData} />
