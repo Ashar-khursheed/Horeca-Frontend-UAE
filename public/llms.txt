@@ -4,7 +4,7 @@
 > We supply commercial kitchen equipment, refrigeration, smallwares, and more across the United States.
 
 - Base URL: https://www.thehorecastore.com
-- Generated: 2026-07-01
+- Generated: 2026-07-07
 - Products file: https://www.thehorecastore.com/llms-products.txt
 - Language: English
 
@@ -22,7 +22,7 @@
 - [Track Order](https://www.thehorecastore.com/track-order)
 - [Wishlist](https://www.thehorecastore.com/wishlist)
 
-## Categories (488)
+## Categories (490)
 
 - [Commercial Cooking Equipment](https://www.thehorecastore.com/restaurant-equipment/commercial-cooking-equipment)
 - [Food Prep Equipment](https://www.thehorecastore.com/restaurant-equipment/food-prep-equipment)
@@ -509,19 +509,21 @@
 - [Coffee Servers Warmers](https://www.thehorecastore.com/restaurant-equipment/coffee-servers-warmers)
 - [Commercial Iced Tea Brewers](https://www.thehorecastore.com/restaurant-equipment/commercial-iced-tea-brewers)
 - [Crepe Makers](https://www.thehorecastore.com/restaurant-equipment/crepe-makers)
+- [Dipper Wells](https://www.thehorecastore.com/restaurant-equipment/dipper-wells)
 - [Hard Soft Serve Machines](https://www.thehorecastore.com/refrigeration/hard-soft-serve-machines)
 - [Chocolate Fountains](https://www.thehorecastore.com/tableware/chocolate-fountains)
 - [Fry Dump Stations](https://www.thehorecastore.com/restaurant-equipment/fry-dump-stations)
+- [Used Glass Chillers And Frosters](https://www.thehorecastore.com/used-restaurant-equipment/used-glass-chillers-and-frosters)
 
-## Blog (277)
+## Blog (311)
 
-- [Horeca Store Your One Stop Destination For Hotel And Restaurant Supplies Equipment](https://www.thehorecastore.com/blog/horeca-store-your-one-stop-destination-for-hotel-and-restaurant-supplies-equipment)
+- [Horeca Store Your One Stop Destination For Hotel Restaurant Supplies Equipment](https://www.thehorecastore.com/blog/horeca-store-your-one-stop-destination-for-hotel-restaurant-supplies-equipment)
 - [How To Set Up Your Hotel Housekeeping Trolley The Right Way](https://www.thehorecastore.com/blog/how-to-set-up-your-hotel-housekeeping-trolley-the-right-way)
 - [Choosing The Best Commercial Toaster For Your Cafe Or Restaurant](https://www.thehorecastore.com/blog/choosing-the-best-commercial-toaster-for-your-cafe-or-restaurant)
 - [Coffee Shop Equipment List Must Have Essentials For Your Cafe](https://www.thehorecastore.com/blog/coffee-shop-equipment-list-must-have-essentials-for-your-cafe)
 - [Conveyor Toasters Vs Regular Toasters Which One Is Right For Your Food Business](https://www.thehorecastore.com/blog/conveyor-toasters-vs-regular-toasters-which-one-is-right-for-your-food-business)
 - [A Guide To Vinegar Types How To Choose The Right One For Your Kitchen](https://www.thehorecastore.com/blog/a-guide-to-vinegar-types-how-to-choose-the-right-one-for-your-kitchen)
-- [Must Have Dairy Products And Tools For Commercial Kitchens](https://www.thehorecastore.com/blog/must-have-dairy-products-and-tools-for-commercial-kitchens)
+- [Must Have Dairy Products Tools For Commercial Kitchens](https://www.thehorecastore.com/blog/must-have-dairy-products-tools-for-commercial-kitchens)
 - [8 Types Of Glassware Every Restaurant Should Have](https://www.thehorecastore.com/blog/8-types-of-glassware-every-restaurant-should-have)
 - [What Is A Salamander Oven And Why Your Restaurant Needs One](https://www.thehorecastore.com/blog/what-is-a-salamander-oven-and-why-your-restaurant-needs-one)
 - [The Ultimate Guide To Flatware And Knives For Your Restaurant Or Cafe](https://www.thehorecastore.com/blog/the-ultimate-guide-to-flatware-and-knives-for-your-restaurant-or-cafe)
@@ -792,8 +794,42 @@
 - [What Are The Best Practices For Maintaining Commercial Kitchen Equipment To Ensure Longevity](https://www.thehorecastore.com/blog/what-are-the-best-practices-for-maintaining-commercial-kitchen-equipment-to-ensure-longevity)
 - [How Can I Find Reliable Suppliers For Bulk Purchasing Of Restaurant Tableware](https://www.thehorecastore.com/blog/how-can-i-find-reliable-suppliers-for-bulk-purchasing-of-restaurant-tableware)
 - [What Factors Should I Consider When Choosing A Commercial Oven For A High Volume Kitchen](https://www.thehorecastore.com/blog/what-factors-should-i-consider-when-choosing-a-commercial-oven-for-a-high-volume-kitchen)
+- [Optimizing Kitchen Space With Multifunctional Equipment](https://www.thehorecastore.com/blog/optimizing-kitchen-space-with-multifunctional-equipment)
+- [Comprehensive Checklist For Outfitting A New Restaurant Kitchen What Items Are Essential](https://www.thehorecastore.com/blog/comprehensive-checklist-for-outfitting-a-new-restaurant-kitchen-what-items-are-essential)
+- [Nuova Simonelli Vs La Marzocco Which Espresso Machine Brand Is Best For Growing Cafes](https://www.thehorecastore.com/blog/nuova-simonelli-vs-la-marzocco-which-espresso-machine-brand-is-best-for-growing-cafes)
+- [Beverage Air Vs True Refrigeration Which Commercial Refrigerator Brand Should You Buy](https://www.thehorecastore.com/blog/beverage-air-vs-true-refrigeration-which-commercial-refrigerator-brand-should-you-buy)
+- [Where To Buy A Food Truck](https://www.thehorecastore.com/blog/where-to-buy-a-food-truck)
+- [Elevate Dining Experience With Premium Tableware](https://www.thehorecastore.com/blog/elevate-dining-experience-with-premium-tableware)
+- [Which Ice Machine Brand Should You Buy Hoshizaki Manitowoc Ice O Matic Or Follett](https://www.thehorecastore.com/blog/which-ice-machine-brand-should-you-buy-hoshizaki-manitowoc-ice-o-matic-or-follett)
+- [Top Commercial Espresso Machine Brands Compared La Marzocco Nuova Simonelli And Victoria Arduino](https://www.thehorecastore.com/blog/top-commercial-espresso-machine-brands-compared-la-marzocco-nuova-simonelli-and-victoria-arduino)
+- [Best Commercial Refrigerator Brand For Restaurants In 2026 True Turbo Air Beverage Air Or Atosa](https://www.thehorecastore.com/blog/best-commercial-refrigerator-brand-for-restaurants-in-2026-true-turbo-air-beverage-air-or-atosa)
+- [Commercial Fryer Brand Comparison Frymaster Pitco And Vulcan](https://www.thehorecastore.com/blog/commercial-fryer-brand-comparison-frymaster-pitco-and-vulcan)
+- [Best Commercial Oven Brand For Restaurants Unox Turbochef Vulcan And Cadco Compared](https://www.thehorecastore.com/blog/best-commercial-oven-brand-for-restaurants-unox-turbochef-vulcan-and-cadco-compared)
+- [Commercial Dishwasher Brand Comparison Jackson Cma Dishmachine And American Dish Service](https://www.thehorecastore.com/blog/commercial-dishwasher-brand-comparison-jackson-cma-dishmachine-and-american-dish-service)
+- [Which Commercial Refrigeration Brand Has The Lowest Cost Of Ownership](https://www.thehorecastore.com/blog/which-commercial-refrigeration-brand-has-the-lowest-cost-of-ownership)
+- [Best Restaurant Equipment Brands For Startups Budget Vs Premium Options](https://www.thehorecastore.com/blog/best-restaurant-equipment-brands-for-startups-budget-vs-premium-options)
+- [Most Reliable Commercial Kitchen Equipment Brands According To Restaurant Owners](https://www.thehorecastore.com/blog/most-reliable-commercial-kitchen-equipment-brands-according-to-restaurant-owners)
+- [Premium Vs Budget Commercial Kitchen Equipment Is The Higher Price Worth It](https://www.thehorecastore.com/blog/premium-vs-budget-commercial-kitchen-equipment-is-the-higher-price-worth-it)
+- [Comparing Beverage Air And True Refrigeration For Restaurant Cold Storage](https://www.thehorecastore.com/blog/comparing-beverage-air-and-true-refrigeration-for-restaurant-cold-storage)
+- [Which Restaurant Equipment Brands Hold Their Value Best Over Time](https://www.thehorecastore.com/blog/which-restaurant-equipment-brands-hold-their-value-best-over-time)
+- [Which Commercial Refrigerator Offers Better Warranty Coverage True Or Beverage Air](https://www.thehorecastore.com/blog/which-commercial-refrigerator-offers-better-warranty-coverage-true-or-beverage-air)
+- [0 Down Financing Available For Restaurant Equipment At The Horeca Store](https://www.thehorecastore.com/blog/0-down-financing-available-for-restaurant-equipment-at-the-horeca-store)
+- [Start Your Cafe From Just 5000 Equip Your Dream Cafe For Less At The Horeca Store](https://www.thehorecastore.com/blog/start-your-cafe-from-just-5000-equip-your-dream-cafe-for-less-at-the-horeca-store)
+- [True Refrigeration Vs Beverage Air Price Performance And Durability Compared](https://www.thehorecastore.com/blog/true-refrigeration-vs-beverage-air-price-performance-and-durability-compared)
+- [True Refrigeration Vs Arctic Air Which Brand Holds Up Better In Daily Commercial Use](https://www.thehorecastore.com/blog/true-refrigeration-vs-arctic-air-which-brand-holds-up-better-in-daily-commercial-use)
+- [Planning A Custom Food Trailer Heres Everything You Need Before You Buy](https://www.thehorecastore.com/blog/planning-a-custom-food-trailer-heres-everything-you-need-before-you-buy)
+- [La Marzocco Or Nuova Simonelli A Complete Cafe Equipment Comparison](https://www.thehorecastore.com/blog/la-marzocco-or-nuova-simonelli-a-complete-cafe-equipment-comparison)
+- [Frymaster Vs Pitco Which Commercial Fryer Is Better For Busy Restaurant Kitchens](https://www.thehorecastore.com/blog/frymaster-vs-pitco-which-commercial-fryer-is-better-for-busy-restaurant-kitchens)
+- [Robot Coupe Vs Dynamic Mixer Which Food Prep Equipment Brand Is Right For Your Kitchen](https://www.thehorecastore.com/blog/robot-coupe-vs-dynamic-mixer-which-food-prep-equipment-brand-is-right-for-your-kitchen)
+- [Cambro Vs Winco Food Storage Containers Which Is Better For Commercial Kitchens](https://www.thehorecastore.com/blog/cambro-vs-winco-food-storage-containers-which-is-better-for-commercial-kitchens)
+- [True Refrigeration Or Beverage Air The Ultimate Reach In Refrigerator Buying Guide](https://www.thehorecastore.com/blog/true-refrigeration-or-beverage-air-the-ultimate-reach-in-refrigerator-buying-guide)
+- [Best Commercial Refrigerator For Restaurants True Refrigeration Vs Turbo Air Reviewed](https://www.thehorecastore.com/blog/best-commercial-refrigerator-for-restaurants-true-refrigeration-vs-turbo-air-reviewed)
+- [Ghost Kitchen Equipment List What You Actually Need To Launch A Delivery Only Brand](https://www.thehorecastore.com/blog/ghost-kitchen-equipment-list-what-you-actually-need-to-launch-a-delivery-only-brand)
+- [Haccp Compliant Kitchen Setup A Beginners Guide For New Owners](https://www.thehorecastore.com/blog/haccp-compliant-kitchen-setup-a-beginners-guide-for-new-owners)
+- [Complete Home Bar Cocktail Station Equipment Checklist For 2026](https://www.thehorecastore.com/blog/complete-home-bar-cocktail-station-equipment-checklist-for-2026)
+- [Menu Engineering 101 How Equipment Choices Affect Food Cost](https://www.thehorecastore.com/blog/menu-engineering-101-how-equipment-choices-affect-food-cost)
 
-## Brands (105)
+## Brands (110)
 
 - [Arctic Air](https://www.thehorecastore.com/brands/arctic-air)
 - [Atosa](https://www.thehorecastore.com/brands/atosa)
@@ -900,6 +936,11 @@
 - [Saniserv](https://www.thehorecastore.com/brands/saniserv)
 - [Victoria Arduino](https://www.thehorecastore.com/brands/victoria-arduino)
 - [Spaceman](https://www.thehorecastore.com/brands/spaceman)
+- [Scotsman](https://www.thehorecastore.com/brands/scotsman)
+- [Carter Hoffmann](https://www.thehorecastore.com/brands/carter-hoffmann)
+- [Cres Cor](https://www.thehorecastore.com/brands/cres-cor)
+- [Ayrking](https://www.thehorecastore.com/brands/ayrking)
+- [Cozoc](https://www.thehorecastore.com/brands/cozoc)
 
 ## Other (1)
 

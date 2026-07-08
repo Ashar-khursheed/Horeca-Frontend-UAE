@@ -251,6 +251,9 @@ export default async function SubCategorySlugPage({
         ? JSON.stringify(schemaObj)
         : undefined;
 
+
+        
+
   if (!subCategoryPageRes?.success) notFound();
   if (!navigationRes || !navigationRes.data?.length) notFound();
 
