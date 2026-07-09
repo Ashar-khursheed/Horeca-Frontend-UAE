@@ -48,12 +48,10 @@ export default function SearchBar() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Close and clear search when nav is hovered
+  // Close search when nav is hovered
   useEffect(() => {
     const close = () => {
       setSearchFocused(false);
-      setSearchQuery("");
-      setLiveData(null);
       inputRef.current?.blur();
     };
     document.addEventListener("nav-hover", close);
@@ -218,7 +216,7 @@ export default function SearchBar() {
                             size={12}
                             className="text-gray-300 shrink-0 group-hover:text-[#186737] transition-colors"
                           />
-                          <span className="text-[11px] xl:text-[12px] 2xl:text-[13px] text-gray-500 line-clamp-1 group-hover:text-[#186737] transition-colors">
+                          <span className="text-[11px] xl:text-[12px] 2xl:text-[13px] text-gray-700 line-clamp-1 group-hover:text-[#186737] transition-colors">
                             {p.name.en}
                           </span>
                         </Link>
