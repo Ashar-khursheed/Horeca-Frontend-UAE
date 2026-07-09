@@ -65,8 +65,10 @@ interface StaticPageListResponse {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Strip junk strings the API sometimes returns ("null", "undefined", "") */
-function clean(v: string | null | undefined): string | undefined {
-  return v && v !== "null" && v !== "undefined" ? v.trim() : undefined;
+function clean(v: any): string | undefined {
+  if (!v || v === "null" || v === "undefined") return undefined;
+  if (typeof v === "object") return JSON.stringify(v);
+  return typeof v === "string" ? v.trim() : String(v);
 }
 
 function parseContent(html: string): ParsedContent {

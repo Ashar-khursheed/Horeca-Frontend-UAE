@@ -76,6 +76,7 @@ const MONTHS = [
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso || "";
   return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 };
 
