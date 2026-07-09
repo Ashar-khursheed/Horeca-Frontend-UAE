@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { makeApiCallSSR } from "@/apis/ssr-fetch";
+import { headers, cookies } from "next/headers";
 import { apiUrls } from "@/apis/api-endpoint";
 import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
@@ -12,6 +12,10 @@ export const revalidate = 3600;
 
 // New slugs not in generateStaticParams are SSR'd on-demand, then cached
 export const dynamicParams = true;
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "https://test-us.thehorecastore.co/api";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -29,12 +33,49 @@ interface CommentsResponse {
   };
 }
 
+// ─── Direct fetch helper (no headers()/cookies() at build time) ──────────────
+async function fetchApi<T>(
+  path: string,
+  params: Record<string, string | number | boolean | undefined | null> = {},
+  revalidateOpt: number | false = 60,
+  countryCode?: string,
+): Promise<T | null> {
+  try {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+    });
+    qs.set("force_country", countryCode ?? "US");
+
+    const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
+    const url = qs.toString() ? `${base}?${qs}` : base;
+
+    const res = await fetch(url, {
+      next: { revalidate: revalidateOpt },
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as T;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+// Reads the request-scoped country cookie/header — only callable where a
+// request context exists (generateMetadata / page render), never at build time.
+async function getCountryCode(): Promise<string> {
+  const [reqHeaders, cookieStore] = await Promise.all([headers(), cookies()]);
+  return reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
+}
+
 // ─── SSG: pre-build all blog slugs ────────────────────────────────────────────
 export async function generateStaticParams() {
-  const first = await makeApiCallSSR<BlogListResponse>(
+  const first = await fetchApi<BlogListResponse>(
     apiUrls.BLOGS,
     { per_page: 100, lang: "en", page: 1 },
-    { revalidate: false },
+    false,
   );
 
   if (!first) return [];
@@ -45,10 +86,10 @@ export async function generateStaticParams() {
   const pageNums = Array.from({ length: last_page - 1 }, (_, i) => i + 2);
   const rest = await Promise.all(
     pageNums.map((page) =>
-      makeApiCallSSR<BlogListResponse>(
+      fetchApi<BlogListResponse>(
         apiUrls.BLOGS,
         { per_page: 100, lang: "en", page },
-        { revalidate: false },
+        false,
       ),
     ),
   );
@@ -67,11 +108,13 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const countryCode = await getCountryCode();
 
-  const blog = await makeApiCallSSR<ApiBlogDetail>(
+  const blog = await fetchApi<ApiBlogDetail>(
     apiUrls.BLOG_SINGLE(slug),
     {},
-    { revalidate: fetchRevalidate },
+    fetchRevalidate,
+    countryCode,
   );
 
   if (!blog) return { title: "Blog Not Found" };
@@ -109,19 +152,22 @@ export async function generateMetadata({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function BlogDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const countryCode = await getCountryCode();
 
-  const blog = await makeApiCallSSR<ApiBlogDetail>(
+  const blog = await fetchApi<ApiBlogDetail>(
     apiUrls.BLOG_SINGLE(slug),
     {},
-    { revalidate: fetchRevalidate },
+    fetchRevalidate,
+    countryCode,
   );
 
   if (!blog) notFound();
 
-  const commentsRes = await makeApiCallSSR<CommentsResponse>(
+  const commentsRes = await fetchApi<CommentsResponse>(
     apiUrls.BLOG_COMMENTS(blog.id),
     {},
-    { revalidate: 60 },
+    60,
+    countryCode,
   );
 
   const initialComments = commentsRes?.data?.comments ?? undefined;
