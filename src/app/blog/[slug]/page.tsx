@@ -177,7 +177,12 @@ export default async function BlogDetailPage({ params }: PageProps) {
       {blog.seo?.schema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: blog.seo.schema }}
+          dangerouslySetInnerHTML={{
+            __html:
+              typeof blog.seo.schema === "string"
+                ? blog.seo.schema
+                : JSON.stringify(blog.seo.schema),
+          }}
         />
       )}
       <BlogDetailClient blog={blog} initialComments={initialComments ?? []} />
