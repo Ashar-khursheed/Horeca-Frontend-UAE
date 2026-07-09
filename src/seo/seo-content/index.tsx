@@ -62,7 +62,7 @@ function PopularSearches({ keywords }: { keywords: PopularTagDetail[] }) {
           {filtered.map((item, index) => (
             <Link
               key={index}
-              href={`${item.popularSlug}`}
+              href={`/${item.popularSlug}`}
               className="inline-block text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:border-[#186737] hover:text-[#186737] hover:bg-green-50 px-3 py-1.5 rounded-full transition-all duration-200"
             >
               {item.popularTags}

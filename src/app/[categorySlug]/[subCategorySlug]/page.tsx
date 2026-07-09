@@ -264,6 +264,11 @@ export default async function SubCategorySlugPage({
         ? JSON.stringify(schemaObj)
         : undefined;
 
+        console.log("api response", {
+          navigationRes,
+          subCategoryPageRes,
+          productsRes
+        })
 
 
   if (!subCategoryPageRes?.success) notFound();
