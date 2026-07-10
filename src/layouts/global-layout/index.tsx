@@ -1,14 +1,15 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { useEffect } from "react";
+import { Provider } from "react-redux";
 import AppInitializer from "@/components/app-initializer";
 import TaxInitializer from "@/components/TaxInitializer";
 import store from "@/store/store";
-import React, { useEffect } from "react";
-import { Provider } from "react-redux";
-import { usePathname } from "next/navigation";
+import type { ApiCategory } from "@/utils/types";
 import Footer from "../footer";
 import Header from "../header";
-import type { ApiCategory } from "@/utils/types";
 
 function ScrollToTop() {
   const pathname = usePathname();
@@ -23,15 +24,20 @@ interface GlobalLayoutProps {
   navItemData?: ApiCategory[];
 }
 
-const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, navItemData }) => {
+const GlobalLayout: React.FC<GlobalLayoutProps> = ({
+  children,
+  navItemData,
+}) => {
   return (
     <Provider store={store}>
       <ScrollToTop />
       <AppInitializer />
       <TaxInitializer />
-      <Header navItemData={navItemData} />
-      {children}
-      <Footer navItemData={navItemData ?? []} />
+      <div className="flex flex-col min-h-screen">
+        <Header navItemData={navItemData} />
+        <main className="flex-grow">{children}</main>
+        <Footer navItemData={navItemData ?? []} />
+      </div>
     </Provider>
   );
 };
