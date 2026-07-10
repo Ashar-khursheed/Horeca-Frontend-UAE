@@ -126,7 +126,7 @@ export default function FilterSidebar({
     Object.values(selectedFixedFilters).reduce((a, v) => a + v.length, 0);
 
   return (
-    <aside className={mobile ? "w-full" : "w-full bg-gray-50 p-3 rounded-[7px] border border-[#186737] sticky top-4 self-start"}>
+    <aside className={mobile ? "w-full" : "w-full bg-gray-50 p-3 rounded-[7px] border border-[#186737] sticky xl:top-[160px] lg:top-[120px] self-start"}>
       {/* Header — desktop only */}
       {!mobile && (
         <div className="flex items-center justify-between mb-3">

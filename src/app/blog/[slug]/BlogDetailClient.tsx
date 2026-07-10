@@ -199,7 +199,17 @@ export default function BlogDetailClient({
 
   const bannerSrc = blog.desktop_banner || blog.mobile_banner || blog.thumbnail;
   const authorImg = blog.author_image;
+const [isSticky, setIsSticky] = useState(false);
 
+useEffect(() => {
+  const handleScroll = () => {
+    setIsSticky(window.scrollY > 150);
+  };
+
+  window.addEventListener("scroll", handleScroll);
+
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
   const crumbs = [
     { label: "Home", href: "/" },
     { label: "Blog", href: "/blog" },
@@ -432,7 +442,7 @@ export default function BlogDetailClient({
                 )}
 
                 {/* Sticky Form & CTA Container */}
-                <div className="lg:sticky lg:top-[20px] xl:top-[10px] space-y-3 lg:space-y-2 xl:space-y-5 h-fit">
+                <div className="lg:sticky top-[190px] space-y-3 lg:space-y-2 xl:space-y-5 h-fit">
                   {/* Consultation Inquiry Form */}
                   <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
 

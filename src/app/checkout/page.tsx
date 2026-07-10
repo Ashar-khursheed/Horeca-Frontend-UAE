@@ -1648,8 +1648,8 @@ export default function CheckoutPage() {
           </div>
 
           {/* â"€â"€ RIGHT â€" Order Summary  */}
-          <div className=" bg-[#fafafa] sticky top-0 ">
-            <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10 sticky top-0">
+          <div className=" bg-[#fafafa] sticky  ">
+            <div className="bg-[#fafafa] border-l border-gray-100 px-6 md:px-10 py-10 sticky xl:top-[160px] lg:top-[130px] ">
               {cartBlock}
               {discountBlock}
 
