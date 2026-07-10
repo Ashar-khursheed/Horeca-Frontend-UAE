@@ -68,7 +68,10 @@ export default function CategoryPageClient({ category, blogs, totalPages, curren
             {category.name}
           </h1>
           {category.description && (
-            <p className="text-gray-500 text-base max-w-2xl">{category.description}</p>
+            <p
+              className="text-gray-500 text-base max-w-2xl"
+              dangerouslySetInnerHTML={{ __html: category.description }}
+            />
           )}
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-400">
             <BookOpen size={15} className="text-[#186737]" />

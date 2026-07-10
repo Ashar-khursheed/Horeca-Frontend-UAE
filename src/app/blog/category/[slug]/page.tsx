@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const res = await fetchApi<CategoryBlogsResponse>(
     apiUrls.BLOG_CATEGORY_BLOGS(slug),
     { lang: "en", page: 1, per_page: 1 },
-    revalidate,
+    0,
     countryCode,
   );
 
@@ -128,7 +128,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const res = await fetchApi<CategoryBlogsResponse>(
     apiUrls.BLOG_CATEGORY_BLOGS(slug),
     { lang: "en", page, per_page: 20 },
-    revalidate,
+    0,
     countryCode,
   );
   if (!res?.category) notFound();
