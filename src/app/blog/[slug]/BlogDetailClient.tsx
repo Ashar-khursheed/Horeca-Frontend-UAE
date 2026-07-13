@@ -22,8 +22,15 @@ import BlogComments, { Comment as BlogComment } from "@/components/blog-comments
 import Breadcrumb from "@/components/breadcum";
 import SeoContent from "@/seo/seo-content";
 import BlogSidebarForm from "@/components/blog-sidebar-form";
+import FaqSection from "@/components/faq-section";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export interface ApiBlogFaq {
+  id: number;
+  question: string;
+  answer: string;
+}
+
 export interface ApiBlogSeo {
   url: string;
   primary_keyword: string | null;
@@ -66,6 +73,7 @@ export interface ApiBlogDetail {
   category: { id: number; name: string; slug: string | null };
   seo: ApiBlogSeo | null;
   custom_card: CustomCard | null;
+  faqs?: ApiBlogFaq[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -490,6 +498,9 @@ useEffect(() => {
           </div> */}
         </div>
       </div>
+
+      {!!blog.faqs?.length && <FaqSection faqs={blog.faqs} />}
+
       <div className="bg-white md:py-10 py-3 pb-0">
         <SeoContent dataAPI={blog?.seo} basePath="/blog" />
       </div>

@@ -185,6 +185,9 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
   const initialComments = commentsRes?.data?.comments ?? undefined;
 
+
+  console.log("BlogDetailPage: blog", blog);
+
   return (
     <>
       {blog.seo?.schema && (
