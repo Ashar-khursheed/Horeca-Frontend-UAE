@@ -156,7 +156,6 @@ export default function BlogDetailClient({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
-
   const blocks = parseDescriptionBlocks(blog.description);
   const toc = extractToc(blocks);
   const readTime = estimateReadTime(blocks);
@@ -492,7 +491,7 @@ useEffect(() => {
         </div>
       </div>
       <div className="bg-white md:py-10 py-3 pb-0">
-        <SeoContent dataAPI={blog?.seo} />
+        <SeoContent dataAPI={blog?.seo} basePath="/blog" />
       </div>
       <style jsx global>{`
         .blog-content h1,

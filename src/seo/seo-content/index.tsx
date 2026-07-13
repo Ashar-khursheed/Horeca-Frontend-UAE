@@ -48,7 +48,13 @@ function getLocaleStr(
 
 // ─── Popular Searches Component ───────────────────────────────────────────────
 
-function PopularSearches({ keywords }: { keywords: PopularTagDetail[] }) {
+function PopularSearches({
+  keywords,
+  basePath,
+}: {
+  keywords: PopularTagDetail[];
+  basePath: string;
+}) {
   const filtered = keywords.filter((k) => k?.popularTags?.trim() !== "");
   if (!filtered.length) return null;
 
@@ -62,7 +68,7 @@ function PopularSearches({ keywords }: { keywords: PopularTagDetail[] }) {
           {filtered.map((item, index) => (
             <Link
               key={index}
-              href={`/${item.popularSlug}`}
+              href={`${basePath}/${item.popularSlug}`}
               className="inline-block text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:border-[#186737] hover:text-[#186737] hover:bg-green-50 px-3 py-1.5 rounded-full transition-all duration-200"
             >
               {item.popularTags}
@@ -114,11 +120,16 @@ Paragraph.displayName = "Paragraph";
 
 // ─── Main SeoContent Component ────────────────────────────────────────────────
 
-export default function SeoContent({ dataAPI }: { dataAPI?: any | null }) {
-
+export default function SeoContent({
+  dataAPI,
+  basePath = "",
+}: {
+  dataAPI?: any | null;
+  basePath?: string;
+}) {
   const locale = useLocale();
   if (!dataAPI) return null;;
-
+console.log("dataAPI", dataAPI);
   const bannerUrl = getLocaleStr(dataAPI.banner_image_url, locale);
   const bannerAlt = getLocaleStr(dataAPI.banner_image_alt_text, locale);
   const para1 = getLocaleStr(dataAPI.paragraph_1, locale);
@@ -132,8 +143,9 @@ export default function SeoContent({ dataAPI }: { dataAPI?: any | null }) {
     : ((locale === "ar" ? popularTagsObj?.ar : popularTagsObj?.en) ??
       popularTagsObj?.en ??
       []);
+  const hasPopularTags = popularTags.some((k) => k?.popularTags?.trim());
 
-  if (!para1 && !para2 && !para3 && !para4 && !bannerUrl) return null;
+  if (!para1 && !para2 && !para3 && !para4 && !bannerUrl && !hasPopularTags) return null;
 
   return (
     <>
@@ -174,7 +186,9 @@ export default function SeoContent({ dataAPI }: { dataAPI?: any | null }) {
         </div>
       </section>
 
-      {popularTags.length > 0 && <PopularSearches keywords={popularTags} />}
+      {popularTags.length > 0 && (
+        <PopularSearches keywords={popularTags} basePath={basePath} />
+      )}
     </>
   );
 }
