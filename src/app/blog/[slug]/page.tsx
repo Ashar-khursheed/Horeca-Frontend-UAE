@@ -70,6 +70,15 @@ async function getCountryCode(): Promise<string> {
   return reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
 }
 
+// Some CMS entries have images pasted directly into the editor as inline
+// base64 data URIs instead of uploaded URLs, ballooning a single blog's
+// `description` to tens of MBs. That blows past the hosting platform's
+// response-size limit (raw HTTP 413) before React ever gets to render it,
+// so it has to be stripped server-side, before the payload is sent to the client.
+function stripInlineBase64Images(raw: string): string {
+  return raw.replace(/data:[a-z]+\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+/gi, "");
+}
+
 // ─── SSG: pre-build all blog slugs ────────────────────────────────────────────
 export async function generateStaticParams() {
   const first = await fetchApi<BlogListResponse>(
@@ -162,6 +171,10 @@ export default async function BlogDetailPage({ params }: PageProps) {
   );
 
   if (!blog) notFound();
+
+  if (typeof blog.description === "string") {
+    blog.description = stripInlineBase64Images(blog.description);
+  }
 
   const commentsRes = await fetchApi<CommentsResponse>(
     apiUrls.BLOG_COMMENTS(blog.id),
