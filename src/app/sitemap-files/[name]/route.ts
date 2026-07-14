@@ -7,6 +7,7 @@ const VALID_SITEMAPS: Record<string, string> = {
   categories:    "frontend/categories.xml",
   blog:          "frontend/blog.xml",
   brand:         "frontend/brand.xml",
+  images:        "frontend/images.xml",
   "products-1":  "frontend/products-1.xml",
   "products-2":  "frontend/products-2.xml",
   "products-3":  "frontend/products-3.xml",

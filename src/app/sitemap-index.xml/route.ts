@@ -7,6 +7,7 @@ const SITEMAPS = [
   "categories",
   "blog",
   "brand",
+  "images",
   ...Array.from({ length: 13 }, (_, i) => `products-${i + 1}`),
 ];
 
