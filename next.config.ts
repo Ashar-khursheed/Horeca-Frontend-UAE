@@ -83,8 +83,18 @@ const nextConfig: NextConfig = {
         source: '/production/:path*',
         destination: 'https://d1p9kdrbe10xzz.cloudfront.net/production/:path*',
       },
+      {
+        source: '/categories/:path*',
+        destination: 'https://d1p9kdrbe10xzz.cloudfront.net/categories/:path*',
+      },
+      // Agar brands ke logos ya blogs ke images ke koi specific paths hain, to unhe bhi yahan add kar sakte hain:
+      {
+        source: '/brands/logos/:path*',
+        destination: 'https://d1p9kdrbe10xzz.cloudfront.net/brands/logos/:path*',
+      },
     ];
   },
+
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
