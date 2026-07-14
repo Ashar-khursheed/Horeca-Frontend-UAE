@@ -378,7 +378,7 @@ export const BlogsCard: React.FC<{ showAll?: boolean; blogs?: ApiBlog[] }> = ({
   if (!blogs.length) return null;
 
   return (
-    <section className="md:my-16 py-6 md:py-0 px-4 sm:px-6 lg:px-8 global-container md:block hidden">
+    <section className="md:my-0 py-6 md:py-0 px-4 sm:px-6 lg:px-8 global-container md:block hiddden">
       {/* Header */}
       <div className="flex items-center justify-between mb-10 flex-wrap gap-4">
         <div>

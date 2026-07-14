@@ -76,7 +76,9 @@ export const Home = ({
           Renders SSR-provided initialProducts immediately, updates on country change. */}
       <FeaturedBrandsDynamic />
 
-      <HomeBlogsSection />
+      <div className="md:block hidden">
+        <HomeBlogsSection />
+      </div>
     </>
   );
 };

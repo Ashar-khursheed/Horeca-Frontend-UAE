@@ -22,8 +22,15 @@ import BlogComments, { Comment as BlogComment } from "@/components/blog-comments
 import Breadcrumb from "@/components/breadcum";
 import SeoContent from "@/seo/seo-content";
 import BlogSidebarForm from "@/components/blog-sidebar-form";
+import FaqSection from "@/components/faq-section";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export interface ApiBlogFaq {
+  id: number;
+  question: string;
+  answer: string;
+}
+
 export interface ApiBlogSeo {
   url: string;
   primary_keyword: string | null;
@@ -66,6 +73,7 @@ export interface ApiBlogDetail {
   category: { id: number; name: string; slug: string | null };
   seo: ApiBlogSeo | null;
   custom_card: CustomCard | null;
+  faqs?: ApiBlogFaq[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -156,7 +164,6 @@ export default function BlogDetailClient({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
-
   const blocks = parseDescriptionBlocks(blog.description);
   const toc = extractToc(blocks);
   const readTime = estimateReadTime(blocks);
@@ -199,7 +206,17 @@ export default function BlogDetailClient({
 
   const bannerSrc = blog.desktop_banner || blog.mobile_banner || blog.thumbnail;
   const authorImg = blog.author_image;
+const [isSticky, setIsSticky] = useState(false);
 
+useEffect(() => {
+  const handleScroll = () => {
+    setIsSticky(window.scrollY > 150);
+  };
+
+  window.addEventListener("scroll", handleScroll);
+
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
   const crumbs = [
     { label: "Home", href: "/" },
     { label: "Blog", href: "/blog" },
@@ -432,7 +449,7 @@ export default function BlogDetailClient({
                 )}
 
                 {/* Sticky Form & CTA Container */}
-                <div className="lg:sticky lg:top-[20px] xl:top-[10px] space-y-3 lg:space-y-2 xl:space-y-5 h-fit">
+                <div className="lg:sticky top-[190px] space-y-3 lg:space-y-2 xl:space-y-5 h-fit">
                   {/* Consultation Inquiry Form */}
                   <BlogSidebarForm type="Blog Page Sidebar Inquiry" />
 
@@ -481,8 +498,11 @@ export default function BlogDetailClient({
           </div> */}
         </div>
       </div>
+
+      {!!blog.faqs?.length && <FaqSection faqs={blog.faqs} />}
+
       <div className="bg-white md:py-10 py-3 pb-0">
-        <SeoContent dataAPI={blog?.seo} />
+        <SeoContent dataAPI={blog?.seo} basePath="/blog" />
       </div>
       <style jsx global>{`
         .blog-content h1,

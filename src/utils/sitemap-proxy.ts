@@ -1,7 +1,7 @@
 import { revalidate } from ".";
 
 const API = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://test-us.thehorecastore.co/api/"
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://apius.thehorecastore.co/api/"
 ).replace(/([^/])$/, "$1/");
 
 export async function proxyXml(backendPath: string): Promise<Response> {
