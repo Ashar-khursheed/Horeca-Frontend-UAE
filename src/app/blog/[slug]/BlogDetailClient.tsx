@@ -502,7 +502,7 @@ useEffect(() => {
       {!!blog.faqs?.length && <FaqSection faqs={blog.faqs} />}
 
       <div className="bg-white md:py-10 py-3 pb-0">
-        <SeoContent dataAPI={blog?.seo} basePath="/blog" />
+        <SeoContent dataAPI={blog?.seo} />
       </div>
       <style jsx global>{`
         .blog-content h1,

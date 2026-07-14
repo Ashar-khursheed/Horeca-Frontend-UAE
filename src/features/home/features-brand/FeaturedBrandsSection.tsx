@@ -7,7 +7,7 @@ import { revalidate } from "@/utils";
 export async function FeaturedBrandsSection() {
   const res = await makeApiCallSSR<{ data: FeaturedCategory[] }>(
     apiUrls.FEATURED_BRAND_PRODUCTS,
-    {},
+    { products_limit: 10, limit: 5, min_products: 5 },
     { revalidate: revalidate },
   );
   return <FeaturedBrandsClient products={res?.data ?? []} />;

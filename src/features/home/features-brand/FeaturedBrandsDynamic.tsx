@@ -11,6 +11,7 @@ import { trimFeaturedBrands } from "@/utils/homepage-payload";
 
 export function FeaturedBrandsDynamic() {
   const [products, setProducts] = useState<FeaturedCategory[]>([]);
+ 
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -19,8 +20,11 @@ export function FeaturedBrandsDynamic() {
   const [initialCountry, setInitialCountry] = useState<string | null>(null);
 
   const loadProducts = () =>
-    makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS)
+    makeApiRequest<{ data: FeaturedCategory[] }>(apiUrls.FEATURED_BRAND_PRODUCTS, {
+      params: { products_limit: 12, limit: 5, min_products: 5 },
+    })
       .then((res) => {
+        console.log("🚀 ~ file: FeaturedBrandsDynamic.tsx:23 ~ loadProducts ~ res:", res)
         if (res?.data) {
           setProducts(trimFeaturedBrands(res.data));
         }
@@ -31,6 +35,7 @@ export function FeaturedBrandsDynamic() {
       .finally(() => setLoading(false));
 
   useEffect(() => {
+    console.log("🚀 ~ file: FeaturedBrandsDynamic.tsx:34 ~ useEffect ~ countryName:", countryName)
     loadProducts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -61,8 +61,59 @@ interface LocalizedString { en?: string; ar?: string; }
  interface FeaturedCategory {
    id: number;
    name: LocalizedString | string;
-   slug: string;
-   products: ApiProductRaw[];
+   featured_products: ApiBrandProduct[];
+ }
+
+ interface ApiBrandSupplier {
+   id: number;
+   product_id: number;
+   vendor_id: number;
+   sale_price: string | number | null;
+   price: number;
+   inventory: number | null;
+   in_stock: number;
+   min_quantity: number;
+   is_fixed: number;
+   delivery_days: string;
+   return_policy: string;
+   free_shipping: number;
+   shipping_charge: string;
+   warranty_information: string | null;
+ }
+
+ interface ApiBrandAccessoryType {
+   id: number;
+   price: number;
+   name: LocalizedString;
+ }
+
+ interface ApiBrandProductAccessory {
+   id: number;
+   is_required: number;
+   name: LocalizedString;
+   accessory_types: ApiBrandAccessoryType[];
+ }
+
+ interface ApiBrandProduct {
+   id: number;
+   sku: string;
+   for_quotes: number;
+   reviews_count: number;
+   title: LocalizedString;
+   image_urls: { en?: string[]; ar?: string[] };
+   image_alt_tags: { en?: string[] | null; ar?: string[] | null };
+   avg_rating: number | null;
+   url: string;
+   currency: { symbol?: string; title?: string };
+   in_wishlist: boolean;
+   in_cart: boolean;
+   selling_type: {
+     en?: { attribute_value: string; attribute_value_unit: string };
+     ar?: { attribute_value: string; attribute_value_unit: string };
+   };
+   is_accessory_required: boolean;
+   product_accessories: ApiBrandProductAccessory[];
+   best_supplier: ApiBrandSupplier | null;
  }
 
  interface FeaturedCategoryTab {
@@ -334,6 +385,7 @@ interface SearchSuggestions {
 }
 
 export type {
+  ApiBrandAccessoryType, ApiBrandProduct, ApiBrandProductAccessory, ApiBrandSupplier,
   ApiCategory,
   ApiCategoryName, ApiCategoryPage, ApiProductRaw, CategoryPageImageDetail, CategoryPageSeoTranslation, FeaturedCategory, FeaturedCategoryTab, FixedFilterItem, HeaderProps, InnerCategoryPageResponse,
   InnerCategoryPageSeo, LocalizedString, ProductsListingResponse, Props, RangeFilterItem, SearchBrand, SearchCategory, SearchProduct, SearchSuggestions

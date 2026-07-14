@@ -4,6 +4,7 @@ import ProductCard from "@/components/product-card";
 import { useLocale } from "next-intl";
 import { useState } from "react";
 import { FeaturedCategory, LocalizedString } from "@/utils/types";
+import { mapBrandProductToCardProduct } from "@/utils/homepage-payload";
 
 function str(v: LocalizedString | string | undefined, locale = "en"): string {
   if (!v) return "";
@@ -20,10 +21,18 @@ export const FeaturedBrands = ({
   const locale = useLocale();
   const [activeIdx, setActiveIdx] = useState(0);
 
-  const activeGroup = products[activeIdx];
-  const featuredProducts = (activeGroup?.products ?? []).slice(0, 10);
+  // API can return brands with an empty featured_products list (e.g. filtered
+  // out for the current country) — skip those so a tab never renders blank.
+  const brandsWithProducts = products.filter(
+    (g) => (g.featured_products?.length ?? 0) > 0,
+  );
 
-  if (!products.length) return null;
+  const activeGroup = brandsWithProducts[activeIdx] ?? brandsWithProducts[0];
+  const featuredProducts = (activeGroup?.featured_products ?? [])
+    .slice(0, 10)
+    .map(mapBrandProductToCardProduct);
+
+  if (!brandsWithProducts.length) return null;
 
   return (
     <section className="w-full bg-white py-5">
@@ -34,7 +43,7 @@ export const FeaturedBrands = ({
           Featured Brands
           </h2>
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar ">
-            {products.map((g, i) => (
+            {brandsWithProducts.map((g, i) => (
               <button
                 key={i}
                 onClick={() => setActiveIdx(i)}
@@ -67,7 +76,7 @@ export const FeaturedBrands = ({
         <div className="flex sm:grid gap-3 overflow-x-auto sm:overflow-visible hide-scrollbar max-sm:pb-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 4xl:grid-cols-6">
           {featuredProducts.map((product) => (
             <div key={product.id} className="shrink-0 w-[175px] sm:w-auto">
-              <ProductCard product={product as any} />
+              <ProductCard product={product} />
             </div>
           ))}
         </div>

@@ -120,13 +120,8 @@ Paragraph.displayName = "Paragraph";
 
 // ─── Main SeoContent Component ────────────────────────────────────────────────
 
-export default function SeoContent({
-  dataAPI,
-  basePath = "",
-}: {
-  dataAPI?: any | null;
-  basePath?: string;
-}) {
+export default function SeoContent({ dataAPI }: { dataAPI?: any | null }) {
+console.log("dataAPIdataAPIdataAPI", dataAPI);
   const locale = useLocale();
   if (!dataAPI) return null;;
 console.log("dataAPI", dataAPI);
@@ -137,6 +132,7 @@ console.log("dataAPI", dataAPI);
   const para3 = getLocaleStr(dataAPI.paragraph_3, locale);
   const para4 = getLocaleStr(dataAPI.paragraph_4, locale);
 
+  const basePath = dataAPI.url?.trim() || "/";
   const popularTagsObj = dataAPI.popular_tag_details;
   const popularTags: PopularTagDetail[] = Array.isArray(popularTagsObj)
     ? popularTagsObj
