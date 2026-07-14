@@ -76,7 +76,7 @@ const nextConfig: NextConfig = {
       'date-fns',
     ],
   },
-  // Yeh block add kiya hai background proxy ke liye
+  // Yeh block add kiya hai background proxy ke liyes
   async rewrites() {
     return [
       {
