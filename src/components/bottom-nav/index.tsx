@@ -155,7 +155,7 @@
 "use client";
 
 import { useAppSelector } from "@/store/hooks";
-import { getCartId } from "@/utils/cartId";
+import { useCartId } from "@/utils/cartId";
 import { Globe, Heart, Home, ShoppingCart, User, Languages,Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -164,13 +164,14 @@ const NAV_ITEMS = [
   { label: "Home",     href: "/",         icon: Home,         isCart: false },
   // { label: "Language", href: "/search",   icon: Languages,        isCart: false },
   { label: "Search", href: "/search",   icon: Search,        isCart: false },
-  { label: "Cart",     href: `/cart/${getCartId()}`,     icon: ShoppingCart, isCart: true  },
+  { label: "Cart",     href: "/cart",     icon: ShoppingCart, isCart: true  },
   { label: "Wishlist", href: "/wishlist", icon: Heart,        isCart: false },
   { label: "Account",  href: "/account",  icon: User,         isCart: false },
 ];
 
 export default function BottomNav() {
   const pathname   = usePathname();
+  const cartId     = useCartId();
   const isLoggedIn = useAppSelector((s) => !!s.profile.customer);
 
   // Cart count
@@ -215,7 +216,12 @@ export default function BottomNav() {
           }}
         >
           {NAV_ITEMS.map((item) => {
-            const href   = item.label === "Account" ? accountHref : item.href;
+            const href   =
+              item.label === "Account"
+                ? accountHref
+                : item.isCart
+                  ? `/cart/${cartId}`
+                  : item.href;
             const active = isActive(href);
             const Icon   = item.icon;
 

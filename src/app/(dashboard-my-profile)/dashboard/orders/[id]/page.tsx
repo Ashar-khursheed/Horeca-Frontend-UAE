@@ -598,21 +598,21 @@ export default function OrderDetailPage() {
                             )}
                           </div>
 
-                          {accessories.length > 0 && (
+                          {accessories?.length > 0 && (
                             <div className="mt-3 border border-gray-100 rounded-[7px] bg-gray-50/60 divide-y divide-gray-100">
                               <p className="px-3 py-1.5 text-[11px] font-bold text-gray-500">
                                 Accessories
                               </p>
-                              {accessories.map((acc) => (
+                              {accessories?.map((acc) => (
                                 <div
                                   key={acc.id}
                                   className="flex items-center justify-between gap-3 px-3 py-1.5"
                                 >
                                   <span className="text-[11px] text-gray-600">
                                     <span className="text-gray-400">
-                                      {acc.product_accessory_name}:
+                                      {acc?.product_accessory_name}:
                                     </span>{" "}
-                                    {acc.accessory_item_name.replace(/^"|"$/g, "")}
+                                    {acc?.accessory_item_name?.replace(/^"|"$/g, "")}
                                   </span>
                                   <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
                                     {sym}{fmt(Number(acc.amount))}

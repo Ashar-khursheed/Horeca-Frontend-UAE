@@ -44,7 +44,7 @@ import { useLocationData } from "@/utils/locationStorage";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "./SearchBar";
-import { getCartId } from "@/utils/cartId";
+import { useCartId } from "@/utils/cartId";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CategoryName {
@@ -165,6 +165,7 @@ export default function NavigationStatic({
   navItemData?: Category[];
 }) {
   const reduxCustomer = useSelector((s: any) => s.profile.customer);
+  const cartId = useCartId();
   const locationData = useLocationData();
   const profileLoading = useSelector((s: any) => s.profile.loading);
   const customer = reduxCustomer;
@@ -561,7 +562,7 @@ export default function NavigationStatic({
                 </Link>
 
                 {/* Cart */}
-                <Link     href={`/cart/${getCartId()}`}>
+                <Link     href={`/cart/${cartId}`}>
                   <button className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] transition-colors text-white rounded-[7px] pl-3 pr-4 h-10">
                     <div className="relative">
                       <ShoppingCart size={18} />

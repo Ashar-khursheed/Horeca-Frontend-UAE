@@ -18,7 +18,7 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import { Switch } from '@/components/ui/switch'
 import type { MobileCheckoutProps } from './types'
-import { getCartId } from '@/utils/cartId'
+import { useCartId } from '@/utils/cartId'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,6 +37,7 @@ const formatExpiry = (v: string) => {
 
 export function MobileCheckout(props: MobileCheckoutProps) {
   const { mobileStep, setMobileStep } = props
+  const cartId = useCartId()
   const activeAddr =
     props.addresses.find((a) => a.id === props.selectedAddress) ?? props.addresses[0]
 
@@ -63,7 +64,7 @@ export function MobileCheckout(props: MobileCheckoutProps) {
             </button>
           ) : (
             <Link
-           href={`/cart/${getCartId()}`}
+           href={`/cart/${cartId}`}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
             >
               <ArrowLeft size={20} className="text-gray-700" />

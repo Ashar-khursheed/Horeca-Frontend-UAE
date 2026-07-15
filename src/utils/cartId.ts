@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 const CART_ID_KEY = "cart_session_id";
 
 function generateCartId(): string {
@@ -23,4 +25,17 @@ export function resetCartId(): string {
     localStorage.setItem(CART_ID_KEY, id);
   }
   return id;
+}
+
+// The cart id lives in localStorage, so it's only knowable on the client.
+// Calling getCartId() directly during render produces a different value on
+// the server (fresh random id) vs. the client (existing localStorage id),
+// which React flags as a hydration mismatch. This hook renders "" on the
+// first pass (matching SSR) and fills in the real id after mount.
+export function useCartId(): string {
+  const [cartId, setCartId] = useState("");
+  useEffect(() => {
+    setCartId(getCartId());
+  }, []);
+  return cartId;
 }

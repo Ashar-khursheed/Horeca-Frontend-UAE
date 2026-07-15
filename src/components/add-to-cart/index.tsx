@@ -42,7 +42,7 @@ import type { ApiProduct, RawApiProduct } from "@/components/product-card";
 import Loader from "../Loader";
 import { AddToCartWidgetProps } from "@/features/product-detail/types";
 import GetAQuoteModal from "@/components/get-a-quote-modal";
-import { getCartId } from "@/utils/cartId";
+import { useCartId } from "@/utils/cartId";
 import { trackGtmEvent } from "@/utils/gtm";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
@@ -133,6 +133,7 @@ export const AddToCartWidget = ({
 }: AddToCartWidgetProps & { inDropdown?: boolean }) => {
   const dispatch = useAppDispatch();
   const locale = useLocale();
+  const cartId = useCartId();
 
   const country = useAppSelector((s) => s.country.data);
   const cartItems = useAppSelector((s) => s.cart.items);
@@ -714,7 +715,7 @@ export const AddToCartWidget = ({
           {/* Add To Cart / Request Quote Button */}
           {isAddedState ? (
             <Link
-            href={`/cart/${getCartId()}`}
+            href={`/cart/${cartId}`}
               className={`${computedButtonClass} w-fulls flex items-center justify-center gap-1.5 group`}
             >
               {iconShow && <CheckCircle size={13} strokeWidth={2} />}
@@ -765,7 +766,7 @@ export const AddToCartWidget = ({
         <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
           {isAddedState && !isQuote ? (
             <Link
-                  href={`/cart/${getCartId()}`}
+                  href={`/cart/${cartId}`}
               className={`flex-1 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors group ${isWishlist ? "h-10 px-3" : "h-8.5"} `}
             >
               {iconShow && <CheckCircle size={13} strokeWidth={2} />}

@@ -1,5 +1,6 @@
 import {
   Document,
+  Font,
   Image,
   Page,
   StyleSheet,
@@ -7,6 +8,13 @@ import {
   View,
 } from "@react-pdf/renderer";
 import React from "react";
+
+// Helvetica (the base-14 PDF font) has no glyph for the Rupee sign (₹) or
+// other non-Latin-1 currency symbols, so it renders as a broken/garbled
+// character. Noto Sans covers the Currency Symbols Unicode block, so we
+// swap it in everywhere "Helvetica" was used below.
+Font.register({ family: "NotoSans", src: "/fonts/NotoSans-Regular.ttf" });
+Font.register({ family: "NotoSans-Bold", src: "/fonts/NotoSans-Bold.ttf" });
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -112,7 +120,18 @@ function toUSD(val: string | number): string {
   });
 }
 
-function convertAmountToWords(amount: number): string {
+const CURRENCY_WORDS: Record<string, string> = {
+  USD: "U.S. Dollars",
+  INR: "Indian Rupees",
+  AED: "UAE Dirhams",
+  GBP: "British Pounds",
+  EUR: "Euros",
+  SAR: "Saudi Riyals",
+  CAD: "Canadian Dollars",
+  AUD: "Australian Dollars",
+};
+
+function convertAmountToWords(amount: number, currencyTitle?: string): string {
   const ones = [
     "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
     "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
@@ -133,8 +152,10 @@ function convertAmountToWords(amount: number): string {
     return numToWords(Math.floor(n / 1000000)) + " Million" + (n % 1000000 ? " " + numToWords(n % 1000000) : "");
   }
 
+  const currencyLabel =
+    CURRENCY_WORDS[currencyTitle ?? "USD"] ?? currencyTitle ?? "U.S. Dollars";
   const [whole, fraction = "00"] = amount.toFixed(2).split(".");
-  return `${numToWords(Number(whole))} And ${fraction}/100 U.S. Dollars Only`;
+  return `${numToWords(Number(whole))} And ${fraction}/100 ${currencyLabel} Only`;
 }
 
 function parseAddress(raw: string) {
@@ -154,7 +175,7 @@ function parseAddress(raw: string) {
 
 const S = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSans",
     fontSize: 8,
     color: "#111111",
     backgroundColor: "#ffffff",
@@ -167,11 +188,11 @@ const S = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   headerLogo: { width: 90, height: 36, objectFit: "contain" },
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 13, fontFamily: "Helvetica-Bold", letterSpacing: 0.5 },
-  headerSub: { fontSize: 8, color: "#186737", marginTop: 2, fontFamily: "Helvetica-Bold" },
+  headerTitle: { fontSize: 13, fontFamily: "NotoSans-Bold", letterSpacing: 0.5 },
+  headerSub: { fontSize: 8, color: "#186737", marginTop: 2, fontFamily: "NotoSans-Bold" },
   headerRight: { alignItems: "flex-end" },
   headerRightText: { fontSize: 7, lineHeight: 1.4 },
-  headerRightBold: { fontSize: 7.5, fontFamily: "Helvetica-Bold", lineHeight: 1.4 },
+  headerRightBold: { fontSize: 7.5, fontFamily: "NotoSans-Bold", lineHeight: 1.4 },
 
   // Bill To + Invoice Info row
   twoCol: { flexDirection: "row", gap: 8, marginBottom: 6 },
@@ -184,18 +205,18 @@ const S = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 6,
     textAlign: "center",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans-Bold",
     fontSize: 8.5,
     borderBottom: "1 solid #000",
   },
   boxBody: { paddingHorizontal: 8, paddingVertical: 8 },
 
   // Bill To
-  billName: { fontFamily: "Helvetica-Bold", fontSize: 9, textTransform: "uppercase", marginBottom: 4 },
+  billName: { fontFamily: "NotoSans-Bold", fontSize: 9, textTransform: "uppercase", marginBottom: 4 },
   billText: { fontSize: 7.5, lineHeight: 1.6, marginBottom: 2 },
-  billLabel: { fontFamily: "Helvetica-Bold" },
+  billLabel: { fontFamily: "NotoSans-Bold" },
   billRow: { flexDirection: "row", marginBottom: 4, alignItems: "flex-start" },
-  billRowLabel: { fontFamily: "Helvetica-Bold", fontSize: 7.5, marginRight: 4, flexShrink: 0 },
+  billRowLabel: { fontFamily: "NotoSans-Bold", fontSize: 7.5, marginRight: 4, flexShrink: 0 },
   billRowValue: { fontSize: 7.5, flex: 1, lineHeight: 1.4 },
 
   // Invoice info table cells
@@ -220,7 +241,7 @@ const S = StyleSheet.create({
   },
   infoCellBorderRight: { borderRight: "1 solid #000" },
   infoCellGray: { backgroundColor: "#E7E7E7" },
-  infoCellRed: { color: "#CC0000", fontFamily: "Helvetica-Bold" },
+  infoCellRed: { color: "#CC0000", fontFamily: "NotoSans-Bold" },
   infoBorderBottom: { borderBottom: "1 solid #000" },
 
   // Product table
@@ -245,22 +266,22 @@ const S = StyleSheet.create({
     fontSize: 7,
     textAlign: "center",
   },
-  prodHeaderText: { fontFamily: "Helvetica-Bold", fontSize: 7 },
+  prodHeaderText: { fontFamily: "NotoSans-Bold", fontSize: 7 },
   prodDescCell: {
     paddingVertical: 4,
     paddingHorizontal: 4,
     fontSize: 7,
     borderRight: "1 solid #000",
   },
-  prodName: { fontFamily: "Helvetica-Bold", fontSize: 7.5, marginBottom: 2 },
+  prodName: { fontFamily: "NotoSans-Bold", fontSize: 7.5, marginBottom: 2 },
   prodMeta: { fontSize: 6.5, lineHeight: 1.4 },
   prodMetaRed: { color: "#CC0000" },
-  prodMetaBold: { fontFamily: "Helvetica-Bold" },
+  prodMetaBold: { fontFamily: "NotoSans-Bold" },
   prodImg: { width: 36, height: 36, objectFit: "contain" },
 
   // Bottom two-col
   termsBox: { flex: 3, border: "1 solid #000", padding: 8 },
-  termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 4 },
+  termsTitle: { fontFamily: "NotoSans-Bold", fontSize: 9, marginBottom: 4 },
   termsText: { fontSize: 6.5, lineHeight: 1.5 },
 
   totalsBox: { flex: 2, border: "1 solid #000" },
@@ -270,10 +291,10 @@ const S = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 2.5,
   },
-  totalsLabel: { fontSize: 7.5, fontFamily: "Helvetica-Bold" },
+  totalsLabel: { fontSize: 7.5, fontFamily: "NotoSans-Bold" },
   totalsValue: { fontSize: 7.5 },
-  totalsRed: { color: "#CC0000", fontFamily: "Helvetica-Bold" },
-  totalsGreen: { color: "#186737", fontFamily: "Helvetica-Bold" },
+  totalsRed: { color: "#CC0000", fontFamily: "NotoSans-Bold" },
+  totalsGreen: { color: "#186737", fontFamily: "NotoSans-Bold" },
   totalsDivider: { borderBottom: "0.5 solid #AAAAAA", marginVertical: 3 },
   totalsNetBar: {
     backgroundColor: "#E7E7E7",
@@ -283,20 +304,20 @@ const S = StyleSheet.create({
     paddingHorizontal: 8,
     borderTop: "1 solid #000",
   },
-  totalsNetText: { fontSize: 8, fontFamily: "Helvetica-Bold", color: "#CC0000" },
+  totalsNetText: { fontSize: 8, fontFamily: "NotoSans-Bold", color: "#CC0000" },
   totalsWords: {
     paddingHorizontal: 8,
     paddingTop: 4,
     paddingBottom: 6,
     textAlign: "center",
     fontSize: 6.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans-Bold",
   },
 
   // Appreciation
   appreciate: {
     textAlign: "center",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans-Bold",
     fontSize: 7.5,
     marginVertical: 6,
   },
@@ -307,7 +328,7 @@ const S = StyleSheet.create({
     backgroundColor: "#E7E7E7",
     textAlign: "center",
     paddingVertical: 4,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans-Bold",
     fontSize: 8.5,
     borderBottom: "1 solid #000",
   },
@@ -315,12 +336,12 @@ const S = StyleSheet.create({
   bankLabel: {
     width: "35%",
     backgroundColor: "#E7E7E7",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans-Bold",
     fontSize: 7,
     padding: 4,
     borderRight: "0.5 solid #000",
   },
-  bankValue: { flex: 1, fontSize: 7, padding: 4, fontFamily: "Helvetica-Bold" },
+  bankValue: { flex: 1, fontSize: 7, padding: 4, fontFamily: "NotoSans-Bold" },
   bankValueRed: { color: "#CC0000" },
 
   payTermsBox: { border: "1 solid #000" },
@@ -328,13 +349,13 @@ const S = StyleSheet.create({
     backgroundColor: "#E7E7E7",
     textAlign: "center",
     paddingVertical: 4,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans-Bold",
     fontSize: 7.5,
     borderBottom: "1 solid #000",
   },
   payTermsBody: { padding: 5 },
   payTermsLine: { fontSize: 6.5, lineHeight: 1.6 },
-  payTermsBold: { fontFamily: "Helvetica-Bold" },
+  payTermsBold: { fontFamily: "NotoSans-Bold" },
 
   // Footer
   footer: {
@@ -349,7 +370,7 @@ const S = StyleSheet.create({
 
   systemNote: {
     textAlign: "center",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans-Bold",
     fontSize: 7,
     marginTop: 5,
     marginBottom: 2,
@@ -422,7 +443,7 @@ const InfoCell = ({
     <Text
       style={[
         S.infoCellText,
-        gray ? { fontFamily: "Helvetica-Bold" as const } : {},
+        gray ? { fontFamily: "NotoSans-Bold" as const } : {},
         red ? S.infoCellRed : {},
       ]}
     >
@@ -526,10 +547,12 @@ const ProductRow = ({
   item,
   sno,
   isAlt,
+  currency,
 }: {
   item: OrderProduct;
   sno: number;
   isAlt: boolean;
+  currency: string;
 }) => {
   const name = item.product.name?.en ?? "";
   const image = item.product.image_urls?.en?.[0] ?? "";
@@ -565,7 +588,7 @@ const ProductRow = ({
           accCharges.map((ac, idx) => (
             <Text key={idx} style={[S.prodMeta, { marginTop: 1 }]}>
               <Text style={S.prodMetaBold}>{ac.accessory_item_name}: </Text>
-              ${ac.accessory_item_price}
+              {currency}{ac.accessory_item_price}
             </Text>
           ))}
       </View>
@@ -586,7 +609,7 @@ const ProductRow = ({
 
       {/* Acc Charge */}
       <View style={[S.prodCell, { width: "13%", alignItems: "center", justifyContent: "center" }]}>
-        <Text>${toUSD(accCharge)}</Text>
+        <Text>{currency}{toUSD(accCharge)}</Text>
       </View>
 
       {/* Unit */}
@@ -596,12 +619,12 @@ const ProductRow = ({
 
       {/* Unit Price */}
       <View style={[S.prodCell, { width: "12%", alignItems: "center", justifyContent: "center" }]}>
-        <Text>${toUSD(price)}</Text>
+        <Text>{currency}{toUSD(price)}</Text>
       </View>
 
       {/* Total */}
       <View style={[S.prodCellLast, { width: "12%", alignItems: "center", justifyContent: "center" }]}>
-        <Text>${toUSD(rowTotal)}</Text>
+        <Text>{currency}{toUSD(rowTotal)}</Text>
       </View>
     </View>
   );
@@ -646,8 +669,10 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
   const anyDiscount    = hasDiscount || hasAdditional || hasCheque;
   const subtotalAfterAll = subtotal - discount - additional - chequeDiscount;
   const total = Number(order.total_amount);
+  const hasShipping = Number(order.shipping_charge) > 0;
+  const hasTax = Number(order.tax_amount) > 0;
 
-  const bold = { fontFamily: "Helvetica-Bold" as const };
+  const bold = { fontFamily: "NotoSans-Bold" as const };
 
   return (
     <View style={S.totalsBox}>
@@ -656,7 +681,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
         {/* 1. INVOICE SUBTOTAL */}
         <View style={S.totalsRow}>
           <Text style={S.totalsLabel}>Invoice Subtotal</Text>
-          <Text style={S.totalsValue}>${toUSD(subtotal)}</Text>
+          <Text style={S.totalsValue}>{currency}{toUSD(subtotal)}</Text>
         </View>
 
         {/* 2. Coupon Discount */}
@@ -665,7 +690,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
               <Text style={[S.totalsLabel, S.totalsRed]}>Coupon Discount</Text>
-              <Text style={[S.totalsValue, S.totalsRed]}>- ${toUSD(discount)}</Text>
+              <Text style={[S.totalsValue, S.totalsRed]}>- {currency}{toUSD(discount)}</Text>
             </View>
           </>
         )}
@@ -689,7 +714,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
                 ) : null}
               </View>
               <Text style={{ fontSize: 7.5, color: "#B45309", ...bold }}>
-                - ${toUSD(additional)}
+                - {currency}{toUSD(additional)}
               </Text>
             </View>
           </>
@@ -703,7 +728,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
               <Text style={[S.totalsLabel, S.totalsGreen]}>
                 Check Discount ({chequeDiscountPct.toFixed(1)}%)
               </Text>
-              <Text style={[S.totalsGreen]}>- ${toUSD(chequeDiscount)}</Text>
+              <Text style={[S.totalsGreen]}>- {currency}{toUSD(chequeDiscount)}</Text>
             </View>
           </>
         )}
@@ -714,7 +739,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
               <Text style={[S.totalsLabel, bold]}>Subtotal After Discounts</Text>
-              <Text style={[S.totalsValue, bold]}>${toUSD(subtotalAfterAll)}</Text>
+              <Text style={[S.totalsValue, bold]}>{currency}{toUSD(subtotalAfterAll)}</Text>
             </View>
           </>
         )}
@@ -725,7 +750,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
               <Text style={[S.totalsLabel, bold]}>Inside Delivery</Text>
-              <Text style={[S.totalsValue, bold]}>$249.00</Text>
+              <Text style={[S.totalsValue, bold]}>{currency}249.00</Text>
             </View>
           </>
         )}
@@ -736,7 +761,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
               <Text style={[S.totalsLabel, bold]}>Lift Gate Delivery</Text>
-              <Text style={[S.totalsValue, bold]}>$75.00</Text>
+              <Text style={[S.totalsValue, bold]}>{currency}75.00</Text>
             </View>
           </>
         )}
@@ -747,26 +772,34 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
               <Text style={[S.totalsLabel, bold]}>Residential Address Fee</Text>
-              <Text style={[S.totalsValue, bold]}>$199.00</Text>
+              <Text style={[S.totalsValue, bold]}>{currency}199.00</Text>
             </View>
           </>
         )}
 
-        {/* 7. Shipping */}
-        <View style={S.totalsDivider} />
-        <View style={S.totalsRow}>
-          <Text style={[S.totalsLabel, bold]}>Shipping Charges</Text>
-          <Text style={[S.totalsValue, bold]}>${toUSD(order.shipping_charge)}</Text>
-        </View>
+        {/* 7. Shipping — only when the order actually has a shipping charge */}
+        {hasShipping && (
+          <>
+            <View style={S.totalsDivider} />
+            <View style={S.totalsRow}>
+              <Text style={[S.totalsLabel, bold]}>Shipping Charges</Text>
+              <Text style={[S.totalsValue, bold]}>{currency}{toUSD(order.shipping_charge)}</Text>
+            </View>
+          </>
+        )}
 
-        {/* 8. Tax */}
-        <View style={S.totalsDivider} />
-        <View style={S.totalsRow}>
-          <Text style={[S.totalsLabel, bold]}>
-            Sales Tax {Number(order.tax_percentage).toFixed(2)}%
-          </Text>
-          <Text style={[S.totalsValue, bold]}>${toUSD(order.tax_amount)}</Text>
-        </View>
+        {/* 8. Tax — only when sales tax actually applies */}
+        {hasTax && (
+          <>
+            <View style={S.totalsDivider} />
+            <View style={S.totalsRow}>
+              <Text style={[S.totalsLabel, bold]}>
+                Sales Tax {Number(order.tax_percentage).toFixed(2)}%
+              </Text>
+              <Text style={[S.totalsValue, bold]}>{currency}{toUSD(order.tax_amount)}</Text>
+            </View>
+          </>
+        )}
 
       </View>
 
@@ -777,7 +810,9 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
       </View>
 
       {/* Amount in words */}
-      <Text style={S.totalsWords}>{convertAmountToWords(total)}</Text>
+      <Text style={S.totalsWords}>
+        {convertAmountToWords(total, order.currency?.target_title)}
+      </Text>
     </View>
   );
 };
@@ -800,7 +835,7 @@ const BankBox = () => (
     <View style={S.bankRow}>
       <Text style={S.bankLabel}>In Case Of Cheque Payment</Text>
       <View style={{ flex: 1, padding: 4 }}>
-        <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold" }}>
+        <Text style={{ fontSize: 7, fontFamily: "NotoSans-Bold" }}>
           Please prepare all cheques in favor of
         </Text>
         <Text style={[S.bankValue, S.bankValueRed, { padding: 0 }]}>
@@ -853,7 +888,7 @@ interface InvoicePdfDocumentProps {
 }
 
 export const InvoicePdfDocument = ({ order }: InvoicePdfDocumentProps) => {
-  const currency = order.currency?.target_symbol ?? "$";
+  const currency = order.currency?.target_symbol   ;
   const paymentMode =
     order.pay_with_cheque === 1
       ? "Check"
@@ -914,7 +949,7 @@ export const InvoicePdfDocument = ({ order }: InvoicePdfDocumentProps) => {
         <View style={S.prodTable}>
           <ProductTableHeader />
           {firstPageProducts.map((item, i) => (
-            <ProductRow key={item.id} item={item} sno={i + 1} isAlt={i % 2 !== 0} />
+            <ProductRow key={item.id} item={item} sno={i + 1} isAlt={i % 2 !== 0} currency={currency} />
           ))}
         </View>
 
@@ -982,7 +1017,7 @@ export const InvoicePdfDocument = ({ order }: InvoicePdfDocumentProps) => {
             <View style={S.prodTable}>
               <ProductTableHeader />
               {pageProducts.map((item, i) => (
-                <ProductRow key={item.id} item={item} sno={startIdx + i + 1} isAlt={i % 2 !== 0} />
+                <ProductRow key={item.id} item={item} sno={startIdx + i + 1} isAlt={i % 2 !== 0} currency={currency} />
               ))}
             </View>
 
@@ -1006,7 +1041,7 @@ export const InvoicePdfDocument = ({ order }: InvoicePdfDocumentProps) => {
               <ProductTableHeader />
               {lastPageProducts.map((item, i) => {
                 const gi = firstPageProducts.length + middleCount + i;
-                return <ProductRow key={item.id} item={item} sno={gi + 1} isAlt={i % 2 !== 0} />;
+                return <ProductRow key={item.id} item={item} sno={gi + 1} isAlt={i % 2 !== 0} currency={currency} />;
               })}
             </View>
           )}

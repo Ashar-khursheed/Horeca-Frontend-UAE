@@ -25,7 +25,7 @@ import {
   getDefaultAddressCache,
   getLocationData,
 } from "@/utils/locationStorage";
-import { getCartId } from "@/utils/cartId";
+import { useCartId } from "@/utils/cartId";
 import {
   getShippingCharge,
   getShippingChargeFromAddress,
@@ -108,6 +108,7 @@ function CouponAppliedBadge({
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const cartId = useCartId();
   const dispatch = useAppDispatch();
   const rawProducts = useAppSelector((s: any) => s.cart.rawProducts);
   const guestItems = useAppSelector((s: any) => s.cart.items);
@@ -768,7 +769,7 @@ export default function CheckoutPage() {
 
   const crumbs = [
     { label: "Home", href: "/" },
-    { label: "Cart", href: `/cart/${getCartId()}` },
+    { label: "Cart", href: `/cart/${cartId}` },
     { label: "Checkout", href: null },
   ];
 
@@ -1202,7 +1203,7 @@ export default function CheckoutPage() {
       </div>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-4">
         <Link
-          href={`/cart/${getCartId()}`}
+          href={`/cart/${cartId}`}
           className="flex items-center gap-1 text-[#186737] text-sm hover:underline font-medium"
         >
           <ChevronRight size={14} className="rotate-180" /> Return to cart

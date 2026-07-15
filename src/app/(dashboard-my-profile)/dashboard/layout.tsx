@@ -126,7 +126,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50/60 global-container">
+    <div className="flex min-h-screen bg-gray-50/60 global-container" suppressHydrationWarning>
       {/* Desktop sidebar */}
       <Sidebar />
 
