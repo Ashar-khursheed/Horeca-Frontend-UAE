@@ -29,7 +29,7 @@ export const FeaturedBrands = ({
 
   const activeGroup = brandsWithProducts[activeIdx] ?? brandsWithProducts[0];
   const featuredProducts = (activeGroup?.featured_products ?? [])
-    .slice(0, 10)
+    .slice(0, 12)
     .map(mapBrandProductToCardProduct);
 
   if (!brandsWithProducts.length) return null;

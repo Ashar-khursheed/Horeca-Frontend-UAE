@@ -1,14 +1,7 @@
-import type { ApiBrandProduct, ApiProductRaw, FeaturedCategory } from "@/utils/types";
+import type { ApiBrandProduct, FeaturedCategory } from "@/utils/types";
 import type { RawApiProduct } from "@/components/product-card";
 
-const MAX_FEATURED_PRODUCTS = 12;
-const MAX_BRAND_PRODUCTS_PER_TAB = 10;
-
-export function trimFeaturedProducts(
-  products: ApiProductRaw[],
-): ApiProductRaw[] {
-  return products.slice(0, MAX_FEATURED_PRODUCTS);
-}
+const MAX_BRAND_PRODUCTS_PER_TAB = 12;
 
 export function trimFeaturedBrands(
   categories: FeaturedCategory[],

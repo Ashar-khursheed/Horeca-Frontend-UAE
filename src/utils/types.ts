@@ -116,15 +116,6 @@ interface LocalizedString { en?: string; ar?: string; }
    best_supplier: ApiBrandSupplier | null;
  }
 
- interface FeaturedCategoryTab {
-   id: number;
-   parent_id: number;
-   image_url: string;
-   order: number;
-   is_featured: boolean;
-   name: string;
- }
-
 
 interface CategoryPageImageDetail {
   image_url: string;
@@ -387,7 +378,7 @@ interface SearchSuggestions {
 export type {
   ApiBrandAccessoryType, ApiBrandProduct, ApiBrandProductAccessory, ApiBrandSupplier,
   ApiCategory,
-  ApiCategoryName, ApiCategoryPage, ApiProductRaw, CategoryPageImageDetail, CategoryPageSeoTranslation, FeaturedCategory, FeaturedCategoryTab, FixedFilterItem, HeaderProps, InnerCategoryPageResponse,
+  ApiCategoryName, ApiCategoryPage, ApiProductRaw, CategoryPageImageDetail, CategoryPageSeoTranslation, FeaturedCategory, FixedFilterItem, HeaderProps, InnerCategoryPageResponse,
   InnerCategoryPageSeo, LocalizedString, ProductsListingResponse, Props, RangeFilterItem, SearchBrand, SearchCategory, SearchProduct, SearchSuggestions
 };
 

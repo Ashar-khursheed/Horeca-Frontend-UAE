@@ -1,44 +1,37 @@
 "use client";
 
 import ProductCard from "@/components/product-card";
-import { makeApiRequest } from "@/apis/axios-instance";
-import { apiUrls } from "@/apis/api-endpoint";
-import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
-import type { ApiProductRaw, FeaturedCategoryTab } from "@/utils/types";
+import { useLocale } from "next-intl";
 import { useState } from "react";
-import { ProductCardSkeleton } from "@/components/loading-sketlon";
+import type { FeaturedCategory, LocalizedString } from "@/utils/types";
+import { mapBrandProductToCardProduct } from "@/utils/homepage-payload";
+
+function str(v: LocalizedString | string | undefined, locale = "en"): string {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  return locale === "ar" ? (v.ar ?? v.en ?? "") : (v.en ?? v.ar ?? "");
+}
 
 export const FeaturedProducts = ({
-  tabs = [],
-  initialProducts = [],
+  categories = [],
 }: {
-  tabs?: FeaturedCategoryTab[];
-  initialProducts?: ApiProductRaw[];
+  categories?: FeaturedCategory[];
 }) => {
-  const [activeIdx, setActiveIdx]   = useState(0);
-  const [products, setProducts]     = useState<ApiProductRaw[]>(initialProducts);
-  const [loading, setLoading]       = useState(false);
+  const locale = useLocale();
+  const [activeIdx, setActiveIdx] = useState(0);
 
-  if (!tabs.length) return null;
+  // API can return categories with an empty featured_products list — skip
+  // those so a tab never renders blank.
+  const categoriesWithProducts = categories.filter(
+    (g) => (g.featured_products?.length ?? 0) > 0,
+  );
 
-  const handleTabClick = async (idx: number) => {
-    if (idx === activeIdx) return;
-    setActiveIdx(idx);
-    setLoading(true);
-    try {
-      const res = await makeApiRequest<{ data: ApiProductRaw[] }>(
-        apiUrls.FEATURED_CATEGORY_TABS,
-        { params: { category_id: tabs[idx].id } },
-      );
-      setProducts(res?.data ?? []);
-    } catch {
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const activeGroup = categoriesWithProducts[activeIdx] ?? categoriesWithProducts[0];
+  const displayProducts = (activeGroup?.featured_products ?? [])
+    .slice(0, 12)
+    .map(mapBrandProductToCardProduct);
 
-  const displayProducts = products.slice(0, 12);
+  if (!categoriesWithProducts.length) return null;
 
   return (
     <section className="w-full bg-white py-5">
@@ -49,10 +42,10 @@ export const FeaturedProducts = ({
            Featured Products
           </h2>
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar">
-            {tabs.map((tab, i) => (
+            {categoriesWithProducts.map((g, i) => (
               <button
-                key={tab.id}
-                onClick={() => handleTabClick(i)}
+                key={g.id}
+                onClick={() => setActiveIdx(i)}
                 className={[
                   "whitespace-nowrap px-3.5 py-1.5 md:text-[15px] text-[12px] font-medium rounded-full shrink-0 transition-all duration-200",
                   activeIdx === i
@@ -60,7 +53,7 @@ export const FeaturedProducts = ({
                     : "text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200",
                 ].join(" ")}
               >
-                {tab.name}
+                {str(g.name, locale)}
               </button>
             ))}
           </div>
@@ -71,21 +64,13 @@ export const FeaturedProducts = ({
           style={{ width: "calc(100% - 2rem)" }}
         />
 
-        {loading ? (
-          <div className={generateDynamicCSSProductCard}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <ProductCardSkeleton/>
-            ))}
-          </div>
-        ) : (
-          <div className="flex sm:grid gap-3 overflow-x-auto sm:overflow-visible hide-scrollbar max-sm:pb-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 4xl:grid-cols-6">
-            {displayProducts.map((product) => (
-              <div key={product.id} className="shrink-0 w-[175px] sm:w-auto">
-                <ProductCard product={product as any} />
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="flex sm:grid gap-3 overflow-x-auto sm:overflow-visible hide-scrollbar max-sm:pb-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 4xl:grid-cols-6">
+          {displayProducts.map((product) => (
+            <div key={product.id} className="shrink-0 w-[175px] sm:w-auto">
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
       </div>
 
       <style>{`
