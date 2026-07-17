@@ -10,74 +10,39 @@ import { useState, useEffect, useRef } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export interface BrandCategoryProductItem {
-  id: number;
-  name: string | { en?: string; ar?: string };
-  sku: string;
-  category_url: string;
-  parent_category_url: string;
-  url: string;
-  vendor_id: number;
-  price: number;
-  sale_price: number;
-  original_price: number;
-  front_sale_price: number;
-  best_price: number;
-  images: string[] | { en?: string[]; ar?: string[] };
-  total_reviews: number;
-  avg_rating: number | null;
-  in_wishlist: boolean;
-  in_cart: boolean;
-  delivery_days: string;
-  return_policy: string;
-  free_shipping: number;
-  min_quantity: number;
-  is_fixed: number;
-  quote_available: number;
-  isRequired: boolean;
-  selling_type: {
-    attribute_value: string | { en?: string; ar?: string };
-    attribute_value_unit: string | { en?: string; ar?: string };
-  };
-  currency?: { symbol?: string; name?: string; title?: string } | null;
-  currency_title: string | null;
-  in_stock: number;
-}
-
 export interface BrandCategoryProductsResponse {
   success: boolean;
-  data: BrandCategoryProductItem[];
-  pagination: { total: number; per_page: number; current_page: number; last_page: number };
+  data: RawApiProduct[];
+  // This endpoint returns flat total_records/total_pages/current_page/per_page
+  // fields instead of a nested `pagination` object (unlike BRAND_BY_SLUG).
+  total_records?: number;
+  total_pages?: number;
+  current_page?: number;
+  per_page?: number;
+  pagination?: { total: number; per_page: number; current_page: number; last_page: number };
   message?: string;
 }
 
-function mapBrandCatProduct(p: BrandCategoryProductItem): RawApiProduct {
+// Product shape here is the same "raw" API product used across the app
+// (title/image_urls/best_supplier/reviews_count/product_accessories etc);
+// selling_type is the one field that arrives double-wrapped in {en, ar}.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBrandCatProduct(p: any): RawApiProduct {
+  const sellingType = p.selling_type?.en ?? p.selling_type?.ar ?? p.selling_type;
   return {
-    id: p.id,
-    name: p.name as RawApiProduct["name"],
-    url: p.url,
-    sku: p.sku,
-    category_url: p.category_url,
-    parent_category_url: p.parent_category_url,
-    price: p.price,
-    sale_price: p.sale_price,
-    original_price: p.original_price,
-    avg_rating: p.avg_rating,
-    total_reviews: p.total_reviews,
-    delivery_days: p.delivery_days,
-    images: p.images as RawApiProduct["images"],
-    alt_tags: [],
-    in_wishlist: p.in_wishlist,
-    min_quantity: p.min_quantity,
-    is_fixed: p.is_fixed,
-    quote_available: p.quote_available,
-    selling_type: {
-      attribute_value: (p.selling_type?.attribute_value ?? "") as NonNullable<RawApiProduct["selling_type"]>["attribute_value"],
-      attribute_value_unit: (p.selling_type?.attribute_value_unit ?? "") as NonNullable<RawApiProduct["selling_type"]>["attribute_value_unit"],
-    },
-    isRequired: p.isRequired,
-    currency: p.currency ?? (p.currency_title ? { symbol: p.currency_title } : undefined),
-    suppliers: [{ vendor_id: p.vendor_id, delivery_days: p.delivery_days, free_shipping: p.free_shipping, min_quantity: p.min_quantity, is_fixed: p.is_fixed }],
+    ...p,
+    selling_type: sellingType,
+  };
+}
+
+// Normalise BRAND_CATEGORY_PRODUCTS' flat pagination fields into the
+// { total, per_page, current_page, last_page } shape used everywhere else.
+function normalizeCategoryPagination(res: BrandCategoryProductsResponse): Pagination {
+  return {
+    total: res.total_records ?? res.pagination?.total ?? 0,
+    per_page: res.per_page ?? res.pagination?.per_page ?? 20,
+    current_page: res.current_page ?? res.pagination?.current_page ?? 1,
+    last_page: res.total_pages ?? res.pagination?.last_page ?? 1,
   };
 }
 
@@ -196,10 +161,10 @@ function PaginationBar({
   pagination,
   onPage,
 }: {
-  pagination: Pagination;
+  pagination: Pagination | undefined;
   onPage: (p: number) => void;
 }) {
-  if (pagination.last_page <= 1) return null;
+  if (!pagination || pagination.last_page <= 1) return null;
   const { current_page, last_page } = pagination;
 
   const pages: (number | "...")[] = [];
@@ -275,11 +240,16 @@ export default function BrandDetailFeature({
   } = data;
 
   const initProducts = categoryProductsData
-    ? categoryProductsData.data.map(mapBrandCatProduct)
+    ? (categoryProductsData.data ?? []).map(mapBrandCatProduct)
     : initialProducts;
-  const initPagination = categoryProductsData
-    ? categoryProductsData.pagination
-    : (initialPagination ?? { total: initialProducts.length, per_page: initialProducts.length || 20, current_page: 1, last_page: 1 });
+  const initPagination: Pagination = categoryProductsData
+    ? normalizeCategoryPagination(categoryProductsData)
+    : (initialPagination ?? {
+        total: initProducts.length,
+        per_page: initProducts.length || 20,
+        current_page: 1,
+        last_page: 1,
+      });
 
   const [products, setProducts] = useState<RawApiProduct[]>(initProducts);
   const [pagination, setPagination] = useState<Pagination>(initPagination);
@@ -319,7 +289,7 @@ export default function BrandDetailFeature({
         );
         if (res?.data) {
           setProducts(res.data.map(mapBrandCatProduct));
-          setPagination(res.pagination);
+          setPagination(normalizeCategoryPagination(res));
         }
       } else {
         const res = await makeApiRequest<BrandDetailResponse>(
@@ -450,9 +420,9 @@ export default function BrandDetailFeature({
             {selectedCategoryName
               ? `${selectedCategoryName} by ${brandName}`
               : `Explore All Products Under ${brandName}`}
-            {pagination.total > 0 && (
+            {pagination?.total > 0 && (
               <span className="ml-2 text-sm font-normal text-gray-500">
-                ({pagination.total} items)
+                ({pagination?.total} items)
               </span>
             )}
           </h2>

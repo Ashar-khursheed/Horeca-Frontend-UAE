@@ -209,6 +209,10 @@ export async function makeApiCallSSR<T = unknown>(
 
     // console.log("SSR FETCH =>", url);
 
+    if (response.status === 404) {
+      return null;
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }

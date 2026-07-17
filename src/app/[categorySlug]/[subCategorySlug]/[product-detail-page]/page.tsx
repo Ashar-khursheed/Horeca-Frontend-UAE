@@ -153,6 +153,7 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
   const schema = productData.data.seo?.seo_schema
 
 
+
   return (
     <>
       <ProductJsonLd schema={schema} />

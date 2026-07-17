@@ -159,7 +159,7 @@ export default async function LocationCityPage({ params }: PageProps) {
     {},
     { revalidate: revalidate, countryCode },
   );
-
+console.log("LocationCityPage res:", res);
   if (!res?.success || !res?.data || !res.data.is_active) notFound();
 
   return <LocationPageClient data={mapApiResponse(res.data)} state={state} city={city} />;

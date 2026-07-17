@@ -4,7 +4,7 @@
 > We supply commercial kitchen equipment, refrigeration, smallwares, and more across the United States.
 
 - Base URL: https://www.thehorecastore.com
-- Generated: 2026-07-13
+- Generated: 2026-07-17
 - Products file: https://www.thehorecastore.com/llms-products.txt
 - Language: English
 
@@ -22,7 +22,7 @@
 - [Track Order](https://www.thehorecastore.com/track-order)
 - [Wishlist](https://www.thehorecastore.com/wishlist)
 
-## Categories (490)
+## Categories (493)
 
 - [Commercial Cooking Equipment](https://www.thehorecastore.com/restaurant-equipment/commercial-cooking-equipment)
 - [Food Prep Equipment](https://www.thehorecastore.com/restaurant-equipment/food-prep-equipment)
@@ -284,6 +284,7 @@
 - [Soup Warmers](https://www.thehorecastore.com/restaurant-equipment/soup-warmers)
 - [Countertop Food Warmer](https://www.thehorecastore.com/restaurant-equipment/countertop-food-warmer)
 - [Strip Warmer](https://www.thehorecastore.com/restaurant-equipment/strip-warmer)
+- [Steam Tables](https://www.thehorecastore.com/restaurant-equipment/steam-tables)
 - [Heated Shelf Food Warmer](https://www.thehorecastore.com/restaurant-equipment/heated-shelf-food-warmer)
 - [Hot Dog Roller](https://www.thehorecastore.com/restaurant-equipment/hot-dog-roller)
 - [Hot Dog Bun Steamers](https://www.thehorecastore.com/restaurant-equipment/hot-dog-bun-steamers)
@@ -430,6 +431,7 @@
 - [Schooner Glasses](https://www.thehorecastore.com/tableware/schooner-glasses)
 - [Bar Utensils](https://www.thehorecastore.com/tableware/bar-utensils)
 - [Meat Tenderizer](https://www.thehorecastore.com/smallware/meat-tenderizer)
+- [Glass Polishers](https://www.thehorecastore.com/restaurant-equipment/glass-polishers)
 - [Cutlery](https://www.thehorecastore.com/tableware/cutlery)
 - [Breading Basket](https://www.thehorecastore.com/smallware/breading-basket)
 - [Food Preparation Equipment Parts Accessories](https://www.thehorecastore.com/restaurant-equipment/food-preparation-equipment-parts-accessories)
@@ -484,6 +486,7 @@
 - [Combination Oven](https://www.thehorecastore.com/restaurant-equipment/combination-oven)
 - [1 Compartment Sink](https://www.thehorecastore.com/restaurant-equipment/1-compartment-sink)
 - [Faucet Sink Drain Accessories](https://www.thehorecastore.com/restaurant-equipment/faucet-sink-drain-accessories)
+- [Lockers](https://www.thehorecastore.com/hotel-supplies/lockers)
 - [Beverage Dispensing Systems](https://www.thehorecastore.com/restaurant-equipment/beverage-dispensing-systems)
 - [Underbar Blender Stations](https://www.thehorecastore.com/restaurant-equipment/underbar-blender-stations)
 - [Gyro Machine](https://www.thehorecastore.com/restaurant-equipment/gyro-machine)
@@ -515,7 +518,7 @@
 - [Fry Dump Stations](https://www.thehorecastore.com/restaurant-equipment/fry-dump-stations)
 - [Used Glass Chillers And Frosters](https://www.thehorecastore.com/used-restaurant-equipment/used-glass-chillers-and-frosters)
 
-## Blog (330)
+## Blog (338)
 
 - [Horeca Store Your One Stop Destination For Hotel Restaurant Supplies Equipment](https://www.thehorecastore.com/blog/horeca-store-your-one-stop-destination-for-hotel-restaurant-supplies-equipment)
 - [How To Set Up Your Hotel Housekeeping Trolley The Right Way](https://www.thehorecastore.com/blog/how-to-set-up-your-hotel-housekeeping-trolley-the-right-way)
@@ -847,8 +850,16 @@
 - [Combi Oven Buying Guide 2026 Steam Convection Or Both](https://www.thehorecastore.com/blog/combi-oven-buying-guide-2026-steam-convection-or-both)
 - [Commercial Meat Slicer Buying Guide 2026](https://www.thehorecastore.com/blog/commercial-meat-slicer-buying-guide-2026)
 - [Commercial Blender Comparison Vitamix Vs Waring Vs Hamilton Beach](https://www.thehorecastore.com/blog/commercial-blender-comparison-vitamix-vs-waring-vs-hamilton-beach)
+- [Panini Press Vs Sandwich Grill Which Do You Need](https://www.thehorecastore.com/blog/panini-press-vs-sandwich-grill-which-do-you-need)
+- [Rotisserie Ovens For Restaurants Buying Guide 2026](https://www.thehorecastore.com/blog/rotisserie-ovens-for-restaurants-buying-guide-2026)
+- [Commercial Popcorn Machine Buying Guide 2026](https://www.thehorecastore.com/blog/commercial-popcorn-machine-buying-guide-2026)
+- [Steam Tables Vs Soup Warmers Which Holding Equipment Fits Your Menu](https://www.thehorecastore.com/blog/steam-tables-vs-soup-warmers-which-holding-equipment-fits-your-menu)
+- [Commercial Coffee Grinder Buying Guide 2026](https://www.thehorecastore.com/blog/commercial-coffee-grinder-buying-guide-2026)
+- [Vitamix Vs Blendtec Best Commercial Blender For Your Cafe](https://www.thehorecastore.com/blog/vitamix-vs-blendtec-best-commercial-blender-for-your-cafe)
+- [Frymaster Vs Henny Penny Fryers Which Fryer Wins](https://www.thehorecastore.com/blog/frymaster-vs-henny-penny-fryers-which-fryer-wins)
+- [Pitco Vs Henny Penny Fryer Which Commercial Fryer Is Best](https://www.thehorecastore.com/blog/pitco-vs-henny-penny-fryer-which-commercial-fryer-is-best)
 
-## Brands (110)
+## Brands (114)
 
 - [Arctic Air](https://www.thehorecastore.com/brands/arctic-air)
 - [Atosa](https://www.thehorecastore.com/brands/atosa)
@@ -960,6 +971,10 @@
 - [Cres Cor](https://www.thehorecastore.com/brands/cres-cor)
 - [Ayrking](https://www.thehorecastore.com/brands/ayrking)
 - [Cozoc](https://www.thehorecastore.com/brands/cozoc)
+- [Lincoln](https://www.thehorecastore.com/brands/lincoln)
+- [Advance Tabco](https://www.thehorecastore.com/brands/advance-tabco)
+- [Garland](https://www.thehorecastore.com/brands/garland)
+- [Rational](https://www.thehorecastore.com/brands/rational)
 
 ## Other (1)
 

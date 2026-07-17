@@ -10,7 +10,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalize = (p: any): RawApiProduct => {
-  const images = p.images;
+  // images can arrive as `images` (flat/locale-wrapped) or `image_urls` (newer shape)
+  const images = p.images ?? p.image_urls;
   const flatImages: string[] = Array.isArray(images)
     ? images
     : (images?.en ?? images?.ar ?? []);
@@ -26,9 +27,7 @@ const normalize = (p: any): RawApiProduct => {
     images: flatImages,
     currency: currencyStr,
     url: p.url ?? p.seo?.url ?? "#",
-    sale_price: p.sale_price ?? 0,
     avg_rating: p.avg_rating ?? null,
-    total_reviews: p.total_reviews ?? 0,
     in_wishlist: p.in_wishlist ?? false,
   };
 };
