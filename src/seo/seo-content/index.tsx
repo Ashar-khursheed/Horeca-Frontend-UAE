@@ -68,7 +68,11 @@ function PopularSearches({
           {filtered.map((item, index) => (
             <Link
               key={index}
-              href={`${basePath}/${item.popularSlug}`}
+              href={
+                item.popularSlug?.includes("/blog")
+                  ? `${item.popularSlug}`
+                  : `/${item.popularSlug}`
+              }
               className="inline-block text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:border-[#186737] hover:text-[#186737] hover:bg-green-50 px-3 py-1.5 rounded-full transition-all duration-200"
             >
               {item.popularTags}
@@ -132,7 +136,7 @@ console.log("dataAPI", dataAPI);
   const para3 = getLocaleStr(dataAPI.paragraph_3, locale);
   const para4 = getLocaleStr(dataAPI.paragraph_4, locale);
 
-  const basePath = dataAPI.url?.trim() || "/";
+  const basePath = dataAPI.url?.trim() ;
   const popularTagsObj = dataAPI.popular_tag_details;
   const popularTags: PopularTagDetail[] = Array.isArray(popularTagsObj)
     ? popularTagsObj
