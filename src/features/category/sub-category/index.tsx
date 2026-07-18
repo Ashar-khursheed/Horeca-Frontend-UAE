@@ -244,6 +244,34 @@ export default function SubCategoryPage({
   const [searchQuery, setSearchQuery] = useState("");
   const swiperRef = useRef<SwiperType | null>(null);
 
+  // Preload child-category thumbnails and keep showing a skeleton until every
+  // one has loaded — avoids the swiper briefly painting an unstyled/oversized
+  // slide before Swiper's JS has finished initializing.
+  const [childImagesReady, setChildImagesReady] = useState(false);
+  useEffect(() => {
+    if (childCategories.length === 0) {
+      setChildImagesReady(false);
+      return;
+    }
+    setChildImagesReady(false);
+    let cancelled = false;
+    let remaining = childCategories.length;
+    const done = () => {
+      remaining -= 1;
+      if (!cancelled && remaining <= 0) setChildImagesReady(true);
+    };
+    childCategories.forEach((child) => {
+      const img = new window.Image();
+      img.onload = done;
+      img.onerror = done;
+      img.src = child.image_url;
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [childCategories.map((c) => c.id).join(",")]);
+
   // ── Client-side products state (initialized from SSR) ────────────────────────
   const [displayProducts, setDisplayProducts] = useState(productsData?.products ?? []);
   const [displayTotal, setDisplayTotal]       = useState(productsData?.total_records ?? productsData?.products?.length ?? 0);
@@ -481,8 +509,20 @@ export default function SubCategoryPage({
         </div>
 
         {/* Subcategory Slider — children of the active subcategory */}
-        {childCategories.length > 0 && (
-          <div className="mb-6 bg-white border border-gray-100 rounded-[7px] p-4 md:p-5 relative">
+        {childCategories.length > 0 && !childImagesReady && (
+          <div data-testid="childcat-skeleton" className="mb-6 bg-white border border-gray-100 rounded-[7px] p-4 md:p-5">
+            <div className="flex gap-4 overflow-hidden px-6">
+              {Array.from({ length: Math.min(childCategories.length, 8) }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center gap-1.5 shrink-0 w-17.5 md:w-22.5">
+                  <div className="w-17.5 md:w-22.5 aspect-square rounded-[7px] bg-gray-100 animate-pulse" />
+                  <div className="h-2.5 w-3/4 rounded bg-gray-100 animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {childCategories.length > 0 && childImagesReady && (
+          <div data-testid="childcat-swiper" className="mb-6 bg-white border border-gray-100 rounded-[7px] p-4 md:p-5 relative">
             {childCategories.length > 3 && (
               <>
                 <button
@@ -505,6 +545,7 @@ export default function SubCategoryPage({
                 swiperRef.current = swiper;
               }}
               spaceBetween={8}
+              slidesPerView={3}
               breakpoints={{
                 0: { slidesPerView: 3 },
                 480: { slidesPerView: 4 },
@@ -525,7 +566,7 @@ export default function SubCategoryPage({
                     <img
                       src={child.image_url}
                       alt={getName(child.name, locale)}
-                      className="w-full aspect-square object-contain group-hover:scale-110 transition-transform duration-300"
+                      className="w-full max-w-17.5 md:max-w-22.5 aspect-square object-contain group-hover:scale-110 transition-transform duration-300"
                     />
                     <span className="text-[9px] md:text-[13px] font-light text-gray-500 group-hover:text-[#186737] text-center leading-tight transition-colors duration-200 line-clamp-2">
                       {getName(child.name, locale)}
