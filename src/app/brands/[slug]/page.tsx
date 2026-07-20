@@ -23,8 +23,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     { revalidate: productDetailRevalidate, countryCode },
   );
 
-  const seo   = data?.seo;
-  const brand = data?.brand;
+  const brand = data?.data;
+  const seo   = brand?.seo_url;
 
   const safe = (v?: string | null) => (!v || v === "undefined" ? undefined : v);
 
@@ -61,20 +61,19 @@ export default async function BrandDetailPage({ params }: PageProps) {
     { page: 1 },
     { revalidate: productDetailRevalidate, countryCode },
   );
-    const schemaObj = data?.seo?.seo_schema?.en;
+  const schemaObj = data?.data?.seo_url?.seo_schema?.en;
   const schema: string | null | undefined = typeof schemaObj === "string"
     ? schemaObj
     : schemaObj
     ? JSON.stringify(schemaObj)
     : undefined;
 
-   
-
-  if (!data?.success || !data?.brand) notFound();
+  if (!data?.success || !data?.data) notFound();
 
   return (
     <>
-       <ProductJsonLd schema={schema} />
-    <BrandDetailFeature data={data} /></>
+      <ProductJsonLd schema={schema} />
+      <BrandDetailFeature data={data.data} brandSlug={slug} />
+    </>
   )
 }
