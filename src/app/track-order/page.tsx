@@ -165,12 +165,20 @@ const STATUS_TO_STEP: Record<string, number> = {
 };
 
 const STATUS_CFG = {
-  Delivered:    { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500", icon: CheckCircle },
-  "In Transit": { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
-  Shipped:      { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
-  Processing:   { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
-  Pending:      { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
-  Cancelled:    { bg: "bg-red-50",    text: "text-red-700",    border: "border-red-200",    dot: "bg-red-500",    icon: AlertCircle },
+  Delivered:           { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500", icon: CheckCircle },
+  "Out for delivery":  { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  "In Transit":        { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  Shipped:             { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  Pickups:             { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  "Ready to ship":     { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Processing:          { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  "Supplier Delivery": { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  International:       { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Export:               { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  "On hold":            { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Confirmed:            { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: CheckCircle },
+  Pending:              { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Cancelled:            { bg: "bg-red-50",   text: "text-red-700",    border: "border-red-200",    dot: "bg-red-500",    icon: AlertCircle },
 } as const;
 
 const DEFAULT_SC = { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-200", dot: "bg-gray-400", icon: Package };
