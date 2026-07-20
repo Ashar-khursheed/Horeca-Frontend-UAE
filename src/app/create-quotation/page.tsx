@@ -7,9 +7,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
+import { fetchCountryByName } from "@/store/slices/country/countrySlice";
+import type { AppDispatch, RootState } from "@/store/store";
+import { useLocationData } from "@/utils/locationStorage";
+import { createQuotationSchema } from "@/validation/schema";
+import { useFormik } from "formik";
 import {
     Building2,
-    ChevronDown,
     ChevronRight,
     FileText,
     Hash,
@@ -27,7 +32,8 @@ import {
     User,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type QuoteProduct = {
@@ -302,23 +308,53 @@ const MobileProductCard = ({
 export default function CreateQuotationPage() {
   const [products, setProducts] = useState<QuoteProduct[]>(INITIAL_PRODUCTS);
   const [submitted, setSubmitted] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const locationFromRedux = useLocationData();
+  const country = useSelector((s: RootState) => s.country);
 
-  // form state
-  const [form, setForm] = useState({
-    businessName: "Arshad Inc.",
-    businessAddress: "Houston, Houston, Texas, United States",
-    contactName: "Arshad Khan",
-    email: "webdeveloper08@horecastore.ae",
-    shippingAddress: "Houston, Houston, Texas, United States",
-    zipCode: "77074",
-    mobile: "(555) 555-5577",
-    paymentTerms: "Credit Card",
-    quoteName: "",
-    notes: "",
+  // Fetch country details (dial code + flag icon) once we know the visitor's country
+  useEffect(() => {
+    if (locationFromRedux?.country) {
+      dispatch(fetchCountryByName(locationFromRedux.country));
+    }
+  }, [locationFromRedux?.country, dispatch]);
+
+  const dialCode = country.data?.phone_code ?? "";
+  const isoCode = locationFromRedux?.countryCode ?? "";
+  const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
+
+  const formik = useFormik({
+    initialValues: {
+      businessName: "Arshad Inc.",
+      businessAddress: "Houston, Houston, Texas, United States",
+      contactName: "Arshad Khan",
+      email: "webdeveloper08@horecastore.ae",
+      shippingAddress: "Houston, Houston, Texas, United States",
+      zipCode: "77074",
+      mobile: "",
+      paymentTerms: "Credit Card",
+      quoteName: "",
+      notes: "",
+    },
+    validationSchema: createQuotationSchema,
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: () => {
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 2500);
+    },
   });
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((prev) => ({ ...prev, [k]: e.target.value }));
+  const phoneValidation = usePhoneValidation(
+    formik.values.mobile.replace(/\D/g, ""),
+    isoCode,
+  );
+
+  const err = (field: keyof typeof formik.values): string | undefined => {
+    const touched = formik.touched[field];
+    const error = formik.errors[field];
+    return touched ? error : undefined;
+  };
 
   const handleQtyChange = (id: number, qty: number) =>
     setProducts((prev) =>
@@ -335,8 +371,8 @@ export default function CreateQuotationPage() {
   const grandTotal = subtotal + shipping + tax;
 
   const handleGenerate = () => {
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 2500);
+    if (phoneValidation.isInvalid || phoneValidation.validating) return;
+    formik.handleSubmit();
   };
 
   return (
@@ -375,12 +411,17 @@ export default function CreateQuotationPage() {
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       />
                       <input
+                        name="businessName"
                         className={`${inputCls} pl-9`}
-                        value={form.businessName}
-                        onChange={set("businessName")}
+                        value={formik.values.businessName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="Your business name"
                       />
                     </div>
+                    {err("businessName") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("businessName")}</p>
+                    )}
                   </Field>
 
                   <Field label="Business Address">
@@ -390,30 +431,40 @@ export default function CreateQuotationPage() {
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       />
                       <input
+                        name="businessAddress"
                         className={`${inputCls} pl-9`}
-                        value={form.businessAddress}
-                        onChange={set("businessAddress")}
+                        value={formik.values.businessAddress}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="City, State, Country"
                       />
                     </div>
+                    {err("businessAddress") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("businessAddress")}</p>
+                    )}
                   </Field>
 
-                  <Field label="Contact Name">
+                  <Field label="Contact Name" required>
                     <div className="relative">
                       <User
                         size={14}
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       />
                       <input
+                        name="contactName"
                         className={`${inputCls} pl-9`}
-                        value={form.contactName}
-                        onChange={set("contactName")}
+                        value={formik.values.contactName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="Full name"
                       />
                     </div>
+                    {err("contactName") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("contactName")}</p>
+                    )}
                   </Field>
 
-                  <Field label="Email Address">
+                  <Field label="Email Address" required>
                     <div className="relative">
                       <Mail
                         size={14}
@@ -421,12 +472,17 @@ export default function CreateQuotationPage() {
                       />
                       <input
                         type="email"
+                        name="email"
                         className={`${inputCls} pl-9`}
-                        value={form.email}
-                        onChange={set("email")}
+                        value={formik.values.email}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="you@company.com"
                       />
                     </div>
+                    {err("email") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("email")}</p>
+                    )}
                   </Field>
 
                   <Field label="Shipping Address" required>
@@ -436,15 +492,20 @@ export default function CreateQuotationPage() {
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       />
                       <input
+                        name="shippingAddress"
                         className={`${inputCls} pl-9 pr-28`}
-                        value={form.shippingAddress}
-                        onChange={set("shippingAddress")}
+                        value={formik.values.shippingAddress}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="Full shipping address"
                       />
                       <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-[#186737] font-semibold hover:underline whitespace-nowrap">
                         Manage Addresses
                       </button>
                     </div>
+                    {err("shippingAddress") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("shippingAddress")}</p>
+                    )}
                   </Field>
 
                   <Field label="Zip Code" required>
@@ -454,31 +515,74 @@ export default function CreateQuotationPage() {
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       />
                       <input
+                        name="zipCode"
                         className={`${inputCls} pl-9`}
-                        value={form.zipCode}
-                        onChange={set("zipCode")}
+                        value={formik.values.zipCode}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="00000"
                       />
                     </div>
+                    {err("zipCode") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("zipCode")}</p>
+                    )}
                   </Field>
 
-                  <Field label="Mobile Number">
-                    <div className="flex gap-2">
-                      <div className="flex items-center gap-1.5 px-3 h-10 rounded-[7px] border border-gray-200 bg-white text-sm text-gray-700 shrink-0 cursor-pointer hover:border-[#186737] transition-colors">
-                        <span>🇺🇸</span>
-                        <ChevronDown size={13} className="text-gray-400" />
+                  <Field label="Mobile Number" required>
+                    <div
+                      className={`flex h-10 rounded-[7px] border overflow-hidden transition-all ${
+                        err("mobile") || phoneValidation.isInvalid
+                          ? "border-red-400"
+                          : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 shrink-0">
+                        {country.loading ? (
+                          <span className="text-xs text-gray-400 animate-pulse">...</span>
+                        ) : (
+                          <>
+                            {country.data?.icon && (
+                              <img src={country.data.icon} alt="Country" className="w-4 h-4" />
+                            )}
+                            <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                              {dialCode}
+                            </span>
+                          </>
+                        )}
                       </div>
                       <input
-                        className={inputCls}
-                        value={form.mobile}
-                        onChange={set("mobile")}
+                        type="tel"
+                        name="mobile"
+                        inputMode="numeric"
+                        className="flex-1 px-3 text-sm outline-none bg-white placeholder:text-gray-400"
+                        value={formik.values.mobile}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="(555) 000-0000"
                       />
                     </div>
+                    {detectedCountry && !err("mobile") && !phoneValidation.isInvalid && !phoneValidation.validating && (
+                      <p className="text-[11px] text-gray-400 mt-1">Detected: {detectedCountry}</p>
+                    )}
+                    {phoneValidation.validating && !err("mobile") && (
+                      <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
+                    )}
+                    {err("mobile") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("mobile")}</p>
+                    )}
+                    {!err("mobile") && phoneValidation.isInvalid && (
+                      <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
+                    )}
                   </Field>
 
                   <Field label="Payment Terms">
-                    <Select value={form.paymentTerms} onValueChange={(val) => setForm((prev) => ({ ...prev, paymentTerms: val }))}>
+                    <Select
+                      value={formik.values.paymentTerms}
+                      onValueChange={(val) => {
+                        formik.setFieldValue("paymentTerms", val);
+                        formik.setFieldTouched("paymentTerms", true);
+                      }}
+                    >
                       <SelectTrigger className={`${inputCls} cursor-pointer`}>
                         <SelectValue />
                       </SelectTrigger>
@@ -499,12 +603,17 @@ export default function CreateQuotationPage() {
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       />
                       <input
+                        name="quoteName"
                         className={`${inputCls} pl-9`}
-                        value={form.quoteName}
-                        onChange={set("quoteName")}
+                        value={formik.values.quoteName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
                         placeholder="Enter your quote name"
                       />
                     </div>
+                    {err("quoteName") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("quoteName")}</p>
+                    )}
                   </Field>
                 </div>
               </section>
@@ -734,12 +843,17 @@ export default function CreateQuotationPage() {
                 </div>
                 <div className="p-5">
                   <textarea
+                    name="notes"
                     rows={4}
                     className="w-full px-3 py-2.5 rounded-[7px] border border-gray-200 text-sm text-gray-900 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all placeholder:text-gray-400 resize-none bg-white"
                     placeholder="Add special instruction or notes for our team..."
-                    value={form.notes}
-                    onChange={set("notes")}
+                    value={formik.values.notes}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                   />
+                  {err("notes") && (
+                    <p className="text-[11px] text-red-500 mt-1">{err("notes")}</p>
+                  )}
                 </div>
               </section>
             </div>

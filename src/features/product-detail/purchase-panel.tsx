@@ -10,14 +10,15 @@ import {
 } from "@/components/ui/select";
 import { useLocationData } from "@/utils/locationStorage";
 import {
+  ArrowRight,
   ChevronRight,
+  ClipboardList,
   FileText,
   Package,
   Phone,
   RotateCcw,
   ShieldCheck,
   Truck,
-  UtensilsCrossed,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PriceComparisonCard } from "./price-comparison-card";
@@ -257,26 +258,29 @@ export const PurchasePanel = ({
         </div>
       </div>
 
-      {/* Opening a Restaurant? */}
-      <div className="bg-[#f0f9f4] border border-[#c3e6d4] rounded-[7px] p-4">
-        <div className="flex items-start gap-3">
-          <div className="bg-[#186737] rounded-[7px] p-2 shrink-0">
-            <UtensilsCrossed size={18} className="text-white" />
+      {/* Create a Quotation */}
+      <div className="relative overflow-hidden bg-linear-to-br from-[#186737] to-[#0f4a27] rounded-[7px] p-4">
+        <ClipboardList
+          size={90}
+          strokeWidth={1}
+          className="absolute -right-3 -bottom-4 text-white/10 pointer-events-none"
+        />
+        <div className="relative flex items-start gap-3">
+          <div className="bg-white/15 border border-white/20 rounded-[7px] p-2 shrink-0">
+            <ClipboardList size={18} className="text-white" />
           </div>
-          <div>
-            <p className="text-sm font-bold text-gray-900">
-              Opening a Restaurant?
-            </p>
-            <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-              Kitchen equipment from start to finish — we&apos;ve got you
-              covered.
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-white">Buying in Bulk?</p>
+            <p className="text-xs text-white/75 mt-0.5 leading-relaxed">
+              Get a custom quotation for this product with pricing tailored
+              to your order.
             </p>
             <a
-              href={`tel:+18664467322`}
-              className="flex items-center gap-1.5 mt-2 text-[#186737] font-bold text-sm hover:underline"
+              href="/create-quotation"
+              className="inline-flex items-center gap-1.5 mt-3 bg-white text-[#186737] font-bold text-xs px-3.5 py-2 rounded-[7px] hover:bg-white/90 transition-colors"
             >
-              <Phone size={13} />
-               (866) 446-7322
+              Create a Quotation
+              <ArrowRight size={13} />
             </a>
           </div>
         </div>
