@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getLocale } from 'next-intl/server'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 import { apiUrls } from '@/apis/api-endpoint'
 import { makeApiCallSSR } from '@/apis/ssr-fetch'
@@ -135,7 +135,8 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
 
   if (!productData?.data) notFound()
 
-  // Validate that categorySlug and subCategorySlug match the product's actual URL
+  // If category/subcategory in the URL don't match the product's canonical path,
+  // redirect to product.data.url instead of 404ing a product that exists.
   // Product URL format: /categorySlug/subCategorySlug/productSlug
   const productUrl = productData.data.url ?? ""
   const urlParts = productUrl.replace(/^\//, "").split("/")
@@ -147,7 +148,14 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
     expectedSubCategory &&
     (categorySlug !== expectedCategory || subCategorySlug !== expectedSubCategory)
   ) {
-    notFound()
+    const requestedUrl = `/${categorySlug}/${subCategorySlug}/${productSlug}`
+    const canonicalUrl = productUrl.startsWith("/") ? productUrl : `/${productUrl}`
+    console.warn("[product-pdp] category path mismatch — redirecting", {
+      requestedUrl,
+      canonicalUrl,
+      productSlug,
+    })
+    redirect(canonicalUrl)
   }
 
   const schema = productData.data.seo?.seo_schema
