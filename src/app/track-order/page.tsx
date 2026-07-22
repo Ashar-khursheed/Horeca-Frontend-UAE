@@ -662,7 +662,7 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                                     <span className="text-gray-400">
                                       {acc.product_accessory_name}:
                                     </span>{" "}
-                                    {acc.accessory_item_name.replace(/^"|"$/g, "")}
+                                    {acc.accessory_item_name?.replace(/^"|"$/g, "")}
                                   </span>
                                   <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
                                     {sym}{fmt(Number(acc.amount))}

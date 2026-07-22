@@ -23,6 +23,16 @@ import CTA from "@/components/cta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface AccessoryCharge {
+  id: number;
+  accessory_item_id: number;
+  accessory_item_name: string | null;
+  accessory_item_price: string;
+  product_accessory_id: number;
+  product_accessory_name: string | null;
+  amount: string;
+}
+
 interface OrderProduct {
   id: number;
   quantity: number;
@@ -30,6 +40,8 @@ interface OrderProduct {
   shipping_charge: string | number;
   expected_shipping_date?: string;
   expectedShippingDate?: string;
+  accessory_item_charge?: string;
+  accessory_charges?: AccessoryCharge[];
   product_supplier: {
     delivery_days: string;
   } | null;
@@ -450,6 +462,8 @@ export default function PaymentSuccessPage() {
 
                   const price = Number(item.unit_price);
                   const itemShipping = Number(item.shipping_charge);
+                  const accessories = item.accessory_charges ?? [];
+                  const accessoryTotal = Number(item.accessory_item_charge ?? 0);
                   const deliveryLabel = item.expected_shipping_date
                     ?? item.expectedShippingDate
                     ?? item.product_supplier?.delivery_days
@@ -491,11 +505,43 @@ export default function PaymentSuccessPage() {
                             Qty:{" "}
                             <span className="font-semibold text-gray-700">{item.quantity}</span>
                           </p>
-                          <div className="flex items-baseline gap-2">
+
+                          {accessories.length > 0 && (
+                            <div className="mb-2 border border-gray-100 rounded-[7px] bg-gray-50/60 divide-y divide-gray-100">
+                              <p className="px-3 py-1.5 text-[11px] font-bold text-gray-500">
+                                Accessories
+                              </p>
+                              {accessories.map((acc, i) => (
+                                <div
+                                  key={acc.id ?? i}
+                                  className="flex items-center justify-between gap-3 px-3 py-1.5"
+                                >
+                                  <span className="text-[11px] text-gray-600">
+                                    {acc.product_accessory_name && (
+                                      <span className="text-gray-400">
+                                        {acc.product_accessory_name}:{" "}
+                                      </span>
+                                    )}
+                                    {acc.accessory_item_name ?? "Selected option"}
+                                  </span>
+                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
+                                    {currencySymbol}{usd(Number(acc.amount))}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="flex items-baseline gap-2 flex-wrap">
                             <span className="text-base font-bold text-[#186737]">
                               {currencySymbol}{usd(price)}
                             </span>
                             <span className="text-xs text-gray-400">/ Each</span>
+                            {accessoryTotal > 0 && (
+                              <span className="text-xs text-gray-400">
+                                + {currencySymbol}{usd(accessoryTotal)} accessories
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                             <Truck size={11} className="text-[#186737]" />

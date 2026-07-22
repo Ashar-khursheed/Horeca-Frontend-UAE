@@ -88,7 +88,7 @@ const apiProductToCartItem = (cp: any): CartItem => ({
   inWishlist: false,
   selectedAccessories: (cp.accessory_charges ?? []).map((acc: any) => ({
     id: acc.accessory_item_id,
-    name: acc.accessory_item_name,
+    name: resolveStr(acc.accessory_item_name),
     price: parseFloat(acc.accessory_item_price ?? 0),
   })),
   url: cp.product?.url ?? "#",
