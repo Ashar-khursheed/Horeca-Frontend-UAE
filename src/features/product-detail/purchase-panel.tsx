@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PriceComparisonCard } from "./price-comparison-card";
+import LeaseToOwnBox from "./lease-to-own-box";
 import { ReportErrorModal } from "./report-error-modal";
 import type { Accessory, AccessoryItem } from "./types";
 
@@ -255,6 +256,12 @@ export const PurchasePanel = ({
             buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${productData?.quote_available ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"}`}
           />
         </div>
+
+        <LeaseToOwnBox
+          price={activePrice}
+          currency={currency}
+          quoteAvailable={productData?.quote_available}
+        />
       </div>
 
       {/* Opening a Restaurant? */}

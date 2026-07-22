@@ -8,6 +8,7 @@ import {
 } from "@/store/slices/wishlist/wishlistSlice";
 import {
   CheckCircle,
+  CircleDollarSign,
   Heart,
   Minus,
   Plus,
@@ -31,6 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import {
+  estimatedWeeklyLeasePayment,
+  isLeaseToOwnEligible,
+} from "@/features/product-detail/lease-to-own-box";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -368,6 +373,11 @@ export const ProductCard = ({
     ? ((originalPrice - product.sale_price) / originalPrice) * 100
     : 0;
 
+  const showLeaseBadge = isLeaseToOwnEligible(activePrice, isQuote);
+  const weeklyLease = showLeaseBadge
+    ? estimatedWeeklyLeasePayment(activePrice)
+    : 0;
+
   // ── Currency symbol: prefer country Redux, fallback to API field ─────
   // Price amount comes from API as-is. Client-side fetch (useEffect in
   // sub-category) re-fetches with user IP → correct local-currency prices.
@@ -504,6 +514,22 @@ export const ProductCard = ({
                   sizes="(max-width: 640px) 175px, (max-width: 1024px) 33vw, 20vw"
                 />
               ))
+            )}
+
+            {/* Lease to Own teaser — solid green, bottom-left (distinct from soft shipping pills) */}
+            {showLeaseBadge && (
+              <span
+                className="absolute left-2 bottom-2 z-[2] inline-flex items-center gap-1 px-[9px] py-[5px] rounded-md text-[11px] font-extrabold leading-none text-white bg-gradient-to-br from-[#186737] to-[#145c30] border border-white/20 shadow-[0_6px_16px_rgba(24,103,55,0.28)] pointer-events-none"
+                aria-label={`Lease to Own as low as $${weeklyLease} per week`}
+              >
+                <CircleDollarSign
+                  size={12}
+                  strokeWidth={2.4}
+                  className="shrink-0 text-white"
+                  aria-hidden
+                />
+                {`As low as $${weeklyLease}/week`}
+              </span>
             )}
           </div>
         </Link>

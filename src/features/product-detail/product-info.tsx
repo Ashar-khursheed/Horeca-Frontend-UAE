@@ -22,6 +22,7 @@ import { ProductVariant } from "./product-variant";
 import { RatingStars } from "./rating-stars";
 import type { Accessory, AccessoryItem, VariantItem } from "./types";
 import AddToCartWidget from "@/components/add-to-cart";
+import LeaseToOwnBox from "./lease-to-own-box";
 
 type BenefitFeature = { benefit: string; feature: string };
 
@@ -276,6 +277,12 @@ export const ProductInfo = ({
             />
           </div>
         )}
+
+        <LeaseToOwnBox
+          price={activePrice}
+          currency={currency}
+          quoteAvailable={product?.quote_available}
+        />
       </div>
 
       {/* Model & Rating */}
