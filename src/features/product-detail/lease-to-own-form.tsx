@@ -1,6 +1,5 @@
 "use client";
 
-import axiosInstance from "@/apis/axios-instance";
 import { RootState } from "@/store/store";
 import { useFormik } from "formik";
 import Link from "next/link";
@@ -121,29 +120,36 @@ export default function LeaseToOwnForm({ onSuccess }: LeaseToOwnFormProps) {
           landing_page: window.location.pathname,
         };
 
-      const formData = new FormData();
-      formData.append("full_name", values.full_name);
-      formData.append("phone", values.phone);
-      formData.append("email", values.email);
-      formData.append("company_name", values.company_name || "");
-      // Backend expects restaurant_type on inquiries; send a stable label for this flow
-      formData.append("restaurant_type", "Lease to Own");
-      formData.append("notes", values.notes || "");
-      formData.append("lead_type", meta.lead_type);
-      formData.append("lead_source", meta.lead_source);
-      formData.append("landing_page", meta.landing_page);
-      formData.append("g_recaptcha_response", recaptchaToken ?? "");
+      // Notes include optional landing context for HIQ; API key stays server-side.
+      const notesParts = [
+        values.notes?.trim() || "",
+        meta.landing_page ? `Landing page: ${meta.landing_page}` : "",
+        meta.lead_source ? `Lead source: ${meta.lead_source}` : "",
+      ].filter(Boolean);
 
       setLoader(true);
       setFormMessage(null);
       try {
-        const response = await axiosInstance.post(
-          "/frontend/inquiries",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } },
-        );
+        const response = await fetch("/api/lease-to-own-lead", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            full_name: values.full_name,
+            phone: values.phone,
+            email: values.email,
+            company_name: values.company_name || "",
+            notes: notesParts.join("\n") || "",
+          }),
+        });
+        const data = (await response.json().catch(() => ({}))) as {
+          success?: boolean;
+          message?: string;
+        };
 
-        if (response?.data?.success === true) {
+        if (response.ok && data?.success === true) {
           resetForm();
           setRecaptchaToken(null);
           onSuccess();
@@ -151,7 +157,7 @@ export default function LeaseToOwnForm({ onSuccess }: LeaseToOwnFormProps) {
           setFormMessage({
             type: "error",
             text:
-              response?.data?.message ||
+              data?.message ||
               "Something went wrong, please try again.",
           });
         }
