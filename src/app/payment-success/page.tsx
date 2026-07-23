@@ -26,10 +26,10 @@ import CTA from "@/components/cta";
 interface AccessoryCharge {
   id: number;
   accessory_item_id: number;
-  accessory_item_name: string | null;
+  accessory_item_name: { en: string } | string | null;
   accessory_item_price: string;
   product_accessory_id: number;
-  product_accessory_name: string | null;
+  product_accessory_name: { en: string } | string | null;
   amount: string;
 }
 
@@ -89,6 +89,9 @@ interface OrderData {
 
 const usd = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const localized = (v: { en: string } | string | null | undefined) =>
+  typeof v === "object" && v !== null ? v.en ?? "" : v ?? "";
 
 function parseAddress(raw: string) {
   const clean = (s: string) =>
@@ -517,12 +520,12 @@ export default function PaymentSuccessPage() {
                                   className="flex items-center justify-between gap-3 px-3 py-1.5"
                                 >
                                   <span className="text-[11px] text-gray-600">
-                                    {acc.product_accessory_name && (
+                                    {localized(acc.product_accessory_name) && (
                                       <span className="text-gray-400">
-                                        {acc.product_accessory_name}:{" "}
+                                        {localized(acc.product_accessory_name)}:{" "}
                                       </span>
                                     )}
-                                    {acc.accessory_item_name ?? "Selected option"}
+                                    {localized(acc.accessory_item_name) || "Selected option"}
                                   </span>
                                   <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
                                     {currencySymbol}{usd(Number(acc.amount))}
