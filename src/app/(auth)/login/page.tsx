@@ -5,14 +5,17 @@ import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowRight,
   Eye,
   EyeOff,
+  Handshake,
   Mail,
   Lock,
   ShieldCheck,
   Truck,
   RotateCcw,
   Star,
+  User,
 } from "lucide-react";
 import Loader from "@/components/Loader";
 import { loginSchema } from "@/validation/schema";
@@ -111,6 +114,7 @@ export async function cacheDefaultAddress() {
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isVendor = searchParams.get("type") === "vendor";
   const dispatch = useDispatch<AppDispatch>();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -157,7 +161,7 @@ function LoginPageInner() {
       if (syncPromises.length > 0) {
         Promise.all(syncPromises).catch(err => console.error("Sync error:", err));
       }
- const redirect = searchParams.get("redirect") ?? "/";
+ const redirect = searchParams.get("redirect") ?? (isVendor ? "/partner/dashboard" : "/");
       window.location.href = redirect;
       cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
     } catch {
@@ -183,7 +187,7 @@ function LoginPageInner() {
           loginUser({ email: values.email.trim(), password: values.password }),
         ).unwrap();
 
-        const redirect = searchParams.get("redirect") ?? "/";
+        const redirect = searchParams.get("redirect") ?? (isVendor ? "/partner/dashboard" : "/");
         window.location.href = redirect;
 
         // Sync guest wishlist & cart in background
@@ -238,31 +242,66 @@ function LoginPageInner() {
 
             {/* Logo area */}
             <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                  <Star size={22} className="text-white fill-white" />
+              <div className="flex items-center justify-between gap-3 mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                    <Star size={22} className="text-white fill-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-black text-lg tracking-tight leading-none">
+                      HorecaStore
+                    </p>
+                    <p className="text-white/60 text-[11px] font-medium mt-0.5">
+                      Commercial Kitchen Equipment
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white font-black text-lg tracking-tight leading-none">
-                    HorecaStore
-                  </p>
-                  <p className="text-white/60 text-[11px] font-medium mt-0.5">
-                    Commercial Kitchen Equipment
-                  </p>
-                </div>
+
+                {/* Partner / Customer login toggle */}
+                {isVendor ? (
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full pl-2.5 pr-3 py-1.5 text-white text-xs font-semibold transition-colors backdrop-blur"
+                  >
+                    <User size={13} />
+                    Customer Login
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login?type=vendor"
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full pl-2.5 pr-3 py-1.5 text-white text-xs font-semibold transition-colors backdrop-blur group"
+                  >
+                    <Handshake size={13} />
+                    Partner Login
+                    <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                )}
               </div>
 
               <h2 className="text-white text-3xl font-black leading-snug mb-4">
-                Welcome back!
-                <br />
-                <span className="text-white/70 text-2xl font-semibold">
-                  Sign in to continue.
-                </span>
+                {isVendor ? (
+                  <>
+                    Welcome, Partner!
+                    <br />
+                    <span className="text-white/70 text-2xl font-semibold">
+                      Sign in to your vendor account.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Welcome back!
+                    <br />
+                    <span className="text-white/70 text-2xl font-semibold">
+                      Sign in to continue.
+                    </span>
+                  </>
+                )}
               </h2>
 
               <p className="text-white/60 text-sm leading-relaxed max-w-xs">
-                Access your orders, saved items, quotes, and personalized
-                recommendations — all in one place.
+                {isVendor
+                  ? "Manage your orders, products, payouts, and store profile — all in one place."
+                  : "Access your orders, saved items, quotes, and personalized recommendations — all in one place."}
               </p>
             </div>
           </div>
@@ -280,10 +319,10 @@ function LoginPageInner() {
             </div>
 
             <h1 className="text-2xl font-black text-gray-900 mb-1">
-              Returning Customers
+              {isVendor ? "Partner Sign In" : "Returning Customers"}
             </h1>
             <p className="text-sm text-gray-500 mb-7">
-              Sign in for faster checkout.
+              {isVendor ? "Sign in to access your vendor dashboard." : "Sign in for faster checkout."}
             </p>
 
             <form
@@ -473,7 +512,7 @@ function LoginPageInner() {
             <p className="text-center text-xs text-gray-500 mt-6">
               Don&apos;t have an account?{" "}
               <Link
-                href="/register"
+                href={isVendor ? "/register?type=vendor" : "/register"}
                 className="text-[#186737] font-semibold hover:underline"
               >
                 Register now

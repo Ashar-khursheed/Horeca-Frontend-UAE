@@ -1,5 +1,7 @@
 "use client";
 
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 import Pagination from "@/components/pagination";
 import {
   Select,
@@ -9,110 +11,166 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertCircle,
   CalendarDays,
   CheckCircle,
   ChevronRight,
   Clock,
   Download,
-  Edit2,
   Eye,
   FileText,
-  Link2,
+  Loader2,
   Plus,
   Search,
-  ShoppingCart,
   SlidersHorizontal,
   X,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface Quote {
-  id: string;
-  name: string;
-  total: number;
-  createdDate: string;
-  status: "Active" | "Expired" | "Pending" | "Cancelled";
-  expiryDate: string;
-  source: "Online" | "Sales Rep" | "Phone" | "Email";
+interface ApiQuote {
+  id: number;
+  quote_number: string;
+  company_name: string | null;
+  total_amount: string;
+  status: string;
+  expired_at: string;
+  created_at: string;
+  total_products: number;
+  currency: {
+    source_title: string;
+    source_symbol: string;
+    target_title: string;
+    target_symbol: string;
+    conversion_rate: number;
+  };
+  customer: {
+    id: number;
+    name: string;
+    email: string;
+    type: string;
+    country_code: string;
+    mobile_number: string;
+  };
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_QUOTES: Quote[] = [
-  { id: "QT1192", name: "Arshad Test",                      total: 2082.73,  createdDate: "Apr 10, 2026", status: "Expired",   expiryDate: "Apr 17, 2026", source: "Online"    },
-  { id: "QT1177", name: "Quote for Arshad Khan - 4/2/2026", total: 2396.84,  createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Online"    },
-  { id: "QT1165", name: "Quote for Arshad Khan - 4/1/2026", total: 11510.00, createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Online"    },
-  { id: "QT1164", name: "Quote for Arshad Khan - 4/1/2026", total: 11510.00, createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Sales Rep" },
-  { id: "QT1163", name: "Quote for Arshad Khan - 4/1/2026", total: 11510.00, createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Online"    },
-  { id: "QT1159", name: "Quote for Arshad Khan - 4/1/2026", total: 11510.00, createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Online"    },
-  { id: "QT1157", name: "Quote for Arshad Khan - 4/1/2026", total: 203.69,   createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Phone"     },
-  { id: "QT1156", name: "Quote for Arshad Khan - 4/1/2026", total: 2396.84,  createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Online"    },
-  { id: "QT1155", name: "Quote for Arshad Khan - 4/1/2026", total: 2396.84,  createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Sales Rep" },
-  { id: "QT1154", name: "Quote for Arshad Khan - 4/1/2026", total: 2396.84,  createdDate: "Apr 1, 2026",  status: "Expired",   expiryDate: "Apr 8, 2026",  source: "Online"    },
-  { id: "QT1148", name: "Kitchen Equipment Bundle",          total: 8750.00,  createdDate: "Mar 25, 2026", status: "Active",    expiryDate: "May 25, 2026", source: "Online"    },
-  { id: "QT1140", name: "Refrigeration Units Quote",         total: 15320.50, createdDate: "Mar 20, 2026", status: "Active",    expiryDate: "May 20, 2026", source: "Sales Rep" },
-  { id: "QT1132", name: "Bar Equipment Package",             total: 4200.00,  createdDate: "Mar 15, 2026", status: "Pending",   expiryDate: "Apr 15, 2026", source: "Email"     },
-  { id: "QT1125", name: "Prep Table & Storage Quote",        total: 6890.00,  createdDate: "Mar 10, 2026", status: "Active",    expiryDate: "May 10, 2026", source: "Online"    },
-  { id: "QT1118", name: "Ice Machine Bulk Order",            total: 3450.00,  createdDate: "Mar 5, 2026",  status: "Cancelled", expiryDate: "Apr 5, 2026",  source: "Phone"     },
-  { id: "QT1110", name: "Commercial Freezer Units",          total: 22100.00, createdDate: "Feb 28, 2026", status: "Expired",   expiryDate: "Mar 28, 2026", source: "Sales Rep" },
-  { id: "QT1105", name: "Quote for Arshad Khan - 2/20/2026",total: 16569.54, createdDate: "Feb 20, 2026", status: "Expired",   expiryDate: "Feb 27, 2026", source: "Online"    },
-  { id: "QT1098", name: "Dishwasher & Sanitizer Package",    total: 5640.00,  createdDate: "Feb 15, 2026", status: "Active",    expiryDate: "Apr 15, 2026", source: "Email"     },
-  { id: "QT1089", name: "Full Kitchen Fit-Out Quote",        total: 48200.00, createdDate: "Feb 8, 2026",  status: "Pending",   expiryDate: "Mar 8, 2026",  source: "Sales Rep" },
-  { id: "QT1075", name: "Serving & Display Equipment",       total: 3120.00,  createdDate: "Jan 30, 2026", status: "Expired",   expiryDate: "Feb 28, 2026", source: "Online"    },
-];
+interface QuotesApiResponse {
+  success: boolean;
+  message: string;
+  data: ApiQuote[];
+  total_pages?: number;
+  total_records?: number;
+}
 
-const PER_PAGE = 10;
+const PER_PAGE = 20;
 
 // ── Status config ─────────────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<Quote["status"], { bg: string; text: string; icon: React.ElementType }> = {
-  Active:    { bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle },
-  Expired:   { bg: "bg-gray-100",   text: "text-gray-500",    icon: XCircle     },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: React.ElementType }> = {
   Pending:   { bg: "bg-amber-50",   text: "text-amber-700",   icon: Clock       },
+  Accepted:  { bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle },
+  Converted: { bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle },
+  Rejected:  { bg: "bg-red-50",     text: "text-red-600",     icon: X           },
   Cancelled: { bg: "bg-red-50",     text: "text-red-600",     icon: X           },
+  Expired:   { bg: "bg-gray-100",   text: "text-gray-500",    icon: XCircle     },
 };
-
-const SOURCE_CONFIG: Record<Quote["source"], { bg: string; text: string }> = {
-  Online:    { bg: "bg-blue-50",    text: "text-blue-700"    },
-  "Sales Rep":{ bg: "bg-purple-50", text: "text-purple-700"  },
-  Phone:     { bg: "bg-amber-50",   text: "text-amber-700"   },
-  Email:     { bg: "bg-teal-50",    text: "text-teal-700"    },
-};
+const DEFAULT_STATUS = { bg: "bg-gray-100", text: "text-gray-500", icon: FileText };
 
 const fmt = (n: number) =>
-  n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+  n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const fmtDate = (s: string) => {
+  if (!s) return "";
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function MyQuotesPage() {
+  const [quotes, setQuotes]         = useState<ApiQuote[]>([]);
+  const [total, setTotal]           = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(false);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const [sourceFilter, setSourceFilter] = useState("All Sources");
   const [fromDate, setFromDate]         = useState("");
   const [toDate, setToDate]             = useState("");
   const [page, setPage]                 = useState(1);
   const [paginationKey, setPaginationKey] = useState(0);
 
-  const filtered = useMemo(() => {
-    return MOCK_QUOTES.filter((q) => {
-      if (
-        search &&
-        !q.id.toLowerCase().includes(search.toLowerCase()) &&
-        !q.name.toLowerCase().includes(search.toLowerCase())
-      )
-        return false;
-      if (statusFilter !== "All Status" && q.status !== statusFilter) return false;
-      if (sourceFilter !== "All Sources" && q.source !== sourceFilter) return false;
-      return true;
-    });
-  }, [search, statusFilter, sourceFilter]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const paged      = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const fetchQuotes = useCallback(
+    async (opts: { page: number; search: string; status: string; from: string; to: string }) => {
+      setLoading(true);
+      setError(false);
+      try {
+        const params: Record<string, string | number> = {
+          page: opts.page,
+          length: PER_PAGE,
+          sort_dir: "asc",
+        };
+        if (opts.search)                    params.global = opts.search;
+        if (opts.status !== "All Status")   params.status = opts.status;
+        if (opts.from)                      params.from_date = opts.from;
+        if (opts.to)                        params.to_date = opts.to;
+
+        const res = await makeApiRequest<QuotesApiResponse>(apiUrls.QUOTES, { params });
+
+        if (res.success) {
+          setQuotes(res.data ?? []);
+          setTotalPages(res.total_pages ?? 1);
+          setTotal(res.total_records ?? res.data?.length ?? 0);
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchQuotes({ page, search, status: statusFilter, from: fromDate, to: toDate });
+    }, search ? 400 : 0);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search, statusFilter, fromDate, toDate]);
 
   const resetPagination = () => { setPage(1); setPaginationKey((k) => k + 1); };
 
-  const hasFilters = search || statusFilter !== "All Status" || sourceFilter !== "All Sources" || fromDate || toDate;
+  const hasFilters = search || statusFilter !== "All Status" || fromDate || toDate;
+
+  const handleDownload = async (quote: ApiQuote) => {
+    setDownloadingId(quote.id);
+    try {
+      const blob = await makeApiRequest<Blob>(apiUrls.QUOTE_DOWNLOAD_PDF(quote.id), {
+        responseType: "blob",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${quote.quote_number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      // non-fatal — leave the row as-is
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-[1400px]">
@@ -170,29 +228,11 @@ export default function MyQuotesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All Status">All Status</SelectItem>
-                <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Accepted">Accepted</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
                 <SelectItem value="Expired">Expired</SelectItem>
                 <SelectItem value="Cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Sources */}
-          <div className="min-w-[150px]">
-            <Select value={sourceFilter} onValueChange={(v) => { setSourceFilter(v); resetPagination(); }}>
-              <SelectTrigger className="h-9 w-full rounded-[7px] border-gray-200 text-sm text-gray-700 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 bg-white cursor-pointer">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Link2 size={13} className="text-gray-400 shrink-0" />
-                  <SelectValue />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Sources">All Sources</SelectItem>
-                <SelectItem value="Online">Online</SelectItem>
-                <SelectItem value="Sales Rep">Sales Rep</SelectItem>
-                <SelectItem value="Phone">Phone</SelectItem>
-                <SelectItem value="Email">Email</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -223,18 +263,15 @@ export default function MyQuotesPage() {
         {/* Active filters row */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
           <p className="text-xs text-gray-400">
-            Showing{" "}
-            <span className="font-semibold text-gray-700">
-              {Math.min((page - 1) * PER_PAGE + 1, filtered.length)}–{Math.min(page * PER_PAGE, filtered.length)}
-            </span>{" "}
-            of{" "}
-            <span className="font-semibold text-gray-700">{filtered.length}</span> quote
-            {filtered.length !== 1 ? "s" : ""}
+            {loading
+              ? "Loading quotes…"
+              : <>Showing <span className="font-semibold text-gray-700">{total}</span> quote{total !== 1 ? "s" : ""}</>
+            }
           </p>
           {hasFilters && (
             <button
               onClick={() => {
-                setSearch(""); setStatusFilter("All Status"); setSourceFilter("All Sources");
+                setSearch(""); setStatusFilter("All Status");
                 setFromDate(""); setToDate(""); resetPagination();
               }}
               className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors font-medium"
@@ -248,162 +285,231 @@ export default function MyQuotesPage() {
       {/* Table */}
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
 
-        {/* Desktop */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                {["Quote No.", "Quote Name", "Total", "Created Date", "Status", "Expiry Date", "Source", "Actions"].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 whitespace-nowrap"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {paged.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-5 py-16 text-center">
-                    <FileText size={40} className="mx-auto text-gray-200 mb-3" />
-                    <p className="text-sm font-semibold text-gray-400">No quotes found</p>
-                    <p className="text-xs text-gray-300 mt-1">Try adjusting your filters</p>
-                  </td>
+        {/* Loading skeleton rows */}
+        {loading && (
+          <div className="divide-y divide-gray-50">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-48" />
+                </div>
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-20 hidden md:block" />
+                <div className="h-6 bg-gray-200 rounded-full animate-pulse w-20 hidden md:block" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-24 hidden lg:block" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-16 hidden md:block" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error state */}
+        {!loading && error && (
+          <div className="py-16 text-center">
+            <AlertCircle size={36} className="mx-auto text-red-200 mb-3" />
+            <p className="text-sm font-semibold text-gray-400">Failed to load quotes</p>
+            <button
+              onClick={() => fetchQuotes({ page, search, status: statusFilter, from: fromDate, to: toDate })}
+              className="mt-3 text-xs text-[#186737] hover:underline font-medium"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* Desktop table */}
+        {!loading && !error && (
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  {["Quote No.", "Company", "Total", "Created Date", "Status", "Expiry Date", "Products", "Actions"].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 whitespace-nowrap"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                paged.map((quote) => {
-                  const sc = STATUS_CONFIG[quote.status];
-                  const src = SOURCE_CONFIG[quote.source];
-                  const StatusIcon = sc.icon;
-                  const isExpired = quote.status === "Expired" || quote.status === "Cancelled";
-                  return (
-                    <tr key={quote.id} className="hover:bg-gray-50/60 transition-colors group">
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {quotes.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-5 py-16 text-center">
+                      <FileText size={40} className="mx-auto text-gray-200 mb-3" />
+                      <p className="text-sm font-semibold text-gray-400">No quotes found</p>
+                      <p className="text-xs text-gray-300 mt-1">Try adjusting your filters</p>
+                    </td>
+                  </tr>
+                ) : (
+                  quotes.map((quote) => {
+                    const sc = STATUS_CONFIG[quote.status] ?? DEFAULT_STATUS;
+                    const StatusIcon = sc.icon;
+                    const isExpired = quote.status === "Expired" || quote.status === "Cancelled";
+                    const sym = quote.currency?.target_symbol ?? "$";
 
-                      {/* Quote No */}
-                      <td className="px-5 py-4">
-                        <span className="text-sm font-bold text-[#186737]">{quote.id}</span>
-                      </td>
+                    return (
+                      <tr key={quote.id} className="hover:bg-gray-50/60 transition-colors group">
 
-                      {/* Name */}
-                      <td className="px-5 py-4 max-w-[240px]">
-                        <p className="text-sm text-gray-700 font-medium truncate">{quote.name}</p>
-                      </td>
+                        {/* Quote No */}
+                        <td className="px-5 py-4">
+                          <span className="text-sm font-bold text-[#186737]">{quote.quote_number}</span>
+                        </td>
 
-                      {/* Total */}
-                      <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">
-                        {fmt(quote.total)}
-                      </td>
+                        {/* Company / Customer */}
+                        <td className="px-5 py-4 max-w-[240px]">
+                          <p className="text-sm text-gray-700 font-medium truncate">
+                            {quote.company_name || quote.customer?.name || "—"}
+                          </p>
+                          {quote.company_name && quote.customer?.name && (
+                            <p className="text-[11px] text-gray-400 truncate">{quote.customer.name}</p>
+                          )}
+                        </td>
 
-                      {/* Created Date */}
-                      <td className="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">
-                        {quote.createdDate}
-                      </td>
+                        {/* Total */}
+                        <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">
+                          {sym}{fmt(Number(quote.total_amount))}
+                        </td>
 
-                      {/* Status */}
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>
-                          <StatusIcon size={10} />
-                          {quote.status}
-                        </span>
-                      </td>
+                        {/* Created Date */}
+                        <td className="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">
+                          {fmtDate(quote.created_at)}
+                        </td>
 
-                      {/* Expiry Date */}
-                      <td className="px-5 py-4 text-sm whitespace-nowrap">
-                        <span className={isExpired ? "text-red-500 font-semibold" : "text-gray-500"}>
-                          {quote.expiryDate}
-                        </span>
-                      </td>
+                        {/* Status */}
+                        <td className="px-5 py-4">
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>
+                            <StatusIcon size={10} />
+                            {quote.status}
+                          </span>
+                        </td>
 
-                      {/* Source */}
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${src.bg} ${src.text}`}>
-                          <Link2 size={9} />
-                          {quote.source}
-                        </span>
-                      </td>
+                        {/* Expiry Date */}
+                        <td className="px-5 py-4 text-sm whitespace-nowrap">
+                          <span className={isExpired ? "text-red-500 font-semibold" : "text-gray-500"}>
+                            {fmtDate(quote.expired_at)}
+                          </span>
+                        </td>
 
-                      {/* Actions */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-1">
-                          <ActionBtn title="View" icon={Eye} />
-                          <ActionBtn title="Edit" icon={Edit2} />
-                          <ActionBtn title="Download" icon={Download} />
-                          <ActionBtn title="Add to Cart" icon={ShoppingCart} green />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                        {/* Products */}
+                        <td className="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">
+                          {quote.total_products} item{quote.total_products !== 1 ? "s" : ""}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-1.5">
+                            <Link
+                              href={`/dashboard/quotes/${quote.id}`}
+                              title="View"
+                              className="w-7 h-7 rounded-[6px] flex items-center justify-center transition-all border border-gray-100 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                            >
+                              <Eye size={13} />
+                            </Link>
+                            <button
+                              title="Download"
+                              onClick={() => handleDownload(quote)}
+                              disabled={downloadingId === quote.id}
+                              className="w-7 h-7 rounded-[6px] flex items-center justify-center transition-all border border-[#186737]/20 text-[#186737] hover:bg-[#186737] hover:text-white disabled:opacity-50"
+                            >
+                              {downloadingId === quote.id ? (
+                                <Loader2 size={13} className="animate-spin" />
+                              ) : (
+                                <Download size={13} />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Mobile cards */}
-        <div className="md:hidden divide-y divide-gray-100">
-          {paged.length === 0 ? (
-            <div className="py-16 text-center">
-              <FileText size={36} className="mx-auto text-gray-200 mb-3" />
-              <p className="text-sm font-semibold text-gray-400">No quotes found</p>
-            </div>
-          ) : (
-            paged.map((quote) => {
-              const sc = STATUS_CONFIG[quote.status];
-              const src = SOURCE_CONFIG[quote.source];
-              const StatusIcon = sc.icon;
-              const isExpired = quote.status === "Expired" || quote.status === "Cancelled";
-              return (
-                <div key={quote.id} className="px-4 py-4">
-                  {/* Top row */}
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <span className="text-sm font-bold text-[#186737]">{quote.id}</span>
-                      <p className="text-[11px] text-gray-400 mt-0.5">{quote.createdDate}</p>
-                    </div>
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
-                      <StatusIcon size={10} />
-                      {quote.status}
-                    </span>
-                  </div>
+        {!loading && !error && (
+          <div className="md:hidden divide-y divide-gray-100">
+            {quotes.length === 0 ? (
+              <div className="py-16 text-center">
+                <FileText size={36} className="mx-auto text-gray-200 mb-3" />
+                <p className="text-sm font-semibold text-gray-400">No quotes found</p>
+              </div>
+            ) : (
+              quotes.map((quote) => {
+                const sc = STATUS_CONFIG[quote.status] ?? DEFAULT_STATUS;
+                const StatusIcon = sc.icon;
+                const isExpired = quote.status === "Expired" || quote.status === "Cancelled";
+                const sym = quote.currency?.target_symbol ?? "$";
 
-                  {/* Name */}
-                  <p className="text-[13px] text-gray-700 font-medium mb-2 line-clamp-2">{quote.name}</p>
-
-                  {/* Meta row */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${src.bg} ${src.text}`}>
-                        <Link2 size={9} />
-                        {quote.source}
+                return (
+                  <div key={quote.id} className="px-4 py-4">
+                    {/* Top row */}
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <span className="text-sm font-bold text-[#186737]">{quote.quote_number}</span>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{fmtDate(quote.created_at)}</p>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
+                        <StatusIcon size={10} />
+                        {quote.status}
                       </span>
+                    </div>
+
+                    {/* Company / Customer */}
+                    <p className="text-[13px] text-gray-700 font-medium mb-2 line-clamp-2">
+                      {quote.company_name || quote.customer?.name || "—"}
+                    </p>
+
+                    {/* Meta row */}
+                    <div className="flex items-center justify-between mb-3">
                       <span className={`text-xs font-semibold ${isExpired ? "text-red-500" : "text-gray-500"}`}>
-                        Expires {quote.expiryDate}
+                        Expires {fmtDate(quote.expired_at)}
                       </span>
+                      <p className="text-sm font-bold text-gray-900">
+                        {sym}{fmt(Number(quote.total_amount))}
+                      </p>
                     </div>
-                    <p className="text-sm font-bold text-gray-900">{fmt(quote.total)}</p>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 border-t border-gray-50 pt-3">
-                    <MobileActionBtn label="View" icon={Eye} />
-                    <MobileActionBtn label="Edit" icon={Edit2} />
-                    <MobileActionBtn label="Download" icon={Download} />
-                    <MobileActionBtn label="Add to Cart" icon={ShoppingCart} green />
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 border-t border-gray-50 pt-3">
+                      <Link
+                        href={`/dashboard/quotes/${quote.id}`}
+                        className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-[6px] bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
+                      >
+                        <Eye size={11} />
+                        View
+                      </Link>
+                      <button
+                        onClick={() => handleDownload(quote)}
+                        disabled={downloadingId === quote.id}
+                        className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-[6px] bg-[#186737]/10 text-[#186737] hover:bg-[#186737] hover:text-white transition-all disabled:opacity-50"
+                      >
+                        {downloadingId === quote.id ? (
+                          <Loader2 size={11} className="animate-spin" />
+                        ) : (
+                          <Download size={11} />
+                        )}
+                        Download
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="py-4">
+        <div className={`py-4 transition-opacity duration-200 ${loading ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
           <Pagination
             key={paginationKey}
+            initialPage={page}
             totalPages={totalPages}
             onPageChange={(p) => setPage(p)}
             showFirstLast
@@ -412,53 +518,5 @@ export default function MyQuotesPage() {
         </div>
       )}
     </div>
-  );
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function ActionBtn({
-  title,
-  icon: Icon,
-  green,
-}: {
-  title: string;
-  icon: React.ElementType;
-  green?: boolean;
-}) {
-  return (
-    <button
-      title={title}
-      className={`w-7 h-7 rounded-[6px] flex items-center justify-center transition-all border ${
-        green
-          ? "border-[#186737]/20 text-[#186737] hover:bg-[#186737] hover:text-white hover:border-[#186737]"
-          : "border-gray-100 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-      }`}
-    >
-      <Icon size={13} />
-    </button>
-  );
-}
-
-function MobileActionBtn({
-  label,
-  icon: Icon,
-  green,
-}: {
-  label: string;
-  icon: React.ElementType;
-  green?: boolean;
-}) {
-  return (
-    <button
-      className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-[6px] transition-all ${
-        green
-          ? "bg-[#186737]/10 text-[#186737] hover:bg-[#186737] hover:text-white"
-          : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
-      }`}
-    >
-      <Icon size={11} />
-      {label}
-    </button>
   );
 }

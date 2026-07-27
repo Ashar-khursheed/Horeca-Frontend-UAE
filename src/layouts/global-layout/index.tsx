@@ -28,16 +28,23 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({
   children,
   navItemData,
 }) => {
+  const pathname = usePathname();
+  const isPartnerDashboard = pathname?.startsWith("/partner/dashboard");
+
   return (
     <Provider store={store}>
       <ScrollToTop />
       <AppInitializer />
       <TaxInitializer />
-      <div className="flex flex-col min-h-screen">
-        <Header navItemData={navItemData} />
-        <main className="flex-grow">{children}</main>
-        <Footer navItemData={navItemData ?? []} />
-      </div>
+      {isPartnerDashboard ? (
+        <div className="flex flex-col min-h-screen">{children}</div>
+      ) : (
+        <div className="flex flex-col min-h-screen">
+          <Header navItemData={navItemData} />
+          <main className="flex-grow">{children}</main>
+          <Footer navItemData={navItemData ?? []} />
+        </div>
+      )}
     </Provider>
   );
 };

@@ -82,6 +82,7 @@ function RegisterPageInner() {
     const router       = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
+  const isVendor = searchParams.get("type") === "vendor";
   const locationFromRedux = useLocationData();
   const country = useSelector((s: RootState) => s.country);
   const [showPass, setShowPass] = useState(false);
@@ -134,7 +135,7 @@ function RegisterPageInner() {
 
   const formik = useFormik({
     initialValues: {
-      type: "",
+      type: isVendor ? "Business" : "",
       business_name: "",
       name: "",
       email: "",
@@ -281,39 +282,41 @@ function RegisterPageInner() {
           >
 
             {/* Row 1 – Type + Full Name */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={`grid grid-cols-1 ${!isVendor ? 'sm:grid-cols-2' : ''} gap-4`}>
 
-              {/* Are You Buying For (type) */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Are You Buying For <span className="text-red-500">*</span>
-                </label>
-                <Select
-                  value={formik.values.type}
-                  onValueChange={(v) => {
-                    formik.setFieldValue("type", v);
-                    formik.setFieldTouched("type", true, false);
-                    if (v !== "Business") formik.setFieldValue("business_name", "");
-                  }}
-                >
-                  <SelectTrigger
-                    className={`w-full h-11 rounded-[9px] border text-sm focus:ring-offset-0 text-gray-700 ${
-                      err("type")
-                        ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                        : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                    }`}
+              {/* Are You Buying For (type) — hidden for vendor signups */}
+              {!isVendor && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Are You Buying For <span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    value={formik.values.type}
+                    onValueChange={(v) => {
+                      formik.setFieldValue("type", v);
+                      formik.setFieldTouched("type", true, false);
+                      if (v !== "Business") formik.setFieldValue("business_name", "");
+                    }}
                   >
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Business">Business</SelectItem>
-                    <SelectItem value="Private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-                {err("type") && (
-                  <p className="text-[11px] text-red-500 mt-1">{err("type")}</p>
-                )}
-              </div>
+                    <SelectTrigger
+                      className={`w-full h-11 rounded-[9px] border text-sm focus:ring-offset-0 text-gray-700 ${
+                        err("type")
+                          ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                          : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+                      }`}
+                    >
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Business">Business</SelectItem>
+                      <SelectItem value="Private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {err("type") && (
+                    <p className="text-[11px] text-red-500 mt-1">{err("type")}</p>
+                  )}
+                </div>
+              )}
 
               {/* Full Name */}
               <div>
@@ -568,7 +571,7 @@ function RegisterPageInner() {
               disabled={loading}
               className="w-full h-11 rounded-[9px] bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
             >
-              {loading ? <Loader /> : "Create an Account"}
+              {loading ? <Loader /> : <>{!isVendor ? 'Create an Account' : 'Become a Partner'}</>}
             </button>
           </form>
 

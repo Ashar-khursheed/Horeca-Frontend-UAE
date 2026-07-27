@@ -93,6 +93,8 @@ export const apiUrls = {
   STATES: "frontend/states",
   CITIES: "frontend/cities",
   SLIDER: (id: number) => `frontend/sliders/${id}`,
+  QUOTES: "frontend/quotes",
+  QUOTE_DOWNLOAD_PDF: (id: number) => `frontend/quotes/${id}/download-pdf`,
 
 
   MADE_TO_ORDER: "frontend/made-to-orders",

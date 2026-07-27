@@ -103,13 +103,14 @@ interface ApiRequestOptions {
   data?: unknown;
   params?: Record<string, unknown>;
   headers?: Record<string, string>;
+  responseType?: "json" | "blob" | "arraybuffer" | "text";
 }
 
 export const makeApiRequest = async <T = unknown>(
   url: string,
   options: ApiRequestOptions = {}
 ): Promise<T> => {
-  const { method = "GET", data, params, headers: customHeaders = {} } = options;
+  const { method = "GET", data, params, headers: customHeaders = {}, responseType } = options;
 
   const isFormData = data instanceof FormData;
 
@@ -117,6 +118,7 @@ export const makeApiRequest = async <T = unknown>(
     url,
     method,
     params,
+    responseType,
     ...(data !== undefined && { data }),
     headers: {
       ...(isFormData ? { "Content-Type": "multipart/form-data" } : {}),
