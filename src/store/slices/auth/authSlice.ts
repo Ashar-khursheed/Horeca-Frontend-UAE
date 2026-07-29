@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { makeApiRequest, removeAuthToken, setAuthToken } from "@/apis/axios-instance";
+import { makeApiRequest, removeAuthToken, setAccountType, setAuthToken } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 import { setProfile, clearProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
@@ -20,7 +20,7 @@ const initialState: AuthState = {
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (
-    credentials: { email: string; password: string },
+    credentials: { email: string; password: string; isVendor?: boolean },
     { dispatch, rejectWithValue }
   ) => {
     try {
@@ -29,16 +29,27 @@ export const loginUser = createAsyncThunk(
         message: string;
         token: string;
         customer: CustomerProfile;
-      }>(apiUrls.LOGIN, {
+        data?: Record<string, unknown>;
+      }>(credentials.isVendor ? apiUrls.VENDOR_LOGIN : apiUrls.LOGIN, {
         method: "POST",
         data: { email: credentials.email, password: credentials.password },
       });
       setAuthToken(res.token);
+      setAccountType(credentials.isVendor ? "vendor" : "customer");
+
+      // Vendor accounts are not customers — leave `profile.customer` untouched
+      // so header/nav components' `if (customer)` guards (which fetch
+      // customer-only data like wishlist/addresses/counts) never fire for a
+      // vendor session and trip 401s against endpoints a vendor can't use.
+      if (credentials.isVendor) {
+        return res.data as unknown as CustomerProfile;
+      }
+
       if (typeof window !== "undefined") {
         localStorage.setItem("user", JSON.stringify(res.customer));
       }
       dispatch(setProfile(res.customer));
-      // window.location.href = "/"; 
+      // window.location.href = "/";
       return res.customer;
     } catch (err: unknown) {
       const msg =

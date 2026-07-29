@@ -13,16 +13,16 @@ interface ModalProps {
   onConfirm?: () => void;
 }
 
-export const Modal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
+export const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
   width = "max-w-3xl",
   footerBtnText,
   zIndex,
   showFooter = false,
-  onConfirm 
+  onConfirm
 }: ModalProps) => {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
@@ -34,7 +34,7 @@ export const Modal = ({
       setIsAnimating(false);
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -46,7 +46,7 @@ export const Modal = ({
         onClose();
       }
     };
-    
+
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -54,12 +54,12 @@ export const Modal = ({
   if (!isOpen && !isAnimating) return null;
 
   return ReactDOM.createPortal(
-    <div 
+    <div
       className={`fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ${
         zIndex === true ? 'z-[9999]' : 'z-50'
       } ${isAnimating ? 'animate-fadeIn' : 'opacity-0'}`}
     >
-      <div 
+      <div
         className={`bg-white rounded-[7px] shadow-2xl ${width} w-full max-h-[90vh] overflow-hidden ${
           isAnimating ? 'animate-slideUp' : 'opacity-0 translate-y-5'
         }`}

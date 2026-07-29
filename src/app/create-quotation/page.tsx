@@ -347,7 +347,7 @@ export default function CreateQuotationPage() {
   const [discount, setDiscount] = useState(0);
 
   // get customer profile from redux and prefill the form if available
-  const customerProfile = useSelector((s: RootState) => s?.profile?.customer);
+  const customerProfile = useSelector((s: RootState) => s?.profile?.customer );
   const [pendingAddress, setPendingAddress] = useState<DefaultAddressCache | null>(null);
   const autofillDone = useRef(false);
 
@@ -1198,7 +1198,7 @@ export default function CreateQuotationPage() {
                                       </span>
                                     </p>
                                     <p className="text-xs text-gray-500 mt-0.5">
-                                      Shipping Charge:{" "}
+                                      {/* Shipping Charge:{" "} */}
                                       <span className="font-medium text-gray-700">
                                         ${fmtPrice(p.shippingCost)}
                                       </span>{" "}

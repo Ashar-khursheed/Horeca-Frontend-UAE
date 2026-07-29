@@ -16,7 +16,7 @@ import { loginUser } from "@/store/slices/auth/authSlice";
 import { syncGuestWishlistAfterLogin } from "@/utils/syncGuestWishlist";
 import { syncGuestCartAfterLogin } from "@/utils/syncGuestCart";
 import type { AppDispatch, RootState } from "@/store/store";
-import { registerSchema } from "@/validation/schema";
+import { registerSchema, vendorRegisterSchema } from "@/validation/schema";
 import { useFormik } from "formik";
 import {
   Building2,
@@ -89,6 +89,7 @@ function RegisterPageInner() {
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleKey, setGoogleKey] = useState(0);
 
@@ -137,6 +138,7 @@ function RegisterPageInner() {
     initialValues: {
       type: isVendor ? "Business" : "",
       business_name: "",
+      vendor_type: "",
       name: "",
       email: "",
       mobile_number: "",
@@ -144,13 +146,36 @@ function RegisterPageInner() {
       password_confirmation: "",
       consent: false,
     },
-    validationSchema: registerSchema,
+    validationSchema: isVendor ? vendorRegisterSchema : registerSchema,
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values) => {
       setLoading(true);
       setApiError("");
+      setSuccessMsg("");
       try {
+        if (isVendor) {
+          const res = await makeApiRequest<{ success: boolean; message: string }>(
+            apiUrls.VENDOR_REGISTER,
+            {
+              method: "POST",
+              data: {
+                vendor_name: values.name.trim(),
+                vendor_country_id: country.data?.id,
+                type: values.vendor_type,
+                name: values.name.trim(),
+                email: values.email.trim(),
+                password: values.password,
+                password_confirmation: values.password_confirmation,
+              },
+            },
+          );
+
+          setSuccessMsg(res.message || "Registration submitted successfully.");
+          setTimeout(() => router.push("/login?type=vendor"), 2000);
+          return;
+        }
+
         const formData = new FormData();
         formData.append("name", values.name.trim());
         formData.append("email", values.email.trim());
@@ -341,8 +366,8 @@ function RegisterPageInner() {
               </div>
             </div>
 
-            {/* Business Name – only when Business is selected */}
-            {formik.values.type === "Business" && (
+            {/* Business Name – customer flow only, when Business is selected */}
+            {!isVendor && formik.values.type === "Business" && (
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Business Name <span className="text-red-500">*</span>
@@ -361,6 +386,46 @@ function RegisterPageInner() {
                 </div>
                 {err("business_name") && (
                   <p className="text-[11px] text-red-500 mt-1">{err("business_name")}</p>
+                )}
+              </div>
+            )}
+
+            {/* Select Type – vendor flow only */}
+            {isVendor && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Select Type <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={formik.values.vendor_type}
+                  onValueChange={(v) => {
+                    formik.setFieldValue("vendor_type", v);
+                    formik.setFieldTouched("vendor_type", true, false);
+                  }}
+                >
+                  <SelectTrigger
+                    className={`w-full h-11 rounded-[9px] border text-sm focus:ring-offset-0 text-gray-700 ${
+                      err("vendor_type")
+                        ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                        : "border-gray-200 focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
+                    }`}
+                  >
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Sales">Sales</SelectItem>
+                    <SelectItem value="Account/Finance">Account/Finance</SelectItem>
+                    <SelectItem value="Order Processing">Order Processing</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Customer Service">Customer Service</SelectItem>
+                    <SelectItem value="Ecommerce">Ecommerce</SelectItem>
+                    <SelectItem value="Product Specialist">Product Specialist</SelectItem>
+                    <SelectItem value="Administration">Administration</SelectItem>
+                    <SelectItem value="Owner/Director">Owner/Director</SelectItem>
+                  </SelectContent>
+                </Select>
+                {err("vendor_type") && (
+                  <p className="text-[11px] text-red-500 mt-1">{err("vendor_type")}</p>
                 )}
               </div>
             )}
@@ -565,13 +630,20 @@ function RegisterPageInner() {
               <p className="text-[11px] text-red-500 text-center">{apiError}</p>
             )}
 
+            {/* Success */}
+            {successMsg && (
+              <p className="text-[12px] font-medium text-[#186737] text-center bg-[#186737]/5 border border-[#186737]/20 rounded-[9px] py-2 px-3">
+                {successMsg}
+              </p>
+            )}
+
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!successMsg}
               className="w-full h-11 rounded-[9px] bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
             >
-              {loading ? <Loader /> : <>{!isVendor ? 'Create an Account' : 'Become a Partner'}</>}
+              {loading || successMsg ? <Loader /> : <>{!isVendor ? 'Create an Account' : 'Become a Partner'}</>}
             </button>
           </form>
 

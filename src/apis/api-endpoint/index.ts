@@ -10,8 +10,10 @@ export interface BrandsParams {
 export const apiUrls = {
   // Authentication
   LOGIN: "frontend/login",
+  VENDOR_LOGIN: "vendor/login",
   GOOGLE_AUTH: "frontend/auth/google",
   REGISTER: "frontend/customer/register",
+  VENDOR_REGISTER: "vendor/register",
   LOGOUT: "frontend/logout",
   GETMYPROFILE: "frontend/customer/get-profile",
   CHANGE_PASSWORD: "frontend/customer/change-password",

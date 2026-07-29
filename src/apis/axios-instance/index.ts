@@ -42,8 +42,27 @@ export const removeAuthToken = (): void => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   localStorage.removeItem("login_time");
+  localStorage.removeItem("account_type");
   document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
   document.cookie = "login_time=; path=/; max-age=0; SameSite=Lax";
+  document.cookie = "account_type=; path=/; max-age=0; SameSite=Lax";
+};
+
+// A vendor's token is only valid against vendor/* endpoints — customer/*
+// endpoints will always 401 for it. Tracking the account type lets the
+// response interceptor and the middleware (route protection) tell that
+// apart from a genuinely expired session. Stored both in localStorage
+// (client-side checks) and as a cookie (middleware runs on the server
+// and has no access to localStorage).
+export const setAccountType = (type: "customer" | "vendor"): void => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("account_type", type);
+  document.cookie = `account_type=${type}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
+};
+
+export const getAccountType = (): "customer" | "vendor" | null => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("account_type") as "customer" | "vendor" | null;
 };
 
 export { AUTH_MAX_MS };
@@ -70,7 +89,16 @@ axiosInstance.interceptors.response.use(
     const url = error.config?.url ?? "";
     const isAuthEndpoint    = url.includes("/auth/");
     const isPaymentEndpoint = url.includes("payments") || url.includes("screen-transaction") || url.includes("payment-history");
-    if (error.response?.status === 401 && !isAuthEndpoint && !isPaymentEndpoint) {
+    // A logged-in vendor hitting any non-vendor endpoint always 401s — that's
+    // expected (vendor tokens aren't valid for customer/frontend endpoints),
+    // not an expired session, so don't wipe the vendor token for it.
+    const isVendorHittingNonVendorEndpoint = getAccountType() === "vendor" && !url.includes("vendor/");
+    if (
+      error.response?.status === 401 &&
+      !isAuthEndpoint &&
+      !isPaymentEndpoint &&
+      !isVendorHittingNonVendorEndpoint
+    ) {
       removeAuthToken();
       if (typeof window !== "undefined") {
         window.location.href = "/login";

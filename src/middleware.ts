@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_ROUTES = ["/dashboard", "/checkout", ];
+const CUSTOMER_PROTECTED_ROUTES = ["/dashboard", "/checkout"];
+const VENDOR_PROTECTED_ROUTES = ["/partner"];
 const AUTH_ROUTES = [ "/forgot-password"];
 const AUTH_MAX_MS = 259200 * 1000; // 72 hours
 function clearAuthCookies(response: NextResponse): NextResponse {
   response.cookies.set("token", "", { maxAge: 0, path: "/" });
   response.cookies.set("login_time", "", { maxAge: 0, path: "/" });
+  response.cookies.set("account_type", "", { maxAge: 0, path: "/" });
   return response;
 }
 
@@ -55,16 +57,38 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token        = request.cookies.get("token")?.value?.trim();
   const loginTimeStr = request.cookies.get("login_time")?.value;
+  const accountType  = request.cookies.get("account_type")?.value;
+  const isVendor     = accountType === "vendor";
 
   const loginTime    = loginTimeStr ? parseInt(loginTimeStr, 10) : null;
   const isTokenValid = !!token && !!loginTime && Date.now() - loginTime < AUTH_MAX_MS;
-  const isProtected  = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
+  const isCustomerProtected = CUSTOMER_PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
+  const isVendorProtected   = VENDOR_PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
   const isAuthRoute  = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
-  if (isProtected && !isTokenValid) {
+  // Vendor-only pages: require a valid vendor session. A logged-out visitor
+  // or a customer session gets sent to the vendor login instead.
+  if (isVendorProtected && (!isTokenValid || !isVendor)) {
     const url = new URL("/login", request.url);
+    url.searchParams.set("type", "vendor");
     url.searchParams.set("redirect", pathname);
-    return clearAuthCookies(NextResponse.redirect(url));
+    return isTokenValid ? NextResponse.redirect(url) : clearAuthCookies(NextResponse.redirect(url));
+  }
+
+  // Customer-only pages: require a valid, non-vendor session. A vendor token
+  // is valid but belongs to a different account type — these pages read from
+  // the customer profile/redux state, which is never populated for a vendor
+  // session, so letting them through here just renders a broken half-empty
+  // page. Send vendor sessions to their own dashboard instead.
+  if (isCustomerProtected) {
+    if (!isTokenValid) {
+      const url = new URL("/login", request.url);
+      url.searchParams.set("redirect", pathname);
+      return clearAuthCookies(NextResponse.redirect(url));
+    }
+    if (isVendor) {
+      return NextResponse.redirect(new URL("/partner/dashboard", request.url));
+    }
   }
 
   if (isAuthRoute && isTokenValid) {

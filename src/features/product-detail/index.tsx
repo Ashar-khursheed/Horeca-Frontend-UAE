@@ -27,6 +27,9 @@ import { trackGtmEvent } from "@/utils/gtm";
 import AddReviewModal from "@/components/add-review-modal";
 import { PriceComparisonCard } from "./price-comparison-card";
 import RecentlyViewedSection from "../category/recently-viewed-section";
+import SpinWheelModal from "./spin-wheel-modal";
+import { CompareTray } from "@/components/compare/compare-tray";
+import type { CompareProduct } from "@/utils/compareStorage";
 
 interface Props {
   productData: ProductDetailResponse;
@@ -160,6 +163,25 @@ const ProductDetailPage = ({
   const avgRating = productData.avg_rating ?? 0;
   const variantGroups = new Map<string, VariantItem[]>();
 
+  const compareProduct: CompareProduct = {
+    id: productData.id,
+    name,
+    image: images[0] ?? "",
+    url: `/${categorySlug}/${subCategorySlug}/${productData.url?.split("/").pop() ?? ""}`,
+    price: productData.price,
+    salePrice: productData.sale_price > 0 ? productData.sale_price : undefined,
+    currency: currencySymbol,
+    brand,
+    sku: productData.sku,
+    rating: avgRating,
+    totalReviews: productData.total_reviews,
+    specs: allSpecs.slice(0, 16).map((s) => ({ name: s.attribute_name, value: s.attribute_value })),
+    vendorId: supplier?.vendor_id,
+    minQuantity: (supplier as { min_quantity?: number } | null)?.min_quantity,
+    isFixed: !!(supplier as { is_fixed?: boolean | number } | null)?.is_fixed,
+    quoteAvailable: !!(productData as unknown as { quote_available?: boolean | number }).quote_available,
+  };
+
   const reviews = (productData.reviews ?? []).map((r) => ({
     id: r.id,
     author: r.customer_name,
@@ -224,6 +246,7 @@ const ProductDetailPage = ({
                 productId={productData.id}
                 inWishlist={productData.in_wishlist}
                 rawProduct={productData}
+                compareProduct={compareProduct}
               />
             </div>
           </div>
@@ -236,6 +259,7 @@ const ProductDetailPage = ({
                 productId={productData.id}
                 inWishlist={productData.in_wishlist}
                 rawProduct={productData}
+                compareProduct={compareProduct}
               />
             </div>
 
@@ -441,6 +465,8 @@ const ProductDetailPage = ({
           />
         </div>
       </main>
+      <SpinWheelModal />
+      <CompareTray />
     </div>
   );
 };

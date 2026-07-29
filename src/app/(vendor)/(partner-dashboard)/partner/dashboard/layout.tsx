@@ -22,6 +22,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { logoutUser } from "@/store/slices/auth/authSlice";
 
 // ── Mock vendor (no backend yet — UI only) ─────────────────────────────────────
 const MOCK_VENDOR = {
@@ -116,9 +119,14 @@ function VisitWebsiteButton({ compact = false }: { compact?: boolean }) {
 
 export default function PartnerDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const dispatch = useDispatch<AppDispatch>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const handleSignOut = () => {
+    dispatch(logoutUser());
+  };
 
   const initials = MOCK_VENDOR.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
@@ -232,13 +240,14 @@ export default function PartnerDashboardLayout({ children }: { children: React.R
                 <p className="text-xs font-bold text-gray-900 truncate">{MOCK_VENDOR.name}</p>
                 <p className="text-[10px] text-gray-400 truncate">{MOCK_VENDOR.email}</p>
               </div>
-              <Link
-                href="/"
+              <button
+                type="button"
+                onClick={handleSignOut}
                 title="Sign out"
                 className="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors shrink-0"
               >
                 <LogOut size={13} />
-              </Link>
+              </button>
             </>
           )}
         </div>
@@ -346,13 +355,16 @@ export default function PartnerDashboardLayout({ children }: { children: React.R
                     >
                       <Settings size={13} /> Store Profile
                     </Link>
-                    <Link
-                      href="/"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        handleSignOut();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50"
                     >
                       <LogOut size={13} /> Sign out
-                    </Link>
+                    </button>
                   </div>
                 </>
               )}

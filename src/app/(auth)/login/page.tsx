@@ -184,27 +184,32 @@ function LoginPageInner() {
       setApiError("");
       try {
         await dispatch(
-          loginUser({ email: values.email.trim(), password: values.password }),
+          loginUser({ email: values.email.trim(), password: values.password, isVendor }),
         ).unwrap();
 
         const redirect = searchParams.get("redirect") ?? (isVendor ? "/partner/dashboard" : "/");
         window.location.href = redirect;
 
-        // Sync guest wishlist & cart in background
-        const syncPromises = [];
-        const guestWishlist = localStorage.getItem("horeca_wishlist");
-        if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
-          syncPromises.push(syncGuestWishlistAfterLogin());
-        }
-        const guestCart = localStorage.getItem("horeca_cart");
-        if (guestCart && JSON.parse(guestCart)?.length > 0) {
-          syncPromises.push(syncGuestCartAfterLogin());
-        }
-        if (syncPromises.length > 0) {
-          Promise.all(syncPromises).catch(err => console.error("Sync error:", err));
-        }
+        // Customer-only post-login side effects — a vendor token 401s on these
+        // customer endpoints, which would trip the global 401 handler and
+        // wipe the fresh vendor token / bounce back to /login.
+        if (!isVendor) {
+          // Sync guest wishlist & cart in background
+          const syncPromises = [];
+          const guestWishlist = localStorage.getItem("horeca_wishlist");
+          if (guestWishlist && JSON.parse(guestWishlist)?.length > 0) {
+            syncPromises.push(syncGuestWishlistAfterLogin());
+          }
+          const guestCart = localStorage.getItem("horeca_cart");
+          if (guestCart && JSON.parse(guestCart)?.length > 0) {
+            syncPromises.push(syncGuestCartAfterLogin());
+          }
+          if (syncPromises.length > 0) {
+            Promise.all(syncPromises).catch(err => console.error("Sync error:", err));
+          }
 
-        cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
+          cacheDefaultAddress().catch(err => console.error("Cache address error:", err));
+        }
       } catch (err: unknown) {
         const msg =
           typeof err === "string"

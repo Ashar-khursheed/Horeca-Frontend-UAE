@@ -90,10 +90,12 @@ export default function AppInitializer() {
     return () => window.removeEventListener(LOCATION_EVENT, handler);
   }, [dispatch]);
 
-  // Profile: only fetch if token exists
+  // Profile: only fetch if token exists — and only for customer accounts,
+  // since a vendor token 401s on this customer-only endpoint.
   useEffect(() => {
     const token = localStorage.getItem("token")?.trim();
-    if (token) {
+    const isVendorAccount = localStorage.getItem("account_type") === "vendor";
+    if (token && !isVendorAccount) {
       dispatch(fetchProfile());
     } else {
       dispatch(setLoading(false));

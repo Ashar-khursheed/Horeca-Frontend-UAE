@@ -4,6 +4,8 @@ import React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Heart, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ShareModal } from "@/components/share-modal";
+import { CompareToggleButton } from "@/components/compare/compare-button";
+import type { CompareProduct } from "@/utils/compareStorage";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   seedWishlistIds,
@@ -19,6 +21,7 @@ type ProductGalleryProps = {
   inWishlist?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawProduct?: any;
+  compareProduct?: CompareProduct;
 };
 
 const MOBILE_visibleCount = 5;
@@ -29,6 +32,7 @@ export const ProductGallery = ({
   productId,
   inWishlist: initialInWishlist = false,
   rawProduct,
+  compareProduct,
 }: ProductGalleryProps) => {
   const dispatch    = useAppDispatch();
   const inWishlist  = useAppSelector((s) => s.wishlist.ids.includes(productId));
@@ -237,6 +241,13 @@ export const ProductGallery = ({
             <Share2 size={15} className="text-gray-400" />
           </button>
 
+          {/* Compare */}
+          {compareProduct && (
+            <div className="absolute top-3 right-23 z-10">
+              <CompareToggleButton product={compareProduct} />
+            </div>
+          )}
+
           {/* Mobile Thumbnail Strip (horizontal, < xl) with left/right arrows */}
           {images.length > 1 && (
             <div className="flex xl:hidden items-center gap-2 order-2 justify-center">
@@ -286,6 +297,12 @@ export const ProductGallery = ({
           )}
 
         </div>
+
+        {compareProduct && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <CompareToggleButton product={compareProduct} variant="button" />
+          </div>
+        )}
       </div>
 
       <ShareModal
