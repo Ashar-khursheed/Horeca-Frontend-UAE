@@ -134,7 +134,8 @@ export default function ContactUsPage() {
     if (!form.name.trim()) e.name = "Name is required.";
     if (!form.email) e.email = "Email is required.";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email.";
-    if (form.phone) {
+    if (!form.phone) e.phone = "Phone number is required.";
+    else {
       const phoneCheck = isValidPhoneNumber(form.phone);
       if (!phoneCheck.valid) e.phone = phoneCheck.message;
     }
@@ -387,7 +388,7 @@ export default function ContactUsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Phone Number
+                      Phone Number <span className="text-red-500">*</span>
                     </label>
                     <div
                       className={`flex h-11 rounded-[9px] border overflow-hidden transition-all ${errors.phone
@@ -437,6 +438,11 @@ export default function ContactUsPage() {
                         className="flex-1 px-3 text-sm outline-none bg-white placeholder:text-gray-300"
                       />
                     </div>
+                    {errors.phone && (
+                      <p className="text-[11px] text-red-500 mt-1">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">
