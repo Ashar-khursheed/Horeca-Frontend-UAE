@@ -132,9 +132,9 @@ export interface BrandDetailResponse {
     name: BrandName;
     thumbnail: LocaleStr | null;
     logo: string;
-    desktop_banner: string[];
-    desktop_banner_alt_text: string[];
-    mobile_banner: string[];
+    desktop_banner: string;
+    desktop_banner_alt_text: string;
+    mobile_banner: string;
     website: string | null;
     is_featured: boolean;
     slug: string;
@@ -274,6 +274,8 @@ export default function BrandDetailFeature({
     pagination: initialPagination,
   } = data;
 
+  console.log("BrandDetailFeature data:", data);
+
   const initProducts = categoryProductsData
     ? categoryProductsData.data.map(mapBrandCatProduct)
     : initialProducts;
@@ -304,9 +306,11 @@ export default function BrandDetailFeature({
   const selectedCategoryName = selectedCategory?.name?.en ?? selectedCategoryUrl ?? "";
 
   const brandName = brand.name?.en ?? "";
-  const bannerUrl =
-    brand.desktop_banner?.[0] ?? brand.thumbnail?.en ?? brand.logo;
-  const bannerAlt = brand.desktop_banner_alt_text?.[0] ?? brandName;
+  const desktopBannerUrl =
+    brand.desktop_banner || brand.thumbnail?.en || brand.logo;
+  const mobileBannerUrl =
+    brand.mobile_banner || brand.desktop_banner || brand.thumbnail?.en || brand.logo;
+  const bannerAlt = brand.desktop_banner_alt_text || brandName;
 
   const fetchPage = async (page: number) => {
     setLoadingPage(true);
@@ -379,11 +383,20 @@ export default function BrandDetailFeature({
         </div>
       </nav>
 
-      {/* Desktop Banner */}
-      {bannerUrl && (
-        <div className="w-full">
+      {/* Banner — desktop image on md+ screens, mobile image below */}
+      {desktopBannerUrl && (
+        <div className="w-full hidden md:block">
           <img
-            src={bannerUrl}
+            src={desktopBannerUrl}
+            alt={bannerAlt}
+            className="w-full h-auto object-cover"
+          />
+        </div>
+      )}
+      {mobileBannerUrl && (
+        <div className="w-full block md:hidden">
+          <img
+            src={mobileBannerUrl}
             alt={bannerAlt}
             className="w-full h-auto object-cover"
           />
