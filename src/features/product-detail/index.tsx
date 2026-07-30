@@ -150,7 +150,7 @@ const ProductDetailPage = ({
     right: allSpecs.slice(mid),
   };
 
-  const overview = description.join("");
+  const overview = description.join("\n\n");
   const qaItems = (productData.faqs ?? []).map((f) => ({
     id: f.id,
     question: f.question,
