@@ -65,6 +65,9 @@ const ProductDetailPage = ({
   const images = productData.images ?? [];
   const description = productData.description ?? [];
   const benefitsFeatures = productData.benefits_features ?? [];
+
+  console.log("productData", productData);
+
   const state = useLocationData();
   const router = useRouter();
   useEffect(() => {

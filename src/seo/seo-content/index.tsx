@@ -36,6 +36,21 @@ export interface SeoApiData {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function parsePopularTags(
+  value: PopularTagDetail[] | string | null | undefined,
+): PopularTagDetail[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 function getLocaleStr(
   obj: LocaleStr | string | null | undefined,
   locale: string,
@@ -140,10 +155,11 @@ console.log("dataAPI", dataAPI);
   const popularTagsObj = dataAPI.popular_tag_details;
   const popularTags: PopularTagDetail[] = Array.isArray(popularTagsObj)
     ? popularTagsObj
-    : ((locale === "ar" ? popularTagsObj?.ar : popularTagsObj?.en) ??
-      popularTagsObj?.en ??
-      []);
-  const hasPopularTags = popularTags.some((k) => k?.popularTags?.trim());
+    : parsePopularTags(
+        (locale === "ar" ? popularTagsObj?.ar : popularTagsObj?.en) ??
+          popularTagsObj?.en,
+      );
+  const hasPopularTags = popularTags?.some((k) => k?.popularTags?.trim());
 
   if (!para1 && !para2 && !para3 && !para4 && !bannerUrl && !hasPopularTags) return null;
 
