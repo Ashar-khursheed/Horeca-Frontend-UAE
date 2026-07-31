@@ -4,7 +4,8 @@
       "Bash(node -e \"const p = require\\('c:/Arshad/Arshad-All-Personal/Arshad Khan/Horeca-NextJS-FRONTEND/node_modules/swiper/package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.exports || {}\\).filter\\(k => k.includes\\('css'\\) || k.includes\\('pagination'\\)\\), null, 2\\)\\)\")",
       "Bash(rm -f test-vendor-login.js vendor-login-before.png vendor-login-after.png)",
       "Bash(cp \"C:\\\\Users\\\\arsha\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND\\\\f2755d9b-b8bd-4e70-9a81-683872797745\\\\scratchpad\\\\test-compare.js\" /dev/null)",
-      "Bash(node \"C:\\\\Users\\\\arsha\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND\\\\f2755d9b-b8bd-4e70-9a81-683872797745\\\\scratchpad\\\\test-vendor-login.js\")"
+      "Bash(node \"C:\\\\Users\\\\arsha\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND\\\\f2755d9b-b8bd-4e70-9a81-683872797745\\\\scratchpad\\\\test-vendor-login.js\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{url_effective}\\\\n\" -L \"http://localhost:3000/partner/dashboard/products\")"
     ]
   }
 }

@@ -114,4 +114,7 @@ export const apiUrls = {
   CUSTOM_SCRIPTS: "frontend/custom-scripts",
   PHONE_VALIDATE: "frontend/phone/validate",
   PRODUCT_QUESTION: "frontend/product-questions",
+
+  // Vendor Dashboard
+  VENDOR_PRICE: "vendor/price",
 };
