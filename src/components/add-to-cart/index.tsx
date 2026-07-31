@@ -133,7 +133,6 @@ export const AddToCartWidget = ({
 }: AddToCartWidgetProps & { inDropdown?: boolean }) => {
   const dispatch = useAppDispatch();
   const locale = useLocale();
-  const cartId = useCartId();
 
   const country = useAppSelector((s) => s.country.data);
   const cartItems = useAppSelector((s) => s.cart.items);
@@ -143,15 +142,24 @@ export const AddToCartWidget = ({
   const location = useLocationData();
 
   // ── Normalise product fields ─────────────────────────────────────────────
-  const supplier0 = (product as RawApiProduct).suppliers?.[0];
+  const supplier0 =
+    (product as RawApiProduct).suppliers?.[0] ??
+    (product as RawApiProduct).best_supplier;
   const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
   const isFixed =
     product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
-  const isQuote = !!product.quote_available;
+  const isQuote = !!(
+    product.quote_available ?? (product as RawApiProduct).for_quotes
+  );
   const vendorId = supplier0?.vendor_id ?? 0;
   const showCounter = showCounterProp ?? !isQuote;
+  const cartId = useCartId();
+  const cartHref = cartId ? `/cart/${cartId}` : "/cart";
 
-  const name = resolveStr(product.name as LS, locale);
+  const name = resolveStr(
+    (product.name ?? (product as RawApiProduct).title) as LS,
+    locale,
+  );
   const currencySymbol = resolveCurrencySymbol(
     product.currency as string | { name?: string; symbol?: string } | undefined,
   );
@@ -161,7 +169,7 @@ export const AddToCartWidget = ({
   );
 
   const image = (() => {
-    const raw = product.images;
+    const raw = product.images ?? (product as RawApiProduct).image_urls;
     if (Array.isArray(raw)) return (raw as string[])[0] ?? "";
     const typed = raw as { en?: string[]; ar?: string[] };
     return locale === "ar"
@@ -169,10 +177,17 @@ export const AddToCartWidget = ({
       : ((typed?.en ?? typed?.ar ?? [])[0] ?? "");
   })();
 
-  const originalPrice = product.original_price ?? product.price ?? 0;
-  const hasSale =
-    product.sale_price > 0 && product.sale_price !== originalPrice;
-  const activePrice = hasSale ? product.sale_price : originalPrice;
+  const toNum = (v: number | string | undefined): number | undefined =>
+    v == null ? undefined : typeof v === "string" ? parseFloat(v) : v;
+  const originalPrice =
+    product.original_price ??
+    product.price ??
+    (product as RawApiProduct).best_price ??
+    toNum(supplier0?.price) ??
+    0;
+  const salePrice = product.sale_price ?? toNum(supplier0?.sale_price) ?? 0;
+  const hasSale = salePrice > 0 && salePrice !== originalPrice;
+  const activePrice = hasSale ? salePrice : originalPrice;
 
   // ── Redux-derived cart state ──────────────────────────────────────────────
   // For logged-in: read from Redux apiEntries
@@ -350,9 +365,12 @@ export const AddToCartWidget = ({
       }
     } else {
       await onBeforeAdd?.();
-      const rawAcc = (product as RawApiProduct).accessories ?? [];
+      const rawAcc =
+        (product as RawApiProduct).accessories ??
+        (product as RawApiProduct).product_accessories ??
+        [];
       const selectedAccessories = rawAcc
-        .flatMap((acc) => acc.accessory_item ?? [])
+        .flatMap((acc) => acc.accessory_item ?? acc.accessory_types ?? [])
         .filter((item) => accessoryItemIds.includes(item.id))
         .map((item) => ({
           id: item.id,
@@ -482,9 +500,12 @@ export const AddToCartWidget = ({
       );
       const subTotal = activePrice * minQty;
       const totalPrice = subTotal + shippingCharge;
-      const rawAcc = (product as RawApiProduct).accessories ?? [];
+      const rawAcc =
+        (product as RawApiProduct).accessories ??
+        (product as RawApiProduct).product_accessories ??
+        [];
       const selectedAccessories = rawAcc
-        .flatMap((acc) => acc.accessory_item ?? [])
+        .flatMap((acc) => acc.accessory_item ?? acc.accessory_types ?? [])
         .filter((item) => accessoryItemIds.includes(item.id))
         .map((item) => ({
           id: item.id,
@@ -715,7 +736,7 @@ export const AddToCartWidget = ({
           {/* Add To Cart / Request Quote Button */}
           {isAddedState ? (
             <Link
-            href={`/cart/${cartId}`}
+            href={cartHref}
               className={`${computedButtonClass} w-fulls flex items-center justify-center gap-1.5 group`}
             >
               {iconShow && <CheckCircle size={13} strokeWidth={2} />}
@@ -766,7 +787,7 @@ export const AddToCartWidget = ({
         <div className={wrapperClassName ?? "flex gap-2 items-center w-full"}>
           {isAddedState && !isQuote ? (
             <Link
-                  href={`/cart/${cartId}`}
+                  href={cartHref}
               className={`flex-1 rounded-lg bg-[#186737] hover:bg-[#145c30] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors group ${isWishlist ? "h-10 px-3" : "h-8.5"} `}
             >
               {iconShow && <CheckCircle size={13} strokeWidth={2} />}

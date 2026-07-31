@@ -43,6 +43,8 @@ export function MobileCheckout(props: MobileCheckoutProps) {
 
   const stepTitle = ['', 'Shipping Address', 'Order Summary', 'Payments'][mobileStep]
 
+  const cartHref = cartId ? `/cart/${cartId}` : '/cart'
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [mobileStep])
@@ -64,7 +66,7 @@ export function MobileCheckout(props: MobileCheckoutProps) {
             </button>
           ) : (
             <Link
-           href={`/cart/${cartId}`}
+           href={cartHref}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
             >
               <ArrowLeft size={20} className="text-gray-700" />

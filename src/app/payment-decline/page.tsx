@@ -86,13 +86,14 @@ const total = subtotal + shippingTotal + taxAmount;
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PaymentDeclinePage() {
   const cartId = useCartId();
+  const cartHref = cartId ? `/cart/${cartId}` : "/cart";
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* ── Breadcrumb ───────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
         <div className="global-container py-3 flex items-center gap-2 text-sm">
-          <Link     href={`/cart/${cartId}`} className="text-[#186737] hover:underline flex items-center gap-1.5">
+          <Link     href={cartHref} className="text-[#186737] hover:underline flex items-center gap-1.5">
             <ShoppingBag size={13} /> Cart
           </Link>
           <span className="text-gray-300">/</span>
@@ -171,7 +172,7 @@ export default function PaymentDeclinePage() {
                         Update Payment Method
                       </Link>
                       <Link
-               href={`/cart/${cartId}`}
+               href={cartHref}
                         className="inline-flex items-center gap-2 border border-gray-200 text-gray-600 hover:border-[#186737] hover:text-[#186737] text-sm font-semibold px-5 py-2.5 rounded-[7px] transition-colors"
                       >
                         <ArrowLeft size={15} />
@@ -319,7 +320,7 @@ export default function PaymentDeclinePage() {
               </Link>
 
               <Link
-             href={`/cart/${cartId}`}
+             href={cartHref}
                 className="mt-2.5 w-full border border-gray-200 hover:border-[#186737] text-gray-600 hover:text-[#186737] font-semibold py-3 rounded-[7px] transition-all flex items-center justify-center gap-2 text-sm"
               >
                 <ArrowLeft size={15} />

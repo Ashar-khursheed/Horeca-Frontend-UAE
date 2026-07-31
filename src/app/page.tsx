@@ -3,11 +3,10 @@ import { makeApiCallSSR } from "@/apis/ssr-fetch";
 import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
-import type { FeaturedCategoryTab, ApiProductRaw } from "@/utils/types";
+import type { FeaturedCategory } from "@/utils/types";
 import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
-import { trimFeaturedProducts } from "@/utils/homepage-payload";
 
 export const metadata: Metadata = {
   title: "Restaurant Supply Store & Commercial Equipment | HorecaStore",
@@ -48,7 +47,7 @@ export default async function Page() {
   const [
     slider1,
     slider2,
-    categoryTabsRes,
+    featuredCategoriesRes,
   ] = await Promise.all([
     makeApiCallSSR<{ items: SliderItem[] }>(
       "frontend/sliders/1",
@@ -60,28 +59,16 @@ export default async function Page() {
       {},
       { revalidate: revalidate, countryCode },
     ),
-    makeApiCallSSR<{ data: FeaturedCategoryTab[] }>(
-      apiUrls.FEATURED_CATEGORY_TABS,
-      {},
+    makeApiCallSSR<{ data: FeaturedCategory[] }>(
+      apiUrls.FEATURED_PRODUCTS,
+      { products_limit: 12, limit: 5, min_products: 12 },
       { revalidate: isLoggedIn ? 0 : revalidate, countryCode },
     ),
   ]);
 
-  const categoryTabs = categoryTabsRes?.data ?? [];
-
-  // First tab products — sequential because we need the tab id first.
-  const firstTabId = categoryTabs[0]?.id;
-  const initialProductsRes = firstTabId
-    ? await makeApiCallSSR<{ data: ApiProductRaw[] }>(
-        apiUrls.FEATURED_CATEGORY_TABS,
-        { category_id: firstTabId },
-        { revalidate: isLoggedIn ? 0 : revalidate, countryCode, withAuth: isLoggedIn, authToken: token ?? undefined },
-      )
-    : null;
-
-  const sliderItems             = slider1?.items ?? [];
-  const sliderItemsTwo          = slider2?.items ?? [];
-  const initialFeaturedProducts = trimFeaturedProducts(initialProductsRes?.data ?? []);
+  const sliderItems      = slider1?.items ?? [];
+  const sliderItemsTwo   = slider2?.items ?? [];
+  const featuredCategories = featuredCategoriesRes?.data ?? [];
 
   const homeSchema = {
     "@context": "https://schema.org",
@@ -174,8 +161,7 @@ export default async function Page() {
         <HomePage
           sliderItems={sliderItems}
           sliderItemsTwo={sliderItemsTwo}
-          categoryTabs={categoryTabs}
-          initialFeaturedProducts={initialFeaturedProducts}
+          featuredCategories={featuredCategories}
         />
       </main>
     </>

@@ -230,13 +230,13 @@ export const BusinessTab = () => {
               onClear={() => setLicenceFile(null)}
             />
 
-            <FileUploadField
+            {/* <FileUploadField
               label="VAT Certificate"
               currentUrl={bd?.vat_certificate}
               file={vatFile}
               onFileChange={setVatFile}
               onClear={() => setVatFile(null)}
-            />
+            /> */}
 
             <Field label="Approval Status">
               <div className={`h-10 px-3 rounded-[7px] border text-sm font-semibold flex items-center capitalize ${statusColor}`}>

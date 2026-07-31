@@ -54,10 +54,10 @@ interface PaymentEntry {
 interface AccessoryCharge {
   id: number;
   accessory_item_id: number;
-  accessory_item_name: string;
+  accessory_item_name: { en: string };
   accessory_item_price: string;
   product_accessory_id: number;
-  product_accessory_name: string;
+  product_accessory_name: { en: string };
   amount: string;
 }
 
@@ -610,9 +610,9 @@ export default function OrderDetailPage() {
                                 >
                                   <span className="text-[11px] text-gray-600">
                                     <span className="text-gray-400">
-                                      {acc?.product_accessory_name}:
+                                      {acc.product_accessory_name?.en}:
                                     </span>{" "}
-                                    {acc?.accessory_item_name?.replace(/^"|"$/g, "")}
+                                    {acc.accessory_item_name?.en?.replace(/^"|"$/g, "")}
                                   </span>
                                   <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
                                     {sym}{fmt(Number(acc.amount))}

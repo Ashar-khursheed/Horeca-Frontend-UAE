@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     makeApiCallSSR<BrandCategoryProductsResponse>(apiUrls.BRAND_CATEGORY_PRODUCTS(slug, categorySlug), {}, { revalidate: productDetailRevalidate, countryCode }),
   ]);
 
-  const brandName = brandData?.brand?.name?.en ?? slug;
-  const catName = brandData?.categories?.find((c) => c.url === categorySlug)?.name?.en ?? categorySlug;
+  const brandName = brandData?.data?.name?.en ?? slug;
+  const catName = brandData?.data?.categories?.find((c) => c.url === categorySlug)?.name?.en ?? categorySlug;
 
   return {
     title: `${catName} - ${brandName}`,
@@ -47,13 +47,12 @@ export default async function BrandCategoryPage({ params }: PageProps) {
     makeApiCallSSR<BrandCategoryProductsResponse>(apiUrls.BRAND_CATEGORY_PRODUCTS(slug, categorySlug), {}, { revalidate: productDetailRevalidate, countryCode }),
   ]);
 
-   console.log("BrandDetailPage data:", brandData);
-
-  if (!brandData?.success || !brandData?.brand) notFound();
+  if (!brandData?.success || !brandData?.data) notFound();
 
   return (
     <BrandDetailFeature
-      data={brandData}
+      data={brandData.data}
+      brandSlug={slug}
       selectedCategoryUrl={categorySlug}
       categoryProductsData={catData ?? undefined}
     />

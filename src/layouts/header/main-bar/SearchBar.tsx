@@ -4,8 +4,6 @@ import AddToCartWidget from "@/components/add-to-cart";
 import type { RawApiProduct } from "@/components/product-card";
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
 import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
-import { apiUrls } from "@/apis/api-endpoint";
-import { makeApiRequest } from "@/apis/axios-instance";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -70,10 +68,15 @@ export default function SearchBar() {
     if (defaultFetchedRef.current) return;
     defaultFetchedRef.current = true;
     setLoading(true);
-    makeApiRequest<SearchSuggestions>(apiUrls.SEARCH, {
-      params: { query: "true", page: 1, length: 5 },
-    })
-      .then((res) => setDefaultData(res?.data ?? null))
+    fetch(`${API_BASE}search?query=true&page=1&length=5`)
+      .then((res) => {
+        if (!res.ok) throw new Error("search failed");
+        return res.json();
+      })
+      .then((raw: NlpSearchResponse) => {
+        const adapted = toSearchSuggestions(raw);
+        setDefaultData(adapted.data ?? null);
+      })
       .catch(() => {
         defaultFetchedRef.current = false; // allow retry on next focus
       })

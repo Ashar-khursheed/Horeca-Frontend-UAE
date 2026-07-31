@@ -5,4 +5,4 @@ export const slugToTitle = (slug: string) =>
     .join(" ");
 
 export const revalidate = 3600;
-export const productDetailRevalidate = 3600;
+export const productDetailRevalidate = 0;

@@ -173,6 +173,7 @@ export default function BottomNav() {
   const pathname   = usePathname();
   const cartId     = useCartId();
   const isLoggedIn = useAppSelector((s) => !!s.profile.customer);
+ 
 
   // Cart count
   const cartCount = useAppSelector((s) =>
@@ -216,12 +217,11 @@ export default function BottomNav() {
           }}
         >
           {NAV_ITEMS.map((item) => {
-            const href   =
-              item.label === "Account"
-                ? accountHref
-                : item.isCart
-                  ? `/cart/${cartId}`
-                  : item.href;
+            const href   = item.label === "Account"
+              ? accountHref
+              : item.isCart
+                ? (cartId ? `/cart/${cartId}` : item.href)
+                : item.href;
             const active = isActive(href);
             const Icon   = item.icon;
 

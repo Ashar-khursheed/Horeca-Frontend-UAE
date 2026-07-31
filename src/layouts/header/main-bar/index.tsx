@@ -562,7 +562,7 @@ export default function NavigationStatic({
                 </Link>
 
                 {/* Cart */}
-                <Link     href={`/cart/${cartId}`}>
+                <Link     href={cartId ? `/cart/${cartId}` : "/cart"}>
                   <button className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c2e] transition-colors text-white rounded-[7px] pl-3 pr-4 h-10">
                     <div className="relative">
                       <ShoppingCart size={18} />

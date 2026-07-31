@@ -2,6 +2,7 @@
 
 import { makeApiRequest } from "@/apis/axios-instance";
 import CTA from "@/components/cta";
+import { useInvoiceDownload } from "@/components/download-invoice";
 import {
   AlertCircle,
   ArrowLeft,
@@ -12,6 +13,7 @@ import {
   Download,
   FileText,
   Headphones,
+  Loader2,
   Mail,
   MapPin,
   MessageCircle,
@@ -30,13 +32,26 @@ import { Suspense, useEffect, useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
+interface AccessoryCharge {
+  id: number;
+  accessory_item_id: number;
+  accessory_item_name: string;
+  accessory_item_price: string;
+  product_accessory_id: number;
+  product_accessory_name: string;
+  amount: string;
+}
+
 interface ApiOrderProduct {
   id: number;
   quantity: number;
   unit_price: string;
   status: string;
+  is_returnable?: string;
   expected_shipping_date?: string;
   expectedShippingDate?: string;
+  accessory_item_charge?: string;
+  accessory_charges?: AccessoryCharge[];
   product_supplier: {
     delivery_days: string;
     return_policy: string;
@@ -71,6 +86,13 @@ interface PaymentEntry {
   payment_details?: { receipt_url?: string };
 }
 
+interface TrackingEntry {
+  id: number;
+  status: string;
+  description: string;
+  created_at: string;
+}
+
 interface ApiTrackingOrder {
   id: number;
   order_number: string;
@@ -84,6 +106,10 @@ interface ApiTrackingOrder {
   total_amount: string;
   is_paid: number;
   is_reserved: number;
+  pay_with_cheque?: number;
+  is_lift_gate?: number;
+  is_residential_address?: number;
+  is_inside_delivery?: number;
   paid_amount: string;
   pending_amount: string;
   payment_link: string | null;
@@ -92,6 +118,7 @@ interface ApiTrackingOrder {
   customer: ApiCustomer;
   customer_address: string;
   order_products: ApiOrderProduct[];
+  tracking?: TrackingEntry[];
   payments: PaymentEntry[];
   currency: {
     source_title: string;
@@ -121,20 +148,37 @@ const TIMELINE_STEPS = [
 ];
 
 const STATUS_TO_STEP: Record<string, number> = {
-  Pending:      0,
-  Processing:   2,
-  Shipped:      4,
+  Pending: 0,
+  Cancelled: 0,
+  Confirmed: 1,
+  Processing: 2,
+  "Supplier Delivery": 2,
+  International: 2,
+  Export: 2,
+  "On hold": 2,
+  "Ready to ship": 3,
+  Shipped: 4,
+  Pickups: 4,
+  "Out for delivery": 5,
   "In Transit": 5,
-  Delivered:    6,
+  Delivered: 6,
 };
 
 const STATUS_CFG = {
-  Delivered:    { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500", icon: CheckCircle },
-  "In Transit": { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
-  Shipped:      { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
-  Processing:   { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
-  Pending:      { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
-  Cancelled:    { bg: "bg-red-50",    text: "text-red-700",    border: "border-red-200",    dot: "bg-red-500",    icon: AlertCircle },
+  Delivered:           { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500", icon: CheckCircle },
+  "Out for delivery":  { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  "In Transit":        { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  Shipped:             { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  Pickups:             { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-500",   icon: Truck },
+  "Ready to ship":     { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Processing:          { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  "Supplier Delivery": { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  International:       { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Export:               { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  "On hold":            { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Confirmed:            { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: CheckCircle },
+  Pending:              { bg: "bg-amber-50", text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500",  icon: Box },
+  Cancelled:            { bg: "bg-red-50",   text: "text-red-700",    border: "border-red-200",    dot: "bg-red-500",    icon: AlertCircle },
 } as const;
 
 const DEFAULT_SC = { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-200", dot: "bg-gray-400", icon: Package };
@@ -176,6 +220,16 @@ function getProductImage(imageUrls: { en: string[] } | string | null | undefined
   } catch {
     return imageUrls as string;
   }
+}
+
+// Tracking log entries read like "Order status changed to Out for delivery by
+// backend panel" rather than a bare status — pull the embedded status out and
+// resolve it through the same step map used for order.status.
+function resolveTrackingStepIdx(status: string): number | null {
+  if (/^order created/i.test(status)) return 0;
+  const m = status.match(/changed to (.+?) by/i);
+  if (m && m[1].trim() in STATUS_TO_STEP) return STATUS_TO_STEP[m[1].trim()];
+  return null;
 }
 
 function getPaymentStatus(order: ApiTrackingOrder): "Paid" | "Pending" | "Refunded" {
@@ -402,14 +456,18 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
   const pc = PAYMENT_CFG[paymentStatus];
   const currentIdx = STATUS_TO_STEP[order.status] ?? 1;
   const placedAt = formatDateTime(order.created_at);
+  const { handleDownload, loadings } = useInvoiceDownload(order as any);
 
   const sym                = order.currency?.target_symbol ?? "$";
   const subtotal           = Number(order.amount);
   const tax                = Number(order.tax_amount);
-  const shipping           = Number(order.shipping_charge);
   const discount           = Number(order.discount);
   const additionalDiscount = Number(order.additional_discount_amount);
   const total              = Number(order.total_amount);
+  const liftFee    = order.is_lift_gate           === 1 ? 75  : 0;
+  const resFee     = order.is_residential_address === 1 ? 199 : 0;
+  const insideFee  = order.is_inside_delivery     === 1 ? 249 : 0;
+  const shipping = total - subtotal - tax + discount + additionalDiscount - liftFee - resFee - insideFee;
 
   const addressLines = order.customer_address
     ? order.customer_address.split(/\\n|\n/)
@@ -418,6 +476,16 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
   const expectedDelivery =
     order.order_products[0]?.expected_shipping_date ??
     order.order_products[0]?.expectedShippingDate ?? "";
+
+  // First timestamp each timeline step was reached, derived from the raw
+  // tracking log (entries are chronological, so the first match per step wins).
+  const trackingTimestamps: Record<number, string> = {};
+  for (const t of order.tracking ?? []) {
+    const idx = resolveTrackingStepIdx(t.status);
+    if (idx !== null && !(idx in trackingTimestamps)) {
+      trackingTimestamps[idx] = t.created_at;
+    }
+  }
 
   // First step is "Order Reserved" when is_reserved === 1
   const isReserved = order.is_reserved === 1;
@@ -470,10 +538,17 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
               </p>
             </div>
           </div>
-          {/* <button className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20 shrink-0">
-            <Download size={14} />
-            Download Invoice
-          </button> */}
+          <button
+            onClick={handleDownload}
+            disabled={loadings}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20 disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+          >
+            {loadings ? (
+              <><Loader2 size={14} className="animate-spin" /> Generating…</>
+            ) : (
+              <><Download size={14} /> Download Invoice</>
+            )}
+          </button>
         </div>
       </div>
 
@@ -506,6 +581,9 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                 const estDelivery =
                   op.expected_shipping_date ?? op.expectedShippingDate ?? "";
                 const price = Number(op.unit_price);
+                const lineTotal = price * op.quantity;
+                const accessories = op.accessory_charges ?? [];
+                const accessoryTotal = Number(op.accessory_item_charge ?? 0);
                 return (
                   <div key={op.id} className="p-5 flex gap-4 hover:bg-gray-50/50 transition-colors">
                     <div className="w-18 h-18 shrink-0 rounded-[7px] bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
@@ -547,18 +625,64 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                               Est. delivery: {estDelivery}
                             </p>
                           )}
-                          <div className="mt-2">
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-[11px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                               Qty: {op.quantity}
                             </span>
+                            {op.status && (
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
+                                op.status === "Delivered"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : op.status === "Request Return" || op.status === "Return Requested"
+                                  ? "bg-orange-50 text-orange-700 border-orange-200"
+                                  : op.status === "Returned" || op.status === "Refunded"
+                                  ? "bg-red-50 text-red-600 border-red-200"
+                                  : op.status === "Cancelled"
+                                  ? "bg-red-50 text-red-700 border-red-200"
+                                  : op.status === "Shipped" || op.status === "In Transit"
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : "bg-gray-100 text-gray-600 border-gray-200"
+                              }`}>
+                                {op.status}
+                              </span>
+                            )}
                           </div>
+
+                          {accessories.length > 0 && (
+                            <div className="mt-3 border border-gray-100 rounded-[7px] bg-gray-50/60 divide-y divide-gray-100">
+                              <p className="px-3 py-1.5 text-[11px] font-bold text-gray-500">
+                                Accessories
+                              </p>
+                              {accessories.map((acc) => (
+                                <div
+                                  key={acc.id}
+                                  className="flex items-center justify-between gap-3 px-3 py-1.5"
+                                >
+                                  <span className="text-[11px] text-gray-600">
+                                    <span className="text-gray-400">
+                                      {acc.product_accessory_name}:
+                                    </span>{" "}
+                                    {acc.accessory_item_name?.replace(/^"|"$/g, "")}
+                                  </span>
+                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
+                                    {sym}{fmt(Number(acc.amount))}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="text-base font-bold text-gray-900">
-                            {sym}{fmt(price * op.quantity)}
+                            {sym}{fmt(lineTotal + accessoryTotal)}
                           </p>
                           {op.quantity > 1 && (
                             <p className="text-[11px] text-gray-400 mt-0.5">{sym}{fmt(price)} each</p>
+                          )}
+                          {accessoryTotal > 0 && (
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              incl. {sym}{fmt(accessoryTotal)} accessories
+                            </p>
                           )}
                         </div>
                       </div>
@@ -639,11 +763,16 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                             </span>
                           )}
                         </div>
-                        {i === 0 && (
-                          <span className="text-[11px] text-gray-400 whitespace-nowrap">
-                            {placedAt.date} · {placedAt.time}
-                          </span>
-                        )}
+                        {isCompleted && !isCancelledStep && (() => {
+                          const ts = trackingTimestamps[i] ?? (i === 0 ? order.created_at : undefined);
+                          if (!ts) return null;
+                          const dt = formatDateTime(ts);
+                          return (
+                            <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                              {dt.date} · {dt.time}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <p className={`text-xs mt-0.5 leading-relaxed ${
                         isCancelledStep
@@ -718,26 +847,42 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                 {additionalDiscount > 0 && (
                   <SummaryRow label="Additional Discount" value={`-${sym}${fmt(additionalDiscount)}`} green />
                 )}
+                {shipping > 0 && (
+                  <SummaryRow label="Shipping" value={`${sym}${fmt(shipping)}`} />
+                )}
+                {order.is_lift_gate           === 1 && <SummaryRow label="Lift Gate Service"   value={`${sym}${fmt(liftFee)}`} />}
+                {order.is_residential_address === 1 && <SummaryRow label="Residential Address" value={`${sym}${fmt(resFee)}`} />}
+                {order.is_inside_delivery     === 1 && <SummaryRow label="Inside Delivery"     value={`${sym}${fmt(insideFee)}`} />}
                 {tax > 0 && (
                   <SummaryRow
                     label={`Tax (${Number(order.tax_percentage).toFixed(2)}%)`}
                     value={`${sym}${fmt(tax)}`}
                   />
                 )}
-                {shipping > 0 && (
-                  <SummaryRow label="Shipping" value={`${sym}${fmt(shipping)}`} />
-                )}
               </div>
-              <div className="border-t border-gray-100 pt-3.5">
+
+              <div className="border-t border-gray-100 pt-3.5 mt-1 space-y-2.5">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total Amount</span>
                   <span className="font-black text-xl text-gray-900">{sym}{fmt(total)}</span>
                 </div>
+                {order.is_paid === 0 && Number(order.paid_amount) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Paid Amount</span>
+                    <span className="text-sm font-semibold text-[#186737]">
+                      {sym}{fmt(Number(order.paid_amount))}
+                    </span>
+                  </div>
+                )}
+                {order.is_paid === 0 && Number(order.pending_amount) > 0 && (
+                  <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
+                    <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
+                    <span className="text-sm font-black text-amber-700">
+                      {sym}{fmt(Number(order.pending_amount))}
+                    </span>
+                  </div>
+                )}
               </div>
-              {/* <button className="w-full flex items-center justify-center gap-2 py-3 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#145c30] transition-colors shadow-sm shadow-[#186737]/20">
-                <Download size={14} />
-                Download Invoice
-              </button> */}
             </div>
           </div>
 

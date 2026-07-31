@@ -63,7 +63,7 @@ export interface PdfOrderDetail {
     accessory_item_charge?: string;
     accessory_charges?: Array<{
       id?: number;
-      accessory_item_name: string;
+      accessory_item_name: { en: string } | string;
       accessory_item_price: number;
     }>;
     product_supplier: {
@@ -585,12 +585,20 @@ const ProductRow = ({
           <Text style={S.prodMetaRed}>{item.expected_shipping_date}</Text>
         </Text>
         {accCharges.length > 0 &&
-          accCharges.map((ac, idx) => (
-            <Text key={idx} style={[S.prodMeta, { marginTop: 1 }]}>
-              <Text style={S.prodMetaBold}>{ac.accessory_item_name}: </Text>
-              {currency}{ac.accessory_item_price}
-            </Text>
-          ))}
+          accCharges.map((ac, idx) => {
+            const accName =
+              typeof ac.accessory_item_name === "string"
+                ? ac.accessory_item_name
+                : (ac.accessory_item_name?.en ?? "");
+            return (
+              <Text key={idx} style={[S.prodMeta, { marginTop: 1 }]}>
+                <Text style={S.prodMetaBold}>
+                  {accName.replace(/^"|"$/g, "")}:{" "}
+                </Text>
+                ${ac.accessory_item_price}
+              </Text>
+            );
+          })}
       </View>
 
       {/* Image */}

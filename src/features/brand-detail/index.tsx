@@ -4,80 +4,45 @@ import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import ProductCard, { type RawApiProduct } from "@/components/product-card";
 import SeoContent, { type SeoApiData } from "@/seo/seo-content";
-import { ChevronLeft, ChevronRight, Globe, Home } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export interface BrandCategoryProductItem {
-  id: number;
-  name: string | { en?: string; ar?: string };
-  sku: string;
-  category_url: string;
-  parent_category_url: string;
-  url: string;
-  vendor_id: number;
-  price: number;
-  sale_price: number;
-  original_price: number;
-  front_sale_price: number;
-  best_price: number;
-  images: string[] | { en?: string[]; ar?: string[] };
-  total_reviews: number;
-  avg_rating: number | null;
-  in_wishlist: boolean;
-  in_cart: boolean;
-  delivery_days: string;
-  return_policy: string;
-  free_shipping: number;
-  min_quantity: number;
-  is_fixed: number;
-  quote_available: number;
-  isRequired: boolean;
-  selling_type: {
-    attribute_value: string | { en?: string; ar?: string };
-    attribute_value_unit: string | { en?: string; ar?: string };
-  };
-  currency?: { symbol?: string; name?: string; title?: string } | null;
-  currency_title: string | null;
-  in_stock: number;
-}
-
 export interface BrandCategoryProductsResponse {
   success: boolean;
-  data: BrandCategoryProductItem[];
-  pagination: { total: number; per_page: number; current_page: number; last_page: number };
+  data: RawApiProduct[];
+  // This endpoint returns flat total_records/total_pages/current_page/per_page
+  // fields instead of a nested `pagination` object (unlike BRAND_BY_SLUG).
+  total_records?: number;
+  total_pages?: number;
+  current_page?: number;
+  per_page?: number;
+  pagination?: { total: number; per_page: number; current_page: number; last_page: number };
   message?: string;
 }
 
-function mapBrandCatProduct(p: BrandCategoryProductItem): RawApiProduct {
+// Product shape here is the same "raw" API product used across the app
+// (title/image_urls/best_supplier/reviews_count/product_accessories etc);
+// selling_type is the one field that arrives double-wrapped in {en, ar}.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBrandCatProduct(p: any): RawApiProduct {
+  const sellingType = p.selling_type?.en ?? p.selling_type?.ar ?? p.selling_type;
   return {
-    id: p.id,
-    name: p.name as RawApiProduct["name"],
-    url: p.url,
-    sku: p.sku,
-    category_url: p.category_url,
-    parent_category_url: p.parent_category_url,
-    price: p.price,
-    sale_price: p.sale_price,
-    original_price: p.original_price,
-    avg_rating: p.avg_rating,
-    total_reviews: p.total_reviews,
-    delivery_days: p.delivery_days,
-    images: p.images as RawApiProduct["images"],
-    alt_tags: [],
-    in_wishlist: p.in_wishlist,
-    min_quantity: p.min_quantity,
-    is_fixed: p.is_fixed,
-    quote_available: p.quote_available,
-    selling_type: {
-      attribute_value: (p.selling_type?.attribute_value ?? "") as NonNullable<RawApiProduct["selling_type"]>["attribute_value"],
-      attribute_value_unit: (p.selling_type?.attribute_value_unit ?? "") as NonNullable<RawApiProduct["selling_type"]>["attribute_value_unit"],
-    },
-    isRequired: p.isRequired,
-    currency: p.currency ?? (p.currency_title ? { symbol: p.currency_title } : undefined),
-    suppliers: [{ vendor_id: p.vendor_id, delivery_days: p.delivery_days, free_shipping: p.free_shipping, min_quantity: p.min_quantity, is_fixed: p.is_fixed }],
+    ...p,
+    selling_type: sellingType,
+  };
+}
+
+// Normalise BRAND_CATEGORY_PRODUCTS' flat pagination fields into the
+// { total, per_page, current_page, last_page } shape used everywhere else.
+function normalizeCategoryPagination(res: BrandCategoryProductsResponse): Pagination {
+  return {
+    total: res.total_records ?? res.pagination?.total ?? 0,
+    per_page: res.per_page ?? res.pagination?.per_page ?? 20,
+    current_page: res.current_page ?? res.pagination?.current_page ?? 1,
+    last_page: res.total_pages ?? res.pagination?.last_page ?? 1,
   };
 }
 
@@ -94,26 +59,10 @@ interface PopularTag {
   popularSlug: string;
 }
 
-interface SeoTranslation {
-  title_tag: string;
-  meta_title: string;
-  meta_description: string;
-  og_title: string;
-  og_description: string;
-  og_image_url: string | null;
-  banner_image_url: string | null;
-  banner_image_alt_text: string | null;
-  paragraph_1: string | null;
-  paragraph_2: string | null;
-  paragraph_3: string | null;
-  paragraph_4: string | null;
-  popular_tag_details: PopularTag[] | null;
-}
-
 interface BrandCategory {
   id: number;
   name: BrandName;
-  image: string;
+  image_url: string;
   url: string;
   product_count: number;
 }
@@ -125,28 +74,33 @@ interface Pagination {
   last_page: number;
 }
 
-export interface BrandDetailResponse {
-  success: boolean;
-  brand: {
-    id: number;
-    name: BrandName;
-    thumbnail: LocaleStr | null;
-    logo: string;
-    desktop_banner: string;
-    desktop_banner_alt_text: string;
-    mobile_banner: string;
-    website: string | null;
-    is_featured: boolean;
-    slug: string;
-  };
-  seo: SeoApiData & {
-    indexing: boolean;
-    current_translation: SeoTranslation;
-  };
+// The API returns the brand's fields flattened directly on `data`
+// (not nested under a `brand` key), and SEO content lives under
+// `seo_url` in the same shape SeoContent already expects.
+export interface BrandDetailData {
+  id: number;
+  name: BrandName;
+  thumbnail?: LocaleStr | null;
+  logo_url?: string | null;
+  desktop_banner?: string[];
+  desktop_banner_alt_text?: string[];
+  mobile_banner?: string[];
+  mobile_banner_alt_text?: string[];
+  website?: string | null;
+  is_featured?: boolean;
+  seo_url?: SeoApiData;
   categories?: BrandCategory[];
   products?: RawApiProduct[];
-  data?: RawApiProduct[];
-  pagination?: Pagination;
+  total_records?: number;
+  total_pages?: number;
+  current_page?: number;
+  per_page?: number;
+}
+
+export interface BrandDetailResponse {
+  success: boolean;
+  message?: string;
+  data?: BrandDetailData;
 }
 
 // ── Category Card ─────────────────────────────────────────────────────────────
@@ -167,9 +121,9 @@ function CategoryCard({
       className={`group flex flex-col items-center bg-white border rounded-[7px] overflow-hidden hover:border-[#186737] hover:shadow-md hover:-translate-y-1 transition-all duration-200 ${isSelected ? "border-[#186737] shadow-md" : "border-slate-200"}`}
     >
       <div className="w-full aspect-square bg-gray-50 flex items-center justify-center p-3">
-        {cat.image ? (
+        {cat.image_url ? (
           <img
-            src={cat.image}
+            src={cat.image_url}
             alt={name}
             loading="lazy"
             className="w-full h-[120px] object-contain group-hover:scale-105 transition-transform duration-300"
@@ -196,10 +150,10 @@ function PaginationBar({
   pagination,
   onPage,
 }: {
-  pagination: Pagination;
+  pagination: Pagination | undefined;
   onPage: (p: number) => void;
 }) {
-  if (pagination.last_page <= 1) return null;
+  if (!pagination || pagination.last_page <= 1) return null;
   const { current_page, last_page } = pagination;
 
   const pages: (number | "...")[] = [];
@@ -259,29 +213,45 @@ function PaginationBar({
 
 export default function BrandDetailFeature({
   data,
+  brandSlug,
   selectedCategoryUrl,
   categoryProductsData,
 }: {
-  data: BrandDetailResponse;
+  data: BrandDetailData;
+  brandSlug: string;
   selectedCategoryUrl?: string;
   categoryProductsData?: BrandCategoryProductsResponse;
 }) {
   const {
-    brand,
-    seo,
+    name,
+    thumbnail,
+    logo_url,
+    desktop_banner,
+    desktop_banner_alt_text,
+    mobile_banner,
+    mobile_banner_alt_text,
+    seo_url: seo,
     categories = [],
     products: initialProducts = [],
-    pagination: initialPagination,
+    total_records,
+    total_pages,
+    current_page,
+    per_page,
   } = data;
 
   console.log("BrandDetailFeature data:", data);
 
   const initProducts = categoryProductsData
-    ? categoryProductsData.data.map(mapBrandCatProduct)
+    ? (categoryProductsData.data ?? []).map(mapBrandCatProduct)
     : initialProducts;
-  const initPagination = categoryProductsData
-    ? categoryProductsData.pagination
-    : (initialPagination ?? { total: initialProducts.length, per_page: initialProducts.length || 20, current_page: 1, last_page: 1 });
+  const initPagination: Pagination = categoryProductsData
+    ? normalizeCategoryPagination(categoryProductsData)
+    : {
+        total: total_records ?? initProducts.length,
+        per_page: per_page ?? (initProducts.length || 20),
+        current_page: current_page ?? 1,
+        last_page: total_pages ?? 1,
+      };
 
   const [products, setProducts] = useState<RawApiProduct[]>(initProducts);
   const [pagination, setPagination] = useState<Pagination>(initPagination);
@@ -305,12 +275,10 @@ export default function BrandDetailFeature({
     : null;
   const selectedCategoryName = selectedCategory?.name?.en ?? selectedCategoryUrl ?? "";
 
-  const brandName = brand.name?.en ?? "";
-  const desktopBannerUrl =
-    brand.desktop_banner || brand.thumbnail?.en || brand.logo;
-  const mobileBannerUrl =
-    brand.mobile_banner || brand.desktop_banner || brand.thumbnail?.en || brand.logo;
-  const bannerAlt = brand.desktop_banner_alt_text || brandName;
+  const brandName = name?.en ?? "";
+  const desktopBannerUrl = desktop_banner?.[0] ?? thumbnail?.en ?? logo_url;
+  const mobileBannerUrl = mobile_banner?.[0] ?? desktop_banner?.[0] ?? thumbnail?.en ?? logo_url;
+  const bannerAlt = desktop_banner_alt_text?.[0] ?? mobile_banner_alt_text?.[0] ?? brandName;
 
   const fetchPage = async (page: number) => {
     setLoadingPage(true);
@@ -318,21 +286,26 @@ export default function BrandDetailFeature({
     try {
       if (selectedCategoryUrl) {
         const res = await makeApiRequest<BrandCategoryProductsResponse>(
-          apiUrls.BRAND_CATEGORY_PRODUCTS(brand.slug, selectedCategoryUrl),
+          apiUrls.BRAND_CATEGORY_PRODUCTS(brandSlug, selectedCategoryUrl),
           { params: { page } },
         );
         if (res?.data) {
           setProducts(res.data.map(mapBrandCatProduct));
-          setPagination(res.pagination);
+          setPagination(normalizeCategoryPagination(res));
         }
       } else {
         const res = await makeApiRequest<BrandDetailResponse>(
-          apiUrls.BRAND_BY_SLUG(brand.slug),
+          apiUrls.BRAND_BY_SLUG(brandSlug),
           { params: { page } },
         );
-        if (res?.products) {
-          setProducts(res.products);
-          if (res.pagination) setPagination(res.pagination);
+        if (res?.data?.products) {
+          setProducts(res.data.products);
+          setPagination({
+            total: res.data.total_records ?? 0,
+            per_page: res.data.per_page ?? 20,
+            current_page: res.data.current_page ?? page,
+            last_page: res.data.total_pages ?? 1,
+          });
         }
       }
     } finally {
@@ -366,7 +339,7 @@ export default function BrandDetailFeature({
             <li className="flex items-center">
               <ChevronRight size={12} className="mx-1 text-gray-300" />
               {selectedCategoryName ? (
-                <Link href={`/brands/${brand.slug}`} className="text-gray-400 hover:text-[#186737] transition-colors">
+                <Link href={`/brands/${brandSlug}`} className="text-gray-400 hover:text-[#186737] transition-colors">
                   {brandName}
                 </Link>
               ) : (
@@ -408,9 +381,9 @@ export default function BrandDetailFeature({
         <div className="global-container py-5">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
-              {brand.logo && (
+              {logo_url && (
                 <img
-                  src={brand.logo}
+                  src={logo_url}
                   alt={brandName}
                   className="h-12 w-auto object-contain"
                 />
@@ -420,9 +393,9 @@ export default function BrandDetailFeature({
               </h1>
             </div>
             {/* <div className="flex items-center gap-2 flex-wrap">
-              {brand.website && (
+              {website && (
                 <a
-                  href={brand.website}
+                  href={website}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-sm font-semibold text-[#186737] border border-[#186737] rounded-[7px] px-4 py-2 hover:bg-[#186737] hover:text-white transition-colors"
@@ -447,7 +420,7 @@ export default function BrandDetailFeature({
                 <CategoryCard
                   key={cat.id}
                   cat={cat}
-                  brandSlug={brand.slug}
+                  brandSlug={brandSlug}
                   isSelected={cat.url === selectedCategoryUrl}
                 />
               ))}
@@ -463,9 +436,9 @@ export default function BrandDetailFeature({
             {selectedCategoryName
               ? `${selectedCategoryName} by ${brandName}`
               : `Explore All Products Under ${brandName}`}
-            {pagination.total > 0 && (
+            {pagination?.total > 0 && (
               <span className="ml-2 text-sm font-normal text-gray-500">
-                ({pagination.total} items)
+                ({pagination?.total} items)
               </span>
             )}
           </h2>

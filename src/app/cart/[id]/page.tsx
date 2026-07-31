@@ -29,7 +29,6 @@ import {
   getDefaultAddressCache,
   getLocationData,
 } from "@/utils/locationStorage";
-import { getCartId } from "@/utils/cartId";
 import { getShippingCharge } from "@/utils/shipping";
 import {
   ArrowRight,
@@ -89,7 +88,7 @@ const apiProductToCartItem = (cp: any): CartItem => ({
   inWishlist: false,
   selectedAccessories: (cp.accessory_charges ?? []).map((acc: any) => ({
     id: acc.accessory_item_id,
-    name: acc.accessory_item_name,
+    name: resolveStr(acc.accessory_item_name),
     price: parseFloat(acc.accessory_item_price ?? 0),
   })),
   url: cp.product?.url ?? "#",
@@ -177,9 +176,6 @@ export default function CartPage() {
 
   const cartShippingCharge = useAppSelector((s) => s.cart.cartShippingCharge);
 
-  const [cartId] = useState<string>(() =>
-    typeof window !== "undefined" ? getCartId() : "",
-  );
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [shipmentOpen, setShipmentOpen] = useState(true);

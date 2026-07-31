@@ -89,28 +89,35 @@ export interface ApiProduct {
 
 export interface RawApiProduct {
   id: number;
-  name: LS;
+  name?: LS;
+  title?: string;
   url: string;
   sku?: string;
   category_url?: string;
   parent_category_url?: string;
-  price: number;
-  sale_price: number;
+  price?: number;
+  sale_price?: number;
   original_price?: number;
+  best_price?: number;
   avg_rating: number | null;
-  total_reviews: number;
+  total_reviews?: number;
+  reviews_count?: number;
   delivery_days?: string;
   currency?: {
     name?: string;
     symbol?: string;
+    title?: string;
   };
-  images: string[] | { en?: string[]; ar?: string[] };
+  images?: string[] | { en?: string[]; ar?: string[] };
+  image_urls?: string[];
   alt_tags?: string[];
+  image_alt_tags?: { en?: string | null; ar?: string | null };
   in_wishlist?: boolean;
   in_cart?: boolean;
   min_quantity?: number;
   is_fixed?: number | boolean;
   quote_available?: number | boolean | null;
+  for_quotes?: number | boolean;
   selling_type?: { attribute_value: LS; attribute_value_unit: LS };
   suppliers?: {
     vendor_id?: number;
@@ -118,13 +125,48 @@ export interface RawApiProduct {
     free_shipping?: boolean | number;
     min_quantity?: number;
     is_fixed?: boolean | number;
+    sale_price?: number | string;
+    price?: number | string;
   }[];
+  best_supplier?: {
+    id?: number;
+    vendor_id?: number;
+    sale_price?: number | string;
+    price?: number | string;
+    min_quantity?: number;
+    is_fixed?: number | boolean;
+    delivery_days?: string;
+    return_policy?: string;
+    free_shipping?: boolean | number;
+    warranty_information?: string;
+  };
   isRequired?: boolean;
+  is_accessory_required?: boolean;
   accessories?: {
     id: number;
     name: LS | { en?: string; ar?: string };
     is_required: number;
-    accessory_item: {
+    accessory_item?: {
+      id: number;
+      name: LS | { en?: string; ar?: string };
+      price: number;
+    }[];
+    accessory_types?: {
+      id: number;
+      name: LS | { en?: string; ar?: string };
+      price: number;
+    }[];
+  }[];
+  product_accessories?: {
+    id: number;
+    name: LS | { en?: string; ar?: string };
+    is_required: number;
+    accessory_item?: {
+      id: number;
+      name: LS | { en?: string; ar?: string };
+      price: number;
+    }[];
+    accessory_types?: {
       id: number;
       name: LS | { en?: string; ar?: string };
       price: number;
@@ -274,7 +316,7 @@ export const AddToCartButton = ({
 // ─── Main ProductCard ─────────────────────────────────────────────────────────
 export const ProductCard = ({
   product,
-  newUrl = "products",
+  newUrl,
   aboveFold = false,
   onWishlistToggle,
   onBeforeAdd,
@@ -300,8 +342,11 @@ export const ProductCard = ({
       ? false
       : !!product.in_wishlist;
   // ── Normalise fields that may arrive in either flat or localised form ──
-  const name = resolveStr(product.name, locale);
-  const rawImages = product.images;
+  const name = resolveStr(
+    product.name ?? (product as RawApiProduct).title,
+    locale,
+  );
+  const rawImages = product.images ?? (product as RawApiProduct).image_urls;
   const images_ = Array.isArray(rawImages)
     ? (rawImages as string[])
     : locale === "ar"
@@ -311,24 +356,36 @@ export const ProductCard = ({
       : ((rawImages as { en?: string[] })?.en ??
         (rawImages as { ar?: string[] })?.ar ??
         []);
-  const deliveryDays =
-    product.delivery_days ??
-    ("suppliers" in product
-      ? (product as RawApiProduct).suppliers?.[0]?.delivery_days
-      : undefined) ??
-    "";
+  const singleAltTag = resolveStr(
+    (product as RawApiProduct).image_alt_tags as LS | undefined,
+    locale,
+  );
+  const supplier0 =
+    (product as RawApiProduct).suppliers?.[0] ??
+    (product as RawApiProduct).best_supplier;
+  const deliveryDays = product.delivery_days ?? supplier0?.delivery_days ?? "";
 
   const sellUnitStr = resolveStr(
     product.selling_type?.attribute_value_unit,
     locale,
   );
-  const originalPrice = product.original_price ?? product.price ?? 0;
-  const supplier0 = (product as RawApiProduct).suppliers?.[0];
+  const toNum = (v: number | string | undefined): number | undefined =>
+    v == null ? undefined : typeof v === "string" ? parseFloat(v) : v;
+  const originalPrice =
+    product.original_price ??
+    product.price ??
+    product.best_price ??
+    toNum(supplier0?.price) ??
+    0;
+  const salePrice = product.sale_price ?? toNum(supplier0?.sale_price) ?? 0;
+  const totalReviews =
+    product.total_reviews ?? (product as RawApiProduct).reviews_count ?? 0;
   const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
   const isFixed =
     product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
-  const isQuote = !!product.quote_available;
-  // if (isQuote) console.log("[QUOTE PRODUCT]", product.id, product.quote_available);
+  const isQuote = !!(
+    product.quote_available ?? (product as RawApiProduct).for_quotes
+  );
 
   // Hydrate guest wishlist from localStorage (guarded inside reducer — runs once)
   // and seed logged-in wishlist from product's in_wishlist field
@@ -339,10 +396,13 @@ export const ProductCard = ({
   }, []);
 
   // ── Accessories modal ────────────────────────────────────────────────
-  const rawAccessories = (product as RawApiProduct).accessories ?? [];
-  const hasRequiredAccessories = rawAccessories.some(
-    (a) => a.is_required === 1,
-  );
+  const rawAccessories =
+    (product as RawApiProduct).accessories ??
+    (product as RawApiProduct).product_accessories ??
+    [];
+  const hasRequiredAccessories =
+    rawAccessories.some((a) => a.is_required === 1) ||
+    !!(product as RawApiProduct).is_accessory_required;
   const [accessoryModalOpen, setAccessoryModalOpen] = useState(false);
   const [selectedAccItems, setSelectedAccItems] = useState<
     Record<number, number | null>
@@ -364,13 +424,12 @@ export const ProductCard = ({
   );
 
   // ── Price logic (sale_price=0 means no sale) ─────────────────────────
-  const hasSale =
-    product.sale_price > 0 && product.sale_price !== originalPrice;
+  const hasSale = salePrice > 0 && salePrice !== originalPrice;
 
-  const activePrice = hasSale ? product.sale_price : originalPrice;
+  const activePrice = hasSale ? salePrice : originalPrice;
 
   const discountPct = hasSale
-    ? ((originalPrice - product.sale_price) / originalPrice) * 100
+    ? ((originalPrice - salePrice) / originalPrice) * 100
     : 0;
 
   const showLeaseBadge = isLeaseToOwnEligible(activePrice, isQuote);
@@ -443,9 +502,14 @@ export const ProductCard = ({
     if (onWishlistToggle) onWishlistToggle(product, !inWishlist);
   };
 
+  const urlPrefix = product.parent_category_url ?? newUrl;
   const productLink = product.url?.startsWith("/")
     ? product.url
-    : `/${product.parent_category_url ?? newUrl}/${product.url}`;
+    : product.url?.includes("/")
+      ? `/${product.url}`
+      : urlPrefix
+        ? `/${urlPrefix}/${product.url}`
+        : `/${product.url}`;
   const displayImages = images.slice(0, 5);
   const visibleImages = showHoverImages
     ? displayImages
@@ -500,7 +564,7 @@ export const ProductCard = ({
                 <Image
                   key={img}
                   src={img}
-                  alt={product.alt_tags?.[i] || name}
+                  alt={product.alt_tags?.[i] || singleAltTag || name}
                   fill
                   priority={aboveFold && i === 0}
                   loading={aboveFold && i === 0 ? "eager" : "lazy"}
@@ -580,9 +644,9 @@ export const ProductCard = ({
             <span className="text-[13px] font-bold text-[#4B5563]">
               {product.avg_rating.toFixed(1)}
             </span>
-            {product.total_reviews > 0 && (
+            {totalReviews > 0 && (
               <span className="text-[11px] text-gray-400">
-                ({product.total_reviews})
+                ({totalReviews})
               </span>
             )}
           </div>
@@ -760,7 +824,7 @@ export const ProductCard = ({
                     />
                   </SelectTrigger>
                   <SelectContent className="z-10000">
-                    {acc.accessory_item.map((item) => (
+                    {(acc.accessory_item ?? acc.accessory_types ?? []).map((item) => (
                       <SelectItem key={item.id} value={item.id.toString()}>
                         {resolveAccName(item.name)} — +
                         {Number(item.price).toLocaleString("en-US", {

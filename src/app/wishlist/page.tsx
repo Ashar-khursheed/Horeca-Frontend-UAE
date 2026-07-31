@@ -2,7 +2,6 @@
 
 import AddToCartWidget from "@/components/add-to-cart";
 import Breadcrumb from "@/components/breadcum";
-import { type RawApiProduct } from "@/components/product-card";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import {
@@ -62,76 +61,90 @@ const resolveStr = (v: unknown): string => {
   return o.en ?? o.ar ?? "";
 };
 
+const toNum = (v: number | string | undefined | null): number | undefined =>
+  v == null ? undefined : typeof v === "string" ? parseFloat(v) : v;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const resolveImages = (raw: any): string[] =>
+  Array.isArray(raw) ? raw : (raw?.en ?? raw?.ar ?? []);
+
 // Transform wishlist API entry → WishlistItem
+// Product shape here is the "logged-in wishlist" API response: some fields
+// (title, selling_type) arrive double-wrapped in {en, ar}, and supplier info
+// is both flattened onto the product AND nested under best_supplier.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const apiEntryToWishlistItem = (entry: any, currencySymbol: string): WishlistItem => {
   const p = entry.product ?? {};
-  const supplier = p.product_suppliers?.[0];
-  const price = parseFloat(supplier?.price ?? p.price ?? 0);
-  const salePrice = parseFloat(supplier?.sale_price ?? 0);
-  const hasSale = salePrice > 0 && salePrice < price;
-  const activePrice = hasSale ? salePrice : price;
-  const category = p.categories?.[0];
-  const catUrl = category?.seo_url?.url ?? "";
-  const prodUrl = p.seo_url?.url ?? String(p.id);
-  const min_quantity = p?.min_quantity
-  const url = catUrl ? `/${catUrl}/${prodUrl}` : `/${prodUrl}`;
+  const supplier = p.best_supplier ?? p.product_suppliers?.[0] ?? p.suppliers?.[0] ?? {};
+  const originalPrice =
+    p.original_price ?? p.price ?? p.best_price ?? toNum(supplier.price) ?? 0;
+  const salePrice = p.front_sale_price ?? p.sale_price ?? toNum(supplier.sale_price) ?? 0;
+  const hasSale = salePrice > 0 && salePrice < originalPrice;
+  const activePrice = hasSale ? salePrice : originalPrice;
+
+  const images = resolveImages(p.image_urls ?? p.images);
+  const productUrl = p.url ?? p.seo_url?.url ?? String(p.id ?? entry.product_id);
+  const url = productUrl.startsWith("/") ? productUrl : `/${productUrl}`;
+
+  // selling_type sometimes arrives as { en: { attribute_value, attribute_value_unit } }
+  const sellingType = p.selling_type?.en ?? p.selling_type?.ar ?? p.selling_type;
 
   return {
     id: entry.product_id,
-    name: resolveStr(p.name) || p.name || "",
-    brand: p.brand?.name ?? resolveStr(p.brand?.translations?.[0]?.name) ?? "",
+    name: resolveStr(p.title) || resolveStr(p.name) || "",
+    brand: p.brand?.name ?? p.brand_name ?? resolveStr(p.brand?.translations?.[0]?.name) ?? "",
     modelNo: p.sku ?? "",
-    image: Array.isArray(p.images)
-      ? (p.images[0] ?? "")
-      : (p.images?.en?.[0] ?? p.images?.ar?.[0] ?? ""),
+    image: images[0] ?? "",
     price: activePrice,
-    originalPrice: price,
+    originalPrice,
     currencySymbol: p.currency?.symbol ?? currencySymbol,
     warranty: "",
-    deliveryDays: supplier?.delivery_days ?? "",
-    freeShipping: !!supplier?.free_shipping,
-    rating: 0,
-    reviews: 0,
+    deliveryDays: p.delivery_days ?? supplier.delivery_days ?? "",
+    freeShipping: !!(p.free_shipping ?? supplier.free_shipping),
+    rating: p.avg_rating ?? 0,
+    reviews: p.reviews_count ?? p.total_reviews ?? 0,
     url,
-    inStock: supplier ? !!supplier.in_stock : true,
-    minQuantity:min_quantity,
-    isFixed: !!supplier?.is_fixed,
-    rawProduct: p,
+    inStock: supplier.in_stock != null ? !!supplier.in_stock : true,
+    minQuantity: p.min_quantity ?? supplier.min_quantity ?? 1,
+    isFixed: !!(p.is_fixed ?? supplier.is_fixed),
+    rawProduct: { ...p, selling_type: sellingType },
   };
 };
 
 // Transform guest localStorage item → WishlistItem
+// rawProduct here is the raw product object saved from ProductCard (RawApiProduct shape:
+// title/image_urls/best_supplier/reviews_count etc, with `url` already a full path).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const guestItemToWishlistItem = (gi: { productId: number; rawProduct: any }, currencySymbol: string): WishlistItem => {
   const p = gi.rawProduct ?? {};
-  const supplier = p.suppliers?.[0];
-  const price = p.original_price ?? p.price ?? 0;
-  const salePrice = p.sale_price ?? 0;
-  const hasSale = salePrice > 0 && salePrice < price;
-  const activePrice = hasSale ? salePrice : price;
-  const raw = Array.isArray(p.images) ? p.images : (p.images?.en ?? p.images?.ar ?? []);
+  const supplier = p.best_supplier ?? p.suppliers?.[0] ?? {};
+  const originalPrice =
+    p.original_price ?? p.price ?? p.best_price ?? toNum(supplier.price) ?? 0;
+  const salePrice = p.sale_price ?? toNum(supplier.sale_price) ?? 0;
+  const hasSale = salePrice > 0 && salePrice < originalPrice;
+  const activePrice = hasSale ? salePrice : originalPrice;
+  const images = resolveImages(p.image_urls ?? p.images);
   const productUrl = p.url ?? String(gi.productId);
-  const url = productUrl.startsWith("/") ? productUrl : `/${p.parent_category_url ?? ""}/${productUrl}`;
+  const url = productUrl.startsWith("/") ? productUrl : `/${productUrl}`;
 
   return {
     id: gi.productId,
-    name: resolveStr(p.name) || String(p.name ?? ""),
-    brand: resolveStr(p.brand) ?? "",
+    name: resolveStr(p.title) || resolveStr(p.name) || String(p.title ?? p.name ?? ""),
+    brand: resolveStr(p.brand) || "",
     modelNo: p.sku ?? "",
-    image: raw[0] ?? "",
+    image: images[0] ?? "",
     price: activePrice,
-    originalPrice: price,
+    originalPrice,
     currencySymbol: typeof p.currency === "string" ? p.currency : (p.currency?.symbol ?? currencySymbol),
     warranty: "",
-    deliveryDays: p.delivery_days ?? supplier?.delivery_days ?? "",
-    freeShipping: !!(supplier?.free_shipping ?? p.free_shipping),
+    deliveryDays: p.delivery_days ?? supplier.delivery_days ?? "",
+    freeShipping: !!(p.free_shipping ?? supplier.free_shipping),
     rating: p.avg_rating ?? 0,
-    reviews: p.total_reviews ?? 0,
+    reviews: p.reviews_count ?? p.total_reviews ?? 0,
     url: url || "/",
-    inStock: true,
-    minQuantity: p.min_quantity ?? supplier?.min_quantity ?? 1,
-    isFixed: !!(p.is_fixed ?? supplier?.is_fixed),
+    inStock: supplier.in_stock != null ? !!supplier.in_stock : true,
+    minQuantity: p.min_quantity ?? supplier.min_quantity ?? 1,
+    isFixed: !!(p.is_fixed ?? supplier.is_fixed),
     rawProduct: p,
   };
 };
@@ -167,46 +180,6 @@ const SkeletonCard = () => (
     </div>
   </div>
 );
-
-// ── Normalise WishlistItem → RawApiProduct for AddToCartWidget ───────────────
-const toRawApiProduct = (item: WishlistItem): RawApiProduct => {
-  const raw      = item.rawProduct ?? {};
-  const supplier = raw.product_suppliers?.[0] ?? raw.suppliers?.[0] ?? {};
-  const urlParts = item.url.split("/").filter(Boolean);
-  const slug     = urlParts[urlParts.length - 1] ?? String(item.id);
-  const parentUrl = urlParts.slice(0, -1).join("/");
-  return {
-    id: item.id,
-    name: item.name,
-    url: slug,
-    parent_category_url: parentUrl,
-    sku: item.modelNo,
-    price: item.price,
-    sale_price: item.originalPrice > item.price ? item.price : 0,
-    original_price: item.originalPrice,
-    avg_rating: item.rating,
-    total_reviews: item.reviews,
-    delivery_days: item.deliveryDays,
-    currency: { symbol: item.currencySymbol },
-    images: item.image ? [item.image] : [],
-    in_wishlist: true,
-    min_quantity: item.minQuantity,
-    is_fixed: item.isFixed ? 1 : 0,
-    quote_available: raw.for_quotes ?? 0,
-    selling_type: {
-      attribute_value: raw.selling_unit_attribute?.attribute_value ?? "1/Each",
-      attribute_value_unit: raw.selling_unit_attribute?.attribute_value ?? "Each",
-    },
-    suppliers: [{
-      vendor_id: supplier.vendor_id,
-      delivery_days: item.deliveryDays,
-      free_shipping: item.freeShipping,
-      min_quantity: item.minQuantity,
-      is_fixed: item.isFixed,
-    }],
-    accessories: raw.accessories ?? [],
-  };
-};
 
 // ── Item Card ─────────────────────────────────────────────────────────────────
 const WishlistCard = ({
@@ -277,10 +250,7 @@ const WishlistCard = ({
               </div>
               <Link href={item.url}>
                 <h3 className="font-semibold text-[13px] sm:text-[15px] text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
-                  {/* {item.name} */}
-                  <Link href={item.rawProduct?.url} className="text-[#186737] hover:underline">
-                    {item.name}
-                  </Link>
+                  {item.name}
                 </h3>
               </Link>
               {item.rating > 0 && (
@@ -337,7 +307,7 @@ const WishlistCard = ({
             </div>
 
             <AddToCartWidget
-              product={toRawApiProduct(item)}
+              product={item.rawProduct}
               showCounter={false}
               isWishlist={true}
               onAddedToCart={onAddedToCart}

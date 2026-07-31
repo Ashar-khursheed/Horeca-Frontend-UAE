@@ -131,14 +131,14 @@ export async function makeApiCallSSR<T = unknown>(
 ): Promise<T | null> {
   try {
     
-    console.log(`
-==========================================
-API PATH : ${path}
-PARAMS   : ${JSON.stringify(params)}
-STACK:
-${new Error().stack?.split("\n").slice(2, 8).join("\n")}
-==========================================
-`);
+//     console.log(`
+// ==========================================
+// API PATH : ${path}
+// PARAMS   : ${JSON.stringify(params)}
+// STACK:
+// ${new Error().stack?.split("\n").slice(2, 8).join("\n")}
+// ==========================================
+// `);
     const qs = new URLSearchParams();
 
     if (params) {
@@ -208,6 +208,10 @@ ${new Error().stack?.split("\n").slice(2, 8).join("\n")}
     });
 
     // console.log("SSR FETCH =>", url);
+
+    if (response.status === 404) {
+      return null;
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);

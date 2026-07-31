@@ -5,12 +5,10 @@
 //   (Swiper, all section components, SEOMainContent, Image wrappers, etc.)
 //   into the initial JS payload, even for parts that need zero interactivity.
 //   Removing "use client" here means only explicitly-marked child components
-//   (HeroBanner, FeaturedProducts, FeaturedBrandsDynamic, BlogsCard) ship
-//   client-side JS. Everything else — SEOMainContent, ShopByCategories, the
+//   (HeroBanner, FeaturedProducts, BlogsCard) ship client-side JS. Everything
+//   else — SEOMainContent, ShopByCategories, FeaturedBrandsSection, the
 //   FoodTruck banner Image — is pure static HTML, cutting TBT significantly.
 //
-// Country detection + brand-product state update are isolated in
-// FeaturedBrandsDynamic so they don't force the whole page into a client tree.
 // Blogs load client-side after first paint to keep the homepage HTML smaller.
 
 import SEOMainContent from "@/seo/seo-main-content";
@@ -18,9 +16,9 @@ import SeoContent from "@/seo/seo-content";
 import FeaturedProducts from "./feature-product";
 import HeroBanner, { SliderItem } from "./hero-banner";
 import ShopByCategories from "./shop-by-category";
-import { FeaturedBrandsDynamic } from "./features-brand/FeaturedBrandsDynamic";
+import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
 import { HomeBlogsSection } from "./HomeBlogsSection";
-import type { ApiProductRaw, FeaturedCategoryTab } from "@/utils/types";
+import type { FeaturedCategory } from "@/utils/types";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
 
@@ -84,13 +82,11 @@ const HOMEPAGE_POPULAR_SEARCHES = [
 export const Home = ({
   sliderItems = [],
   sliderItemsTwo = [],
-  categoryTabs = [],
-  initialFeaturedProducts = [],
+  featuredCategories = [],
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
-  categoryTabs?: FeaturedCategoryTab[];
-  initialFeaturedProducts?: ApiProductRaw[];
+  featuredCategories?: FeaturedCategory[];
 }) => {
   return (
     <>
@@ -114,7 +110,7 @@ export const Home = ({
       <ShopByCategories />
 
       {/* "use client" for tab switching + client-side products fetch on tab change */}
-      <FeaturedProducts tabs={categoryTabs} initialProducts={initialFeaturedProducts} />
+      <FeaturedProducts categories={featuredCategories} />
 
       {/* Static banner image — server HTML */}
       <div className="w-full md:py-10 py-4">
@@ -132,9 +128,8 @@ export const Home = ({
         </div>
       </div>
 
-      {/* "use client" — handles country-detection + brand-tab state.
-          Renders SSR-provided initialProducts immediately, updates on country change. */}
-      <FeaturedBrandsDynamic />
+      {/* Pure server HTML — SSR-fetched, no client-side refetch */}
+      <FeaturedBrandsSection />
 
       <div className="md:block hidden">
         <HomeBlogsSection />

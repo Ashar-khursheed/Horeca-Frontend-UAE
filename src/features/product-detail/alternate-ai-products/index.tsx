@@ -19,25 +19,50 @@ type Product = {
   rawProduct?: any;
 };
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const toNum = (v: number | string | undefined | null): number | undefined =>
+  v == null ? undefined : typeof v === "string" ? parseFloat(v) : v;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const resolveLS = (v: any): string => {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  return v.en ?? v.ar ?? "";
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const resolveImages = (raw: any): string[] =>
+  Array.isArray(raw) ? raw : (raw?.en ?? raw?.ar ?? []);
+
 // ── Map API similar product to internal Product type ──────────────────────────
+// Product fields (title/image_urls/image_alt_tags/selling_type) commonly arrive
+// wrapped in {en, ar}, and price/supplier info lives under best_supplier.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapApiProduct = (p: any): Product => {
-  const name = p.name?.en ?? p.name?.ar ?? String(p.name ?? "");
-  const image =
-    p.images?.en?.[0] ??
-    p.images?.ar?.[0] ??
-    (Array.isArray(p.images) ? p.images[0] : "") ??
-    "";
-  const original = parseFloat(p.price ?? 0);
-  const sale = parseFloat(p.sale_price ?? 0);
+  const name = resolveLS(p.title) || resolveLS(p.name) || String(p.id ?? "");
+  const images = resolveImages(p.image_urls ?? p.images);
+  const image = images[0] ?? "";
+
+  const supplier = p.best_supplier ?? p.suppliers?.[0] ?? {};
+  const original =
+    p.original_price ?? p.price ?? p.best_price ?? toNum(supplier.price) ?? 0;
+  const sale = p.sale_price ?? toNum(supplier.sale_price) ?? 0;
   const hasSale = sale > 0 && sale < original;
   const price = hasSale ? sale : original;
-  const currency = p.currency?.symbol ?? "$";
-  const unitVal = p.selling_type?.attribute_value_unit;
-  const unit =
-    (typeof unitVal === "object" ? (unitVal?.en ?? unitVal?.ar) : unitVal) ??
-    "Each";
-  const url = p.url ?? p.seo?.url ?? "#";
+
+  const currency =
+    typeof p.currency === "string" ? p.currency : (p.currency?.symbol ?? "$");
+
+  // selling_type sometimes arrives as { en: { attribute_value, attribute_value_unit } }
+  const sellingType = p.selling_type?.en ?? p.selling_type?.ar ?? p.selling_type;
+  const unit = resolveLS(sellingType?.attribute_value_unit) || "Each";
+
+  const productUrl = p.url ?? p.seo?.url ?? "";
+  const url = !productUrl
+    ? "#"
+    : productUrl.startsWith("/")
+      ? productUrl
+      : `/${productUrl}`;
 
   return {
     id: p.id,
@@ -49,7 +74,7 @@ const mapApiProduct = (p: any): Product => {
     unit,
     url,
     hasSale,
-    rawProduct: p,
+    rawProduct: { ...p, selling_type: sellingType },
   };
 };
 
@@ -188,6 +213,8 @@ const AlternateAiProducts = ({
   const hasAI = AI_PRODUCTS.length > 0;
   const hasSimilar = similar.length > 0;
   if (!hasAI && !hasSimilar) return null;
+
+
 
   return (
     <div className="mt-8 hidden md:grid grid-cols-2  gap-4">

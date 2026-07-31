@@ -18,9 +18,8 @@ export const apiUrls = {
   UPDATE_PROFILE: "frontend/customer/update-profile",
   NavigationAPI: "frontend-categories",
   NavigationAPIHOME: "frontend-categories?category_type=home",
-  FEATURED_PRODUCTS: "frontend/featured-categories-with-products",
-  FEATURED_CATEGORY_TABS: "frontend/featured-categories",
-  FEATURED_BRAND_PRODUCTS: "frontend/featured-brands-with-products",
+  FEATURED_PRODUCTS: "frontend/categories/featured-products",
+  FEATURED_BRAND_PRODUCTS: "frontend/brands/featured-products",
   BLOGS: "frontend/blogs",
   BLOG_CATEGORIES_WITH_BLOGS: "frontend/categories-with-blogs",
   MAIN_CATEGPRY_PAGES: (slug: string) =>

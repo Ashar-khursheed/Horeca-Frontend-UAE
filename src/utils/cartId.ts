@@ -27,15 +27,17 @@ export function resetCartId(): string {
   return id;
 }
 
-// The cart id lives in localStorage, so it's only knowable on the client.
-// Calling getCartId() directly during render produces a different value on
-// the server (fresh random id) vs. the client (existing localStorage id),
-// which React flags as a hydration mismatch. This hook renders "" on the
-// first pass (matching SSR) and fills in the real id after mount.
+/**
+ * getCartId() reads localStorage and is non-deterministic on the server
+ * (fabricates a new id every SSR pass). Calling it directly during render
+ * causes a hydration mismatch on the cart href. This hook returns "" on
+ * the server and on the client's first paint (matching SSR), then resolves
+ * the real id post-mount — a normal post-hydration update, not a mismatch.
+ */
 export function useCartId(): string {
-  const [cartId, setCartId] = useState("");
+  const [id, setId] = useState("");
   useEffect(() => {
-    setCartId(getCartId());
+    setId(getCartId());
   }, []);
-  return cartId;
+  return id;
 }

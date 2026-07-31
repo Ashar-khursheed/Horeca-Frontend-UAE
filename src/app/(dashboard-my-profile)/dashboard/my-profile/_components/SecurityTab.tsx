@@ -1,11 +1,11 @@
 "use client";
 
-import { changePassword } from "@/store/slices/auth/authSlice";
+import { changePassword, logoutUser } from "@/store/slices/auth/authSlice";
 import { AppDispatch } from "@/store/store";
 import { changePasswordSchema } from "@/validation/schema";
 import { useFormik } from "formik";
 import { CheckCircle, Eye, EyeOff, Lock, Shield } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Field, inputCls } from "./shared";
 
@@ -18,6 +18,12 @@ export const SecurityTab = () => {
   });
   const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error">("idle");
   const [apiMessage, setApiMessage] = useState("");
+
+  useEffect(() => {
+    if (apiStatus === "idle") return;
+    const timer = setTimeout(() => setApiStatus("idle"), 3000);
+    return () => clearTimeout(timer);
+  }, [apiStatus]);
 
   const strengthOf = (pw: string) =>
     pw.length === 0 ? 0
@@ -43,10 +49,13 @@ export const SecurityTab = () => {
       setApiStatus("idle");
       setApiMessage("");
       try {
-        const msg = await dispatch(changePassword(values)).unwrap();
+        await dispatch(changePassword(values)).unwrap();
         setApiStatus("success");
-        setApiMessage(msg ?? "Password updated successfully.");
+        setApiMessage("Password updated successfully. Please login again with your new password.");
         resetForm();
+        setTimeout(() => {
+          dispatch(logoutUser());
+        }, 1000);
       } catch (err: unknown) {
         setApiStatus("error");
         setApiMessage(
