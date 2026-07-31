@@ -7,7 +7,9 @@ import {
   AlertCircle,
   CheckCircle,
   ChevronRight,
+  Eye,
   Package,
+  Pencil,
   Search,
   XCircle,
 } from "lucide-react";
@@ -44,8 +46,32 @@ interface VendorPriceApiResponse {
 
 const PER_PAGE = 20;
 
+const SORT_BY_OPTIONS = [
+  { value: "", label: "--" },
+  { value: "id", label: "ID" },
+  { value: "cost_per_item", label: "Cost per Item" },
+  { value: "inventory", label: "Inventory" },
+  { value: "created_at", label: "Created At" },
+];
+
+const SORT_DIR_OPTIONS = [
+  { value: "", label: "--" },
+  { value: "asc", label: "Ascending" },
+  { value: "desc", label: "Descending" },
+];
+
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Stash the row's data before navigating to the detail page — there's no
+// single-record fetch endpoint yet, so the detail page reads this back.
+const stashProduct = (p: VendorPriceProduct) => {
+  try {
+    sessionStorage.setItem(`vendor_product_${p.id}`, JSON.stringify(p));
+  } catch {
+    // ignore (e.g. storage disabled)
+  }
+};
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function PartnerProductsPage() {
@@ -56,12 +82,14 @@ export default function PartnerProductsPage() {
   const [error, setError]           = useState(false);
 
   const [search, setSearch]               = useState("");
+  const [sortBy, setSortBy]               = useState("");
+  const [sortDir, setSortDir]             = useState("");
   const [page, setPage]                   = useState(1);
   const [paginationKey, setPaginationKey] = useState(0);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchProducts = useCallback(async (opts: { page: number; search: string }) => {
+  const fetchProducts = useCallback(async (opts: { page: number; search: string; sortBy: string; sortDir: string }) => {
     setLoading(true);
     setError(false);
     try {
@@ -70,6 +98,8 @@ export default function PartnerProductsPage() {
         length: PER_PAGE,
       };
       if (opts.search) params.global = opts.search;
+      if (opts.sortBy) params.sort_by = opts.sortBy;
+      if (opts.sortDir) params.sort_dir = opts.sortDir;
 
       const res = await makeApiRequest<VendorPriceApiResponse>(apiUrls.VENDOR_PRICE, { params });
 
@@ -90,11 +120,11 @@ export default function PartnerProductsPage() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchProducts({ page, search });
+      fetchProducts({ page, search, sortBy, sortDir });
     }, search ? 400 : 0);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search]);
+  }, [page, search, sortBy, sortDir]);
 
   const resetPagination = () => { setPage(1); setPaginationKey((k) => k + 1); };
 
@@ -128,15 +158,36 @@ export default function PartnerProductsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search by product SKU, vendor SKU, product name or vendor name..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); resetPagination(); }}
-            className="w-full h-9 pl-8 pr-3 rounded-[7px] border border-gray-200 text-sm text-gray-800 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all placeholder:text-gray-400 bg-white"
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by product SKU, vendor SKU, product name or vendor name..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); resetPagination(); }}
+              className="w-full h-9 pl-8 pr-3 rounded-[7px] border border-gray-200 text-sm text-gray-800 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all placeholder:text-gray-400 bg-white"
+            />
+          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => { setSortBy(e.target.value); if (!e.target.value) setSortDir(""); resetPagination(); }}
+            className="h-9 rounded-[7px] border border-gray-200 text-sm text-gray-700 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all bg-white px-2 cursor-pointer sm:w-44"
+          >
+            {SORT_BY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.value ? `Sort by: ${o.label}` : "Sort by"}</option>
+            ))}
+          </select>
+          <select
+            value={sortDir}
+            onChange={(e) => { setSortDir(e.target.value); resetPagination(); }}
+            disabled={!sortBy}
+            className="h-9 rounded-[7px] border border-gray-200 text-sm text-gray-700 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all bg-white px-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed sm:w-40"
+          >
+            {SORT_DIR_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
           <p className="text-xs text-gray-400">
@@ -183,7 +234,7 @@ export default function PartnerProductsPage() {
             <AlertCircle size={36} className="mx-auto text-red-200 mb-3" />
             <p className="text-sm font-semibold text-gray-400">Failed to load products</p>
             <button
-              onClick={() => fetchProducts({ page, search })}
+              onClick={() => fetchProducts({ page, search, sortBy, sortDir })}
               className="mt-3 text-xs text-[#186737] hover:underline font-medium"
             >
               Try again
@@ -197,7 +248,7 @@ export default function PartnerProductsPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Product", "Vendor", "Cost / Item", "Inventory", "Status"].map((h) => (
+                  {["Product", "Vendor", "Cost / Item", "Inventory", "Status", "Actions"].map((h) => (
                     <th key={h} className="text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 whitespace-nowrap">
                       {h}
                     </th>
@@ -207,7 +258,7 @@ export default function PartnerProductsPage() {
               <tbody className="divide-y divide-gray-50">
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-16 text-center">
+                    <td colSpan={6} className="px-5 py-16 text-center">
                       <Package size={40} className="mx-auto text-gray-200 mb-3" />
                       <p className="text-sm font-semibold text-gray-400">No products found</p>
                       <p className="text-xs text-gray-300 mt-1">Try adjusting your search</p>
@@ -244,6 +295,24 @@ export default function PartnerProductsPage() {
                             {inStock ? <CheckCircle size={10} /> : <XCircle size={10} />}
                             {inStock ? "In Stock" : "Out of Stock"}
                           </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <Link
+                              href={`/partner/dashboard/products/${p.id}`}
+                              onClick={() => stashProduct(p)}
+                              className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-[#186737] transition-colors"
+                            >
+                              <Eye size={12} /> View
+                            </Link>
+                            <Link
+                              href={`/partner/dashboard/products/${p.id}?edit=1`}
+                              onClick={() => stashProduct(p)}
+                              className="flex items-center gap-1 text-xs font-semibold text-[#186737] hover:underline"
+                            >
+                              <Pencil size={12} /> Edit
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -291,6 +360,22 @@ export default function PartnerProductsPage() {
                     <div className="flex items-center justify-between mt-3 border-t border-gray-50 pt-3">
                       <p className="text-sm font-bold text-gray-900">${fmt(Number(p.cost_per_item))}</p>
                       <p className="text-[11px] text-gray-400">{p.vendor.name}</p>
+                    </div>
+                    <div className="flex items-center gap-4 mt-3 border-t border-gray-50 pt-3">
+                      <Link
+                        href={`/partner/dashboard/products/${p.id}`}
+                        onClick={() => stashProduct(p)}
+                        className="flex items-center gap-1 text-xs font-semibold text-gray-500"
+                      >
+                        <Eye size={12} /> View
+                      </Link>
+                      <Link
+                        href={`/partner/dashboard/products/${p.id}?edit=1`}
+                        onClick={() => stashProduct(p)}
+                        className="flex items-center gap-1 text-xs font-semibold text-[#186737]"
+                      >
+                        <Pencil size={12} /> Edit
+                      </Link>
                     </div>
                   </div>
                 );
