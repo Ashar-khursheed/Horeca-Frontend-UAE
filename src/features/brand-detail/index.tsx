@@ -275,10 +275,16 @@ export default function BrandDetailFeature({
     : null;
   const selectedCategoryName = selectedCategory?.name?.en ?? selectedCategoryUrl ?? "";
 
+  const getFirstString = (v?: string | string[] | null) => {
+    if (!v) return undefined;
+    return Array.isArray(v) ? v[0] : v;
+  };
+
   const brandName = name?.en ?? "";
-  const desktopBannerUrl = desktop_banner?.[0] ?? thumbnail?.en ?? logo_url;
-  const mobileBannerUrl = mobile_banner?.[0] ?? desktop_banner?.[0] ?? thumbnail?.en ?? logo_url;
-  const bannerAlt = desktop_banner_alt_text?.[0] ?? mobile_banner_alt_text?.[0] ?? brandName;
+  const desktopBannerUrl = getFirstString(desktop_banner) ?? getFirstString(thumbnail?.en) ?? logo_url;
+  const mobileBannerUrl = getFirstString(mobile_banner) ?? getFirstString(desktop_banner) ?? getFirstString(thumbnail?.en) ?? logo_url;
+
+  const bannerAlt = getFirstString(desktop_banner_alt_text) ?? getFirstString(mobile_banner_alt_text) ?? brandName;
 
   const fetchPage = async (page: number) => {
     setLoadingPage(true);
@@ -361,7 +367,7 @@ export default function BrandDetailFeature({
         <div className="w-full hidden md:block">
           <img
             src={desktopBannerUrl}
-            alt={bannerAlt}
+            alt={bannerAlt }
             className="w-full h-auto object-cover"
           />
         </div>
@@ -369,7 +375,7 @@ export default function BrandDetailFeature({
       {mobileBannerUrl && (
         <div className="w-full block md:hidden">
           <img
-            src={mobileBannerUrl}
+            src={mobileBannerUrl }
             alt={bannerAlt}
             className="w-full h-auto object-cover"
           />
