@@ -63,16 +63,6 @@ const SORT_DIR_OPTIONS = [
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-// Stash the row's data before navigating to the detail page — there's no
-// single-record fetch endpoint yet, so the detail page reads this back.
-const stashProduct = (p: VendorPriceProduct) => {
-  try {
-    sessionStorage.setItem(`vendor_product_${p.id}`, JSON.stringify(p));
-  } catch {
-    // ignore (e.g. storage disabled)
-  }
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function PartnerProductsPage() {
   const [products, setProducts]     = useState<VendorPriceProduct[]>([]);
@@ -300,14 +290,12 @@ export default function PartnerProductsPage() {
                           <div className="flex items-center gap-3">
                             <Link
                               href={`/partner/dashboard/products/${p.id}`}
-                              onClick={() => stashProduct(p)}
                               className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-[#186737] transition-colors"
                             >
                               <Eye size={12} /> View
                             </Link>
                             <Link
                               href={`/partner/dashboard/products/${p.id}?edit=1`}
-                              onClick={() => stashProduct(p)}
                               className="flex items-center gap-1 text-xs font-semibold text-[#186737] hover:underline"
                             >
                               <Pencil size={12} /> Edit
@@ -364,14 +352,12 @@ export default function PartnerProductsPage() {
                     <div className="flex items-center gap-4 mt-3 border-t border-gray-50 pt-3">
                       <Link
                         href={`/partner/dashboard/products/${p.id}`}
-                        onClick={() => stashProduct(p)}
                         className="flex items-center gap-1 text-xs font-semibold text-gray-500"
                       >
                         <Eye size={12} /> View
                       </Link>
                       <Link
                         href={`/partner/dashboard/products/${p.id}?edit=1`}
-                        onClick={() => stashProduct(p)}
                         className="flex items-center gap-1 text-xs font-semibold text-[#186737]"
                       >
                         <Pencil size={12} /> Edit

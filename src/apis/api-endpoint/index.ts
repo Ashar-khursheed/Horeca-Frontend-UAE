@@ -117,4 +117,5 @@ export const apiUrls = {
 
   // Vendor Dashboard
   VENDOR_PRICE: "vendor/price",
+  VENDOR_PRICE_DETAIL: (id: number | string) => `vendor/price/${id}`,
 };

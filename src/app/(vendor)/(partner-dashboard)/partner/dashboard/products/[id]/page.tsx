@@ -1,12 +1,17 @@
 "use client";
 
+import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 import {
+  AlertCircle,
   ArrowLeft,
   CheckCircle,
   ChevronRight,
+  Loader2,
   Package,
   Pencil,
   Save,
+  Truck,
   X,
   XCircle,
 } from "lucide-react";
@@ -34,21 +39,11 @@ interface VendorPriceProduct {
   };
 }
 
-// Placeholder shown only if the row wasn't reached via the products list
-// (e.g. a direct link or page refresh) — there's no single-record GET yet.
-const FALLBACK_PRODUCT: VendorPriceProduct = {
-  id: 0,
-  product_id: 0,
-  vendor: { id: 0, name: "—" },
-  vendor_sku: "—",
-  cost_per_item: "0.00",
-  shipping_charge: "0.00",
-  delivery_days: "—",
-  return_policy: "—",
-  inventory: 0,
-  in_stock: 0,
-  product: { id: 0, sku: "—", name: { en: "Product not found" }, image_urls: { en: [] } },
-};
+interface VendorPriceDetailResponse {
+  success: boolean;
+  message: string;
+  data: VendorPriceProduct;
+}
 
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -59,78 +54,54 @@ export default function PartnerProductDetailPage() {
   const router = useRouter();
 
   const [product, setProduct] = useState<VendorPriceProduct | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [isEditing, setIsEditing] = useState(searchParams.get("edit") === "1");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
-  const [costPerItem, setCostPerItem] = useState("");
-  const [shippingCharge, setShippingCharge] = useState("");
-  const [deliveryDays, setDeliveryDays] = useState("");
-  const [returnPolicy, setReturnPolicy] = useState("");
-  const [inventory, setInventory] = useState(0);
-  const [inStock, setInStock] = useState(true);
+  const fetchProduct = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await makeApiRequest<VendorPriceDetailResponse>(
+        apiUrls.VENDOR_PRICE_DETAIL(params.id)
+      );
+      if (res.success && res.data) {
+        setProduct(res.data);
+        setActiveImage(0);
+      } else {
+        setError(true);
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let loaded: VendorPriceProduct | null = null;
-    try {
-      const raw = sessionStorage.getItem(`vendor_product_${params.id}`);
-      if (raw) loaded = JSON.parse(raw);
-    } catch {
-      // ignore
-    }
-
-    const p = loaded ?? { ...FALLBACK_PRODUCT, id: Number(params.id) };
-    setNotFound(!loaded);
-    setProduct(p);
-    setCostPerItem(p.cost_per_item);
-    setShippingCharge(p.shipping_charge);
-    setDeliveryDays(p.delivery_days);
-    setReturnPolicy(p.return_policy);
-    setInventory(p.inventory);
-    setInStock(p.in_stock === 1);
+    fetchProduct();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
-  if (!product) return null;
-
-  const image = product.product.image_urls?.en?.[0];
-
-  const handleSave = () => {
-    // UI only — no update endpoint wired up yet.
-    const updated: VendorPriceProduct = {
-      ...product,
-      cost_per_item: costPerItem,
-      shipping_charge: shippingCharge,
-      delivery_days: deliveryDays,
-      return_policy: returnPolicy,
-      inventory,
-      in_stock: inStock ? 1 : 0,
-    };
-    setProduct(updated);
-    try {
-      sessionStorage.setItem(`vendor_product_${product.id}`, JSON.stringify(updated));
-    } catch {
-      // ignore
+  useEffect(() => {
+    if (product && searchParams.get("edit") === "1") {
+      setIsModalOpen(true);
+      router.replace(`/partner/dashboard/products/${product.id}`);
     }
-    setIsEditing(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product]);
+
+  const handleSaved = (updated: Pick<VendorPriceProduct, "cost_per_item" | "inventory" | "in_stock">) => {
+    setProduct((prev) => (prev ? { ...prev, ...updated } : prev));
+    setIsModalOpen(false);
     setSaved(true);
-    router.replace(`/partner/dashboard/products/${product.id}`);
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const handleCancel = () => {
-    setCostPerItem(product.cost_per_item);
-    setShippingCharge(product.shipping_charge);
-    setDeliveryDays(product.delivery_days);
-    setReturnPolicy(product.return_policy);
-    setInventory(product.inventory);
-    setInStock(product.in_stock === 1);
-    setIsEditing(false);
-    router.replace(`/partner/dashboard/products/${product.id}`);
-  };
-
   return (
-    <div className="p-4 sm:p-6 space-y-5 max-w-[1000px]">
+    <div className="p-4 sm:p-6 space-y-5 max-w-300">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs text-gray-400">
         <Link href="/" className="hover:text-[#186737] transition-colors">Home</Link>
@@ -139,183 +110,195 @@ export default function PartnerProductDetailPage() {
         <ChevronRight size={12} />
         <Link href="/partner/dashboard/products" className="hover:text-[#186737] transition-colors">Products</Link>
         <ChevronRight size={12} />
-        <span className="text-gray-700 font-medium truncate max-w-[220px]">{product.product.name.en}</span>
+        <span className="text-gray-700 font-medium truncate max-w-[220px]">
+          {product ? product.product.name.en : "…"}
+        </span>
       </nav>
-
-      {notFound && (
-        <div className="rounded-[7px] border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
-          Opened directly, so live details couldn&apos;t be loaded — go back to Products and use View/Edit from the list.
-        </div>
-      )}
 
       {saved && (
         <div className="flex items-center gap-2 rounded-[7px] border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
-          <CheckCircle size={13} /> Changes saved (UI only — not yet sent to the server).
+          <CheckCircle size={13} /> Price &amp; stock updated successfully.
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <Link
-              href="/partner/dashboard/products"
-              className="w-9 h-9 rounded-[7px] border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] transition-all shrink-0 mt-0.5"
-            >
-              <ArrowLeft size={15} />
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-[7px] border border-gray-100 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
-                {image ? (
-                  <img src={image} alt={product.product.name.en} className="w-full h-full object-contain p-1" />
-                ) : (
-                  <Package size={18} className="text-gray-300" />
+      {/* Loading skeleton */}
+      {loading && (
+        <div className="space-y-5">
+          <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-9 h-9 rounded-[7px] bg-gray-100 animate-pulse shrink-0" />
+              <div className="w-16 h-16 rounded-[7px] bg-gray-100 animate-pulse shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
+                <div className="h-3 bg-gray-100 rounded animate-pulse w-1/3" />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {[0, 1].map((i) => (
+              <div key={i} className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5 space-y-4">
+                {[0, 1, 2, 3].map((j) => (
+                  <div key={j} className="h-8 bg-gray-100 rounded animate-pulse" />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {!loading && error && (
+        <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm py-16 text-center">
+          <AlertCircle size={36} className="mx-auto text-red-200 mb-3" />
+          <p className="text-sm font-semibold text-gray-400">Failed to load product details</p>
+          <button
+            onClick={fetchProduct}
+            className="mt-3 text-xs text-[#186737] hover:underline font-medium"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && product && (
+        <>
+          {/* Header */}
+          <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-4 min-w-0">
+                <Link
+                  href="/partner/dashboard/products"
+                  className="w-9 h-9 rounded-[7px] border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#186737] hover:text-[#186737] transition-all shrink-0 mt-0.5"
+                >
+                  <ArrowLeft size={15} />
+                </Link>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 rounded-[7px] border border-gray-100 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
+                    {product.product.image_urls?.en?.[0] ? (
+                      <img
+                        src={product.product.image_urls.en[0]}
+                        alt={product.product.name.en}
+                        className="w-full h-full object-contain p-1"
+                      />
+                    ) : (
+                      <Package size={18} className="text-gray-300" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-lg font-bold text-gray-900 leading-snug truncate">{product.product.name.en}</h1>
+                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">{product.vendor_sku}</p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#155c30] transition-colors shrink-0"
+              >
+                <Pencil size={13} /> Edit Price &amp; Stock
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Image gallery */}
+            {product.product.image_urls?.en?.length > 0 && (
+              <div className="lg:col-span-5 bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
+                <div className="w-full aspect-square rounded-[7px] border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={product.product.image_urls.en[activeImage]}
+                    alt={product.product.name.en}
+                    className="max-w-full max-h-full object-contain p-3"
+                  />
+                </div>
+                {product.product.image_urls.en.length > 1 && (
+                  <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
+                    {product.product.image_urls.en.map((img, i) => (
+                      <button
+                        key={img}
+                        onClick={() => setActiveImage(i)}
+                        className={`w-11 h-11 rounded-[7px] border shrink-0 overflow-hidden flex items-center justify-center transition-colors ${
+                          i === activeImage ? "border-[#186737] ring-2 ring-[#186737]/15" : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-contain p-1" />
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900 leading-snug">{product.product.name.en}</h1>
-                <p className="text-[11px] text-gray-400 font-mono mt-0.5">{product.vendor_sku}</p>
+            )}
+
+            <div className={`${product.product.image_urls?.en?.length > 0 ? "lg:col-span-7" : "lg:col-span-12"} space-y-5`}>
+              {/* Pricing & stock */}
+              <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="font-bold text-gray-900 text-sm">Pricing &amp; Stock</h2>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="text-[11px] font-semibold text-[#186737] hover:underline flex items-center gap-1"
+                  >
+                    <Pencil size={11} /> Edit
+                  </button>
+                </div>
+                <div className="p-5 grid grid-cols-2 gap-x-4 gap-y-4">
+                  <Field label="Cost per Item" prefix="$">
+                    <p className="text-sm font-bold text-gray-900">${fmt(Number(product.cost_per_item))}</p>
+                  </Field>
+                  <Field label="Shipping Charge" prefix="$">
+                    <p className="text-sm font-semibold text-gray-700">${fmt(Number(product.shipping_charge))}</p>
+                  </Field>
+                  <Field label="Inventory">
+                    <p className={`text-sm font-semibold ${product.inventory === 0 ? "text-red-600" : "text-gray-700"}`}>
+                      {product.inventory} units
+                    </p>
+                  </Field>
+                  <Field label="Stock Status">
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                        product.in_stock === 1 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {product.in_stock === 1 ? <CheckCircle size={10} /> : <XCircle size={10} />}
+                      {product.in_stock === 1 ? "In Stock" : "Out of Stock"}
+                    </span>
+                  </Field>
+                </div>
+              </div>
+
+              {/* Delivery & vendor info */}
+              <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                  <Truck size={14} className="text-gray-400" />
+                  <h2 className="font-bold text-gray-900 text-sm">Delivery &amp; Vendor</h2>
+                </div>
+                <div className="p-5 grid grid-cols-2 gap-x-4 gap-y-4">
+                  <Field label="Delivery Days">
+                    <p className="text-sm font-semibold text-gray-700">{product.delivery_days || "—"}</p>
+                  </Field>
+                  <Field label="Vendor">
+                    <p className="text-sm font-semibold text-gray-700">{product.vendor.name}</p>
+                  </Field>
+                  <Field label="Product SKU">
+                    <p className="text-sm font-mono text-gray-500">{product.product.sku}</p>
+                  </Field>
+                  <Field label="Return Policy">
+                    <p className="text-sm text-gray-700 whitespace-pre-line">{product.return_policy || "—"}</p>
+                  </Field>
+                </div>
               </div>
             </div>
           </div>
 
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#155c30] transition-colors shrink-0"
-            >
-              <Pencil size={13} /> Edit
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={handleCancel}
-                className="flex items-center gap-1.5 h-9 px-3 rounded-[7px] border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors"
-              >
-                <X size={13} /> Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex items-center gap-1.5 h-9 px-4 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#155c30] transition-colors"
-              >
-                <Save size={13} /> Save Changes
-              </button>
-            </div>
+          {isModalOpen && (
+            <EditPriceStockModal
+              product={product}
+              onClose={() => setIsModalOpen(false)}
+              onSaved={handleSaved}
+            />
           )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {/* Pricing & stock */}
-        <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="font-bold text-gray-900 text-sm">Pricing &amp; Stock</h2>
-          </div>
-          <div className="p-5 space-y-4">
-            <Field label="Cost per Item" prefix="$">
-              {isEditing ? (
-                <input
-                  type="number"
-                  step="0.01"
-                  value={costPerItem}
-                  onChange={(e) => setCostPerItem(e.target.value)}
-                  className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                />
-              ) : (
-                <p className="text-sm font-bold text-gray-900">${fmt(Number(costPerItem))}</p>
-              )}
-            </Field>
-
-            <Field label="Shipping Charge" prefix="$">
-              {isEditing ? (
-                <input
-                  type="number"
-                  step="0.01"
-                  value={shippingCharge}
-                  onChange={(e) => setShippingCharge(e.target.value)}
-                  className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                />
-              ) : (
-                <p className="text-sm font-semibold text-gray-700">${fmt(Number(shippingCharge))}</p>
-              )}
-            </Field>
-
-            <Field label="Inventory">
-              {isEditing ? (
-                <input
-                  type="number"
-                  min={0}
-                  value={inventory}
-                  onChange={(e) => setInventory(Number(e.target.value))}
-                  className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                />
-              ) : (
-                <p className={`text-sm font-semibold ${inventory === 0 ? "text-red-600" : "text-gray-700"}`}>{inventory} units</p>
-              )}
-            </Field>
-
-            <Field label="Stock Status">
-              {isEditing ? (
-                <button
-                  type="button"
-                  onClick={() => setInStock((v) => !v)}
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors ${inStock ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
-                >
-                  {inStock ? <CheckCircle size={10} /> : <XCircle size={10} />}
-                  {inStock ? "In Stock" : "Out of Stock"}
-                </button>
-              ) : (
-                <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${inStock ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
-                  {inStock ? <CheckCircle size={10} /> : <XCircle size={10} />}
-                  {inStock ? "In Stock" : "Out of Stock"}
-                </span>
-              )}
-            </Field>
-          </div>
-        </div>
-
-        {/* Shipping & vendor info */}
-        <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="font-bold text-gray-900 text-sm">Delivery &amp; Vendor</h2>
-          </div>
-          <div className="p-5 space-y-4">
-            <Field label="Delivery Days">
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={deliveryDays}
-                  onChange={(e) => setDeliveryDays(e.target.value)}
-                  className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10"
-                />
-              ) : (
-                <p className="text-sm font-semibold text-gray-700">{deliveryDays}</p>
-              )}
-            </Field>
-
-            <Field label="Return Policy">
-              {isEditing ? (
-                <textarea
-                  value={returnPolicy}
-                  onChange={(e) => setReturnPolicy(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 resize-none"
-                />
-              ) : (
-                <p className="text-sm text-gray-700 whitespace-pre-line">{returnPolicy}</p>
-              )}
-            </Field>
-
-            <Field label="Vendor">
-              <p className="text-sm font-semibold text-gray-700">{product.vendor.name}</p>
-            </Field>
-
-            <Field label="Product SKU">
-              <p className="text-sm font-mono text-gray-500">{product.product.sku}</p>
-            </Field>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
@@ -327,6 +310,140 @@ function Field({ label, prefix, children }: { label: string; prefix?: string; ch
         {prefix ? `${label} (${prefix})` : label}
       </label>
       {children}
+    </div>
+  );
+}
+
+// ── Edit modal ───────────────────────────────────────────────────────────────
+function EditPriceStockModal({
+  product,
+  onClose,
+  onSaved,
+}: {
+  product: VendorPriceProduct;
+  onClose: () => void;
+  onSaved: (updated: Pick<VendorPriceProduct, "cost_per_item" | "inventory" | "in_stock">) => void;
+}) {
+  const [costPerItem, setCostPerItem] = useState(product.cost_per_item);
+  const [inventory, setInventory] = useState(product.inventory);
+  const [inStock, setInStock] = useState(product.in_stock === 1);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await makeApiRequest<{ success: boolean; message?: string }>(
+        apiUrls.VENDOR_PRICE_DETAIL(product.id),
+        {
+          method: "PUT",
+          data: {
+            cost_per_item: Number(costPerItem),
+            inventory: Number(inventory),
+            in_stock: inStock,
+          },
+        }
+      );
+
+      if (res.success === false) {
+        setSaveError(res.message || "Failed to update. Please try again.");
+        return;
+      }
+
+      onSaved({
+        cost_per_item: String(costPerItem),
+        inventory: Number(inventory),
+        in_stock: inStock ? 1 : 0,
+      });
+    } catch {
+      setSaveError("Failed to update. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={saving ? undefined : onClose} />
+      <div className="relative bg-white rounded-[10px] shadow-xl w-full max-w-md overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="font-bold text-gray-900 text-sm">Edit Price &amp; Stock</h2>
+            <p className="text-[11px] text-gray-400 mt-0.5 truncate max-w-70">{product.product.name.en}</p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={saving}
+            className="w-8 h-8 rounded-[7px] flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors disabled:opacity-50"
+          >
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {saveError && (
+            <div className="flex items-center gap-2 rounded-[7px] border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+              <AlertCircle size={13} className="shrink-0" /> {saveError}
+            </div>
+          )}
+
+          <Field label="Cost per Item" prefix="$">
+            <input
+              type="number"
+              step="0.01"
+              min={0}
+              value={costPerItem}
+              onChange={(e) => setCostPerItem(e.target.value)}
+              disabled={saving}
+              className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 disabled:opacity-50"
+            />
+          </Field>
+
+          <Field label="Inventory">
+            <input
+              type="number"
+              min={0}
+              value={inventory}
+              onChange={(e) => setInventory(Number(e.target.value))}
+              disabled={saving}
+              className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 disabled:opacity-50"
+            />
+          </Field>
+
+          <Field label="Stock Status">
+            <button
+              type="button"
+              onClick={() => setInStock((v) => !v)}
+              disabled={saving}
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors disabled:opacity-50 ${
+                inStock ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+              }`}
+            >
+              {inStock ? <CheckCircle size={10} /> : <XCircle size={10} />}
+              {inStock ? "In Stock" : "Out of Stock"}
+            </button>
+          </Field>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            disabled={saving}
+            className="flex items-center gap-1.5 h-9 px-3 rounded-[7px] border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#155c30] transition-colors disabled:opacity-60"
+          >
+            {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
