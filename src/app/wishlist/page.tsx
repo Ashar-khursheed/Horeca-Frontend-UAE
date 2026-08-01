@@ -3,7 +3,6 @@
 import AddToCartWidget from "@/components/add-to-cart";
 import Breadcrumb from "@/components/breadcum";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import {
   fetchWishlist,
   hydrateGuestWishlist,
@@ -25,7 +24,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type WishlistItem = {
@@ -195,12 +193,10 @@ const WishlistCard = ({
   const hasSale = item.originalPrice > item.price;
   const discountPct = hasSale ? ((item.originalPrice - item.price) / item.originalPrice) * 100 : 0;
   const [priceInt, priceDec] = fmtPrice(item.price).split(".");
-  const dispatch = useDispatch()
   const handleRemove = () => {
     setRemoving(true);
     setTimeout(() => {
       onRemove(item.id);
-      dispatch(fetchCounts() as any);
     }, 280);
   };
 

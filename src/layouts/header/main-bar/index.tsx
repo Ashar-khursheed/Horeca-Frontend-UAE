@@ -39,6 +39,7 @@ import {
   clearWishlist,
   fetchWishlist,
 } from "@/store/slices/wishlist/wishlistSlice";
+import { hydrateCart } from "@/store/slices/cart/cartSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useLocationData } from "@/utils/locationStorage";
 import { usePathname, useRouter } from "next/navigation";
@@ -189,6 +190,13 @@ export default function NavigationStatic({
       dispatch(fetchWishlist());
     }
   }, [customer, dispatch]);
+
+  // Guest cart badge reads Redux `cart.items`, which starts empty until
+  // hydrated from localStorage — do it here so the header count is correct
+  // on first paint regardless of which page loaded first.
+  useEffect(() => {
+    dispatch(hydrateCart());
+  }, [dispatch]);
 
   // Priority: live API default → cached localStorage default → locationData
   const resolvedDefault = liveDefault ?? cachedDefault;
