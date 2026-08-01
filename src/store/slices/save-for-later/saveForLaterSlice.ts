@@ -139,6 +139,17 @@ const saveForLaterSlice = createSlice({
       saveGuestItems(state.guestItems);
     },
 
+    // Guest: unconditionally remove item (no-op if not present) — used when a
+    // product is added to cart and must no longer appear in Save for Later.
+    removeGuestSaveItem(state, action: PayloadAction<{ productId: number }>) {
+      const { productId } = action.payload;
+      if (state.guestItems.some((i) => i.productId === productId)) {
+        state.guestItems = state.guestItems.filter((i) => i.productId !== productId);
+        state.ids = state.ids.filter((id) => id !== productId);
+        saveGuestItems(state.guestItems);
+      }
+    },
+
     resetSaveForLaterFetch(state) {
       state.fetchStatus = "idle";
     },
@@ -218,6 +229,7 @@ const saveForLaterSlice = createSlice({
 export const {
   hydrateGuestSaveItems,
   toggleGuestSaveItem,
+  removeGuestSaveItem,
   resetSaveForLaterFetch,
   clearSaveForLater,
 } = saveForLaterSlice.actions;

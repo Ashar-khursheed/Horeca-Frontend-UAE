@@ -19,6 +19,8 @@ export type CartItem = {
   qty: number;
   inWishlist: boolean;
   url: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawProduct?: any;
 };
 
 export type SavedItem = {
@@ -46,6 +48,8 @@ export type SavedItem = {
   minQty?: number;
   isFixed?: boolean;
   altTags?: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawProduct?: any;
 };
 
 export const fmtPrice = (n: number) =>

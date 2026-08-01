@@ -64,7 +64,9 @@ export default function SavedProductCard({
 }) {
   const dispatch = useAppDispatch();
   const [isRemoving, setIsRemoving] = useState(false);
-  const product = toApiProduct(item);
+  // Prefer the true original raw product (full data) when available;
+  // only fall back to the reconstructed subset if it was never captured.
+  const product: ApiProduct = item.rawProduct ?? toApiProduct(item);
 
   const handleBeforeAdd = async () => {
     if (isLoggedIn) {

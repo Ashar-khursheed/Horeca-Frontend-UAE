@@ -126,6 +126,7 @@ const localItemToCartItem = (item: any): CartItem => ({
     price: parseFloat(String(a.price ?? 0)) || 0,
   })),
   inWishlist: false,
+  rawProduct: item.rawProduct,
 });
 
 // ── Map API save-for-later product → SavedItem ────────────────────────────────
@@ -161,6 +162,7 @@ const apiToSavedItem = (p: any): SavedItem => {
       Array.isArray(p.alt_tags) && p.alt_tags.length > 0
         ? p.alt_tags
         : undefined,
+    rawProduct: p,
   };
 };
 
@@ -341,7 +343,7 @@ export default function CartPage() {
   const cartProductIds = new Set<number>(
     isLoggedIn
       ? rawProducts.map((p: any) => p.product_id ?? p.id)
-      : reduxGuestItems.map((i: any) => i.id),
+      : reduxGuestItems.map((i: any) => i.productId),
   );
 
   const savedItems: SavedItem[] = (

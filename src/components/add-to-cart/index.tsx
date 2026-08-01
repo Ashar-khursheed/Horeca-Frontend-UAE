@@ -33,7 +33,7 @@ import {
   toggleGuestWishlistItem,
 } from "@/store/slices/wishlist/wishlistSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
-import { removeSaveForLater } from "@/store/slices/save-for-later/saveForLaterSlice";
+import { removeSaveForLater, removeGuestSaveItem } from "@/store/slices/save-for-later/saveForLaterSlice";
 import {
   getShippingCharge,
   getShippingChargeFromAddress,
@@ -404,6 +404,8 @@ export const AddToCartWidget = ({
           rawProduct: product,
         } as Parameters<typeof addItem>[0]),
       );
+      // If this product is in save-for-later, remove it automatically
+      dispatch(removeGuestSaveItem({ productId: product.id }));
       fireAddToCartGTM({ id: product.id, name, sku: product.sku ?? "", price: activePrice, quantity: count, vendorId, currencySymbol });
       onAddSuccess?.();
     }
@@ -539,6 +541,8 @@ export const AddToCartWidget = ({
           rawProduct: product,
         } as Parameters<typeof addItem>[0]),
       );
+      // If this product is in save-for-later, remove it automatically
+      dispatch(removeGuestSaveItem({ productId: product.id }));
       fireAddToCartGTM({ id: product.id, name, sku: product.sku ?? "", price: activePrice, quantity: minQty, vendorId, currencySymbol });
       onAddSuccess?.();
     }

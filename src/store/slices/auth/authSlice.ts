@@ -3,9 +3,10 @@ import { makeApiRequest, removeAuthToken, setAuthToken } from "@/apis/axios-inst
 import { apiUrls } from "@/apis/api-endpoint";
 import { setProfile, clearProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
-import { clearCart } from "@/store/slices/cart/cartSlice";
+import { clearCart, clearApiEntries } from "@/store/slices/cart/cartSlice";
 import { clearWishlist } from "@/store/slices/wishlist/wishlistSlice";
 import { clearCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { clearSaveForLater } from "@/store/slices/save-for-later/saveForLaterSlice";
 
 interface AuthState {
   loading: boolean;
@@ -81,8 +82,10 @@ export const logoutUser = createAsyncThunk(
       removeAuthToken();
       dispatch(clearProfile());
       dispatch(clearCart());
+      dispatch(clearApiEntries());
       dispatch(clearWishlist());
       dispatch(clearCounts());
+      dispatch(clearSaveForLater());
       localStorage.clear();
        if (typeof window !== "undefined") {
         window.location.href = "/login";
