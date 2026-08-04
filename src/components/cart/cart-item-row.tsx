@@ -3,7 +3,7 @@
 import { Bookmark, Calendar, Minus, Plus, Trash2, Truck } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { CartItem, fmtPrice } from "./cart-types";
+import { CartItem, fmtPrice, toAbsUrl } from "./cart-types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   hydrateGuestSaveItems,
@@ -74,7 +74,7 @@ export default function CartItemRow({
     <div className="flex gap-3 sm:gap-4 group">
       {/* Image */}
       <Link
-      href={`${item.url}`}
+      href={toAbsUrl(item.url)}
         className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-[7px] bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center"
       >
         {hasSale && (
@@ -99,7 +99,7 @@ export default function CartItemRow({
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
               {/* {item.name} */}
-              <Link href={`${item.url}`} className="text-[#186737] hover:underline">
+              <Link href={toAbsUrl(item.url)} className="text-[#186737] hover:underline">
                 {item.name}
               </Link>
             </h3>

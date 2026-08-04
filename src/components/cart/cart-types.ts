@@ -58,4 +58,13 @@ export const fmtPrice = (n: number) =>
     maximumFractionDigits: 2,
   });
 
+// Product URLs from the API sometimes arrive without a leading slash. Next.js
+// <Link> resolves a relative href against the current path, so on a cart page
+// (e.g. /cart/123) that turns "refrigeration/..." into "/cart/refrigeration/...".
+// Always force it absolute.
+export const toAbsUrl = (url: string | undefined | null): string => {
+  if (!url || url === "#") return "#";
+  return url.startsWith("/") ? url : `/${url}`;
+};
+
 export const TAX_RATE = 0.0825;

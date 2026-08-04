@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { SavedItem, fmtPrice } from "./cart-types";
+import { SavedItem, fmtPrice, toAbsUrl } from "./cart-types";
 
 const RatingStars = ({ rating }: { rating: number }) => (
   <div className="flex items-center gap-0.5">
@@ -57,7 +57,7 @@ export default function SavedItemRow({
 
       {/* Image */}
       <Link
-        href={item.url}
+        href={toAbsUrl(item.url)}
         className="relative shrink-0 w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[7px] bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center"
       >
         {hasSale && (
@@ -78,7 +78,7 @@ export default function SavedItemRow({
 
       {/* Middle — name + meta */}
       <div className="flex-1 min-w-0">
-        <Link href={item.url}>
+        <Link href={toAbsUrl(item.url)}>
           <p className="text-sm font-semibold text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
             {item.name}
           </p>
