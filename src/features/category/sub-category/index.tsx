@@ -150,8 +150,6 @@ export default function SubCategoryPage({
   const rangeFiltersData = subCategoryPage?.rangeFilters;
   const fixedFiltersData = subCategoryPage?.fixedFilters;
 
-  
-
   // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
   const unitMap: Record<number, number> = Object.fromEntries(
     Object.values(rangeFiltersData ?? {})
@@ -159,11 +157,33 @@ export default function SubCategoryPage({
       .map((f) => [f.attribute_id, f.unit_id as number]),
   );
 
-  // Children of the currently active subcategory shown in the swiper
-  const activeSubCategory = subCategories.find(
-    (cat) => cat.slug === subCategorySlug,
-  );
-  const childCategories = activeSubCategory?.children ?? [];
+  // Prefer categories from the filters API (correct for any nesting depth).
+  // Fall back to a recursive search in the navigation tree — a shallow
+  // `.find()` only matches top-level children and misses grandchildren.
+  const findCategoryBySlug = (
+    cats: ApiCategory[],
+    slug: string,
+  ): ApiCategory | undefined => {
+    for (const cat of cats) {
+      if (cat.slug === slug) return cat;
+      const found = findCategoryBySlug(cat.children ?? [], slug);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  const pageCategories = subCategoryPage?.categories ?? [];
+  const childCategories: ApiCategory[] =
+    pageCategories.length > 0
+      ? pageCategories.map((c) => ({
+          id: c.id,
+          parent_id: null,
+          order: 0,
+          name: c.name,
+          slug: c.url,
+          image_url: c.icon_image,
+          children: [],
+        }))
+      : (findCategoryBySlug(subCategories, subCategorySlug)?.children ?? []);
 
   const crumbs = [
     { label: "Home", href: "/" },
@@ -191,13 +211,20 @@ export default function SubCategoryPage({
   // useSearchParams already decodes the value, so no extra decoding needed
   const initBrands = (
     searchParams.get("brands")?.split(",").filter(Boolean) ?? []
-  ).map((entry) => {
-    const colonIdx = entry.indexOf(":");
-    return {
-      id: Number(entry.slice(0, colonIdx)),
-      name: entry.slice(colonIdx + 1),
-    };
-  });
+  )
+    .map((entry) => {
+      const colonIdx = entry.indexOf(":");
+      if (colonIdx < 0) {
+        const id = Number(entry);
+        return Number.isFinite(id) && id > 0
+          ? { id, name: entry }
+          : null;
+      }
+      const id = Number(entry.slice(0, colonIdx));
+      if (!Number.isFinite(id) || id <= 0) return null;
+      return { id, name: entry.slice(colonIdx + 1) };
+    })
+    .filter((b): b is { id: number; name: string } => b != null);
   const rawMin = searchParams.get("min")
     ? Number(searchParams.get("min"))
     : apiPriceMin;
@@ -261,6 +288,10 @@ export default function SubCategoryPage({
       if (!cancelled && remaining <= 0) setChildImagesReady(true);
     };
     childCategories.forEach((child) => {
+      if (!child.image_url) {
+        done();
+        return;
+      }
       const img = new window.Image();
       img.onload = done;
       img.onerror = done;
@@ -281,7 +312,7 @@ export default function SubCategoryPage({
   const [displayPage, setDisplayPage]   = useState(currentPage);
   const [isFetching, setIsFetching]     = useState(false);
 
-  // Sync productsData into display state if a real navigation re-mounts with fresh SSR props
+  // Sync productsData into display state when soft-nav updates SSR props without remount
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
@@ -289,8 +320,9 @@ export default function SubCategoryPage({
       setDisplayProducts(productsData.products);
       setDisplayTotal(productsData.total_records ?? productsData.products.length ?? 0);
       setDisplayTotalPages(productsData.total_pages ?? (Math.ceil((productsData.total_records ?? 0) / 20) || 1));
+      setDisplayPage(currentPage);
     }
-  }, [productsData]);
+  }, [productsData, currentPage]);
 
   // ── Sync filters → URL + fetch products client-side ──────────────────────────
   const pushURL = useCallback(
@@ -492,7 +524,7 @@ export default function SubCategoryPage({
 
   return (
 <>
-    <main className="min-h-screen bg-gray-5p0">
+    <main className="min-h-screen bg-gray-50">
       <Breadcrumb crumbs={crumbs} />
 
       <div className="global-container ">
