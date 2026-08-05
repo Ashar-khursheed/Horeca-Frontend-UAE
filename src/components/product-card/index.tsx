@@ -191,6 +191,14 @@ const resolveCurrencySymbol = (c: CurrencyField): string => {
   return c.symbol ?? c.name ?? "AED";
 };
 
+// for_quotes API se boolean (false) ya number (0) dono form mein aa sakta hai.
+// Explicit false/0 => price chhupao, "Request A Quote" dikhao. Missing/true/1 => normal price.
+const isQuoteHidden = (v: unknown): boolean => {
+  if (v === undefined || v === null) return false;
+  if (typeof v === "string") return v === "0" || v.toLowerCase() === "false";
+  return v === false || v === 0;
+};
+
 interface ProductCardProps {
   product: ApiProduct | RawApiProduct;
   newUrl?: string;
@@ -378,9 +386,7 @@ export const ProductCard = ({
   const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
   const isFixed =
     product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
-  const isQuote = !!(
-    product.quote_available ?? (product as RawApiProduct).for_quotes
-  );
+  const isQuote = isQuoteHidden((product as RawApiProduct).for_quotes);
 
   // Hydrate guest wishlist from localStorage (guarded inside reducer — runs once)
   // and seed logged-in wishlist from product's in_wishlist field

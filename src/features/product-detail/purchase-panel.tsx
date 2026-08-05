@@ -30,6 +30,14 @@ const fmtPrice = (n: number) =>
     maximumFractionDigits: 2,
   });
 
+// for_quotes API se boolean (false) ya number (0) dono form mein aa sakta hai.
+// Explicit false/0 => price chhupao, "Request A Quote" dikhao. Missing/true/1 => normal price.
+export const isQuoteHidden = (v: unknown): boolean => {
+  if (v === undefined || v === null) return false;
+  if (typeof v === "string") return v === "0" || v.toLowerCase() === "false";
+  return v === false || v === 0;
+};
+
 type PurchasePanelProps = {
   activePrice: number;
   activeOriginal: number;
@@ -64,6 +72,8 @@ export const PurchasePanel = ({
   productData,
 }: PurchasePanelProps) => {
   // Per-accessory selections: { [accessoryId]: selectedItem | null }
+
+  console.log("productDataproductData",productData)
   const [selectedItems, setSelectedItems] = useState<
     Record<number, AccessoryItem | null>
   >({});
@@ -112,7 +122,7 @@ export const PurchasePanel = ({
       <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-5 md:block hidden">
         {/* Price */}
 
-        {productData?.quote_available ? (
+        {isQuoteHidden(productData?.for_quotes) ? (
           <>
             {" "}
             <div style={{ minHeight: "62px" }}>
@@ -252,7 +262,7 @@ export const PurchasePanel = ({
             accessoryItemIds={selectedItemIds}
             wrapperClassName="flex items-center gap-2 mb-2"
             counterClassName="flex items-center border border-[#BCE3C9] rounded-[7px] overflow-hidden bg-white shrink-0 h-11 w-[90px]"
-            buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${productData?.quote_available ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"}`}
+            buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${isQuoteHidden(productData?.for_quotes) ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"}`}
           />
         </div>
       </div>

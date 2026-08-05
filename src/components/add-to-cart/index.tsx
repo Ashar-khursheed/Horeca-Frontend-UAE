@@ -68,6 +68,14 @@ const resolveCurrencySymbol = (
   return c.symbol ?? c.name ?? "AED";
 };
 
+// for_quotes API se boolean (false) ya number (0) dono form mein aa sakta hai.
+// Explicit false/0 => price chhupao, "Request A Quote" dikhao. Missing/true/1 => normal price.
+const isQuoteHidden = (v: unknown): boolean => {
+  if (v === undefined || v === null) return false;
+  if (typeof v === "string") return v === "0" || v.toLowerCase() === "false";
+  return v === false || v === 0;
+};
+
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
   try {
@@ -148,9 +156,7 @@ export const AddToCartWidget = ({
   const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
   const isFixed =
     product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
-  const isQuote = !!(
-    product.quote_available ?? (product as RawApiProduct).for_quotes
-  );
+  const isQuote = isQuoteHidden((product as RawApiProduct).for_quotes);
   const vendorId = supplier0?.vendor_id ?? 0;
   const showCounter = showCounterProp ?? !isQuote;
   const cartId = useCartId();

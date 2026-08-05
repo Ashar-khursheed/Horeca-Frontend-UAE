@@ -150,6 +150,7 @@ export default function SubCategoryPage({
   const rangeFiltersData = subCategoryPage?.rangeFilters;
   const fixedFiltersData = subCategoryPage?.fixedFilters;
 
+  console.log("SubCategoryPage render", productsData)
   // unit_id lookup map: attrId → unit_id (from SSR filter data, stable)
   const unitMap: Record<number, number> = Object.fromEntries(
     Object.values(rangeFiltersData ?? {})
