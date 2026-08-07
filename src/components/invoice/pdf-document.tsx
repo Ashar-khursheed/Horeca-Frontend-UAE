@@ -372,7 +372,7 @@ const Header = () => (
       <Text style={S.headerRightBold}>THE HORECA STORE INC.</Text>
       <Text style={S.headerRightText}>8800 Bissonnet Street, Ste A,</Text>
       <Text style={S.headerRightText}>Houston, Texas 77074</Text>
-      <Text style={S.headerRightText}>Phone: 1 (866) 446-7322</Text>
+      <Text style={S.headerRightText}>Phone: (866) 446-7322</Text>
       <Text style={S.headerRightText}>Email: sales@thehorecastore.com</Text>
       <Text style={[S.headerRightText, S.footerGreen]}>www.thehorecastore.com</Text>
     </View>
@@ -867,7 +867,10 @@ export const InvoicePdfDocument = ({ order }: InvoicePdfDocumentProps) => {
       ? "Check"
       : (() => {
           const mode = order.payments[0]?.payment_mode ?? order.payment_mode ?? "";
-          return mode.toLowerCase() === "square" ? "Credit Debit Card" : (mode || "Credit Debit Card");
+          const lower = mode.toLowerCase();
+          if (lower === "square") return "Credit Debit Card";
+          if (lower === "cheque") return "Check";
+          return mode || "Credit Debit Card";
         })();
 
   const allProducts = order.order_products ?? [];
