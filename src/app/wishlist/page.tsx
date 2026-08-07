@@ -2,6 +2,14 @@
 
 import AddToCartWidget from "@/components/add-to-cart";
 import Breadcrumb from "@/components/breadcum";
+import { Modal } from "@/components/ui/modal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchWishlist,
@@ -17,6 +25,7 @@ import {
   Package,
   RotateCcw,
   Share2,
+  ShieldCheck,
   ShoppingBag,
   Star,
   Truck,
@@ -200,6 +209,23 @@ const WishlistCard = ({
     }, 280);
   };
 
+  // ── Accessories modal (mirrors product-card behaviour) ──────────────────
+  const rawAccessories =
+    item.rawProduct?.accessories ?? item.rawProduct?.product_accessories ?? [];
+  const hasRequiredAccessories =
+    rawAccessories.some((a: { is_required?: number }) => a.is_required === 1) ||
+    !!item.rawProduct?.is_accessory_required;
+  const [accessoryModalOpen, setAccessoryModalOpen] = useState(false);
+  const [selectedAccItems, setSelectedAccItems] = useState<Record<number, number | null>>({});
+  const [accShowErrors, setAccShowErrors] = useState(false);
+  const accCanAddToCart = rawAccessories.every(
+    (a: { id: number; is_required?: number }) =>
+      a.is_required !== 1 || selectedAccItems[a.id] != null,
+  );
+  const selectedAccessoryIds = Object.values(selectedAccItems).filter(
+    (v): v is number => v != null,
+  );
+
   return (
     <div
       className={`group bg-white rounded-[7px] border border-gray-100 shadow-sm hover:shadow-md hover:border-[#c3e6d4] transition-all duration-300 overflow-hidden ${
@@ -302,15 +328,133 @@ const WishlistCard = ({
               )}
             </div>
 
-            <AddToCartWidget
-              product={item.rawProduct}
-              showCounter={false}
-              isWishlist={true}
-              onAddedToCart={onAddedToCart}
-              wrapperClassName="flex gap-2 items-center justify-end"
-              buttonClassName="flex items-center gap-1 px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-[7px] text-[10px] sm:text-sm font-semibold bg-[#186737] hover:bg-[#145c30] text-white transition-colors whitespace-nowrap"
-            />
+            <div
+              onClickCapture={(e) => {
+                if (hasRequiredAccessories && !accessoryModalOpen) {
+                  e.stopPropagation();
+                  setAccessoryModalOpen(true);
+                }
+              }}
+            >
+              <AddToCartWidget
+                product={item.rawProduct}
+                accessoryItemIds={selectedAccessoryIds}
+                showCounter={false}
+                isWishlist={true}
+                onAddedToCart={onAddedToCart}
+                wrapperClassName="flex gap-2 items-center justify-end"
+                buttonClassName="flex items-center gap-1 px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-[7px] text-[10px] sm:text-sm font-semibold bg-[#186737] hover:bg-[#145c30] text-white transition-colors whitespace-nowrap"
+              />
+            </div>
           </div>
+
+          {/* Accessories Modal — required before adding to cart from wishlist */}
+          <Modal
+            isOpen={accessoryModalOpen}
+            onClose={() => {
+              setAccessoryModalOpen(false);
+              setAccShowErrors(false);
+              setSelectedAccItems({});
+            }}
+            title="Product Accessories"
+            width="max-w-md"
+            showFooter={false}
+            zIndex
+          >
+            <div className="flex items-center gap-3 pb-4 mb-4 border-b border-gray-100">
+              {item.image && (
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-14 h-14 object-contain rounded-[7px] border border-gray-100 bg-gray-50"
+                />
+              )}
+              <div>
+                <p className="text-sm font-semibold text-gray-900 line-clamp-2">{item.name}</p>
+                {item.modelNo && (
+                  <p className="text-xs text-gray-400 mt-0.5">Model No: {item.modelNo}</p>
+                )}
+              </div>
+            </div>
+
+            {rawAccessories.map(
+              (acc: {
+                id: number;
+                is_required?: number;
+                name: unknown;
+                accessory_item?: { id: number; name: unknown; price: number }[];
+                accessory_types?: { id: number; name: unknown; price: number }[];
+              }) => {
+                const isRequired = acc.is_required === 1;
+                const hasError =
+                  accShowErrors && isRequired && selectedAccItems[acc.id] == null;
+                const accName = resolveStr(acc.name);
+                return (
+                  <div key={acc.id} className="mb-4">
+                    <p className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1.5">
+                      <ShieldCheck
+                        size={15}
+                        className={isRequired ? "text-red-500 shrink-0" : "text-[#186737] shrink-0"}
+                      />
+                      <span className="capitalize">{accName}</span>
+                      {isRequired && <span className="text-red-500 text-xs font-normal">*</span>}
+                    </p>
+                    <Select
+                      value={selectedAccItems[acc.id]?.toString() ?? ""}
+                      onValueChange={(val) => {
+                        setSelectedAccItems((prev) => ({ ...prev, [acc.id]: Number(val) }));
+                        if (val) setAccShowErrors(false);
+                      }}
+                    >
+                      <SelectTrigger
+                        className={`w-full h-10 text-sm focus:ring-[#186737] ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`}
+                      >
+                        <SelectValue placeholder={`Select ${accName}…`} />
+                      </SelectTrigger>
+                      <SelectContent className="z-10000">
+                        {(acc.accessory_item ?? acc.accessory_types ?? []).map((opt) => (
+                          <SelectItem key={opt.id} value={opt.id.toString()}>
+                            {resolveStr(opt.name)} — +
+                            {Number(opt.price).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {hasError && (
+                      <p className="text-xs text-red-500 mt-1">Please select {accName}</p>
+                    )}
+                  </div>
+                );
+              },
+            )}
+
+            <div
+              onClickCapture={(e) => {
+                if (!accCanAddToCart) {
+                  e.stopPropagation();
+                  setAccShowErrors(true);
+                }
+              }}
+            >
+              <AddToCartWidget
+                product={item.rawProduct}
+                accessoryItemIds={selectedAccessoryIds}
+                showCounter={false}
+                isWishlist={true}
+                onAddedToCart={(id) => {
+                  setAccessoryModalOpen(false);
+                  setAccShowErrors(false);
+                  setSelectedAccItems({});
+                  onAddedToCart(id);
+                }}
+                wrapperClassName="flex gap-2 items-center w-full mt-2"
+                buttonClassName="flex-1 h-11 rounded-[7px] text-sm font-bold text-white bg-[#186737] hover:bg-[#145c30]"
+              />
+            </div>
+          </Modal>
 
           <div className="sm:hidden mt-2 flex items-center  gap-1 text-[10px] text-gray-400">
             <Truck size={10} className="text-[#186737] shrink-0" />

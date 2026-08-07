@@ -16,7 +16,11 @@
       "Bash(curl -s -X POST https://test-us.thehorecastore.co/api/frontend/products/filters/get-products -H 'Content-Type: application/json' -d '{\"category_url\":\"bottle-cooler\",\"page\":1,\"length\":5,\"sort_by\":\"price\",\"sort_dir\":\"asc\",\"applied_filters\":{},\"applied_range_filters\":[{}],\"applied_fixed_filters\":[{}],\"locale\":\"en\"}' -o /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad/resp.json)",
       "Bash(python3 -c ' *)",
       "Bash(curl -s https://test-us.thehorecastore.co/api/frontend/search?q=walk+in+cooler -o /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad/search1.json)",
-      "Bash(curl -s https://test-us.thehorecastore.co/api/frontend/brands/featured-products -o /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad/brandfeat.json)"
+      "Bash(curl -s https://test-us.thehorecastore.co/api/frontend/brands/featured-products -o /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad/brandfeat.json)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(wc -l /tmp_tsc_out.txt)",
+      "Bash(head -n 60 /tmp_tsc_out.txt)"
     ]
   }
 }
