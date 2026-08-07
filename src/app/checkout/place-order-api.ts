@@ -58,7 +58,7 @@ async function processSquarePayment(token: string, amount: number) {
     method: "POST",
     data: { source_id: token, amount, idempotency_key: idempotencyKey },
   })) as any;
-  if (!res?.success) throw new Error(res?.message ?? "Payment failed. Please try again.");
+  if (!res?.success) throw new Error("Payment failed. Please try again.");
   return res;
 }
 
