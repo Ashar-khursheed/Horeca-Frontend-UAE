@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e \"const p = require\\('c:/Arshad/Arshad-All-Personal/Arshad Khan/Horeca-NextJS-FRONTEND/node_modules/swiper/package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.exports || {}\\).filter\\(k => k.includes\\('css'\\) || k.includes\\('pagination'\\)\\), null, 2\\)\\)\")"
+      "Bash(node -e \"const p = require\\('c:/Arshad/Arshad-All-Personal/Arshad Khan/Horeca-NextJS-FRONTEND/node_modules/swiper/package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.exports || {}\\).filter\\(k => k.includes\\('css'\\) || k.includes\\('pagination'\\)\\), null, 2\\)\\)\")",
+      "Bash(curl -s \"https://test-us.thehorecastore.co/api/frontend/products?limit=3\")",
+      "Bash(curl -s \"https://test-us.thehorecastore.co/api/frontend/search?q=Aug%20Test%20Product\")",
+      "Bash(curl -s \"https://test-us.thehorecastore.co/api/frontend/products/filters/get-products?page=1\")",
+      "Bash(curl -s -X POST \"https://test-us.thehorecastore.co/api/frontend/products/filters/get-products\" -H \"Content-Type: application/json\" -H \"Accept: application/json\" -d '{\"page\":1,\"length\":3,\"locale\":\"en\",\"applied_filters\":[],\"applied_range_filters\":[{}],\"applied_fixed_filters\":[{}]}')",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);ps=d.get\\('products'\\) or [];print\\('count',len\\(ps\\)\\);[print\\({k:v for k,v in p.items\\(\\) if 'quote' in k or k in \\('id','name','sku'\\)}\\) for p in ps[:5]]\")",
+      "Bash(curl -s -X POST \"https://test-us.thehorecastore.co/api/frontend/products/filters/get-products\" -H \"Content-Type: application/json\" -d '{\"category_url\":\"kitchen-equipment\",\"page\":1,\"length\":5,\"sort_by\":\"price\",\"sort_dir\":\"asc\",\"applied_filters\":{},\"applied_range_filters\":[{}],\"applied_fixed_filters\":[{}],\"locale\":\"en\"}')",
+      "Bash(curl -s -X POST \"https://test-us.thehorecastore.co/api/frontend/products/filters/get-products\" -H \"Content-Type: application/json\" -d '{\"category_url\":\"bottle-cooler\",\"page\":1,\"length\":5,\"sort_by\":\"price\",\"sort_dir\":\"asc\",\"applied_filters\":{},\"applied_range_filters\":[{}],\"applied_fixed_filters\":[{}],\"locale\":\"en\"}')",
+      "Bash(wc -c /tmp_resp.json)",
+      "Bash(head -c 3000 /tmp_resp.json)",
+      "Bash(curl -s -X POST \"https://test-us.thehorecastore.co/api/frontend/products/filters/get-products\" -H \"Content-Type: application/json\" -d '{\"category_url\":\"bottle-cooler\",\"page\":1,\"length\":5,\"sort_by\":\"price\",\"sort_dir\":\"asc\",\"applied_filters\":{},\"applied_range_filters\":[{}],\"applied_fixed_filters\":[{}],\"locale\":\"en\"}' -o resp.json)",
+      "Bash(mkdir -p /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad)",
+      "Bash(curl -s -X POST https://test-us.thehorecastore.co/api/frontend/products/filters/get-products -H 'Content-Type: application/json' -d '{\"category_url\":\"bottle-cooler\",\"page\":1,\"length\":5,\"sort_by\":\"price\",\"sort_dir\":\"asc\",\"applied_filters\":{},\"applied_range_filters\":[{}],\"applied_fixed_filters\":[{}],\"locale\":\"en\"}' -o /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad/resp.json)",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s https://test-us.thehorecastore.co/api/frontend/search?q=walk+in+cooler -o /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad/search1.json)",
+      "Bash(curl -s https://test-us.thehorecastore.co/api/frontend/brands/featured-products -o /c/Users/arsha/AppData/Local/Temp/claude/c--Arshad-Arshad-All-Personal-Arshad-Khan-Horeca-NextJS-FRONTEND/61f3aec2-70d4-4824-bfb7-c53ca9fe82c5/scratchpad/brandfeat.json)"
     ]
   }
 }

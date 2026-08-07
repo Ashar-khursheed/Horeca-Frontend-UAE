@@ -203,6 +203,12 @@ export default async function SubCategorySlugPage({
     ...priceFilter,
   };
 
+  // API expects [{}] as the empty sentinel (same as buildFilterBody / client pushURL)
+  const rangeFiltersPayload =
+    applied_range_filters.length > 0 ? applied_range_filters : [{}];
+  const fixedFiltersPayload =
+    applied_fixed_filters.length > 0 ? applied_fixed_filters : [{}];
+
   const productsBody = {
     category_url: subCategorySlug,
     page: currentPage,
@@ -210,16 +216,16 @@ export default async function SubCategorySlugPage({
     sort_by,
     sort_dir,
     applied_filters: appliedFilters,
-    applied_range_filters,
-    applied_fixed_filters,
+    applied_range_filters: rangeFiltersPayload,
+    applied_fixed_filters: fixedFiltersPayload,
     locale: "en",
   };
 
   const filtersBody = {
     category_url: subCategorySlug,
     applied_filters: appliedFilters,
-    applied_range_filters,
-    applied_fixed_filters,
+    applied_range_filters: rangeFiltersPayload,
+    applied_fixed_filters: fixedFiltersPayload,
     locale: "en",
   };
 
@@ -264,13 +270,6 @@ export default async function SubCategorySlugPage({
         ? JSON.stringify(schemaObj)
         : undefined;
 
-        console.log("api response", {
-          navigationRes,
-          subCategoryPageRes,
-          productsRes
-        })
-
-
   if (!subCategoryPageRes?.success) notFound();
   if (!navigationRes || !navigationRes.data?.length) notFound();
 
@@ -278,6 +277,7 @@ export default async function SubCategorySlugPage({
     <div>
       <ProductJsonLd schema={schema} />
       <SubCategoryPage
+        key={`${categorySlug}/${subCategorySlug}`}
         subCategories={subCategories}
         categorySlug={categorySlug}
         subCategorySlug={subCategorySlug}

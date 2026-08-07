@@ -324,6 +324,7 @@ type ReviewsSectionProps = {
   reviews: Review[];
   ratingDist: RatingDist[];
   productId: number;
+  hasReviewed?: boolean;
 };
 
 // ─── Rating Stars ─────────────────────────────────────────────────────────────
@@ -604,6 +605,7 @@ export const ReviewsSection = ({
   reviews,
   ratingDist,
   productId,
+  hasReviewed = false,
 }: ReviewsSectionProps) => {
   const [reviewFilter, setReviewFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("top");
@@ -706,13 +708,15 @@ export const ReviewsSection = ({
               ))}
             </ol>
           </div>
-          <button
-            onClick={() => setReviewModalOpen(true)}
-            className="bg-[#186737] md:hidden block px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
-          >
-            <MessageCircle size={15} strokeWidth={2} />
-            Leave a Review
-          </button>
+          {!hasReviewed && (
+            <button
+              onClick={() => setReviewModalOpen(true)}
+              className="bg-[#186737] md:hidden block px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
+            >
+              <MessageCircle size={15} strokeWidth={2} />
+              Leave a Review
+            </button>
+          )}
         </div>
 
         {/* ── Right ────────────────────────────────────────────────── */}

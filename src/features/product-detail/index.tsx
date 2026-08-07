@@ -4,6 +4,8 @@ import Breadcrumb from "@/components/breadcum";
 import { ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
 
@@ -179,6 +181,15 @@ const ProductDetailPage = ({
     stars,
     count: reviews.filter((r) => r.rating === stars).length,
   }));
+
+  // Ek customer ek product par sirf ek hi review de sakta hai — agar already de chuka hai to button chhupao
+  const customer = useSelector((s: RootState) => s.profile.customer);
+  const hasReviewed = !!(
+    customer?.email &&
+    (productData.reviews ?? []).some(
+      (r) => r.customer_email?.toLowerCase() === customer.email.toLowerCase(),
+    )
+  );
 
   const [selectedVariants, setSelectedVariants] = useState<
     Record<string, VariantItem>
@@ -365,13 +376,15 @@ const ProductDetailPage = ({
                   used this product.
                 </p>
               </div>
-              <button
-                onClick={() => setReviewModalOpen(true)}
-                className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
-              >
-                <MessageCircle size={15} strokeWidth={2} />
-                Leave a Review
-              </button>
+              {!hasReviewed && (
+                <button
+                  onClick={() => setReviewModalOpen(true)}
+                  className="bg-[#186737] px-4 hover:bg-[#145c30] text-white text-sm font-bold py-2.5 rounded-[7px] transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageCircle size={15} strokeWidth={2} />
+                  Leave a Review
+                </button>
+              )}
             </div>
             {reviews.length > 0 && (
               <div className={`p-6 ${openReviews ? "block" : "hidden"} md:block`}>
@@ -380,6 +393,7 @@ const ProductDetailPage = ({
                   reviews={reviews}
                   ratingDist={ratingDist}
                   productId={productData.id}
+                  hasReviewed={hasReviewed}
                 />
               </div>
             )}

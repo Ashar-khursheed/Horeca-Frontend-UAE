@@ -136,7 +136,7 @@ export const QASection = ({ items, productId }: QASectionProps) => {
                   {qa.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-sm text-gray-600 leading-relaxed px-2">
-                  {qa.answer}
+                  <div dangerouslySetInnerHTML={{ __html: qa.answer }} />
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -149,7 +149,7 @@ export const QASection = ({ items, productId }: QASectionProps) => {
                   {qa.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-sm text-gray-600 leading-relaxed px-2">
-                  {qa.answer}
+                  <div dangerouslySetInnerHTML={{ __html: qa.answer }} />
                 </AccordionContent>
               </AccordionItem>
             ))}
