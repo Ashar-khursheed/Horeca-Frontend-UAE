@@ -70,6 +70,7 @@ function mapProduct(p: SearchProduct): ApiProduct {
     min_quantity: s0?.min_quantity ?? 1,
     is_fixed: s0?.is_fixed ? 1 : 0,
     quote_available: p.quote_available == null ? null : p.quote_available ? 1 : 0,
+    for_quotes: p.quote_available ? 1 : 0,
     selling_type: {
       attribute_value: typeof p.selling_type?.attribute_value === "object"
         ? (p.selling_type.attribute_value?.en ?? "")
@@ -106,7 +107,7 @@ export default function SearchFeature({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-
+console.log("SearchFeature initialData:", initialData);
   const query = searchParams.get("q") ?? initialQuery;
   const submitted = !!query;
 

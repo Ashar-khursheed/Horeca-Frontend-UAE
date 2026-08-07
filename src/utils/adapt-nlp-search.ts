@@ -21,6 +21,13 @@ export interface NlpSearchProduct {
   quote_available: number | null;
   is_fixed: number;
   min_quantity: number;
+  is_accessory_required?: boolean;
+  product_accessories?: {
+    id: number;
+    is_required: number;
+    name: { en?: string; ar?: string } | string;
+    accessory_types?: { id: number; name: { en?: string; ar?: string } | string; price: number }[];
+  }[];
 }
 
 export interface NlpSearchCategory {
@@ -81,6 +88,16 @@ export function toSearchSuggestions(raw: NlpSearchResponse): SearchSuggestions {
     quote_available: p.quote_available == null ? null : !!p.quote_available,
     isRequired: p.isRequired,
     in_wishlist: p.in_wishlist,
+    accessories: (p.product_accessories ?? []).map((acc) => ({
+      id: acc.id,
+      name: acc.name,
+      is_required: acc.is_required,
+      accessory_item: (acc.accessory_types ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+      })),
+    })),
     selling_type: {
       attribute_value: { en: "", ar: "" },
       attribute_value_unit: { en: p.selling_unit ?? "", ar: p.selling_unit ?? "" },

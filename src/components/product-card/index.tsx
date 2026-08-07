@@ -63,6 +63,7 @@ export interface ApiProduct {
   min_quantity: number;
   is_fixed: number;
   quote_available: number | null;
+  for_quotes?: number | boolean;
   selling_type: { attribute_value: string; attribute_value_unit: string };
   free_shipping: number;
   return_policy: string;
@@ -657,29 +658,33 @@ export const ProductCard = ({
             )}
           </div>
         ) : (
-          <TickerBadge />
+          !isQuote && <TickerBadge />
         )}
 
-        {/* Shipping row */}
-        <p className="mt- text-[12.5px] font-semibold text-[#4B5563] hidden md:flex items-center gap-1">
-          <Truck size={13} className="text-[#186737] flex-shrink-0" />
-          Shipping charges apply
-        </p>
-        <p className="mt- text-[12.5px] font-semibold text-[#4B5563] md:hidden flex items-center gap-1">
-          <Truck size={13} className="text-[#186737] flex-shrink-0" />
-          Shipping Fee
-        </p>
+        {!isQuote && (
+          <>
+            {/* Shipping row */}
+            <p className="mt- text-[12.5px] font-semibold text-[#4B5563] hidden md:flex items-center gap-1">
+              <Truck size={13} className="text-[#186737] flex-shrink-0" />
+              Shipping charges apply
+            </p>
+            <p className="mt- text-[12.5px] font-semibold text-[#4B5563] md:hidden flex items-center gap-1">
+              <Truck size={13} className="text-[#186737] flex-shrink-0" />
+              Shipping Fee
+            </p>
 
-        {/* Ships in X Days */}
-        <p className="mt-1 text-[12.5px] text-[#4B5563]">
-          {deliveryDays ? (
-            <span className="font-bold text-gray-900">
-              Mostly Ships in {deliveryDays}
-            </span>
-          ) : (
-            <span className="font-semibold">Now Shipping Faster</span>
-          )}
-        </p>
+            {/* Ships in X Days */}
+            <p className="mt-1 text-[12.5px] text-[#4B5563]">
+              {deliveryDays ? (
+                <span className="font-bold text-gray-900">
+                  Mostly Ships in {deliveryDays}
+                </span>
+              ) : (
+                <span className="font-semibold">Now Shipping Faster</span>
+              )}
+            </p>
+          </>
+        )}
 
         {/* ── PRICE — mt-auto pushes to bottom ─────────────────────── */}
         <div className="mt-auto pt-3">

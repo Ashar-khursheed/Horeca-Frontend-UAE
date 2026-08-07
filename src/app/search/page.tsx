@@ -35,11 +35,14 @@ async function fetchSearchResults(
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
     }
-    const res = await fetch(`${NLP_SEARCH_API}?${qs.toString()}`, {
+    const fullUrl = `${NLP_SEARCH_API}?${qs.toString()}`;
+    console.log("NLP_SEARCH_API url:", fullUrl);
+    const res = await fetch(fullUrl, {
       next: { revalidate: 0 },
     });
     if (!res.ok) return null;
     const json = (await res.json()) as NlpSearchResponse;
+    console.log("NLP_SEARCH_API data:", json);
     return toSearchSuggestions(json);
   } catch {
     return null;
