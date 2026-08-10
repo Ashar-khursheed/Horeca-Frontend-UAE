@@ -20,7 +20,11 @@
       "Bash(npx tsc *)",
       "Bash(echo \"EXIT:$?\")",
       "Bash(wc -l /tmp_tsc_out.txt)",
-      "Bash(head -n 60 /tmp_tsc_out.txt)"
+      "Bash(head -n 60 /tmp_tsc_out.txt)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pkill -f \"next-server\")",
+      "Bash(curl -s \"http://localhost:3000/search?q=lg&brands=69:True+Refrigeration\" -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

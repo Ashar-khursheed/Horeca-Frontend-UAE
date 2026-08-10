@@ -19,6 +19,7 @@ export type CartItem = {
   qty: number;
   inWishlist: boolean;
   url: string;
+  parentCategoryUrl?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawProduct?: any;
 };
@@ -65,6 +66,21 @@ export const fmtPrice = (n: number) =>
 export const toAbsUrl = (url: string | undefined | null): string => {
   if (!url || url === "#") return "#";
   return url.startsWith("/") ? url : `/${url}`;
+};
+
+// Some sources (e.g. the NLP search API) return a bare product slug with no
+// category segments — "work-table-s-s-30-x-72-...". Others (logged-in cart/
+// wishlist APIs) already return the full "category/subcategory/slug" path.
+// Join the category prefix only when the slug doesn't already carry one,
+// mirroring ProductCard's productLink logic.
+export const resolveProductUrl = (
+  url: string | undefined | null,
+  parentCategoryUrl?: string | null,
+): string => {
+  if (!url || url === "#") return "#";
+  if (url.startsWith("/")) return url;
+  if (url.includes("/")) return `/${url}`;
+  return parentCategoryUrl ? `/${parentCategoryUrl}/${url}` : `/${url}`;
 };
 
 export const TAX_RATE = 0.0825;

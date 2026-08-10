@@ -4,7 +4,7 @@ import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import CartItemRow from "@/components/cart/cart-item-row";
 import CartSummary from "@/components/cart/cart-summary";
-import { CartItem, SavedItem } from "@/components/cart/cart-types";
+import { CartItem, SavedItem, resolveProductUrl } from "@/components/cart/cart-types";
 import SavedProductCard from "@/components/cart/saved-product-card";
 import { Modal } from "@/components/ui/modal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -96,38 +96,46 @@ const apiProductToCartItem = (cp: any): CartItem => ({
 
 // ── Transform localStorage Redux CartItem → display CartItem ──────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const localItemToCartItem = (item: any): CartItem => ({
-  id: item.productId,
-  vendorId: item.vendorId ?? 1,
-  name: item.name ?? "",
-  brand: "",
-  modelNo: item.sku ?? "",
-  image: item.image ?? "",
-  price: item.price ?? 0,
-  url: item.url ?? "#",
-  originalPrice: item.originalPrice ?? item.price ?? 0,
-  unit: item.sellUnit ?? "Each",
-  shippingCost: item.shippingCharge ?? 0,
-  deliveryDays:
-    item.rawProduct?.delivery_days ??
-    item.rawProduct?.suppliers?.[0]?.delivery_days ??
-    "",
-  shipBy:
-    item.rawProduct?.suppliers?.[0]?.delivery_days ??
-    item.rawProduct?.delivery_days ??
-    "",
-  qty: item.quantity ?? 1,
-  minQty: item.minQty ?? 1,
-  isFixed: item.isFixed ?? false,
-  currencySymbol:
-    item.currencySymbol ?? item.rawProduct?.currency?.symbol ?? "$",
-  selectedAccessories: (item.selectedAccessories ?? []).map((a: any) => ({
-    ...a,
-    price: parseFloat(String(a.price ?? 0)) || 0,
-  })),
-  inWishlist: false,
-  rawProduct: item.rawProduct,
-});
+const localItemToCartItem = (item: any): CartItem => {
+  const parentCategoryUrl =
+    item.parentCategoryUrl ??
+    item.rawProduct?.parent_category_url ??
+    item.rawProduct?.parent_category_url_resolved ??
+    "";
+  return {
+    id: item.productId,
+    vendorId: item.vendorId ?? 1,
+    name: item.name ?? "",
+    brand: "",
+    modelNo: item.sku ?? "",
+    image: item.image ?? "",
+    price: item.price ?? 0,
+    url: resolveProductUrl(item.url, parentCategoryUrl),
+    parentCategoryUrl,
+    originalPrice: item.originalPrice ?? item.price ?? 0,
+    unit: item.sellUnit ?? "Each",
+    shippingCost: item.shippingCharge ?? 0,
+    deliveryDays:
+      item.rawProduct?.delivery_days ??
+      item.rawProduct?.suppliers?.[0]?.delivery_days ??
+      "",
+    shipBy:
+      item.rawProduct?.suppliers?.[0]?.delivery_days ??
+      item.rawProduct?.delivery_days ??
+      "",
+    qty: item.quantity ?? 1,
+    minQty: item.minQty ?? 1,
+    isFixed: item.isFixed ?? false,
+    currencySymbol:
+      item.currencySymbol ?? item.rawProduct?.currency?.symbol ?? "$",
+    selectedAccessories: (item.selectedAccessories ?? []).map((a: any) => ({
+      ...a,
+      price: parseFloat(String(a.price ?? 0)) || 0,
+    })),
+    inWishlist: false,
+    rawProduct: item.rawProduct,
+  };
+};
 
 // ── Map API save-for-later product → SavedItem ────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -7,6 +7,10 @@ import { Metadata } from "next";
 
 const NLP_SEARCH_API = "https://nlpus.thehorecastore.co/search";
 
+// Filters change on every client navigation (brands/cats/price) — never let
+// Next cache a stale RSC payload for a previous filter combination.
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   searchParams: Promise<{
     q?: string;
