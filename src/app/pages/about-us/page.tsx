@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import FinancingModal from "@/components/financing-modal";
 import { useRef, useState, useEffect } from "react";
 import {
@@ -85,8 +86,23 @@ const socials = [
   { icon: Linkedin, href: "https://www.linkedin.com/company/horecastoreamerica/", label: "LinkedIn" },
 ];
 
-// ── Image placeholder (replace src with actual image path) ────────────────────
-function SectionImage({ alt }: { alt: string }) {
+// ── Section image (uses photo when src is provided; otherwise placeholder) ────
+function SectionImage({ alt, src }: { alt: string; src?: string }) {
+  if (src) {
+    return (
+      <div className="relative w-full h-[300px] sm:h-[420px] rounded-2xl overflow-hidden">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className="object-cover"
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          priority
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-[300px] sm:h-[420px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#186737]/10 to-[#186737]/30 flex items-center justify-center">
       <div className="absolute inset-0 opacity-10"
@@ -231,7 +247,10 @@ export default function AboutUsPage() {
             </p>
           </div>
           <div className="flex-1 w-full">
-            <SectionImage alt="HorecaStore Vision" />
+            <SectionImage
+              src="/images/about-us/empowering-every-kitchen.png"
+              alt="Commercial kitchen with professional chefs and restaurant equipment"
+            />
           </div>
         </div>
       </section>
