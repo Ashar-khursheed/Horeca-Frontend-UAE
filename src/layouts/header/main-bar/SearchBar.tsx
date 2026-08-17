@@ -198,7 +198,7 @@ export default function SearchBar() {
       {searchFocused && (searchQuery.trim() || hasResults) && (
         <div
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden"
+          className="absolute top-[calc(100%+8px)] right-0 w-[min(920px,calc(100vw-1.5rem))] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden"
           role="listbox"
           aria-label="Search suggestions"
         >
