@@ -623,22 +623,38 @@ button{
   height: 100%;
 }
 
-/* Search suggestion dropdown responsive layout */
+/* Search suggestion dropdown — nav left, product grid right */
 .search-left-col {
   width: 100%;
 }
 .search-right-col {
   display: none;
 }
+.search-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
 
-@media (min-width: 1300px) {
+@media (min-width: 1024px) {
   .search-left-col {
-    width: 55%;
+    width: 280px;
+    max-width: 34%;
     border-right: 1px solid #f3f4f6;
+    flex-shrink: 0;
   }
   .search-right-col {
     display: block;
     flex: 1 1 0%;
+  }
+  .search-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .search-product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
