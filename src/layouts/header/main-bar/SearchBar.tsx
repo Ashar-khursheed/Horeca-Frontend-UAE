@@ -112,6 +112,7 @@ export default function SearchBar() {
 
   const handleQueryChange = (val: string) => {
     setSearchQuery(val);
+    if (val.trim()) setSearchFocused(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!val.trim()) {
       abortRef.current?.abort();
@@ -160,7 +161,14 @@ export default function SearchBar() {
           placeholder="Search 100,000+ products trusted by hotels & restaurants..."
           className="flex-1 bg-white text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
           onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
+          onBlur={() => {
+            // Delay so link mousedown/click inside the dropdown can run first.
+            window.setTimeout(() => {
+              if (document.activeElement !== inputRef.current) {
+                setSearchFocused(false);
+              }
+            }, 120);
+          }}
           autoComplete="off"
         />
         {searchQuery &&
