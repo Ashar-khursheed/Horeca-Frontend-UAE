@@ -17,7 +17,8 @@ const productHref = (p: SearchProduct) =>
 
 const API_BASE = "https://nlpus.thehorecastore.co/";
 const DEBOUNCE_MS = 180;
-const SUGGEST_LENGTH = 8;
+/** Fewer, larger cards — Kitchenall-style readability over density */
+const SUGGEST_LENGTH = 6;
 
 function formatPrice(p: SearchProduct): string {
   const sale = Number(p.sale_price);
@@ -198,7 +199,7 @@ export default function SearchBar() {
       {searchFocused && (searchQuery.trim() || hasResults) && (
         <div
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute top-[calc(100%+8px)] right-0 w-[min(920px,calc(100vw-1.5rem))] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden"
+          className="absolute top-[calc(100%+8px)] right-0 w-[min(1200px,calc(100vw-1rem))] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden"
           role="listbox"
           aria-label="Search suggestions"
         >
@@ -309,65 +310,68 @@ export default function SearchBar() {
               </div>
             </div>
 
-            {/* Right — product cards (native links, no Add to Cart) */}
-            <div className="search-right-col p-3.5 overflow-y-auto max-h-[28rem] min-w-0">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3">
-                Products
-              </p>
-              {showTypedSkeleton || showInitialSkeleton ? (
-                <div className="search-product-grid">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="rounded-lg border border-gray-100 p-2.5 space-y-2"
-                    >
-                      <div className="aspect-square rounded-md bg-gray-100 animate-pulse" />
-                      <div className="h-3 bg-gray-100 animate-pulse rounded w-full" />
-                      <div className="h-3 bg-gray-100 animate-pulse rounded w-1/2" />
-                    </div>
-                  ))}
-                </div>
-              ) : products.length > 0 ? (
-                <div className="search-product-grid">
-                  {products.slice(0, SUGGEST_LENGTH).map((p) => (
-                    <Link
-                      key={p.id}
-                      href={productHref(p)}
-                      onClick={closeDropdown}
-                      className="group block rounded-lg border border-gray-100 p-2.5 hover:border-[#186737]/35 hover:bg-[#f8fdf9] transition-all"
-                    >
-                      <div className="aspect-square rounded-md bg-gray-50 border border-gray-100 overflow-hidden mb-2">
-                        {p.images.en?.[0] ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={p.images.en[0]}
-                            alt={p.name.en}
-                            width={120}
-                            height={120}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : null}
-                      </div>
-                      <p className="text-[12px] text-gray-700 leading-snug line-clamp-2 min-h-[2.4em] group-hover:text-gray-900">
-                        {p.name.en}
-                      </p>
-                      <p className="mt-1.5 text-[14px] font-extrabold text-slate-900">
-                        {p.quote_available ? "Request quote" : formatPrice(p)}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              ) : searchQuery.trim() && !loading ? (
-                <p className="text-[13px] text-gray-400 py-6 text-center">
-                  No products found
+            {/* Right — large product cards (native links, no Add to Cart) */}
+            <div className="search-right-col flex flex-col min-w-0 max-h-[min(36rem,70vh)]">
+              <div className="p-4 overflow-y-auto flex-1 min-h-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3">
+                  Products
                 </p>
-              ) : null}
+                {showTypedSkeleton || showInitialSkeleton ? (
+                  <div className="search-product-grid">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl border border-gray-100 p-3 space-y-3"
+                      >
+                        <div className="aspect-[5/4] rounded-lg bg-gray-100 animate-pulse" />
+                        <div className="h-3.5 bg-gray-100 animate-pulse rounded w-full" />
+                        <div className="h-3.5 bg-gray-100 animate-pulse rounded w-4/5" />
+                        <div className="h-4 bg-gray-100 animate-pulse rounded w-1/3" />
+                      </div>
+                    ))}
+                  </div>
+                ) : products.length > 0 ? (
+                  <div className="search-product-grid">
+                    {products.slice(0, SUGGEST_LENGTH).map((p) => (
+                      <Link
+                        key={p.id}
+                        href={productHref(p)}
+                        onClick={closeDropdown}
+                        className="group block rounded-xl border border-gray-100 p-3 hover:border-[#186737]/35 hover:bg-[#f8fdf9] transition-all"
+                      >
+                        <div className="aspect-[4/3] rounded-lg bg-[#f8fafc] border border-gray-100 overflow-hidden mb-3 flex items-center justify-center">
+                          {p.images.en?.[0] ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={p.images.en[0]}
+                              alt={p.name.en}
+                              width={320}
+                              height={240}
+                              className="w-full h-full object-contain p-1.5"
+                            />
+                          ) : null}
+                        </div>
+                        <p className="text-[14px] text-gray-900 leading-[1.4] line-clamp-3 min-h-[4.2em] group-hover:text-black">
+                          {p.name.en}
+                        </p>
+                        <p className="mt-2.5 text-[17px] font-extrabold text-slate-900 tracking-tight">
+                          {p.quote_available ? "Request quote" : formatPrice(p)}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                ) : searchQuery.trim() && !loading ? (
+                  <p className="text-[13px] text-gray-400 py-6 text-center">
+                    No products found
+                  </p>
+                ) : null}
+              </div>
 
               {searchQuery.trim() && (totalRecords > 0 || products.length > 0) ? (
                 <Link
                   href={`/search?q=${encodeURIComponent(searchQuery.trim())}`}
                   onClick={closeDropdown}
-                  className="mt-3 flex items-center justify-center gap-1.5 w-full py-3 text-[13px] font-bold text-[#186737] bg-[#f8fdf9] border-t border-gray-100 hover:bg-[#eef8f1] transition-colors"
+                  className="shrink-0 flex items-center justify-center gap-1.5 w-full py-3.5 text-[14px] font-bold text-[#186737] bg-[#f8fdf9] border-t border-gray-100 hover:bg-[#eef8f1] transition-colors"
                 >
                   See all{" "}
                   {(totalRecords || products.length).toLocaleString("en-US")}{" "}
