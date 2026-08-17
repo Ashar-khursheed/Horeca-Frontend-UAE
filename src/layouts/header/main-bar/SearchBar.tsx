@@ -17,8 +17,8 @@ const productHref = (p: SearchProduct) =>
 
 const API_BASE = "https://nlpus.thehorecastore.co/";
 const DEBOUNCE_MS = 180;
-/** Fewer, larger cards — Kitchenall-style readability over density */
-const SUGGEST_LENGTH = 6;
+/** Kitchenall: 4 across × 2 rows, kept shallow via compact cards */
+const SUGGEST_LENGTH = 8;
 
 function formatPrice(p: SearchProduct): string {
   const sale = Number(p.sale_price);
@@ -199,7 +199,7 @@ export default function SearchBar() {
       {searchFocused && (searchQuery.trim() || hasResults) && (
         <div
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute top-[calc(100%+8px)] right-0 w-[min(1200px,calc(100vw-1rem))] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden"
+          className="absolute top-[calc(100%+8px)] right-0 w-[min(1180px,calc(100vw-1rem))] max-h-[min(480px,58vh)] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden flex flex-col"
           role="listbox"
           aria-label="Search suggestions"
         >
@@ -209,25 +209,25 @@ export default function SearchBar() {
             </div>
           )}
 
-          <div className="flex">
+          <div className="flex min-h-0 flex-1 overflow-hidden">
             {/* Left — categories & brands (native links) */}
-            <div className="search-left-col bg-[#f8fafc] flex flex-col min-w-0">
-              <div className="px-3.5 pt-3.5 pb-2">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2 px-1">
+            <div className="search-left-col bg-[#f8fafc] flex flex-col min-w-0 overflow-y-auto">
+              <div className="px-3 pt-3 pb-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-1.5 px-1">
                   Categories
                 </p>
                 {showTypedSkeleton || showInitialSkeleton ? (
-                  <ul className="space-y-1.5">
-                    {Array.from({ length: 3 }).map((_, i) => (
+                  <ul className="space-y-1">
+                    {Array.from({ length: 2 }).map((_, i) => (
                       <li
                         key={i}
-                        className="h-11 bg-gray-100 animate-pulse rounded-lg"
+                        className="h-9 bg-gray-100 animate-pulse rounded-lg"
                       />
                     ))}
                   </ul>
                 ) : categories.length > 0 ? (
                   <ul className="space-y-0.5">
-                    {categories.slice(0, 6).map((c) => {
+                    {categories.slice(0, 4).map((c) => {
                       const href = categoryHref(c.super_parent_url, c.url);
                       const pathLabel = [c.super_parent_url, c.url]
                         .filter(Boolean)
@@ -238,28 +238,28 @@ export default function SearchBar() {
                           <Link
                             href={href}
                             onClick={closeDropdown}
-                            className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white hover:shadow-sm transition-all"
+                            className="flex items-center gap-2 px-1.5 py-1.5 rounded-lg hover:bg-white hover:shadow-sm transition-all"
                           >
-                            <span className="w-9 h-9 rounded-md bg-white border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
+                            <span className="w-8 h-8 rounded-md bg-white border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
                               {c.image ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   src={c.image}
                                   alt=""
-                                  width={36}
-                                  height={36}
+                                  width={32}
+                                  height={32}
                                   className="w-full h-full object-contain"
                                 />
                               ) : (
-                                <Search size={14} className="text-gray-300" />
+                                <Search size={12} className="text-gray-300" />
                               )}
                             </span>
                             <span className="min-w-0">
-                              <span className="block text-[13px] text-gray-800 line-clamp-1 font-medium">
+                              <span className="block text-[12.5px] text-gray-800 line-clamp-1 font-medium">
                                 {c.name.en}
                               </span>
                               {pathLabel ? (
-                                <span className="block text-[11px] text-gray-400 line-clamp-1 capitalize">
+                                <span className="block text-[10.5px] text-gray-400 line-clamp-1 capitalize">
                                   {pathLabel}
                                 </span>
                               ) : null}
@@ -276,15 +276,15 @@ export default function SearchBar() {
                 ) : null}
               </div>
 
-              <div className="mx-4 border-t border-gray-200" />
+              <div className="mx-3 border-t border-gray-200" />
 
-              <div className="px-3.5 py-3">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2 px-1">
+              <div className="px-3 py-2.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-1.5 px-1">
                   Brands
                 </p>
                 {showTypedSkeleton || showInitialSkeleton ? (
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from({ length: 3 }).map((_, i) => (
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from({ length: 2 }).map((_, i) => (
                       <div
                         key={i}
                         className="h-7 w-20 bg-gray-100 animate-pulse rounded-full"
@@ -293,12 +293,12 @@ export default function SearchBar() {
                   </div>
                 ) : brands.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">
-                    {brands.slice(0, 6).map((b) => (
+                    {brands.slice(0, 5).map((b) => (
                       <Link
                         key={b.id}
                         href={`/brands/${b.slug}`}
                         onClick={closeDropdown}
-                        className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1.5 hover:border-[#186737] hover:text-[#186737] transition-all"
+                        className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1 hover:border-[#186737] hover:text-[#186737] transition-all"
                       >
                         {b.name.en}
                       </Link>
@@ -310,23 +310,22 @@ export default function SearchBar() {
               </div>
             </div>
 
-            {/* Right — large product cards (native links, no Add to Cart) */}
-            <div className="search-right-col flex flex-col min-w-0 max-h-[min(36rem,70vh)]">
-              <div className="p-4 overflow-y-auto flex-1 min-h-0">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-3">
+            {/* Right — wide shallow product row (Kitchenall proportions) */}
+            <div className="search-right-col flex flex-col min-w-0 min-h-0 flex-1">
+              <div className="px-3.5 pt-3 pb-2 overflow-y-auto flex-1 min-h-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
                   Products
                 </p>
                 {showTypedSkeleton || showInitialSkeleton ? (
                   <div className="search-product-grid">
-                    {Array.from({ length: 6 }).map((_, i) => (
+                    {Array.from({ length: 8 }).map((_, i) => (
                       <div
                         key={i}
-                        className="rounded-xl border border-gray-100 p-3 space-y-3"
+                        className="rounded-lg border border-gray-100 p-2 space-y-2"
                       >
-                        <div className="aspect-[5/4] rounded-lg bg-gray-100 animate-pulse" />
-                        <div className="h-3.5 bg-gray-100 animate-pulse rounded w-full" />
-                        <div className="h-3.5 bg-gray-100 animate-pulse rounded w-4/5" />
-                        <div className="h-4 bg-gray-100 animate-pulse rounded w-1/3" />
+                        <div className="search-product-image h-[100px] lg:h-[110px] xl:h-[118px] bg-gray-100 animate-pulse rounded-md" />
+                        <div className="h-3 bg-gray-100 animate-pulse rounded w-full" />
+                        <div className="h-3 bg-gray-100 animate-pulse rounded w-2/3" />
                       </div>
                     ))}
                   </div>
@@ -337,31 +336,31 @@ export default function SearchBar() {
                         key={p.id}
                         href={productHref(p)}
                         onClick={closeDropdown}
-                        className="group block rounded-xl border border-gray-100 p-3 hover:border-[#186737]/35 hover:bg-[#f8fdf9] transition-all"
+                        className="group block rounded-lg border border-gray-100 bg-[#fafbfc] p-2 hover:border-[#186737]/35 hover:bg-[#f8fdf9] transition-all"
                       >
-                        <div className="aspect-[4/3] rounded-lg bg-[#f8fafc] border border-gray-100 overflow-hidden mb-3 flex items-center justify-center">
+                        <div className="search-product-image h-[100px] lg:h-[110px] xl:h-[118px] rounded-md bg-white border border-gray-100 overflow-hidden mb-2 flex items-center justify-center">
                           {p.images.en?.[0] ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={p.images.en[0]}
                               alt={p.name.en}
-                              width={320}
-                              height={240}
-                              className="w-full h-full object-contain p-1.5"
+                              width={180}
+                              height={118}
+                              className="max-h-full max-w-full object-contain"
                             />
                           ) : null}
                         </div>
-                        <p className="text-[14px] text-gray-900 leading-[1.4] line-clamp-3 min-h-[4.2em] group-hover:text-black">
+                        <p className="text-[12.5px] text-gray-900 leading-[1.35] line-clamp-2 min-h-[2.7em] group-hover:text-black">
                           {p.name.en}
                         </p>
-                        <p className="mt-2.5 text-[17px] font-extrabold text-slate-900 tracking-tight">
+                        <p className="mt-1.5 text-[15px] font-extrabold text-slate-900 tracking-tight">
                           {p.quote_available ? "Request quote" : formatPrice(p)}
                         </p>
                       </Link>
                     ))}
                   </div>
                 ) : searchQuery.trim() && !loading ? (
-                  <p className="text-[13px] text-gray-400 py-6 text-center">
+                  <p className="text-[13px] text-gray-400 py-4 text-center">
                     No products found
                   </p>
                 ) : null}
@@ -371,7 +370,7 @@ export default function SearchBar() {
                 <Link
                   href={`/search?q=${encodeURIComponent(searchQuery.trim())}`}
                   onClick={closeDropdown}
-                  className="shrink-0 flex items-center justify-center gap-1.5 w-full py-3.5 text-[14px] font-bold text-[#186737] bg-[#f8fdf9] border-t border-gray-100 hover:bg-[#eef8f1] transition-colors"
+                  className="shrink-0 flex items-center justify-center gap-1.5 w-full py-2.5 text-[13px] font-bold text-[#186737] bg-[#f0f7f3] border-t border-gray-100 hover:bg-[#e7f3eb] transition-colors"
                 >
                   See all{" "}
                   {(totalRecords || products.length).toLocaleString("en-US")}{" "}

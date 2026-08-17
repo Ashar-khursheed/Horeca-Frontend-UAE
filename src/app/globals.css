@@ -623,7 +623,7 @@ button{
   height: 100%;
 }
 
-/* Search suggestion dropdown — nav left, large product cards right */
+/* Search suggest — Kitchenall: wide + shallow, 4 product columns */
 .search-left-col {
   width: 100%;
 }
@@ -633,13 +633,17 @@ button{
 .search-product-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.875rem;
+  gap: 0.625rem;
+}
+.search-product-image {
+  width: 100%;
+  height: 100px !important;
 }
 
 @media (min-width: 1024px) {
   .search-left-col {
-    width: 260px;
-    max-width: 28%;
+    width: 240px;
+    max-width: 24%;
     border-right: 1px solid #f3f4f6;
     flex-shrink: 0;
   }
@@ -647,9 +651,17 @@ button{
     display: flex;
     flex: 1 1 0%;
   }
-  /* Cap at 3 columns so each card stays large and readable */
   .search-product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .search-product-image {
+    height: 110px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .search-product-image {
+    height: 118px !important;
   }
 }
 
