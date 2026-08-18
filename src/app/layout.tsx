@@ -115,7 +115,8 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://d1p9kdrbe10xzz.cloudfront.net" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://nlpus.thehorecastore.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://nlpus.thehorecastore.co" />
         <link rel="dns-prefetch" href="https://d1p9kdrbe10xzz.cloudfront.net" />
         <link rel="preconnect" href="https://pim.thehorecastore.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://pim.thehorecastore.co" />

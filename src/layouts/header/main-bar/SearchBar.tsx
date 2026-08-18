@@ -1,6 +1,10 @@
 "use client";
 
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
+import {
+  toSearchSuggestions,
+  type NlpSearchResponse,
+} from "@/utils/adapt-nlp-search";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,8 +21,24 @@ const productHref = (p: SearchProduct) =>
     ? p.url
     : `/${p.parent_category_url_resolved}/${p.url}`;
 
-const DEBOUNCE_MS = 180;
+const NLP_SEARCH_API = "https://nlpus.thehorecastore.co/search";
+const DEBOUNCE_MS = 80;
 const SUGGEST_LENGTH = 8;
+const suggestCache = new Map<string, SearchSuggestions["data"]>();
+
+function cacheGet(query: string) {
+  return suggestCache.get(query.trim().toLowerCase());
+}
+
+function cacheSet(query: string, data: SearchSuggestions["data"]) {
+  const key = query.trim().toLowerCase();
+  suggestCache.delete(key);
+  suggestCache.set(key, data);
+  if (suggestCache.size > 24) {
+    const oldest = suggestCache.keys().next().value;
+    if (oldest) suggestCache.delete(oldest);
+  }
+}
 
 function formatPrice(p: SearchProduct): string {
   const sale = Number(p.sale_price);
@@ -150,13 +170,21 @@ export default function SearchBar() {
     const requestId = ++requestIdRef.current;
 
     setLoading(true);
+    const cached = cacheGet(term);
+    if (cached) {
+      setLiveData(cached);
+      setLoading(false);
+    }
     try {
-      const url = `/api/search?query=${encodeURIComponent(term)}&page=1&length=${SUGGEST_LENGTH}`;
+      const url = `${NLP_SEARCH_API}?query=${encodeURIComponent(term)}&page=1&length=${SUGGEST_LENGTH}`;
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw new Error("search failed");
-      const adapted: SearchSuggestions = await res.json();
+      const raw: NlpSearchResponse = await res.json();
       if (requestId !== requestIdRef.current) return;
-      setLiveData(adapted.data ?? null);
+      const adapted = toSearchSuggestions(raw);
+      const data = adapted.data ?? null;
+      if (data) cacheSet(term, data);
+      setLiveData(data);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
     } finally {
@@ -166,7 +194,6 @@ export default function SearchBar() {
 
   const handleQueryChange = (val: string) => {
     setSearchQuery(val);
-    if (val.trim()) setSearchFocused(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!val.trim()) {
       abortRef.current?.abort();
@@ -174,6 +201,14 @@ export default function SearchBar() {
       setLoading(false);
       return;
     }
+    setSearchFocused(true);
+    const cached = cacheGet(val);
+    if (cached) {
+      setLiveData(cached);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     debounceRef.current = setTimeout(() => fetchSearch(val), DEBOUNCE_MS);
   };
 
@@ -376,7 +411,7 @@ export default function SearchBar() {
                   </div>
                 ) : products.length > 0 ? (
                   <div className="search-product-grid">
-                    {products.slice(0, SUGGEST_LENGTH).map((p) => (
+                    {products.slice(0, SUGGEST_LENGTH).map((p, i) => (
                       <Link
                         key={p.id}
                         href={productHref(p)}
@@ -391,6 +426,8 @@ export default function SearchBar() {
                               alt={p.name.en}
                               width={180}
                               height={118}
+                              loading={i < 4 ? "eager" : "lazy"}
+                              decoding="async"
                               className="max-h-full max-w-full object-contain"
                             />
                           ) : null}
