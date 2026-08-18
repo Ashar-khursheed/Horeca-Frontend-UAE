@@ -1,4 +1,5 @@
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
+import { lookupCategoryMeta } from "@/lib/search/category-image-lookup";
 
 // ── Raw shape returned by the NLP search microservice (nlpus.thehorecastore.co) ──
 export interface NlpSearchProduct {
@@ -126,14 +127,20 @@ export function toSearchSuggestions(raw: NlpSearchResponse): SearchSuggestions {
       // NB: category.slug/url from the NLP service aren't reliable route slugs —
       // grandparent_slug/parent_slug mirror the product's own category fields above
       // and match real /[categorySlug]/[subCategorySlug] routes.
-      categories: (raw.data.categories ?? []).map((c) => ({
-        id: c.id,
-        name: { en: c.name, ar: c.name },
-        image: c.image,
-        url: c.parent_slug ?? "",
-        super_parent_url: c.grandparent_slug ?? "",
-        super_parent: { id: 0, name: { en: "", ar: "" }, url: c.grandparent_slug ?? "" },
-      })),
+      categories: (raw.data.categories ?? []).map((c) => {
+        const meta =
+          lookupCategoryMeta(c.parent_slug) ??
+          lookupCategoryMeta(c.slug) ??
+          lookupCategoryMeta(c.grandparent_slug);
+        return {
+          id: c.id,
+          name: { en: c.name || meta?.name || c.slug, ar: c.name || meta?.name || c.slug },
+          image: c.image || meta?.image || null,
+          url: c.parent_slug ?? "",
+          super_parent_url: c.grandparent_slug ?? "",
+          super_parent: { id: 0, name: { en: "", ar: "" }, url: c.grandparent_slug ?? "" },
+        };
+      }),
       brands: (raw.data.brands ?? []).map((b) => ({
         id: b.id,
         name: { en: b.name, ar: b.name },

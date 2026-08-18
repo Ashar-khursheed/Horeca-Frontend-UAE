@@ -1,0 +1,17 @@
+# Self-hosted search engine (free, Algolia-like speed — no per-search billing).
+# Start: docker compose up -d meilisearch
+# Dashboard: http://127.0.0.1:7700
+
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_ADMIN_API_KEY:-dev_master_key_local_only}
+      MEILI_ENV: development
+    volumes:
+      - meili_data:/meili_data
+
+volumes:
+  meili_data:

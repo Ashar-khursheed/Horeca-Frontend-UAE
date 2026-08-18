@@ -1,19 +1,65 @@
 "use client";
 
-import AddToCartWidget from "@/components/add-to-cart";
-import type { RawApiProduct } from "@/components/product-card";
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
-import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const productHref = (p: SearchProduct) =>
-  p.url?.startsWith("/") ? p.url : `/${p.parent_category_url_resolved}/${p.url}`;
+  p.url?.startsWith("/")
+    ? p.url
+    : `/${p.parent_category_url_resolved}/${p.url}`;
 
-const API_BASE =
-  "https://nlpus.thehorecastore.co/";
+const DEBOUNCE_MS = 180;
+/** Kitchenall: 4 across × 2 rows, kept shallow via compact cards */
+const SUGGEST_LENGTH = 8;
+
+function formatPrice(p: SearchProduct): string {
+  const sale = Number(p.sale_price);
+  const base = Number(p.price);
+  const amount =
+    Number.isFinite(sale) && sale > 0 && sale < base
+      ? sale
+      : Number.isFinite(base)
+        ? base
+        : 0;
+  const symbol = p.currency?.symbol?.trim() || "$";
+  return `${symbol}${amount.toLocaleString("en-US", {
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function categoryHref(superParent: string, url: string) {
+  if (!superParent || !url) return "#";
+  return `/${superParent}/${url}`;
+}
+
+function brandHref(brand: SearchSuggestions["data"]["brands"][number]) {
+  if (brand.url?.startsWith("/")) return brand.url;
+  if (brand.slug) return `/brands/${brand.slug}`;
+  return "/brands";
+}
+
+function categoryThumb(
+  category: SearchSuggestions["data"]["categories"][number],
+  products: SearchProduct[],
+) {
+  if (category.image) return category.image;
+  const match = products.find((product) => {
+    const path =
+      product.category_url_resolved ||
+      product.parent_category_url_resolved ||
+      "";
+    return (
+      path === category.url ||
+      path.endsWith(`/${category.url}`) ||
+      path.includes(category.url)
+    );
+  });
+  return match?.images?.en?.[0] || null;
+}
 
 export default function SearchBar() {
   const router = useRouter();
@@ -22,31 +68,12 @@ export default function SearchBar() {
   const [liveData, setLiveData] = useState<SearchSuggestions["data"] | null>(
     null,
   );
-  // Default/trending suggestions shown before the user types anything —
-  // fetched lazily on first focus instead of via SSR, so it only hits the
-  // backend for visitors who actually open the search box.
-  const [defaultData, setDefaultData] = useState<SearchSuggestions["data"] | null>(
-    null,
-  );
-  const defaultFetchedRef = useRef(false);
-
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [is2xl, setIs2xl] = useState(true);
+  const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    const update = () => {
-      if (window.innerWidth >= 1920) setIs2xl(true);
-      else if (window.innerWidth >= 768) setIs2xl(false);
-      else setIs2xl(true);
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  // Close search when nav is hovered
   useEffect(() => {
     const close = () => {
       setSearchFocused(false);
@@ -56,65 +83,72 @@ export default function SearchBar() {
     return () => document.removeEventListener("nav-hover", close);
   }, []);
 
-  // Active data: live typed-query results if available, otherwise the
-  // lazily-fetched default/trending suggestions
-  const d = liveData ?? defaultData;
-  const products = d?.products ?? [];
-  const categories = d?.categories ?? [];
-  const brands = d?.brands ?? [];
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
+  }, []);
 
-  const handleFocus = () => {
-    setSearchFocused(true);
-    if (defaultFetchedRef.current) return;
-    defaultFetchedRef.current = true;
-    setLoading(true);
-    fetch(`${API_BASE}search?query=true&page=1&length=5`)
-      .then((res) => {
-        if (!res.ok) throw new Error("search failed");
-        return res.json();
-      })
-      .then((raw: NlpSearchResponse) => {
-        const adapted = toSearchSuggestions(raw);
-        setDefaultData(adapted.data ?? null);
-      })
-      .catch(() => {
-        defaultFetchedRef.current = false; // allow retry on next focus
-      })
-      .finally(() => setLoading(false));
-  };
-
+  const products = liveData?.products ?? [];
+  const categories = liveData?.categories ?? [];
+  const brands = liveData?.brands ?? [];
+  const totalRecords = liveData?.total_records ?? 0;
+  const hasResults =
+    products.length > 0 || categories.length > 0 || brands.length > 0;
+  const showInitialSkeleton = loading && !hasResults && !searchQuery.trim();
+  const showTypedSkeleton = loading && !hasResults && !!searchQuery.trim();
 
   const fetchSearch = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setLiveData(null);
+    const term = query.trim();
+    if (!term) {
+      abortRef.current?.abort();
+      abortRef.current = null;
       setLoading(false);
+      // Keep last results until the user clears or types again — avoid blank flash.
       return;
     }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const requestId = ++requestIdRef.current;
+
     setLoading(true);
     try {
-      const url = `${API_BASE}search?query=${encodeURIComponent(query.trim())}&page=1&length=5`;
-      const res = await fetch(url);
-
+      const url = `/api/search?query=${encodeURIComponent(term)}&page=1&length=${SUGGEST_LENGTH}`;
+      const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw new Error("search failed");
-      const raw: NlpSearchResponse = await res.json();
-      const adapted = toSearchSuggestions(raw);
+      const adapted: SearchSuggestions = await res.json();
+      if (requestId !== requestIdRef.current) return;
       setLiveData(adapted.data ?? null);
-    } catch {
-      // silently keep previous data
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      // Keep previous results on failure — no blank wipe.
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, []);
 
   const handleQueryChange = (val: string) => {
     setSearchQuery(val);
+    if (val.trim()) setSearchFocused(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchSearch(val), 300);
+    if (!val.trim()) {
+      abortRef.current?.abort();
+      setLiveData(null);
+      setLoading(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => fetchSearch(val), DEBOUNCE_MS);
   };
 
   const clearQuery = () => {
     setSearchQuery("");
     setLiveData(null);
+    setLoading(false);
+    abortRef.current?.abort();
+    inputRef.current?.focus();
   };
 
   const goToSearch = (q?: string) => {
@@ -127,9 +161,10 @@ export default function SearchBar() {
     }
   };
 
+  const closeDropdown = () => setSearchFocused(false);
+
   return (
     <div className="flex-1 hidden lg:block relative">
-      {/* ── Input ── */}
       <div
         className={`flex items-center border rounded-full px-4 h-11 gap-2 transition-all duration-200 bg-white ${
           searchFocused ? "border-[#186737]" : "border-gray-200"
@@ -145,14 +180,23 @@ export default function SearchBar() {
           onKeyDown={(e) => e.key === "Enter" && goToSearch()}
           placeholder="Search 100,000+ products trusted by hotels & restaurants..."
           className="flex-1 bg-white text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
-          onFocus={handleFocus}
-          onBlur={() => setSearchFocused(false)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => {
+            // Delay so link mousedown/click inside the dropdown can run first.
+            window.setTimeout(() => {
+              if (document.activeElement !== inputRef.current) {
+                setSearchFocused(false);
+              }
+            }, 120);
+          }}
+          autoComplete="off"
         />
         {searchQuery &&
           (loading ? (
             <span className="shrink-0 w-4 h-4 border-2 border-gray-300 border-t-[#186737] rounded-full animate-spin" />
           ) : (
             <button
+              type="button"
               onClick={clearQuery}
               aria-label="Clear search query"
               className="shrink-0 text-black hover:text-gray-600 transition-colors"
@@ -161,225 +205,206 @@ export default function SearchBar() {
             </button>
           ))}
         <button
+          type="button"
           onClick={() => goToSearch()}
           aria-label="Submit search"
-          className="bg-[#186737] text-white rounded-full w-7 h-7 flex items-center justify-center shrink-0 hover:bg-[#145c2e] transition-colors"
-          disabled={!searchQuery}
+          className="bg-[#186737] text-white rounded-full w-7 h-7 flex items-center justify-center shrink-0 hover:bg-[#145c2e] transition-colors disabled:opacity-50"
+          disabled={!searchQuery.trim()}
         >
           <Search size={13} />
         </button>
       </div>
 
-      {/* ── Dropdown ── */}
-      {searchFocused && (
+      {searchFocused && (searchQuery.trim() || hasResults) && (
         <div
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden"
+          className="absolute top-[calc(100%+8px)] right-0 w-[min(1180px,calc(100vw-1rem))] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden flex flex-col"
+          role="listbox"
+          aria-label="Search suggestions"
         >
-          {/* Did you mean / loading bar */}
           {loading && (
             <div className="h-0.5 bg-gray-100 overflow-hidden">
               <div className="h-full bg-[#186737] animate-pulse w-1/2" />
             </div>
           )}
-          {/* {!loading && d?.did_you_mean && (
-            <div className="px-4 py-2 bg-[#f0fdf4] border-b border-gray-100 text-[12px] text-[#186737]">
-              {d.did_you_mean}
-            </div>
-          )} */}
 
           <div className="flex">
-            {/* ── Left col ── */}
-            <div className="search-left-col bg-[#f8fafc] flex flex-col">
-              {/* Product Suggestions */}
-              <div className="px-3.5 pt-3.5 pb-3">
-                <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
-                  Product Suggestions
+            {/* Left — categories & brands (native links) */}
+            <div className="search-left-col bg-[#f8fafc] flex flex-col min-w-0 overflow-y-auto">
+              <div className="px-3 pt-3 pb-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-1.5 px-1">
+                  Categories
                 </p>
-                {loading ? (
+                {showTypedSkeleton || showInitialSkeleton ? (
                   <ul className="space-y-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                    {Array.from({ length: 2 }).map((_, i) => (
                       <li
                         key={i}
-                        className="h-8 bg-gray-100 animate-pulse rounded-xl"
+                        className="h-12 bg-gray-100 animate-pulse rounded-lg"
                       />
                     ))}
                   </ul>
-                ) : products.length > 0 ? (
+                ) : categories.length > 0 ? (
                   <ul className="space-y-0.5">
-                    {products.slice(0, 5).map((p, i) => (
-                      <li key={i}>
-                        <Link
-                          href={productHref(p)}
-                            onClick={() => { setSearchFocused(false); router.push(productHref(p)); }}
-                          // onMouseDown={() => goToSearch(p.name.en)}
-                          className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white hover:shadow-sm transition-all group"
-                        >
-                          <Search
-                            size={12}
-                            className="text-gray-300 shrink-0 group-hover:text-[#186737] transition-colors"
-                          />
-                          <span className="text-[11px] xl:text-[12px] 2xl:text-[13px] text-gray-700 line-clamp-1 group-hover:text-[#186737] transition-colors">
-                            {p.name.en}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
+                    {categories.slice(0, 4).map((c) => {
+                      const href = categoryHref(c.super_parent_url, c.url);
+                      const pathLabel = [c.super_parent_url, c.url]
+                        .filter(Boolean)
+                        .join(" / ")
+                        .replace(/-/g, " ");
+                      const thumb = categoryThumb(c, products);
+                      return (
+                        <li key={c.id}>
+                          <Link
+                            href={href}
+                            onClick={closeDropdown}
+                            className="flex items-center gap-2.5 px-1 py-1.5 rounded-md hover:bg-white hover:underline transition-colors"
+                          >
+                            <span className="w-11 h-11 rounded-md bg-[#f3f4f6] overflow-hidden shrink-0">
+                              {thumb ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={thumb}
+                                  alt=""
+                                  width={44}
+                                  height={44}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="w-full h-full flex items-center justify-center">
+                                  <Search size={14} className="text-gray-300" />
+                                </span>
+                              )}
+                            </span>
+                            <span className="min-w-0 text-[13px] text-gray-900 leading-[1.35] line-clamp-2 capitalize">
+                              {pathLabel || c.name.en}
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
-                ) : (
-                  <p className="text-[12px] text-gray-400 px-3 py-2">
-                    No suggestions
+                ) : searchQuery.trim() && !loading ? (
+                  <p className="text-[12px] text-gray-400 px-2 py-1">
+                    No categories
                   </p>
-                )}
+                ) : null}
               </div>
 
-              <div className="mx-5 border-t border-gray-200" />
+              <div className="mx-3 border-t border-gray-200" />
 
-              {/* Categories */}
-              <div className="px-5 py-3">
-                <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
-                  Categories
+              <div className="px-3 py-2.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-1.5 px-1">
+                  Brands
                 </p>
-                {loading ? (
-                  <div className="flex gap-2 flex-wrap">
+                {showTypedSkeleton || showInitialSkeleton ? (
+                  <div className="grid grid-cols-2 gap-1.5">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <div
                         key={i}
-                        className="h-7 w-24 bg-gray-100 animate-pulse rounded-full"
-                      />
-                    ))}
-                  </div>
-                ) : categories.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {categories.slice(0, 6).map((c, i) => (
-                      <Link
-                        key={i}
-                        href={`/${c.super_parent_url}/${c.url}`}
-                        // onClick={() =>
-                        //   router.push(`/${c.super_parent_url}/${c.url}`)
-                        // }
-                          onClick={() => { setSearchFocused(false);  router.push(`/${c.super_parent_url}/${c.url}`)}}
-                        className="text-[10.5px] xl:text-[11px] 2xl:text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1 xl:px-3 xl:py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
-                      >
-                        {c.name.en}
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[12px] text-gray-400">No categories</p>
-                )}
-              </div>
-
-              <div className="mx-5 border-t border-gray-200" />
-
-              {/* Brands */}
-              <div className="px-5 py-3">
-                <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
-                  Brands
-                </p>
-                {loading ? (
-                  <div className="flex gap-2 flex-wrap">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-7 w-20 bg-gray-100 animate-pulse rounded-full"
+                        className="h-12 bg-gray-100 animate-pulse rounded-md"
                       />
                     ))}
                   </div>
                 ) : brands.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {brands.slice(0, 5).map((b, i) => (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {brands.slice(0, 4).map((b) => (
                       <Link
-                        key={i}
-                        href={`/brands/${b.slug}`}
-                        onClick={() => { setSearchFocused(false); router.push(`/brands/${b.slug}`); }}
-                        className="text-[10.5px] xl:text-[11px] 2xl:text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1 xl:px-3 xl:py-1.5 hover:border-[#186737] hover:text-[#186737] hover:bg-[#186737]/5 transition-all"
+                        key={b.id}
+                        href={brandHref(b)}
+                        onClick={closeDropdown}
+                        title={b.name.en}
+                        className="h-12 px-2 rounded-md bg-white border border-gray-200 flex items-center justify-center hover:border-[#186737] hover:shadow-sm transition-all"
                       >
-                        {b.name.en}
+                        {b.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={b.image}
+                            alt={b.name.en}
+                            className="max-h-8 max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-[11px] font-medium text-gray-600 text-center line-clamp-2">
+                            {b.name.en}
+                          </span>
+                        )}
                       </Link>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-[12px] text-gray-400">No brands</p>
-                )}
+                ) : searchQuery.trim() && !loading ? (
+                  <p className="text-[12px] text-gray-400 px-1">No brands</p>
+                ) : null}
               </div>
-
-              <div className="mx-5 border-t border-gray-200" />
-
-              {/* View all */}
-              {/* <div className="px-3.5 py-3 mt-auto">
-                <button
-                  onMouseDown={() => goToSearch()}
-                  className="w-full h-8 xl:h-8.5 2xl:h-9 rounded-xl bg-[#186737] text-white text-[11px] xl:text-[12px] 2xl:text-[13px] font-semibold hover:bg-[#145c2e] transition-colors flex items-center justify-center gap-2"
-                >
-                  <Search size={13} /> View all results
-                </button>
-              </div> */}
             </div>
 
-            {/* ── Right col — Trending Products ── */}
-            <div className="search-right-col p-3.5 overflow-y-auto max-h-115">
-              <p className="text-[9px] xl:text-[9.5px] 2xl:text-[10.5px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-4">
-                Trending Products
-              </p>
-              {loading ? (
-                <ul className="space-y-2.5">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <li
-                      key={i}
-                      className="flex gap-3 p-3 rounded-xl border border-gray-100"
-                    >
-                      <div className="w-15.5 h-15.5 rounded-xl bg-gray-100 animate-pulse shrink-0" />
-                      <div className="flex-1 space-y-2">
+            {/* Right — wide shallow product row (Kitchenall proportions) */}
+            <div className="search-right-col flex flex-col min-w-0 flex-1">
+              <div className="px-3.5 pt-3 pb-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
+                  Products
+                </p>
+                {showTypedSkeleton || showInitialSkeleton ? (
+                  <div className="search-product-grid">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-lg border border-gray-100 p-2 space-y-2"
+                      >
+                        <div className="search-product-image h-[100px] lg:h-[110px] xl:h-[118px] bg-gray-100 animate-pulse rounded-md" />
                         <div className="h-3 bg-gray-100 animate-pulse rounded w-full" />
-                        <div className="h-3 bg-gray-100 animate-pulse rounded w-3/4" />
-                        <div className="h-7 bg-gray-100 animate-pulse rounded w-full mt-3" />
+                        <div className="h-3 bg-gray-100 animate-pulse rounded w-2/3" />
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <ul className="space-y-2.5">
-                  {products.slice(0, 4).map((p, i) => (
-                    <li
-                      key={i}
-                      className="flex gap-3 p-3 rounded-xl border border-gray-100 hover:border-[#186737]/25 hover:bg-[#f8fdf9] transition-all cursor-pointer group"
-                    >
-                      <div className="w-15.5 h-15.5 rounded-xl bg-gray-100 shrink-0 border border-gray-100 overflow-hidden">
-                        {p.images.en?.[0] && (
-                          <img
-                            src={p.images.en[0]}
-                            alt={p.name.en}
-                            width={62}
-                            height={62}
-                            className="w-full h-full object-contain"
-                            onClick={() => { setSearchFocused(false); router.push(productHref(p)); }}
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 flex flex-col justify-between">
-                        <p
-                          className="text-[11px] xl:text-[11.5px] 2xl:text-[12px] text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-900 transition-colors"
-                          onClick={() => { setSearchFocused(false); router.push(productHref(p)); }}
-                        >
+                    ))}
+                  </div>
+                ) : products.length > 0 ? (
+                  <div className="search-product-grid">
+                    {products.slice(0, SUGGEST_LENGTH).map((p) => (
+                      <Link
+                        key={p.id}
+                        href={productHref(p)}
+                        onClick={closeDropdown}
+                        className="group block rounded-lg border border-gray-100 bg-[#fafbfc] p-2 hover:border-[#186737]/35 hover:bg-[#f8fdf9] transition-all"
+                      >
+                        <div className="search-product-image h-[100px] lg:h-[110px] xl:h-[118px] rounded-md bg-white border border-gray-100 overflow-hidden mb-2 flex items-center justify-center">
+                          {p.images.en?.[0] ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={p.images.en[0]}
+                              alt={p.name.en}
+                              width={180}
+                              height={118}
+                              className="max-h-full max-w-full object-contain"
+                            />
+                          ) : null}
+                        </div>
+                        <p className="text-[12.5px] text-gray-900 leading-[1.35] line-clamp-2 min-h-[2.7em] group-hover:text-black">
                           {p.name.en}
                         </p>
-                        <AddToCartWidget
-                          product={{
-                            ...p,
-                            original_price: p.price,
-                            parent_category_url: p.parent_category_url_resolved,
-                            images: { en: p.images.en ?? [], ar: p.images.ar ?? [] },
-                          } as unknown as RawApiProduct}
-                          wrapperClassName="flex items-center flex-row gap-2 mt-2 w-full"
-                          isSearchbar={is2xl}
-                          inDropdown={true}
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                        <p className="mt-1.5 text-[15px] font-extrabold text-slate-900 tracking-tight">
+                          {p.quote_available ? "Request quote" : formatPrice(p)}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                ) : searchQuery.trim() && !loading ? (
+                  <p className="text-[13px] text-gray-400 py-4 text-center">
+                    No products found
+                  </p>
+                ) : null}
+              </div>
+
+              {searchQuery.trim() && (totalRecords > 0 || products.length > 0) ? (
+                <Link
+                  href={`/search?q=${encodeURIComponent(searchQuery.trim())}`}
+                  onClick={closeDropdown}
+                  className="shrink-0 flex items-center justify-center gap-1.5 w-full py-2.5 text-[13px] font-bold text-[#186737] bg-[#f0f7f3] border-t border-gray-100 hover:bg-[#e7f3eb] transition-colors"
+                >
+                  See all{" "}
+                  {(totalRecords || products.length).toLocaleString("en-US")}{" "}
+                  results for &ldquo;{searchQuery.trim()}&rdquo;
+                  <span aria-hidden>→</span>
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
