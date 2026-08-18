@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest",
+    "search:sync": "node scripts/sync-search-index.mjs",
+    "search:up": "docker compose up -d meilisearch"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.19.4",
@@ -28,6 +30,7 @@
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.576.0",
+    "meilisearch": "^0.60.0",
     "next": "^16.2.9",
     "next-auth": "^4.24.14",
     "next-intl": "^4.8.3",

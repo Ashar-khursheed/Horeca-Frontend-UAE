@@ -1,14 +1,10 @@
 import SearchFeature from "@/features/search";
 import type { SearchSuggestions } from "@/utils/types";
-import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
+import { runProductSearch } from "@/lib/search/run-product-search";
 import { Suspense } from "react";
 import { SITE_URL } from "@/utils/site-url";
 import { Metadata } from "next";
 
-const NLP_SEARCH_API = "https://nlpus.thehorecastore.co/search";
-
-// Filters change on every client navigation (brands/cats/price) — never let
-// Next cache a stale RSC payload for a previous filter combination.
 export const dynamic = "force-dynamic";
 
 interface PageProps {
@@ -31,28 +27,6 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/search` },
 };
 
-async function fetchSearchResults(
-  params: Record<string, string | number | undefined>,
-): Promise<SearchSuggestions | null> {
-  try {
-    const qs = new URLSearchParams();
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
-    }
-    const fullUrl = `${NLP_SEARCH_API}?${qs.toString()}`;
-    console.log("NLP_SEARCH_API url:", fullUrl);
-    const res = await fetch(fullUrl, {
-      next: { revalidate: 0 },
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as NlpSearchResponse;
-    console.log("NLP_SEARCH_API data:", json);
-    return toSearchSuggestions(json);
-  } catch {
-    return null;
-  }
-}
-
 export default async function SearchPage({ searchParams }: PageProps) {
   const {
     q = "",
@@ -66,7 +40,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
   } = await searchParams;
   const page = Math.max(1, Number(pageParam));
 
-  // Parse brand IDs from URL: "52:True Refrigeration,53:Turbo Air"
   const brandIds = brandsParam
     ? brandsParam
         .split(",")
@@ -77,7 +50,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
         .filter((id) => !isNaN(id) && id > 0)
     : [];
 
-  // Parse category IDs from URL: "1:Kitchen Equipments,76:Kitchen Supplies"
   const categoryIds = catsParam
     ? catsParam
         .split(",")
@@ -88,7 +60,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
         .filter((id) => !isNaN(id) && id > 0)
     : [];
 
-  // Build applied_filters JSON for API
   const appliedFilters: Record<string, unknown> = {};
   if (brandIds.length) appliedFilters.brand_ids = brandIds;
   if (categoryIds.length) appliedFilters.category_ids = categoryIds;
@@ -99,8 +70,8 @@ export default async function SearchPage({ searchParams }: PageProps) {
     };
   }
 
-  const searchResult = q.trim()
-    ? await fetchSearchResults({
+  const searchResult: SearchSuggestions | null = q.trim()
+    ? await runProductSearch({
         query: q.trim(),
         page,
         length: 20,
@@ -111,8 +82,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
         ...(sortDir ? { sort_dir: sortDir } : {}),
       })
     : null;
-
-    console.log("SearchPage searchResult:", searchResult);
 
   return (
     <Suspense>

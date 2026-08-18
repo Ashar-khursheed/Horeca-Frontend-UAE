@@ -1,10 +1,6 @@
 "use client";
 
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
-import {
-  toSearchSuggestions,
-  type NlpSearchResponse,
-} from "@/utils/adapt-nlp-search";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,7 +11,6 @@ const productHref = (p: SearchProduct) =>
     ? p.url
     : `/${p.parent_category_url_resolved}/${p.url}`;
 
-const API_BASE = "https://nlpus.thehorecastore.co/";
 const DEBOUNCE_MS = 180;
 /** Kitchenall: 4 across × 2 rows, kept shallow via compact cards */
 const SUGGEST_LENGTH = 8;
@@ -39,6 +34,31 @@ function formatPrice(p: SearchProduct): string {
 function categoryHref(superParent: string, url: string) {
   if (!superParent || !url) return "#";
   return `/${superParent}/${url}`;
+}
+
+function brandHref(brand: SearchSuggestions["data"]["brands"][number]) {
+  if (brand.url?.startsWith("/")) return brand.url;
+  if (brand.slug) return `/brands/${brand.slug}`;
+  return "/brands";
+}
+
+function categoryThumb(
+  category: SearchSuggestions["data"]["categories"][number],
+  products: SearchProduct[],
+) {
+  if (category.image) return category.image;
+  const match = products.find((product) => {
+    const path =
+      product.category_url_resolved ||
+      product.parent_category_url_resolved ||
+      "";
+    return (
+      path === category.url ||
+      path.endsWith(`/${category.url}`) ||
+      path.includes(category.url)
+    );
+  });
+  return match?.images?.en?.[0] || null;
 }
 
 export default function SearchBar() {
@@ -96,12 +116,11 @@ export default function SearchBar() {
 
     setLoading(true);
     try {
-      const url = `${API_BASE}search?query=${encodeURIComponent(term)}&page=1&length=${SUGGEST_LENGTH}`;
+      const url = `/api/search?query=${encodeURIComponent(term)}&page=1&length=${SUGGEST_LENGTH}`;
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw new Error("search failed");
-      const raw: NlpSearchResponse = await res.json();
+      const adapted: SearchSuggestions = await res.json();
       if (requestId !== requestIdRef.current) return;
-      const adapted = toSearchSuggestions(raw);
       setLiveData(adapted.data ?? null);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -199,7 +218,7 @@ export default function SearchBar() {
       {searchFocused && (searchQuery.trim() || hasResults) && (
         <div
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute top-[calc(100%+8px)] right-0 w-[min(1180px,calc(100vw-1rem))] max-h-[min(480px,58vh)] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden flex flex-col"
+          className="absolute top-[calc(100%+8px)] right-0 w-[min(1180px,calc(100vw-1rem))] bg-white rounded-[7px] shadow-[0_12px_48px_rgba(0,0,0,0.13)] border border-gray-100 z-50 overflow-hidden flex flex-col"
           role="listbox"
           aria-label="Search suggestions"
         >
@@ -209,7 +228,7 @@ export default function SearchBar() {
             </div>
           )}
 
-          <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="flex">
             {/* Left — categories & brands (native links) */}
             <div className="search-left-col bg-[#f8fafc] flex flex-col min-w-0 overflow-y-auto">
               <div className="px-3 pt-3 pb-2">
@@ -221,7 +240,7 @@ export default function SearchBar() {
                     {Array.from({ length: 2 }).map((_, i) => (
                       <li
                         key={i}
-                        className="h-9 bg-gray-100 animate-pulse rounded-lg"
+                        className="h-12 bg-gray-100 animate-pulse rounded-lg"
                       />
                     ))}
                   </ul>
@@ -233,36 +252,32 @@ export default function SearchBar() {
                         .filter(Boolean)
                         .join(" / ")
                         .replace(/-/g, " ");
+                      const thumb = categoryThumb(c, products);
                       return (
                         <li key={c.id}>
                           <Link
                             href={href}
                             onClick={closeDropdown}
-                            className="flex items-center gap-2 px-1.5 py-1.5 rounded-lg hover:bg-white hover:shadow-sm transition-all"
+                            className="flex items-center gap-2.5 px-1 py-1.5 rounded-md hover:bg-white hover:underline transition-colors"
                           >
-                            <span className="w-8 h-8 rounded-md bg-white border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
-                              {c.image ? (
+                            <span className="w-11 h-11 rounded-md bg-[#f3f4f6] overflow-hidden shrink-0">
+                              {thumb ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
-                                  src={c.image}
+                                  src={thumb}
                                   alt=""
-                                  width={32}
-                                  height={32}
-                                  className="w-full h-full object-contain"
+                                  width={44}
+                                  height={44}
+                                  className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <Search size={12} className="text-gray-300" />
+                                <span className="w-full h-full flex items-center justify-center">
+                                  <Search size={14} className="text-gray-300" />
+                                </span>
                               )}
                             </span>
-                            <span className="min-w-0">
-                              <span className="block text-[12.5px] text-gray-800 line-clamp-1 font-medium">
-                                {c.name.en}
-                              </span>
-                              {pathLabel ? (
-                                <span className="block text-[10.5px] text-gray-400 line-clamp-1 capitalize">
-                                  {pathLabel}
-                                </span>
-                              ) : null}
+                            <span className="min-w-0 text-[13px] text-gray-900 leading-[1.35] line-clamp-2 capitalize">
+                              {pathLabel || c.name.en}
                             </span>
                           </Link>
                         </li>
@@ -283,24 +298,36 @@ export default function SearchBar() {
                   Brands
                 </p>
                 {showTypedSkeleton || showInitialSkeleton ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {Array.from({ length: 2 }).map((_, i) => (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {Array.from({ length: 4 }).map((_, i) => (
                       <div
                         key={i}
-                        className="h-7 w-20 bg-gray-100 animate-pulse rounded-full"
+                        className="h-12 bg-gray-100 animate-pulse rounded-md"
                       />
                     ))}
                   </div>
                 ) : brands.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {brands.slice(0, 5).map((b) => (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {brands.slice(0, 4).map((b) => (
                       <Link
                         key={b.id}
-                        href={`/brands/${b.slug}`}
+                        href={brandHref(b)}
                         onClick={closeDropdown}
-                        className="text-[12px] text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1 hover:border-[#186737] hover:text-[#186737] transition-all"
+                        title={b.name.en}
+                        className="h-12 px-2 rounded-md bg-white border border-gray-200 flex items-center justify-center hover:border-[#186737] hover:shadow-sm transition-all"
                       >
-                        {b.name.en}
+                        {b.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={b.image}
+                            alt={b.name.en}
+                            className="max-h-8 max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-[11px] font-medium text-gray-600 text-center line-clamp-2">
+                            {b.name.en}
+                          </span>
+                        )}
                       </Link>
                     ))}
                   </div>
@@ -311,8 +338,8 @@ export default function SearchBar() {
             </div>
 
             {/* Right — wide shallow product row (Kitchenall proportions) */}
-            <div className="search-right-col flex flex-col min-w-0 min-h-0 flex-1">
-              <div className="px-3.5 pt-3 pb-2 overflow-y-auto flex-1 min-h-0">
+            <div className="search-right-col flex flex-col min-w-0 flex-1">
+              <div className="px-3.5 pt-3 pb-2">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-2">
                   Products
                 </p>
