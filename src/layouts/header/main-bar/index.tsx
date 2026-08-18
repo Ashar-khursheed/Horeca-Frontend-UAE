@@ -617,7 +617,7 @@ export default function NavigationStatic({
                 <button
                   onClick={() => router.push("/search")}
                   aria-label="Search"
-                  className="relative w-9 h-9 flex lg:hidden items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="relative w-9 h-9 flex md:hidden items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
                 >
                   <Search size={20} />
                 </button>
