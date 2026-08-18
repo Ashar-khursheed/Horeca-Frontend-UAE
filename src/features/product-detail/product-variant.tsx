@@ -4,7 +4,9 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { VariantItem } from "./types";
+import type { ProductAttribute, VariantItem } from "./types";
+import { VariantChips } from "./variant-chips";
+import { variantHref } from "./variant-utils";
 
 interface VariantGroup {
   attribute_id: string;
@@ -17,17 +19,24 @@ interface ProductVariantProps {
   variants: VariantItem[];
   currency: string;
   parentId: number;
+  currentAttributes?: ProductAttribute[];
 }
 
 const fmtP = (n: number) =>
   Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export function ProductVariant({ variants, currency, parentId }: ProductVariantProps) {
+export function ProductVariant({
+  variants,
+  currency,
+  parentId,
+  currentAttributes = [],
+}: ProductVariantProps) {
   const router = useRouter();
   const [groups, setGroups]     = useState<VariantGroup[]>([]);
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [hovered, setHovered]   = useState<Record<string, string>>({});
   const [loading, setLoading]   = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
     if (!variants?.length) return;
@@ -44,9 +53,32 @@ export function ProductVariant({ variants, currency, parentId }: ProductVariantP
     setSelected(init);
   }, [variants]);
 
+  useEffect(() => {
+    groups.forEach((g) => {
+      g.variants.forEach((v) => {
+        const href = variantHref(v.url);
+        if (href) router.prefetch(href);
+      });
+    });
+  }, [groups, router]);
+
+  const goToSlug = (slug: string) => {
+    const path = slug.startsWith("/") ? slug : `/${slug}`;
+    router.push(`${path}#product-purchase`);
+  };
+
   const pick = async (attrId: string, value: string) => {
     const nextSelected = { ...selected, [attrId]: value };
     setSelected(nextSelected);
+    const group = groups.find((g) => g.attribute_id === attrId);
+    const match = group?.variants.find((v) => v.attribute_value === value);
+    if (groups.length === 1 && match?.url) {
+      const href = variantHref(match.url);
+      if (href) {
+        router.push(`${href}#product-purchase`);
+        return;
+      }
+    }
     setLoading(true);
     try {
       const attribute = Object.entries(nextSelected).map(([id, val]) => ({
@@ -59,7 +91,7 @@ export function ProductVariant({ variants, currency, parentId }: ProductVariantP
         data: { parent_id: parentId, attribute },
       });
       const slug: string | undefined = res?.data?.[0]?.full_slug;
-      if (slug) router.push(`/${slug}`);
+      if (slug) goToSlug(slug);
     } catch {
       // ignore — stay on current page
     } finally {
@@ -80,48 +112,25 @@ export function ProductVariant({ variants, currency, parentId }: ProductVariantP
     <div className="w-full space-y-4">
       {groups.map((g) => (
         <div key={g.attribute_id}>
-          {/* Label row */}
-          <p className="lg:text-sm text-[12px] font-semibold text-gray-800 mb-2">
-            {g.label}:{" "}
-            <span className="text-[#186737] font-bold">{displayVal(g.attribute_id)}</span>
-          </p>
+          {g.type !== "tile" && (
+            <p className="lg:text-sm text-[12px] font-semibold text-gray-800 mb-2">
+              {g.label}:{" "}
+              <span className="text-[#186737] font-bold">{displayVal(g.attribute_id)}</span>
+            </p>
+          )}
 
-          {/* ── TILE ─────────────────────────────────────────────────────── */}
           {g.type === "tile" && (
-            <div className="flex gap-2 flex-wrap">
-              {g.variants.map((v) => {
-                const active = selected[g.attribute_id] === v.attribute_value;
-                return (
-                  <button
-                    key={v.sku + v.attribute_value}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => pick(g.attribute_id, v.attribute_value)}
-                    onMouseEnter={() => onEnter(g.attribute_id, v.attribute_value)}
-                    onMouseLeave={() => onLeave(g.attribute_id)}
-                    className={` bg-white rounded-[7px] border-2 cursor-pointer transition-all duration-150 hover:border-[#186737] hover:shadow-sm disabled:opacity-50  text-left ${
-                      active ? "border-[#186737] shadow-sm bg-[#f0f9f4]" : "border-gray-200"
-                    }`}
-                    style={{ minWidth: "90px", maxWidth: "120px" }}
-                  >
-                    <div className="p-3">
-                      <div className="text-[10px] text-gray-400 mb-1.5 truncate">SKU: {v.sku}</div>
-                      <div className={`text-sm font-extrabold mb-1.5 ${active ? "text-[#186737]" : "text-gray-900"}`}>
-                        {v.attribute_value}
-                      </div>
-                      {v.sale_price && v.sale_price < v.price ? (
-                        <>
-                          <div className="text-[12px] font-bold text-gray-900">{currency}{fmtP(v.sale_price)}</div>
-                          <div className="text-[11px] text-gray-400 line-through">{currency}{fmtP(v.price)}</div>
-                        </>
-                      ) : (
-                        <div className="text-[12px] font-bold text-gray-900">{currency}{fmtP(v.price)}</div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <VariantChips
+              label={g.label}
+              variants={g.variants}
+              selectedValue={selected[g.attribute_id] || ""}
+              currency={currency}
+              loading={loading}
+              currentAttributes={currentAttributes}
+              compareOpen={compareOpen}
+              onCompareOpenChange={setCompareOpen}
+              onPick={(value) => pick(g.attribute_id, value)}
+            />
           )}
 
           {/* ── SWATCHES ─────────────────────────────────────────────────── */}
@@ -285,7 +294,7 @@ export function ProductVariant({ variants, currency, parentId }: ProductVariantP
       {loading && (
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Loader2 size={13} className="animate-spin text-[#186737]" />
-     Redirecting you to the next page. Please wait...
+          Updating selection…
         </div>
       )}
     </div>

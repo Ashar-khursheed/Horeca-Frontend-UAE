@@ -68,8 +68,6 @@ const ProductDetailPage = ({
   const description = productData.description ?? [];
   const benefitsFeatures = productData.benefits_features ?? [];
 
-  console.log("productData", productData);
-
   const state = useLocationData();
   const router = useRouter();
   useEffect(() => {

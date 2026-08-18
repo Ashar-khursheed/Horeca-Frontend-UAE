@@ -302,11 +302,12 @@ export const ProductInfo = ({
       </div>
 
       {/* <div className="border-t border-gray-300" /> */}
-      <div>
+      <div id="product-purchase" className="scroll-mt-24">
         <ProductVariant
           variants={variants || []}
           currency={currency}
           parentId={parentId}
+          currentAttributes={product?.attributes ?? []}
         />
       </div>
       {/* Variant Groups */}
