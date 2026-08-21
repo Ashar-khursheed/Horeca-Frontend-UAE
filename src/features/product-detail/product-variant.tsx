@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ProductAttribute, VariantItem } from "./types";
 import { VariantChips } from "./variant-chips";
-import { variantHref } from "./variant-utils";
+import { variantHref, isChipGroup } from "./variant-utils";
 
 interface VariantGroup {
   attribute_id: string;
@@ -36,7 +36,7 @@ export function ProductVariant({
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [hovered, setHovered]   = useState<Record<string, string>>({});
   const [loading, setLoading]   = useState(false);
-  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareOpenFor, setCompareOpenFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!variants?.length) return;
@@ -119,7 +119,7 @@ export function ProductVariant({
             </p>
           )}
 
-          {g.type === "tile" && (
+          {(g.type === "tile" && isChipGroup(g.label, g.type)) && (
             <VariantChips
               label={g.label}
               variants={g.variants}
@@ -127,10 +127,46 @@ export function ProductVariant({
               currency={currency}
               loading={loading}
               currentAttributes={currentAttributes}
-              compareOpen={compareOpen}
-              onCompareOpenChange={setCompareOpen}
+              compareOpen={compareOpenFor === g.attribute_id}
+              onCompareOpenChange={(open) =>
+                setCompareOpenFor(open ? g.attribute_id : null)
+              }
               onPick={(value) => pick(g.attribute_id, value)}
             />
+          )}
+
+          {/* Compact pills for other tile groups (voltage, BTU, unit type) */}
+          {g.type === "tile" && !isChipGroup(g.label, g.type) && (
+            <div>
+              <p className="lg:text-sm text-[12px] font-semibold text-gray-800 mb-2">
+                {g.label}:{" "}
+                <span className="text-[#186737] font-bold">
+                  {displayVal(g.attribute_id)}
+                </span>
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {g.variants.map((v) => {
+                  const active = selected[g.attribute_id] === v.attribute_value;
+                  return (
+                    <button
+                      key={v.sku + v.attribute_value}
+                      type="button"
+                      disabled={loading}
+                      onClick={() => pick(g.attribute_id, v.attribute_value)}
+                      onMouseEnter={() => onEnter(g.attribute_id, v.attribute_value)}
+                      onMouseLeave={() => onLeave(g.attribute_id)}
+                      className={`px-3 py-1.5 rounded-[7px] border text-sm transition-all disabled:opacity-50 ${
+                        active
+                          ? "border-[#186737] bg-[#186737] text-white shadow-sm"
+                          : "border-gray-200 bg-white text-gray-800 hover:border-[#186737] hover:text-[#186737]"
+                      }`}
+                    >
+                      {v.attribute_value}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {/* ── SWATCHES ─────────────────────────────────────────────────── */}

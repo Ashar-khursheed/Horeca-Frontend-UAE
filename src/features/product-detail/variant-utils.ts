@@ -45,13 +45,25 @@ export function splitChipLabel(value: string, fallbackUnit: string) {
 }
 
 export function chooseHeading(label: string) {
-  if (/capacity/i.test(label)) return "Choose Bowl Capacity";
+  if (/bowl|qt\.?/i.test(label) && /capacity/i.test(label)) {
+    return "Choose Bowl Capacity";
+  }
+  if (/\bsize\b|pans?|inch|dimension/i.test(label)) return "Choose Size";
   const clean = label.replace(/\s*\([^)]*\)\s*$/, "").trim();
   return clean ? `Choose ${clean}` : "Choose option";
 }
 
 export function isCapacityGroup(label: string) {
-  return /capacity/i.test(label);
+  return /capacity/i.test(label) && !/btu|cooling|heating/i.test(label);
+}
+
+/** Apple-style chips + Compare — size/capacity only, not voltage/BTU/type. */
+export function isChipGroup(label: string, type: string) {
+  if (type !== "tile") return false;
+  if (/\b(volt|voltage|watt|amp|phase|hertz)\b/i.test(label)) return false;
+  if (/\b(type|mode|unit type)\b/i.test(label)) return false;
+  if (/\bbtu\b/i.test(label)) return false;
+  return /(\bsize\b|pans?|inch|dimension|bowl|\bqt\b|capacity)/i.test(label);
 }
 
 export function sortVariants(variants: VariantItem[]) {

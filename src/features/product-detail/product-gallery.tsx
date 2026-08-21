@@ -50,7 +50,6 @@ export const ProductGallery = ({
   const imgContainerRef = useRef<HTMLDivElement>(null);
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPos,  setZoomPos]  = useState({ x: 50, y: 50 });
-  const [zoomRect, setZoomRect] = useState<DOMRect | null>(null);
 
   // Hydrate guest wishlist + seed from product API's in_wishlist field
   useEffect(() => {
@@ -72,7 +71,6 @@ export const ProductGallery = ({
   };
 
   const ZOOM_FACTOR = 2.5;
-  const LENS_PCT = 100 / ZOOM_FACTOR;
 
   const prevImg = () => setActiveImg((p) => (p === 0 ? images.length - 1 : p - 1));
   const nextImg = () => setActiveImg((p) => (p === images.length - 1 ? 0 : p + 1));
@@ -92,8 +90,6 @@ export const ProductGallery = ({
 
   const handleMouseEnter = () => {
     if (window.innerWidth < 1280) return;
-    if (imgContainerRef.current)
-      setZoomRect(imgContainerRef.current.getBoundingClientRect());
     setShowZoom(true);
   };
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -103,15 +99,6 @@ export const ProductGallery = ({
       y: Math.min(Math.max(((e.clientY - rect.top) / rect.height) * 100, 0), 100),
     });
   };
-
-  const lensX = Math.min(Math.max(zoomPos.x - LENS_PCT / 2, 0), 100 - LENS_PCT);
-  const lensY = Math.min(Math.max(zoomPos.y - LENS_PCT / 2, 0), 100 - LENS_PCT);
-
-  // Clamp zoom panel so it never goes off the right edge of the viewport
-  const zoomPanelSize = zoomRect ? Math.min(zoomRect.height, 380) : 380;
-  const zoomPanelLeft = zoomRect
-    ? Math.min(zoomRect.right + 16, window.innerWidth - zoomPanelSize - 8)
-    : 0;
 
   return (
     <>
@@ -175,23 +162,16 @@ export const ProductGallery = ({
             <img
               src={images[activeImg]}
               alt={productName}
-              className="w-full md:h-100 xl:h-full object-contain p-4 transition-all duration-300 pointer-events-none select-none"
+              className="w-full md:h-100 xl:h-full object-contain p-4 pointer-events-none select-none origin-center will-change-transform"
+              style={
+                showZoom
+                  ? {
+                      transform: `scale(${ZOOM_FACTOR})`,
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                    }
+                  : undefined
+              }
             />
-
-            {/* Zoom Lens */}
-            {showZoom && (
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  width: `${LENS_PCT}%`,
-                  height: `${LENS_PCT}%`,
-                  left: `${lensX}%`,
-                  top: `${lensY}%`,
-                  background: "rgba(173,216,230,0.35)",
-                  border: "1px solid rgba(100,160,200,0.5)",
-                }}
-              />
-            )}
 
             {/* Prev / Next */}
             {images.length > 1 && (
@@ -294,26 +274,6 @@ export const ProductGallery = ({
         url={typeof window !== "undefined" ? window.location.href : ""}
         title={productName}
       />
-
-      {/* External Zoom Panel — fixed, appears to the right of the image */}
-      {showZoom && zoomRect && (
-        <div
-          className="fixed z-[9999] rounded-[7px] overflow-hidden pointer-events-none"
-          style={{
-            top: zoomRect.top,
-            left: zoomPanelLeft,
-            width: zoomPanelSize,
-            height: zoomPanelSize,
-            boxShadow: "0 4px 32px 0 rgba(0,0,0,0.18)",
-            border: "1px solid #e5e7eb",
-            backgroundImage: `url(${images[activeImg]})`,
-            backgroundSize: `${ZOOM_FACTOR * 100}%`,
-            backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
-            backgroundRepeat: "no-repeat",
-            backgroundColor: "white",
-          }}
-        />
-      )}
     </>
   );
 };
