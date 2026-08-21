@@ -22,6 +22,7 @@ import { ProductVariant } from "./product-variant";
 import { RatingStars } from "./rating-stars";
 import type { Accessory, AccessoryItem, VariantItem } from "./types";
 import AddToCartWidget from "@/components/add-to-cart";
+import { useAppSelector } from "@/store/hooks";
 
 type BenefitFeature = { benefit: string; feature: string };
 
@@ -86,7 +87,7 @@ export const ProductInfo = ({
   const [showErrors, setShowErrors] = useState(false);
   const locationState = useLocationData();
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
-
+ const {country} = useAppSelector((s) => s);
   const requiredUnmet = accessories.filter(
     (acc) => acc.is_required === 1 && !selectedItems[acc.id],
   );
@@ -136,7 +137,7 @@ export const ProductInfo = ({
       {/* Model & Rating */}
       <div className="md:hidden flex flex-wrap gap-x-4 gap-y-1">
         <p className="text-sm text-gray-500">
-          Model: <span className="font-semibold text-gray-700">{model}</span>
+          Item No: <span className="font-semibold text-gray-700">{model}</span>
         </p>
         {avgRating > 0 && (
           <div className="flex items-center gap-2">
@@ -183,7 +184,7 @@ export const ProductInfo = ({
               <Truck size={16} className="text-[#186737] shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-gray-800">
-                  {freeShipping ? "Free Shipping" : "Shipping Charges Apply"}
+               Free Delivery in {country?.data?.name}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">Ships {deliveryDays}</p>
               </div>
@@ -281,7 +282,7 @@ export const ProductInfo = ({
       {/* Model & Rating */}
       <div className="md:flex hidden flex-wrap gap-x-4 gap-y-1">
         <p className="text-sm text-gray-500">
-          Model: <span className="font-semibold text-gray-700">{model}</span>
+          Item No: <span className="font-semibold text-gray-700">{model}</span>
         </p>
         {avgRating > 0 && (
           <div className="flex items-center gap-2">
@@ -345,7 +346,7 @@ export const ProductInfo = ({
       {/* Why You'll Love It */}
       <div>
         <h3 className="lg:text-base text-[13px] font-bold text-gray-800 mb-3 flex items-center gap-1.5">
-          <span className="text-[#186737]">★</span> Why You&apos;ll Love It
+          <span className="text-[#186737]">★</span> Key Benefits & Features
         </h3>
 
         {/* Desktop */}

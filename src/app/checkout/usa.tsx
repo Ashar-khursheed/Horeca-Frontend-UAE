@@ -1,7 +1,6 @@
 "use client";
 
 import { makeApiRequest } from "@/apis/axios-instance";
-import { apiUrls } from "@/apis/api-endpoint";
 import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
 import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
 import {
@@ -21,6 +20,7 @@ import {
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { TAX_STORAGE_KEY } from "@/store/slices/tax/taxSlice";
 import {
   getDefaultAddressCache,
   getLocationData,
@@ -39,7 +39,6 @@ import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
 import { Modal } from "@/components/ui/modal";
 import { trackGtmEvent } from "@/utils/gtm";
 import { CurrencySymbol } from "@/components/currency-symbol";
-import { UAE_VAT_RATE } from "dirham";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -167,10 +166,6 @@ export default function CheckoutPage() {
     );
   })();
 
-  // Sourced from the `frontend/countries/...` API response in Redux (state.country.data.name),
-  // not the saved address â€" that API call is the source of truth for VAT/processing-fee eligibility.
-  const isUAEUser = country?.data?.name === "United Arab Emirates";
-
   // Mobile step (1 = Contact + Address, 2 = Cart + Payment)
   const [mobileStep, setMobileStep] = useState(1);
 
@@ -199,6 +194,7 @@ export default function CheckoutPage() {
   };
 
   const fetchedRef = useRef(false);
+  const taxFetchedZip = useRef<string | null>(null);
 
   useEffect(() => {
     if (fetchedRef.current) return;
@@ -307,23 +303,124 @@ export default function CheckoutPage() {
       return sum + itemShipping;
     }, 0);
 
-    // UAE VAT + processing-fee recompute (no US zip-based sales tax lookup)
-    setCartSummary((prev) => {
-      if (!prev) return prev;
-      const updated = {
-        ...prev,
-        totalShippingCharges: newTotalShipping,
-        ...computeSummaryTotals(
-          prev.subTotal,
-          prev.discountAmount ?? 0,
-          newTotalShipping,
-        ),
-      };
-      localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    const isUS =
+      (defaultAddr as any).country?.toLowerCase().includes("united states") ||
+      (defaultAddr as any).related_country?.name
+        ?.toLowerCase()
+        .includes("united states");
+
+    if (isUS && (defaultAddr as any).zip_code) {
+      const zip = (defaultAddr as any).zip_code;
+      const city = encodeURIComponent((defaultAddr as any).city ?? "");
+
+      // Use cached tax data if zip matches — avoid duplicate API calls
+      try {
+        const cached = localStorage.getItem(TAX_STORAGE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.zip === zip) {
+            const cachedRate = parseFloat(
+              (parseFloat(parsed.combined_rate ?? "0") * 100).toFixed(2),
+            );
+            setCartSummary((prev) => {
+              if (!prev) return prev;
+              const discountedSub = prev.subTotal - (prev.discountAmount ?? 0);
+              const taxableAmount = discountedSub + newTotalShipping;
+              const taxAmount = taxableAmount * (cachedRate / 100);
+              const updated = {
+                ...prev,
+                totalShippingCharges: newTotalShipping,
+                taxRatePercentage: cachedRate,
+                discountedSubtotal: discountedSub,
+                finalDiscountedSubtotal: discountedSub,
+                taxableAmount,
+                taxAmount,
+                total: taxableAmount + taxAmount,
+              };
+              localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+              return updated;
+            });
+            return;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+
+      // Prevent duplicate API calls for the same zip in this session
+      if (taxFetchedZip.current === zip) return;
+      taxFetchedZip.current = zip;
+
+      fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/tax/rate?zip=${zip}&country=US&city=${city}`,
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          const newRate = parseFloat(
+            (parseFloat(data.combined_rate ?? "0") * 100).toFixed(2),
+          );
+          setCartSummary((prev) => {
+            if (!prev) return prev;
+            const discountedSub = prev.subTotal - (prev.discountAmount ?? 0);
+            const taxableAmount = discountedSub + newTotalShipping;
+            const taxAmount = taxableAmount * (newRate / 100);
+            const updated = {
+              ...prev,
+              totalShippingCharges: newTotalShipping,
+              taxRatePercentage: newRate,
+              discountedSubtotal: discountedSub,
+              finalDiscountedSubtotal: discountedSub,
+              taxableAmount,
+              taxAmount,
+              total: taxableAmount + taxAmount,
+            };
+            localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+            localStorage.setItem(TAX_STORAGE_KEY, JSON.stringify(data));
+            return updated;
+          });
+        })
+        .catch(() => {
+          taxFetchedZip.current = null; // allow retry on next render
+          setCartSummary((prev) => {
+            if (!prev) return prev;
+            const discountedSub = prev.subTotal - (prev.discountAmount ?? 0);
+            const taxableAmount = discountedSub + newTotalShipping;
+            const taxRate = (prev.taxRatePercentage ?? 0) / 100;
+            const taxAmount = taxableAmount * taxRate;
+            const updated = {
+              ...prev,
+              totalShippingCharges: newTotalShipping,
+              discountedSubtotal: discountedSub,
+              finalDiscountedSubtotal: discountedSub,
+              taxableAmount,
+              taxAmount,
+              total: taxableAmount + taxAmount,
+            };
+            localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+            return updated;
+          });
+        });
+    } else {
+      setCartSummary((prev) => {
+        if (!prev) return prev;
+        const discountedSub = prev.subTotal - (prev.discountAmount ?? 0);
+        const taxableAmount = discountedSub + newTotalShipping;
+        const updated = {
+          ...prev,
+          totalShippingCharges: newTotalShipping,
+          taxRatePercentage: 0,
+          discountedSubtotal: discountedSub,
+          finalDiscountedSubtotal: discountedSub,
+          taxableAmount,
+          taxAmount: 0,
+          total: taxableAmount,
+        };
+        localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
+        return updated;
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addresses, rawProducts, isUAEUser]);
+  }, [addresses, rawProducts]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const apiCartItems = rawProducts.map((cp: any) => ({
@@ -358,54 +455,22 @@ export default function CheckoutPage() {
   const currencySymbolICON: string =
     (rawProducts[0] as any)?.product?.currency?.symbol ?? "$";
 
-  // â"€â"€ Pricing (UAE: flat VAT + card processing fee, no US zip-based sales tax)
-  // Processing fee: 2.95% for UAE addresses, 3.95% for everywhere else
-  const PAYMENT_PROCESSING_FEE_RATE = isUAEUser ? 2.95 : 3.95;
+  // â"€â"€ Pricing
   const baseSubtotal = cartSummary?.subTotal ?? 0;
   const baseShipping = cartSummary?.totalShippingCharges ?? 0;
-  const ratePercent = isUAEUser ? UAE_VAT_RATE * 100 : 0; // VAT applies only within the UAE
+  const ratePercent = cartSummary?.taxRatePercentage ?? 0;
   const taxRate = ratePercent / 100;
   const liftFee = liftGate ? 75 : 0;
   const resFee = residential ? 199 : 0;
   const insideFee = insideDelivery ? 249 : 0;
   const discountedSubtotal = baseSubtotal - discount;
-  const paymentProcessingFee =
-    (discountedSubtotal * PAYMENT_PROCESSING_FEE_RATE) / 100;
-  // VAT calculated on subtotal + processing fee + shipping + addon fees
-  const amountBeforeVAT =
-    discountedSubtotal +
-    paymentProcessingFee +
-    baseShipping +
-    liftFee +
-    resFee +
-    insideFee;
-  const totalTax = amountBeforeVAT * taxRate;
-  const grandTotal = amountBeforeVAT + totalTax;
+  // Tax calculated on discounted subtotal + shipping
+  const taxOnBase = (discountedSubtotal + baseShipping) * taxRate;
+  const taxOnFees = (liftFee + resFee + insideFee) * taxRate;
+  const totalTax = taxOnBase + taxOnFees;
+  const grandTotal =
+    discountedSubtotal + baseShipping + liftFee + resFee + insideFee + totalTax;
   const totalItems = cartItems.reduce((s: any, c: any) => s + c.qty, 0);
-
-  // Shared totals recompute for effects that patch the cached cart summary
-  // (address change, coupon apply/remove) — same formula as the pricingBlock above.
-  const computeSummaryTotals = (
-    subTotal: number,
-    discountAmount: number,
-    shippingCharges: number,
-  ) => {
-    const r2 = (n: number) => Math.round(n * 100) / 100;
-    const discountedSub = r2(subTotal - discountAmount);
-    const fee = r2((discountedSub * PAYMENT_PROCESSING_FEE_RATE) / 100);
-    const beforeVAT = r2(discountedSub + fee + shippingCharges);
-    const vat = r2(beforeVAT * taxRate);
-    return {
-      discountedSubtotal: discountedSub,
-      finalDiscountedSubtotal: discountedSub,
-      paymentProcessingFee: fee,
-      paymentProcessingFeeRate: PAYMENT_PROCESSING_FEE_RATE,
-      taxableAmount: beforeVAT,
-      taxAmount: vat,
-      total: r2(beforeVAT + vat),
-      taxRatePercentage: ratePercent,
-    };
-  };
 
   const isCartLoading =
     isLoggedIn && (apiStatus === "idle" || apiStatus === "loading");
@@ -494,11 +559,19 @@ export default function CheckoutPage() {
             const summary = JSON.parse(raw);
             const sub = summary.subTotal ?? 0;
             const shipping = summary.totalShippingCharges ?? 0;
+            const rate = (summary.taxRatePercentage ?? 0) / 100;
             const r2 = (n: number) => Math.round(n * 100) / 100;
+            const discountedSub = r2(sub - discountAmount);
+            const taxableAmt = r2(discountedSub + shipping);
+            const taxAmt = r2(taxableAmt * rate);
             const updated = {
               ...summary,
               discountAmount: r2(discountAmount),
-              ...computeSummaryTotals(sub, discountAmount, shipping),
+              discountedSubtotal: discountedSub,
+              finalDiscountedSubtotal: discountedSub,
+              taxableAmount: taxableAmt,
+              taxAmount: taxAmt,
+              total: r2(taxableAmt + taxAmt),
               isCouponApplied: true,
             };
             localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
@@ -539,10 +612,18 @@ export default function CheckoutPage() {
         const summary = JSON.parse(raw);
         const sub = summary.subTotal ?? 0;
         const shipping = summary.totalShippingCharges ?? 0;
+        const rate = (summary.taxRatePercentage ?? 0) / 100;
+        const r2 = (n: number) => Math.round(n * 100) / 100;
+        const taxableAmt = r2(sub + shipping);
+        const taxAmt = r2(taxableAmt * rate);
         const updated = {
           ...summary,
           discountAmount: 0,
-          ...computeSummaryTotals(sub, 0, shipping),
+          discountedSubtotal: sub,
+          finalDiscountedSubtotal: sub,
+          taxableAmount: taxableAmt,
+          taxAmount: taxAmt,
+          total: r2(taxableAmt + taxAmt),
           isCouponApplied: false,
         };
         localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(updated));
@@ -603,23 +684,34 @@ export default function CheckoutPage() {
       }
     }
 
-    // 3. Payment method check
-    if (
-      !paymentHandleRef.current ||
-      paymentHandleRef.current.selectedMethod !== "ccavenue"
-    ) {
-      setOrderError("Please select a payment method to continue.");
+    // 3. Card tokenize (no API)
+    if (!paymentHandleRef.current) {
+      setOrderError(
+        "Payment form is not ready. Please wait a moment and try again.",
+      );
+      return;
+    }
+    setOrderStep("card");
+    let token: any;
+    try {
+      token = await paymentHandleRef.current.getPaymentToken();
+    } catch {
+      setOrderStep("idle");
+      return;
+    }
+    if (!token) {
+      setOrderStep("idle");
+      setOrderError("Could not process card. Please try again.");
       return;
     }
 
     setIsPlacingOrder(true);
     try {
-      // 4. Address save
+      // 5. Address save
       setOrderStep("address");
       const addressSaved = await addressCheckoutRef.current?.save();
       if (!addressSaved) {
         setOrderStep("idle");
-        setIsPlacingOrder(false);
         setOrderError(
           "Please fill in your delivery address before placing your order.",
         );
@@ -628,8 +720,7 @@ export default function CheckoutPage() {
           ?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
-
-      // 5. Profile update
+      // 4. Profile update
       setOrderStep("profile");
       await updateProfile(
         {
@@ -642,33 +733,38 @@ export default function CheckoutPage() {
         dispatch,
       );
 
-      // 6. CCAvenue: start hosted payment and redirect there
-      setOrderStep("payment");
-      const res = await makeApiRequest<{
-        success: boolean;
-        message: string;
-        data: { payment_url: string; order_id: number; amount: string; currency: string };
-      }>(apiUrls.CCAVENUE_INITIATE_PAYMENT, {
-        method: "POST",
-        data: {
-          order_id: `ORD-${Date.now()}`,
-          amount: grandTotal,
-          currency: currencySymbolICON,
-        },
+      // 6. Payment + order + history (all in place-order-api.ts)
+      const orderId = await placeOrderWithPayment({
+        token,
+        amount: Number(grandTotal.toFixed(2)),
+        firstName,
+        lastName,
+        email,
+        phone,
+        countryCode: (countryCode as any) ?? "",
+        rawProducts,
+        liftGate,
+        residential,
+        insideDelivery,
+        ratePercent,
+        cardDetails: paymentHandleRef.current?.getCardDetails(),
+        onStep: setOrderStep,
       });
 
-      if (!res?.success || !res?.data?.payment_url) {
-        throw new Error(
-          res?.message ?? "Could not start payment. Please try again.",
-        );
-      }
-
-      // Keep isPlacingOrder true — the browser is about to navigate away
-      window.location.href = res.data.payment_url;
+      setOrderStep("done");
+      dispatch(fetchCounts() as any);
+      // Clear Redux cart so "Added!" badges reset on all product cards
+      dispatch(clearApiEntries());
+      dispatch(clearCart());
+      setTimeout(
+        () => router.replace(`/payment-success?orderID=${orderId}`),
+        1200,
+      );
     } catch (err: any) {
       setOrderStep("idle");
-      setIsPlacingOrder(false);
       setOrderError(parseOrderError(err));
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
@@ -928,7 +1024,7 @@ export default function CheckoutPage() {
   ];
 
   const deliveryBlock = (
-    <div className="mb-6 border border-gray-200 rounded-[7px] overflow-hidden hidden">
+    <div className="mb-6 border border-gray-200 rounded-[7px] overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
         <h2 className="text-sm font-semibold text-gray-900">
           Lift Gate or Residential Address
@@ -989,7 +1085,7 @@ export default function CheckoutPage() {
       <>
         <div className="space-y-2 text-sm mb-4">
           <PriceRow
-            label={`Products Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
+            label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
             value={
               <>
                 <CurrencySymbol currency={currencySymbolICON} fontsize="15px"/>
@@ -1020,39 +1116,28 @@ export default function CheckoutPage() {
               />
             </>
           )}
-          <PriceRow
-            label={`Payment Processing Fee (${PAYMENT_PROCESSING_FEE_RATE}%)`}
-            value={
-              <>
-                <CurrencySymbol currency={currencySymbolICON} fontsize="15px" />
-                {usd(paymentProcessingFee)}
-              </>
-            }
-          />
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 flex items-center gap-1">
-              Shipping &amp; Handling
-              <button
-                type="button"
-                onClick={() => setShowShippingPolicyModal(true)}
-                className="w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors leading-none"
-                aria-label="Shipping policy info"
-              >
-                ?
-              </button>
-            </span>
-            {baseShipping > 0 ? (
+          {baseShipping > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 flex items-center gap-1">
+                Shipping &amp; Handling
+                <button
+                  type="button"
+                  onClick={() => setShowShippingPolicyModal(true)}
+                  className="w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors leading-none"
+                  aria-label="Shipping policy info"
+                >
+                  ?
+                </button>
+              </span>
               <span className="font-medium text-gray-800">
                 <CurrencySymbol currency={currencySymbolICON} fontsize="14px" />
                 {usd(baseShipping)}
               </span>
-            ) : (
-              <span className="font-medium text-[#186737]">Free</span>
-            )}
-          </div>
+            </div>
+          )}
           {liftGate && (
             <PriceRow
-              label="Lift Gate Service"
+              label={`Lift Gate Service${ratePercent > 0 ? ` ` : ""}`}
               value={
                 <>
                   <CurrencySymbol currency={currencySymbolICON} fontsize="15px" />
@@ -1063,7 +1148,7 @@ export default function CheckoutPage() {
           )}
           {residential && (
             <PriceRow
-              label="Residential Address"
+              label={`Residential Address${ratePercent > 0 ? `` : ""}`}
               value={
                 <>
                   <CurrencySymbol currency={currencySymbolICON} fontsize="15px" />
@@ -1074,7 +1159,7 @@ export default function CheckoutPage() {
           )}
           {insideDelivery && (
             <PriceRow
-              label="Inside Delivery"
+              label={`Inside Delivery${ratePercent > 0 ? ` ` : ""}`}
               value={
                 <>
                   <CurrencySymbol currency={currencySymbolICON} fontsize="15px"/>
@@ -1084,32 +1169,21 @@ export default function CheckoutPage() {
             />
           )}
           {ratePercent > 0 && (
-            <>
-              <PriceRow
-                label="Amount Before VAT"
-                value={
-                  <>
-                    <CurrencySymbol currency={currencySymbolICON} fontsize="15px" />
-                    {usd(amountBeforeVAT)}
-                  </>
-                }
-              />
-              <PriceRow
-                label={`VAT (${ratePercent.toFixed(2)}%)`}
-                value={
-                  <>
-                    <CurrencySymbol currency={currencySymbolICON} fontsize="15px" />
-                    {usd(totalTax)}
-                  </>
-                }
-              />
-            </>
+            <PriceRow
+              label={`Tax (${ratePercent}%)`}
+              value={
+                <>
+                  <CurrencySymbol currency={currencySymbolICON} fontsize="15px" />
+                  {usd(totalTax)}
+                </>
+              }
+            />
           )}
         </div>
         <div className="h-px bg-gray-200 mb-4" />
         <div className="flex items-center justify-between mb-4">
           <span className="font-bold text-gray-900 text-base">
-            Your Total
+            Total Amount
           </span>
           <span className="font-bold text-gray-900 text-xl">
             <CurrencySymbol currency={currencySymbolICON} weight="bold" fontsize="18px" />
@@ -1377,6 +1451,8 @@ export default function CheckoutPage() {
                 Payment Details
               </h2>
               <CheckoutPayment
+                squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
+                squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
                 onHandleReady={(h) => {
                   paymentHandleRef.current = h;
                 }}
@@ -1663,6 +1739,8 @@ export default function CheckoutPage() {
             {deliveryBlock}
             <div className="h-px bg-gray-200 my-4" />
             <CheckoutPayment
+              squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
+              squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
               onHandleReady={(h) => {
                 paymentHandleRef.current = h;
               }}

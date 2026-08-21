@@ -51,17 +51,6 @@ export async function updateProfile(
   }
 }
 
-// ── Square payment ────────────────────────────────────────────────────────────
-async function processSquarePayment(token: string, amount: number) {
-  const idempotencyKey = crypto.randomUUID();
-  const res = (await makeApiRequest(apiUrls.SQUARE_PAYMENT, {
-    method: "POST",
-    data: { source_id: token, amount, idempotency_key: idempotencyKey },
-  })) as any;
-  if (!res?.success) throw new Error(res?.message ?? "Payment failed. Please try again.");
-  return res;
-}
-
 // ── Build products array ──────────────────────────────────────────────────────
 function buildProducts(rawProducts: any[]) {
   console.log("aspodasjdasdjasdfasu",rawProducts)
@@ -201,26 +190,26 @@ async function fetchFullOrder(orderId: number, fallback: any) {
 }
 
 // ── MAIN: Place order with all API calls ─────────────────────────────────────
+// NOTE: not currently called — CCAvenue is a redirect-based gateway (see
+// checkout/page.tsx handlePlaceOrder), and order creation for that flow is
+// still pending backend design. Kept here for the payment methods that create
+// the order up front once that's wired back in.
 export async function placeOrderWithPayment(params: PlaceOrderParams): Promise<number> {
-  const { token, amount, onStep } = params;
+  const { onStep } = params;
 
-  // 1. Square payment
-  onStep("payment");
-  const paymentRes = await processSquarePayment(token, amount);
-
-  // 2. Create order
+  // 1. Create order
   onStep("order");
   const orderData = await createOrder(params);
   const orderId = orderData?.id;
   localStorage.removeItem(CART_SUMMARY_KEY);
 
-  // 3. Fetch full order details
+  // 2. Fetch full order details
   const fullOrderData = await fetchFullOrder(orderId, orderData);
 
-  // 4. Non-blocking: payment history + screen transaction (parallel)
+  // 3. Non-blocking: payment history + screen transaction (parallel)
   await Promise.allSettled([
-    savePaymentHistory(fullOrderData, paymentRes),
-    saveScreenTransaction(params, fullOrderData, paymentRes),
+    savePaymentHistory(fullOrderData, null),
+    saveScreenTransaction(params, fullOrderData, null),
   ]);
 
   // 5. Save to localStorage + clear coupon

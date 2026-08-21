@@ -97,11 +97,12 @@ export const apiUrls = {
   SLIDER: (id: number) => `frontend/sliders/${id}`,
   QUOTES: "frontend/quotes",
   QUOTE_DOWNLOAD_PDF: (id: number) => `frontend/quotes/${id}/download-pdf`,
+  QUOTE_UPDATE: (id: number | string) => `frontend/quotes/${id}`,
 
 
   MADE_TO_ORDER: "frontend/made-to-orders",
 
-  SQUARE_PAYMENT:"frontend/payment-square",
+  CCAVENUE_INITIATE_PAYMENT: "frontend/ccavenue/initiate-payment",
   PLACE_ORDER:"frontend/orders",
   ADD_RECENT_PRODUCT: "frontend/recent-products/add",
   GET_RECENT_PRODUCTS: (page: number) => `frontend/recent-products?page=${page}`,
@@ -116,6 +117,10 @@ export const apiUrls = {
   PRODUCT_QUESTION: "frontend/product-questions",
 
   // Vendor Dashboard
+  VENDOR_PROFILE: "vendor/profile",
+  VENDOR_CHANGE_PASSWORD: "vendor/change-password",
   VENDOR_PRICE: "vendor/price",
   VENDOR_PRICE_DETAIL: (id: number | string) => `vendor/price/${id}`,
+  VENDOR_PRICE_EXPORT: "vendor/price/export",
+  VENDOR_PRICE_IMPORT: "vendor/price/import",
 };

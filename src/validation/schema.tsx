@@ -116,7 +116,7 @@ export const guestCheckoutSchema = Yup.object({
 });
 
 export const createQuotationSchema = Yup.object({
-  company_name: Yup.string().trim().max(120, "Maximum 120 characters."),
+  company_name: Yup.string().trim().max(120, "Maximum 120 characters.").required("Company name is required."),
   name: Yup.string()
     .trim()
     .required("Contact name is required.")
@@ -155,7 +155,7 @@ export const createQuotationSchema = Yup.object({
     .required("Zip code is required.")
     .matches(/^[A-Za-z0-9\s-]{3,10}$/, "Enter a valid zip/postal code."),
   payment_mode: Yup.string().required("Please select payment terms."),
-  quote_name: Yup.string().trim().max(80, "Maximum 80 characters."),
+  quote_name: Yup.string().trim().max(80, "Maximum 80 characters.").required("Quote name is required."),
   notes: Yup.string().trim().max(500, "Maximum 500 characters."),
   register_customer: Yup.boolean(),
 });

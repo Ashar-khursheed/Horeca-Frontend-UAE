@@ -15,16 +15,12 @@ import {
   Truck,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { fetchVendorProfile } from "@/store/slices/vendor-profile/vendorProfileSlice";
 
 // ── Mock data (UI only — no backend wired up yet) ──────────────────────────────
-const VENDOR = {
-  name: "Ahmed Al Mansoori",
-  store_name: "Gulf Kitchen Equipment Co.",
-  email: "ahmed@gulfkitchenequip.com",
-  type: "Business",
-  member_since: "Jan 2025",
-};
-
 const STATS = [
   { label: "Orders Received", value: "58",     sub: "+5 this month",     icon: ShoppingBag, color: "bg-blue-50 text-blue-600" },
   { label: "Pending Orders",  value: "4",       sub: "Needs action",      icon: Clock,       color: "bg-amber-50 text-amber-600" },
@@ -36,7 +32,7 @@ const QUICK_ACTIONS = [
   { icon: ShoppingBag, label: "Orders",        desc: "View and fulfil orders placed for your products. Update shipping status.",     link: "/partner/dashboard/orders",    linkLabel: "View Orders",    iconBg: "bg-blue-50",   iconColor: "text-blue-500" },
   { icon: Package,     label: "Products",      desc: "Manage your product listings, pricing, and stock levels.",                     link: "/partner/dashboard/products",  linkLabel: "Manage Products",iconBg: "bg-purple-50", iconColor: "text-purple-500" },
   { icon: CreditCard,  label: "Payouts",       desc: "Track your earnings and view payout history from completed orders.",           link: "/partner/dashboard/payments",  linkLabel: "View Payouts",   iconBg: "bg-amber-50",  iconColor: "text-amber-500" },
-  { icon: Settings,    label: "Store Profile", desc: "Update your store info, bank details, and account settings.",                  link: "/partner/dashboard/my-profile",linkLabel: "Edit Profile",   iconBg: "bg-orange-50", iconColor: "text-orange-500" },
+  { icon: Settings,    label: "Store Profile", desc: "Update your store info, bank details, and account settings.",                  link: "/partner/dashboard/store-profile",linkLabel: "Edit Profile",   iconBg: "bg-orange-50", iconColor: "text-orange-500" },
   { icon: Headphones,  label: "Support Center",desc: "Need help? Open a ticket or contact our vendor support team.",                 link: "/partner/dashboard/support",   linkLabel: "Get Support",    iconBg: "bg-rose-50",   iconColor: "text-rose-500" },
 ];
 
@@ -82,53 +78,72 @@ const RECENT_ORDERS = [
 ];
 
 export default function PartnerDashboardPage() {
-  const initials = VENDOR.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const dispatch = useDispatch<AppDispatch>();
+  const { vendor, contact, loading } = useSelector((state: RootState) => state.vendorProfile);
+
+  useEffect(() => {
+    if (!vendor) dispatch(fetchVendorProfile());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const vendorName = vendor?.name || contact?.name || "Vendor";
+  const vendorEmail = contact?.email || "";
+  const vendorType = vendor?.type || "Business";
+  const memberSince = vendor?.created_at
+    ? new Date(vendor.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : "—";
+  const initials = vendorName.split(" ").filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "V";
+  const showBannerSkeleton = loading && !vendor;
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-full">
       {/* ── Welcome Banner ────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-[7px] bg-linear-to-br from-[#186737] via-[#1e7d42] to-[#22a34e] text-white shadow-lg">
-        <div className="absolute -top-12 -right-12 w-52 h-52 rounded-full bg-white/5" />
-        <div className="absolute -bottom-8 -right-4 w-36 h-36 rounded-full bg-white/5" />
-        <div className="absolute top-6 right-24 w-16 h-16 rounded-full bg-white/5" />
+      {showBannerSkeleton ? (
+        <WelcomeBannerSkeleton />
+      ) : (
+        <div className="relative overflow-hidden rounded-[7px] bg-linear-to-br from-[#186737] via-[#1e7d42] to-[#22a34e] text-white shadow-lg">
+          <div className="absolute -top-12 -right-12 w-52 h-52 rounded-full bg-white/5" />
+          <div className="absolute -bottom-8 -right-4 w-36 h-36 rounded-full bg-white/5" />
+          <div className="absolute top-6 right-24 w-16 h-16 rounded-full bg-white/5" />
 
-        <div className="relative p-6 sm:p-8">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-[7px] bg-white/20 border border-white/30 flex items-center justify-center shrink-0 backdrop-blur-sm">
-                <span className="text-white font-black text-xl">{initials}</span>
+          <div className="relative p-6 sm:p-8">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-[7px] bg-white/20 border border-white/30 flex items-center justify-center shrink-0 backdrop-blur-sm">
+                  <span className="text-white font-black text-xl">{initials}</span>
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">
+                    Welcome back, {vendorName}! 👋
+                  </h1>
+                  <p className="text-white/70 text-sm mt-0.5">Store: {vendorName}</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-white">
-                  Welcome back, {VENDOR.name}! 👋
-                </h1>
-                <p className="text-white/70 text-sm mt-0.5">Store: {VENDOR.store_name}</p>
+
+              <div className="flex items-center gap-2 bg-white/15 border border-white/20 rounded-[7px] px-4 py-2.5 backdrop-blur-sm">
+                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                  <Mail size={12} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/60 font-medium">Email</p>
+                  <p className="text-xs text-white font-normal">{vendorEmail}</p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-white/15 border border-white/20 rounded-[7px] px-4 py-2.5 backdrop-blur-sm">
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                <Mail size={12} />
-              </div>
-              <div>
-                <p className="text-[10px] text-white/60 font-medium">Email</p>
-                <p className="text-xs text-white font-normal">{VENDOR.email}</p>
-              </div>
+            <div className="mt-5 pt-4 border-t border-white/15 flex items-center gap-5 flex-wrap text-xs text-white/75">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                Account Type: <strong className="text-white ml-1">{vendorType}</strong>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                Vendor Since: <strong className="text-white ml-1">{memberSince}</strong>
+              </span>
             </div>
-          </div>
-
-          <div className="mt-5 pt-4 border-t border-white/15 flex items-center gap-5 flex-wrap text-xs text-white/75">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
-              Account Type: <strong className="text-white ml-1">{VENDOR.type}</strong>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
-              Vendor Since: <strong className="text-white ml-1">{VENDOR.member_since}</strong>
-            </span>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── Stats Row ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -279,13 +294,36 @@ export default function PartnerDashboardPage() {
               Keep your bank details up to date in Store Profile to avoid payout delays.
             </p>
             <Link
-              href="/partner/dashboard/my-profile"
+              href="/partner/dashboard/store-profile"
               className="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-[7px] transition-colors"
             >
               Update Bank Details <ArrowRight size={12} />
             </Link>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Welcome banner skeleton (shown while the vendor profile is loading) ────────
+function WelcomeBannerSkeleton() {
+  return (
+    <div className="relative overflow-hidden rounded-[7px] bg-white border border-gray-100 shadow-sm p-6 sm:p-8">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-[7px] bg-gray-100 animate-pulse shrink-0" />
+          <div className="space-y-2.5">
+            <div className="h-6 w-56 bg-gray-200 rounded animate-pulse" />
+            <div className="h-3.5 w-40 bg-gray-100 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="h-12 w-44 bg-gray-100 rounded-[7px] animate-pulse" />
+      </div>
+
+      <div className="mt-5 pt-4 border-t border-gray-100 flex items-center gap-5 flex-wrap">
+        <div className="h-3.5 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="h-3.5 w-32 bg-gray-100 rounded animate-pulse" />
       </div>
     </div>
   );

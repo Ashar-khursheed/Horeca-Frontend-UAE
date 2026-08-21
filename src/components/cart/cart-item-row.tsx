@@ -12,6 +12,7 @@ import {
   removeSaveForLater,
 } from "@/store/slices/save-for-later/saveForLaterSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { CurrencySymbol } from "../currency-symbol";
 
 export default function CartItemRow({
   item,
@@ -27,7 +28,7 @@ export default function CartItemRow({
   const dispatch       = useAppDispatch();
   const isSaved        = useAppSelector((s) => s.saveForLater.ids.includes(item.id));
   const isSaving       = useAppSelector((s) => s.saveForLater.toggling.includes(item.id));
-
+ const {country} = useAppSelector((s) => s);
   // Hydrate guest save-for-later from localStorage on mount
   useEffect(() => {
     dispatch(hydrateGuestSaveItems());
@@ -102,21 +103,24 @@ export default function CartItemRow({
               </Link>
             </h3>
             <p className="text-xs text-[#186737] font-semibold mt-1">{item.brand}</p>
-            <p className="text-xs text-gray-400 mt-0.5">Model: {item.modelNo}</p>
+            <p className="text-xs text-gray-400 mt-0.5">Item No: {item.modelNo}</p>
           </div>
 
           {/* Price – desktop */}
           <div className="hidden sm:block text-right shrink-0 ml-4">
             <p className="text-base font-bold text-gray-900">
-              {item.currencySymbol ?? "$"}{fmtPrice(unitPrice * item.qty)}
+              {/* {item.currencySymbol ?? "$"}{fmtPrice(unitPrice * item.qty)} */}
+                  <CurrencySymbol currency={item.currencySymbol} weight="bold" fontsize="15px" />{fmtPrice(unitPrice * item.qty)}
+
             </p>
             {hasSale && (
               <p className="text-xs text-gray-400 line-through">
-                {item.currencySymbol ?? "$"}{fmtPrice(item.originalPrice * item.qty)}
+               <CurrencySymbol currency={item.currencySymbol} weight="bold" fontsize="15px" />{fmtPrice(item.originalPrice * item.qty)}
+                {/* {item.currencySymbol ?? "$"}{fmtPrice(item.originalPrice * item.qty)} */}
               </p>
             )}
             <p className="text-xs text-gray-500 mt-0.5">
-              {item.currencySymbol ?? "$"}{fmtPrice(item.price)} /{item.unit}
+              <CurrencySymbol currency={item.currencySymbol} weight="bold" fontsize="14px" />{fmtPrice(item.price)} /{item.unit}
             </p>
           </div>
         </div>
@@ -137,9 +141,10 @@ export default function CartItemRow({
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Truck size={12} className="text-[#186737]" />
             <span className="font-semibold text-gray-700">
-              {item.shippingCost > 0
+              {/* {item.shippingCost > 0
                 ? `Shipping Charges: $${fmtPrice(item.shippingCost * item.qty)}`
-                : "Shipping Charges Apply"}
+                : "Shipping Charges Apply"} */}
+              Free Delivery in {country?.data?.name}
             </span>
           </div>
           <span className="text-gray-300">·</span>
@@ -152,11 +157,11 @@ export default function CartItemRow({
         {/* Mobile price */}
         <div className="sm:hidden mt-2">
           <p className="text-sm font-bold text-gray-900">
-            {item.currencySymbol ?? "$"}{fmtPrice(unitPrice * item.qty)}
+            <CurrencySymbol currency={item.currencySymbol} weight="bold" fontsize="15px" />{fmtPrice(unitPrice * item.qty)}
           </p>
           {hasSale && (
             <p className="text-xs text-gray-400 line-through">
-              {item.currencySymbol ?? "$"}{fmtPrice(item.originalPrice * item.qty)}
+              <CurrencySymbol currency={item.currencySymbol} weight="bold" fontsize="15px" />{fmtPrice(item.originalPrice * item.qty)}
             </p>
           )}
         </div>

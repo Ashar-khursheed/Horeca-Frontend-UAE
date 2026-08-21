@@ -1,28 +1,82 @@
 "use client";
 
 import { Modal } from "@/components/ui/modal";
-import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
-import type { SearchProduct } from "@/utils/types";
+import { CurrencySymbol } from "@/components/currency-symbol";
+import type { ApiBrandProduct, SearchProduct } from "@/utils/types";
 import { Check, Package, Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const SEARCH_API = "https://nlpus.thehorecastore.co/search";
+const SEARCH_API = "https://test-us.thehorecastore.co/api/frontend/search";
 
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export type { SearchProduct };
 
+// ── Raw shape returned by frontend/search (the real backend, not the NLP microservice) ──
+interface BackendSearchResponse {
+  success: boolean;
+  data: {
+    products: ApiBrandProduct[];
+  };
+}
+
+// Adapts frontend/search's product shape (title/image_urls/best_supplier) into the
+// SearchProduct shape this modal renders. Kept local to this file — the shared
+// toSearchSuggestions() adapter in @/utils/adapt-nlp-search is for the separate NLP
+// microservice response shape still used by the main search bar/page/compare.
+function adaptBackendSearchProducts(raw: BackendSearchResponse): SearchProduct[] {
+  return (raw.data?.products ?? []).map((p) => {
+    const supplier = p.best_supplier;
+    const salePrice = supplier?.sale_price != null ? Number(supplier.sale_price) : 0;
+    return {
+      id: p.id,
+      sku: p.sku,
+      name: { en: p.title?.en ?? "", ar: p.title?.ar ?? null },
+      images: { en: p.image_urls?.en ?? [], ar: p.image_urls?.ar ?? [] },
+      url: p.url,
+      category_url_resolved: "",
+      parent_category_url_resolved: "",
+      price: supplier?.price ?? 0,
+      sale_price: salePrice,
+      currency: { symbol: p.currency?.symbol ?? "AED", title: p.currency?.title ?? "" },
+      quote_available: !!p.for_quotes,
+      isRequired: false,
+      in_wishlist: p.in_wishlist,
+      suppliers: supplier
+        ? [
+            {
+              vendor_id: supplier.vendor_id,
+              price: supplier.price,
+              sale_price: salePrice || undefined,
+              shipping_charge: Number(supplier.shipping_charge) || 0,
+              delivery_days: supplier.delivery_days,
+              return_policy: supplier.return_policy,
+              free_shipping: !!supplier.free_shipping,
+              min_quantity: supplier.min_quantity,
+              is_fixed: !!supplier.is_fixed,
+            },
+          ]
+        : [],
+    };
+  });
+}
+
+const VAT_RATE = 0.05;
+
 export function AddProductModal({
   isOpen,
   onClose,
   onAdd,
   addedIds,
+  isUAE = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (product: SearchProduct) => void;
   addedIds: number[];
+  /** Show 5% VAT + total per product — only applies within the UAE. */
+  isUAE?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState<SearchProduct[]>([]);
@@ -34,12 +88,11 @@ export function AddProductModal({
     setLoading(true);
     setError(false);
     try {
-      const url = `${SEARCH_API}?query=${encodeURIComponent(q.trim() || "true")}&page=1&length=10`;
+      const url = `${SEARCH_API}?query=${encodeURIComponent(q.trim() || "hoshizaki")}&page=1&length=10`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("search failed");
-      const raw: NlpSearchResponse = await res.json();
-      const adapted = toSearchSuggestions(raw);
-      setProducts(adapted.data?.products ?? []);
+      const raw: BackendSearchResponse = await res.json();
+      setProducts(adaptBackendSearchProducts(raw));
     } catch {
       setError(true);
       setProducts([]);
@@ -113,6 +166,8 @@ export function AddProductModal({
               {products.map((p) => {
                 const image = p.images?.en?.[0] ?? "";
                 const price = p.sale_price > 0 ? p.sale_price : p.price;
+                const vatAmount = isUAE ? price * VAT_RATE : 0;
+                const totalWithVat = price + vatAmount;
                 const supplier = p.suppliers?.[0];
                 const alreadyAdded = addedIds.includes(p.id);
 
@@ -142,8 +197,21 @@ export function AddProductModal({
                         SKU: <span className="text-gray-600 font-medium">{p.sku}</span>
                       </p>
                       <p className="text-sm font-bold text-[#186737] mt-1">
-                        {p.currency?.symbol ?? "$"}{fmt(price)}
+                        <CurrencySymbol currency={p.currency?.symbol} fontsize="15px" />
+                        {fmt(price)}
                       </p>
+                      {isUAE && (
+                        <>
+                          <p className="text-[11px] text-gray-400 mt-0.5">
+                            VAT (5%): <CurrencySymbol currency={p.currency?.symbol} fontsize="11px" />
+                            {fmt(vatAmount)}
+                          </p>
+                          <p className="text-xs font-semibold text-gray-700 mt-0.5">
+                            Total: <CurrencySymbol currency={p.currency?.symbol} fontsize="12px" />
+                            {fmt(totalWithVat)}
+                          </p>
+                        </>
+                      )}
                       {supplier?.delivery_days && (
                         <p className="text-[11px] text-gray-400 mt-0.5">
                           Ships in {supplier.delivery_days}

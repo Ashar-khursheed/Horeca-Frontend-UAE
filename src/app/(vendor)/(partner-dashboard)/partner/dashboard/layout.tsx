@@ -9,6 +9,7 @@ import {
   Globe,
   Headphones,
   HelpCircle,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -16,22 +17,18 @@ import {
   Search,
   Settings,
   ShoppingBag,
+  User,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import { logoutUser } from "@/store/slices/auth/authSlice";
-
-// ── Mock vendor (no backend yet — UI only) ─────────────────────────────────────
-const MOCK_VENDOR = {
-  name: "Arshad Khan",
-  store_name: "Gulf Kitchen Equipment Co.",
-  email: "arshad@arshad.com",
-};
+import { fetchVendorProfile } from "@/store/slices/vendor-profile/vendorProfileSlice";
+import { ChangePasswordModal } from "./_components/change-password-modal";
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 const NAV = [
@@ -64,8 +61,15 @@ const NAV = [
     subtitle: "Track earnings & payout history",
   },
   {
-    label: "Store Profile",
+    label: "My Profile",
     href: "/partner/dashboard/my-profile",
+    icon: User,
+    title: "My Profile",
+    subtitle: "Your account, business & contact details",
+  },
+  {
+    label: "Store Profile",
+    href: "/partner/dashboard/store-profile",
     icon: Settings,
     title: "Store Profile",
     subtitle: "Update your store info & settings",
@@ -123,12 +127,23 @@ export default function PartnerDashboardLayout({ children }: { children: React.R
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+
+  const { vendor, contact } = useSelector((state: RootState) => state.vendorProfile);
+
+  useEffect(() => {
+    if (!vendor) dispatch(fetchVendorProfile());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSignOut = () => {
     dispatch(logoutUser());
   };
 
-  const initials = MOCK_VENDOR.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const vendorName = vendor?.name || contact?.name || "Vendor";
+  const vendorEmail = contact?.email || "";
+  const initials =
+    vendorName.split(" ").filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "V";
 
   const isActive = (href: string) =>
     href === "/partner/dashboard" ? pathname === "/partner/dashboard" : pathname.startsWith(href);
@@ -237,8 +252,8 @@ export default function PartnerDashboardLayout({ children }: { children: React.R
           {(mobile || !collapsed) && (
             <>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-gray-900 truncate">{MOCK_VENDOR.name}</p>
-                <p className="text-[10px] text-gray-400 truncate">{MOCK_VENDOR.email}</p>
+                <p className="text-xs font-bold text-gray-900 truncate">{vendorName}</p>
+                <p className="text-[10px] text-gray-400 truncate">{vendorEmail}</p>
               </div>
               <button
                 type="button"
@@ -338,7 +353,7 @@ export default function PartnerDashboardLayout({ children }: { children: React.R
                 <div className="w-7 h-7 rounded-full bg-[#186737] flex items-center justify-center shrink-0">
                   <span className="text-white font-bold text-[10px]">{initials}</span>
                 </div>
-                <span className="text-xs font-semibold text-gray-700">{MOCK_VENDOR.name.split(" ")[0]}</span>
+                <span className="text-xs font-semibold text-gray-700">{vendorName.split(" ")[0]}</span>
               </button>
 
               {userMenuOpen && (
@@ -346,15 +361,32 @@ export default function PartnerDashboardLayout({ children }: { children: React.R
                   <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
                   <div className="absolute right-0 top-11 z-20 w-48 bg-white rounded-[7px] border border-gray-100 shadow-lg py-1.5">
                     <p className="px-3 py-1.5 text-[11px] text-gray-400 truncate border-b border-gray-50 mb-1">
-                      {MOCK_VENDOR.email}
+                      {vendorEmail}
                     </p>
                     <Link
                       href="/partner/dashboard/my-profile"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50"
                     >
+                      <User size={13} /> My Profile
+                    </Link>
+                    <Link
+                      href="/partner/dashboard/store-profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50"
+                    >
                       <Settings size={13} /> Store Profile
                     </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setChangePasswordOpen(true);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50"
+                    >
+                      <KeyRound size={13} /> Change Password
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -374,6 +406,10 @@ export default function PartnerDashboardLayout({ children }: { children: React.R
 
         <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
       </div>
+
+      {changePasswordOpen && (
+        <ChangePasswordModal onClose={() => setChangePasswordOpen(false)} />
+      )}
     </div>
   );
 }

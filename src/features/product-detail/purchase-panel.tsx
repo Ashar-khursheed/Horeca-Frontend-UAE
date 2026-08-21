@@ -24,6 +24,8 @@ import { useEffect, useState } from "react";
 import { PriceComparisonCard } from "./price-comparison-card";
 import { ReportErrorModal } from "./report-error-modal";
 import type { Accessory, AccessoryItem } from "./types";
+import { useAppSelector } from "@/store/hooks";
+import { CurrencySymbol } from "@/components/currency-symbol";
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -70,6 +72,7 @@ export const PurchasePanel = ({
   >({});
   const [showErrors, setShowErrors] = useState(false);
   const locationState = useLocationData();
+    const {country} = useAppSelector((s) => s);
   const [reportOpen, setReportOpen] = useState(false);
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
   useEffect(() => {
@@ -135,8 +138,8 @@ export const PurchasePanel = ({
                 </span>
               )}
               <div className="flex items-baseline gap-0.5">
-                <span className="text-3xl font-bold text-gray-900">
-                  {currency}
+                <span className="text-3xl font-bold text-gray-900 flex items-baseline gap-1">
+                  <CurrencySymbol currency={currency} weight="bold" />
                   {priceInt}
                 </span>
                 <span className="text-lg font-bold text-gray-900">
@@ -147,8 +150,8 @@ export const PurchasePanel = ({
             </div>
             <PriceComparisonCard productData={productData} />
             {hasSale && (
-              <p className="text-gray-400 text-sm line-through mt-0.5">
-                Was {currency}
+              <p className="text-gray-400 text-sm line-through mt-0.5 flex items-baseline gap-1">
+                Was <CurrencySymbol currency={currency} />
                 {fmtPrice(activeOriginal)}
               </p>
             )}
@@ -158,7 +161,7 @@ export const PurchasePanel = ({
               <Truck size={16} className="text-[#186737] shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-gray-800">
-                  Shipping Charges Apply
+        Free Delivery in {country?.data?.name}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Ships {deliveryDays}

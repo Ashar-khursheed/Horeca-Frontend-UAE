@@ -33,12 +33,12 @@ interface LinkItem {
 const QUICK_LINKS: LinkItem[] = [
   { label: "About Us", href: "/pages/about-us" },
   { label: "Starting a Restaurant?", href: "/starting-a-restaurant" },
-  {
-    label: "Financing Options",
-    href: "#",
-    isModal: true,
-    modalTitle: "Financing Options",
-  },
+  // {
+  //   label: "Financing Options",
+  //   href: "#",
+  //   isModal: true,
+  //   modalTitle: "Financing Options",
+  // },
   {
     label: "Request a Quote",
     href: "#",
@@ -99,7 +99,7 @@ const SOCIAL_LINKS = [
         </svg>
       </>
     ),
-    href: "https://www.facebook.com/horecastoreamerica",
+    href: "https://www.facebook.com/horecastore.ae",
     label: "Facebook",
   },
   // { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
@@ -135,7 +135,7 @@ const SOCIAL_LINKS = [
         </svg>
       </>
     ),
-    href: "https://www.instagram.com/horecastoreamerica",
+    href: "https://www.instagram.com/horecastore.ae",
     label: "Instagram",
   },
   {
@@ -162,7 +162,7 @@ const SOCIAL_LINKS = [
         </svg>
       </>
     ),
-    href: "https://www.linkedin.com/company/horecastoreamerica/",
+    href: "https://www.linkedin.com/company/horecastore/",
     label: "LinkedIn",
   },
   {

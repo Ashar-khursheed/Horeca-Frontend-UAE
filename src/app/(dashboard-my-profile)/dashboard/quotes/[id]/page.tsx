@@ -3,6 +3,7 @@
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import CTA from "@/components/cta";
+import { CurrencySymbol } from "@/components/currency-symbol";
 import {
   AlertCircle,
   ArrowLeft,
@@ -16,6 +17,7 @@ import {
   Mail,
   MapPin,
   Package,
+  Pencil,
   Phone,
   Shield,
   User,
@@ -192,7 +194,6 @@ export default function QuoteDetailPage() {
   const insideFee = quote.is_inside_delivery === 1 ? 249 : 0;
 
   const addressLines = (quote.customer_address ?? "").split(/\\n|\n/).filter(Boolean);
-  const sym = quote.currency?.target_symbol ?? "$";
 
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-[1400px]">
@@ -233,17 +234,27 @@ export default function QuoteDetailPage() {
             </div>
           </div>
 
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20 disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
-          >
-            {downloading ? (
-              <><Loader2 size={14} className="animate-spin" /> Generating…</>
-            ) : (
-              <><Download size={14} /> Download Quote</>
+          <div className="flex items-center gap-2 shrink-0">
+            {quote.status === "Pending" && (
+              <Link
+                href={`/create-quotation?id=${quote.id}`}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold border border-[#186737] text-[#186737] hover:bg-[#f0f9f4] transition-all"
+              >
+                <Pencil size={14} /> Edit Quote
+              </Link>
             )}
-          </button>
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {downloading ? (
+                <><Loader2 size={14} className="animate-spin" /> Generating…</>
+              ) : (
+                <><Download size={14} /> Download Quote</>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -323,7 +334,8 @@ export default function QuoteDetailPage() {
                                     {acc.accessory_item_name?.en?.replace(/^"|"$/g, "")}
                                   </span>
                                   <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
-                                    {sym}{fmt(Number(acc.amount))}
+                                    <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="11px" />
+                                    {fmt(Number(acc.amount))}
                                   </span>
                                 </div>
                               ))}
@@ -333,16 +345,19 @@ export default function QuoteDetailPage() {
 
                         <div className="shrink-0 text-right">
                           <p className="text-base font-bold text-gray-900">
-                            {sym}{fmt(lineTotal + accessoryTotal)}
+                            <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="15px" />
+                            {fmt(lineTotal + accessoryTotal)}
                           </p>
                           {item.quantity > 1 && (
                             <p className="text-[11px] text-gray-400 mt-0.5">
-                              {sym}{fmt(Number(item.unit_price))} each
+                              <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="11px" />
+                              {fmt(Number(item.unit_price))} each
                             </p>
                           )}
                           {accessoryTotal > 0 && (
                             <p className="text-[11px] text-gray-400 mt-0.5">
-                              incl. {sym}{fmt(accessoryTotal)} accessories
+                              <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="11px" />
+                              incl. {fmt(accessoryTotal)} accessories
                             </p>
                           )}
                         </div>
@@ -355,7 +370,10 @@ export default function QuoteDetailPage() {
 
             <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
               <span className="text-xs text-gray-500 font-medium">Items Subtotal</span>
-              <span className="text-sm font-bold text-gray-900">{sym}{fmt(subtotal)}</span>
+              <span className="text-sm font-bold text-gray-900">
+                <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="15px" />
+                {fmt(subtotal)}
+              </span>
             </div>
           </div>
 
@@ -417,25 +435,91 @@ export default function QuoteDetailPage() {
             </div>
             <div className="p-5 space-y-3">
               <div className="space-y-2.5">
-                <SummaryRow label="Subtotal" value={`${sym}${fmt(subtotal)}`} />
+                <SummaryRow
+                  label="Subtotal"
+                  value={
+                    <>
+                      <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="14px" />
+                      {fmt(subtotal)}
+                    </>
+                  }
+                />
                 {discount > 0 && (
-                  <SummaryRow label="Discount" value={`-${sym}${fmt(discount)}`} green />
+                  <SummaryRow
+                    label="Discount"
+                    value={
+                      <>
+                        -<CurrencySymbol currency={quote.currency?.target_symbol} fontsize="14px" />
+                        {fmt(discount)}
+                      </>
+                    }
+                    green
+                  />
                 )}
                 {shipping > 0 && (
-                  <SummaryRow label="Shipping" value={`${sym}${fmt(shipping)}`} />
+                  <SummaryRow
+                    label="Shipping"
+                    value={
+                      <>
+                        <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="14px" />
+                        {fmt(shipping)}
+                      </>
+                    }
+                  />
                 )}
-                {quote.is_lift_gate === 1 && <SummaryRow label="Lift Gate Service" value={`${sym}${fmt(liftFee)}`} />}
-                {quote.is_residential_address === 1 && <SummaryRow label="Residential Address" value={`${sym}${fmt(resFee)}`} />}
-                {quote.is_inside_delivery === 1 && <SummaryRow label="Inside Delivery" value={`${sym}${fmt(insideFee)}`} />}
+                {quote.is_lift_gate === 1 && (
+                  <SummaryRow
+                    label="Lift Gate Service"
+                    value={
+                      <>
+                        <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="14px" />
+                        {fmt(liftFee)}
+                      </>
+                    }
+                  />
+                )}
+                {quote.is_residential_address === 1 && (
+                  <SummaryRow
+                    label="Residential Address"
+                    value={
+                      <>
+                        <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="14px" />
+                        {fmt(resFee)}
+                      </>
+                    }
+                  />
+                )}
+                {quote.is_inside_delivery === 1 && (
+                  <SummaryRow
+                    label="Inside Delivery"
+                    value={
+                      <>
+                        <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="14px" />
+                        {fmt(insideFee)}
+                      </>
+                    }
+                  />
+                )}
                 {tax > 0 && (
-                  <SummaryRow label={`VAT (${taxPercentage.toFixed(0)}%)`} value={`${sym}${fmt(tax)}`} />
+                  <SummaryRow
+                    label={`VAT (${taxPercentage.toFixed(0)}%)`}
+                    value={
+                      <>
+                        <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="14px" />
+                        {fmt(tax)}
+                      </>
+                    }
+                  />
                 )}
               </div>
 
               <div className="border-t border-gray-100 pt-3.5 mt-1">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total Amount</span>
-                  <span className="font-black text-xl text-gray-900">{sym}{fmt(total)}</span>
+                  <span className="font-black text-xl text-gray-900 inline-flex items-center gap-0.5">
+                    <CurrencySymbol currency={quote.currency?.target_symbol} weight="bold" fontsize="20px" />
+                    {fmt(total)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -525,7 +609,7 @@ function ErrorState() {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SummaryRow({ label, value, green }: { label: string; value: string; green?: boolean }) {
+function SummaryRow({ label, value, green }: { label: string; value: React.ReactNode; green?: boolean }) {
   return (
     <div className="flex justify-between items-center text-sm">
       <span className="text-gray-500">{label}</span>

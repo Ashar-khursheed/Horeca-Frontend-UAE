@@ -1,145 +1,172 @@
-'use client'
+"use client";
 
-import { useRef, useState } from 'react'
-import SquarePayment, { SquarePaymentHandle } from './square-payment'
+import { useRef, useState } from "react";
+import { Banknote, CreditCard, Lock, Wallet } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type PaymentMethod = 'square'
-// Aage add karna ho toh: | 'check' | 'net_terms'
+export type PaymentMethod = "ccavenue" | "stripe" | "cod";
 
 export interface CheckoutPaymentHandle {
-  /**
-   * Call this from the "Confirm & Pay" button.
-   * Returns Square token string, ya null if not ready.
-   * Throws if tokenization fails.
-   */
-  getPaymentToken(): Promise<string | null>
-  /** Returns card details stored after last successful tokenize */
-  getCardDetails(): { brand?: string; last4?: string; expMonth?: number; expYear?: number } | null
-  selectedMethod: PaymentMethod
+  /** Which payment method the customer has selected. */
+  selectedMethod: PaymentMethod;
 }
 
 interface Props {
-  /** Square credentials */
-  squareAppId:      string
-  squareLocationId: string
-
   /** Expose internal handle to parent page */
-  onHandleReady?: (handle: CheckoutPaymentHandle) => void
+  onHandleReady?: (handle: CheckoutPaymentHandle) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function CheckoutPayment({
-  squareAppId,
-  squareLocationId,
-  onHandleReady,
-}: Props) {
-  const [selected, setSelected] = useState<PaymentMethod>('square')
-  const [squareReady, setSquareReady] = useState(false)
-
-  const squareRef = useRef<SquarePaymentHandle>(null)
+export default function CheckoutPayment({ onHandleReady }: Props) {
+  const [selected, setSelected] = useState<PaymentMethod>("ccavenue");
 
   // ── Expose handle to parent via callback ────────────────────────────────────
-  // We call onHandleReady once so parent keeps a stable ref
   const handleRef = useRef<CheckoutPaymentHandle>({
-    selectedMethod: 'square',
-    async getPaymentToken() {
-      if (selected === 'square') {
-        if (!squareRef.current) throw new Error('Square not initialized')
-        return squareRef.current.tokenize()
-      }
-      return null
-    },
-    getCardDetails() {
-      if (selected === 'square') return squareRef.current?.getCardDetails() ?? null
-      return null
-    },
-  })
+    selectedMethod: "ccavenue",
+  });
+  handleRef.current.selectedMethod = selected;
 
-  // Sync selected into handle
-  handleRef.current.selectedMethod = selected
-
-  // Give parent access after first render
-  const didNotify = useRef(false)
+  const didNotify = useRef(false);
   if (!didNotify.current && onHandleReady) {
-    didNotify.current = true
-    // next tick so ref is stable
-    Promise.resolve().then(() => onHandleReady(handleRef.current))
+    didNotify.current = true;
+    Promise.resolve().then(() => onHandleReady(handleRef.current));
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    // <div className="mt-5 rounded-xl border-2 border-[#E2E8F0]">
-    <div className="mt-5 rounded-[7px] border-2 border-[#E2E8F0]">
-
+    <div className="mt-5 rounded-[7px] border-2 border-[#E2E8F0] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between rounded-t-[4px] bg-[#E2E8F0] px-6 py-3">
-        <h2 className="text-lg font-semibold text-[#424242]">Payment Method</h2>
+      <div className="flex items-center justify-between bg-[#E2E8F0] px-6 py-3">
+        <h2 className="text-lg font-semibold text-[#424242]">
+          Payment Method
+        </h2>
       </div>
 
-      {/* ── Square (Credit / Debit Card) ────────────────────────────────────── */}
       <div className="px-6">
-        <label
-          htmlFor="pm-square"
-          className="flex cursor-pointer items-start gap-3 border-b-2 border-[#E2E8F0] py-4"
+        <PaymentOption
+          id="pm-ccavenue"
+          title="Credit / Debit Card"
+          subtitle="Pay securely with CCAvenue — Visa, Mastercard, Amex & more"
+          icon={<CreditCard size={20} />}
+          selected={selected === "ccavenue"}
+          onSelect={() => setSelected("ccavenue")}
         >
-          <input
-            id="pm-square"
-            type="radio"
-            name="paymentMethod"
-            value="square"
-            checked={selected === 'square'}
-            onChange={() => setSelected('square')}
-            className="mt-0.5 h-4 w-4 cursor-pointer accent-[#186737]"
-          />
-          <div className="flex-1">
-            <span className="block text-base font-semibold text-[#212121]">
-              Credit / Debit Card
-            </span>
-            <span className="mt-0.5 block text-sm text-gray-500">
-              Secure payment via Square — Visa, Mastercard, Amex & more
-            </span>
-          </div>
-
-          {/* Card brand icons */}
           <div className="flex shrink-0 items-center gap-1.5 self-center md:block hidden">
-            <CardBadge label="VISA"   bg="bg-[#1a1f71]" color="text-white"   />
-            <CardBadge label="MC"     bg="bg-[#eb001b]" color="text-white"   />
-            <CardBadge label="AMEX"   bg="bg-[#007bc1]" color="text-white"   />
+            <CardBadge label="VISA" bg="bg-[#1a1f71]" color="text-white" />
+            <CardBadge label="MC" bg="bg-[#eb001b]" color="text-white" />
+            <CardBadge label="AMEX" bg="bg-[#007bc1]" color="text-white" />
           </div>
-        </label>
+        </PaymentOption>
 
-        {/* Square form — always mounted, shown only when selected */}
-        <div className={selected === 'square' ? 'block' : 'hidden'}>
-          <SquarePayment
-            ref={squareRef}
-            appId={squareAppId}
-            locationId={squareLocationId}
-            onReady={() => setSquareReady(true)}
-            onError={() => setSquareReady(false)}
-          />
-        </div>
+        <PaymentOption
+          id="pm-stripe"
+          title="Pay With Stripe"
+          subtitle="Coming soon"
+          icon={<Wallet size={20} />}
+          selected={false}
+          disabled
+        />
+
+        <PaymentOption
+          id="pm-cod"
+          title="Cash On Delivery"
+          subtitle="Coming soon"
+          icon={<Banknote size={20} />}
+          selected={false}
+          disabled
+          isLast
+        />
       </div>
 
-      {/* ── Extend here for more methods ───────────────────────────────────── */}
-      {/*
-        <div className="px-6">
-          <label htmlFor="pm-check" ...>Pay with Check</label>
-          {selected === 'check' && <PayWithCheck ref={checkRef} />}
-        </div>
-      */}
+      {/* Security note */}
+      <div className="flex items-center gap-2 bg-[#F8FAFC] px-6 py-3 text-xs text-gray-500">
+        <Lock size={12} className="text-[#186737]" />
+        Your payment is encrypted and processed securely.
+      </div>
     </div>
-  )
+  );
 }
 
-// ─── Small helper ─────────────────────────────────────────────────────────────
+// ─── Small helpers ────────────────────────────────────────────────────────────
+
+function PaymentOption({
+  id,
+  title,
+  subtitle,
+  icon,
+  selected,
+  disabled = false,
+  isLast = false,
+  onSelect,
+  children,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  selected: boolean;
+  disabled?: boolean;
+  isLast?: boolean;
+  onSelect?: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className={`flex items-start gap-3 py-4 transition-colors rounded-[7px] px-3 -mx-3 ${
+        isLast ? "" : "border-b-2 border-[#E2E8F0]"
+      } ${
+        disabled
+          ? "cursor-not-allowed opacity-60"
+          : selected
+            ? "cursor-pointer bg-[#F0F9F4]"
+            : "cursor-pointer hover:bg-gray-50"
+      }`}
+    >
+      <input
+        id={id}
+        type="radio"
+        name="paymentMethod"
+        checked={selected}
+        disabled={disabled}
+        onChange={onSelect}
+        className="mt-0.5 h-4 w-4 shrink-0 accent-[#186737] disabled:cursor-not-allowed"
+      />
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+          selected ? "bg-[#186737] text-white" : "bg-gray-100 text-gray-500"
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="flex-1 min-w-0">
+        <span className="flex items-center gap-2">
+          <span className="block text-base font-semibold text-[#212121]">
+            {title}
+          </span>
+          {disabled && (
+            <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+              Coming Soon
+            </span>
+          )}
+        </span>
+        <span className="mt-0.5 block text-sm text-gray-500">{subtitle}</span>
+      </span>
+      {children}
+    </label>
+  );
+}
 
 function CardBadge({
-  label, bg, color,
+  label,
+  bg,
+  color,
 }: {
-  label: string; bg: string; color: string
+  label: string;
+  bg: string;
+  color: string;
 }) {
   return (
     <span
@@ -147,5 +174,5 @@ function CardBadge({
     >
       {label}
     </span>
-  )
+  );
 }

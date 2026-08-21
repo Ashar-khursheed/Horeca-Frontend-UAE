@@ -35,7 +35,7 @@ export function CompareToggleButton({ product, className = "", variant = "icon" 
 
   if (variant === "button") {
     return (
-      <div className={`relative ${className}`}>
+      <div className={`relative ${className} hidden`}>
         <button
           onClick={handleClick}
           className={`w-[182px] ml-auto h-10 flex items-center justify-center gap-2 rounded-[7px] border text-sm font-bold transition-all ${
@@ -65,7 +65,7 @@ export function CompareToggleButton({ product, className = "", variant = "icon" 
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative hidden ${className}`}>
       <button
         onClick={handleClick}
         aria-label={inCompare ? "Remove from compare" : "Add to compare"}

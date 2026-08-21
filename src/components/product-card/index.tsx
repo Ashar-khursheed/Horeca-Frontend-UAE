@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { CurrencySymbol } from "../currency-symbol";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type LS = { en?: string; ar?: string } | string;
@@ -320,8 +321,9 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const locale = useLocale();
   const dispatch = useAppDispatch();
-  // ── Country from Redux (client-side currency conversion) ─────────────
-  const country = useAppSelector((s) => s.country.data);
+  // const state = useAppSelector((s) => s?.country);
+  const {country} = useAppSelector((s) => s);
+
   // ── Wishlist from Redux ───────────────────────────────────────────────
   const wishlistIds = useAppSelector((s) => s.wishlist.ids);
   const wishlistHydrated = useAppSelector((s) => s.wishlist.hydrated);
@@ -607,7 +609,7 @@ export const ProductCard = ({
             className="mt-1.5 text-xs text-[#6B7280] font-medium"
             title={product.sku}
           >
-            Model No: {product.sku}
+           Item No: {product.sku}
           </p>
         )}
 
@@ -631,7 +633,8 @@ export const ProductCard = ({
         {/* Shipping row */}
         <p className="mt- text-[12.5px] font-semibold text-[#4B5563] hidden md:flex items-center gap-1">
           <Truck size={13} className="text-[#186737] flex-shrink-0" />
-          Shipping charges apply
+          {/* Shipping charges apply */}
+          Free Delivery in {country?.data?.name}
         </p>
         <p className="mt- text-[12.5px] font-semibold text-[#4B5563] md:hidden flex items-center gap-1">
           <Truck size={13} className="text-[#186737] flex-shrink-0" />
@@ -676,8 +679,8 @@ export const ProductCard = ({
                     }`}
                   >
                     {typeof product?.currency === "object"
-                      ? product.currency?.symbol || "AED"
-                      : product?.currency || "AED"}
+                      ? <> <CurrencySymbol currency={product.currency?.symbol } weight="bold" fontsize={"20px"} /></>
+                    : <><CurrencySymbol currency={product?.currency || "AED"} weight="bold" fontsize={"20px"} /></>}
                     {priceInt}
                   </b>
                   <span
@@ -700,11 +703,20 @@ export const ProductCard = ({
                 <p className="text-[#6B7280] font-semibold text-[13px] line-through mt-1">
                   WAS{" "}
                   {typeof product?.currency === "object"
+                    ? <> <CurrencySymbol currency={product.currency?.symbol } weight="bold" fontsize={"14px"} /></>
+                    : <><CurrencySymbol currency={product?.currency || "AED"} weight="bold" fontsize={"14px"} /></>}{" "}
+                  {fmtPrice(originalPrice)}
+                </p>
+              ) : null}
+              {/* {hasSale ? (
+                <p className="text-[#6B7280] font-semibold text-[13px] line-through mt-1">
+                  WAS{" "}
+                  {typeof product?.currency === "object"
                     ? product.currency?.symbol || "AED"
                     : product?.currency || "AED"}{" "}
                   {fmtPrice(originalPrice)}
                 </p>
-              ) : null}
+              ) : null} */}
             </div>
           )}
         </div>

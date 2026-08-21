@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import profileReducer from "./slices/my-profile/profileSlice";
+import vendorProfileReducer from "./slices/vendor-profile/vendorProfileSlice";
 import countryReducer from "./slices/country/countrySlice";
 import authReducer from "./slices/auth/authSlice";
 import blogInteractionReducer from "./slices/blog/blogInteractionSlice";
@@ -14,6 +15,7 @@ const store = configureStore({
   reducer: {
     auth: authReducer,
     profile: profileReducer,
+    vendorProfile: vendorProfileReducer,
     country: countryReducer,
     blogInteraction: blogInteractionReducer,
     cart: cartReducer,

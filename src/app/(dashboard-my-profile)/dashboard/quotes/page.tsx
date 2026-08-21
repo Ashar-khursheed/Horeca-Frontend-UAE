@@ -20,6 +20,7 @@ import {
   Eye,
   FileText,
   Loader2,
+  Pencil,
   Plus,
   Search,
   SlidersHorizontal,
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CurrencySymbol } from "@/components/currency-symbol";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ApiQuote {
@@ -369,7 +371,7 @@ export default function MyQuotesPage() {
 
                         {/* Total */}
                         <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">
-                          {sym}{fmt(Number(quote.total_amount))}
+                          <CurrencySymbol currency={quote.currency?.target_symbol} fontsize="15px"/>{fmt(Number(quote.total_amount))}
                         </td>
 
                         {/* Created Date */}
@@ -407,6 +409,15 @@ export default function MyQuotesPage() {
                             >
                               <Eye size={13} />
                             </Link>
+                            {quote.status === "Pending" && (
+                              <Link
+                                href={`/create-quotation?id=${quote.id}`}
+                                title="Edit"
+                                className="w-7 h-7 rounded-[6px] flex items-center justify-center transition-all border border-gray-100 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                              >
+                                <Pencil size={13} />
+                              </Link>
+                            )}
                             <button
                               title="Download"
                               onClick={() => handleDownload(quote)}
@@ -483,6 +494,15 @@ export default function MyQuotesPage() {
                         <Eye size={11} />
                         View
                       </Link>
+                      {quote.status === "Pending" && (
+                        <Link
+                          href={`/create-quotation?id=${quote.id}`}
+                          className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-[6px] bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
+                        >
+                          <Pencil size={11} />
+                          Edit
+                        </Link>
+                      )}
                       <button
                         onClick={() => handleDownload(quote)}
                         disabled={downloadingId === quote.id}

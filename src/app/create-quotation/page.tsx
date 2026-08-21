@@ -2,50 +2,49 @@
 
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import CTA from "@/components/cta";
+import { CurrencySymbol } from "@/components/currency-symbol";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { loginUser } from "@/store/slices/auth/authSlice";
-import { addAddress, type AddressPayload } from "@/store/slices/customer-address/customerAddressSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
+import { addAddress, type AddressPayload } from "@/store/slices/customer-address/customerAddressSlice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { getDefaultAddressCache, useLocationData, type DefaultAddressCache } from "@/utils/locationStorage";
 import { createQuotationSchema } from "@/validation/schema";
 import { useFormik } from "formik";
 import {
-    AlertCircle,
-    Building2,
-    Check,
-    CheckCircle,
-    ChevronRight,
-    FileText,
-    Hash,
-    Home,
-    Info,
-    Loader2,
-    Mail,
-    MapPin,
-    MessageCircle,
-    Minus,
-    Phone,
-    Plus,
-    ShoppingCart,
-    Tag,
-    Trash2,
-    User,
-    X,
+  AlertCircle,
+  Building2,
+  Check,
+  CheckCircle,
+  ChevronRight,
+  FileText,
+  Hash,
+  Home,
+  Info,
+  Loader2,
+  Mail,
+  MapPin,
+  Minus,
+  Plus,
+  Tag,
+  Trash2,
+  User,
+  X
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AddProductModal, type SearchProduct } from "./_components/add-product-modal";
-import CTA from "@/components/cta";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type QuoteProduct = {
@@ -67,6 +66,40 @@ interface CountryItem { id: number; name: string; phone_code: string; icon: stri
 interface CountriesResponse { message: string; data: CountryItem[]; }
 interface LookupItem { id: number; name: string; }
 interface LookupResponse { success: boolean; data: LookupItem[]; }
+
+// ── Edit mode: shape of an existing quote fetched via GET frontend/quotes/{id} ────
+interface ApiQuoteAccessoryCharge {
+  accessory_item_id: number;
+}
+interface ApiQuoteProduct {
+  quantity: number;
+  unit_price: string;
+  shipping_charge: string;
+  vendor_id: number;
+  accessory_charges?: ApiQuoteAccessoryCharge[];
+  product_supplier: { delivery_days: string; return_policy: string };
+  product: {
+    id: number;
+    sku: string;
+    name: { en: string; ar?: string };
+    image_urls: { en: string[] };
+    brand?: { name: { en: string; ar?: string } };
+    warranty_attribute?: { en: string; ar?: string };
+  };
+}
+interface ApiQuoteDetail {
+  id: number;
+  company_name: string | null;
+  is_lift_gate: number | null;
+  is_residential_address: number | null;
+  is_inside_delivery: number | null;
+  coupon_id: number | null;
+  discount: string | null;
+  payment_mode: string;
+  status: string;
+  customer: { name: string; email: string; mobile_number: string | null };
+  quote_products: ApiQuoteProduct[];
+}
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 const INITIAL_PRODUCTS: QuoteProduct[] = [
@@ -164,7 +197,7 @@ const ProductRow = ({
               Brand: {product.brand}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
-              SKU #:{" "}
+              Item No:{" "}
               <span className="text-[#186737] font-medium">{product.sku}</span>
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -315,6 +348,19 @@ const MobileProductCard = ({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CreateQuotationPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("id");
+  const isEditMode = !!editId;
+  const [editLoading, setEditLoading] = useState(isEditMode);
+  const [editLoadError, setEditLoadError] = useState(false);
+  // Fields the create form has no UI for — carried over unchanged from the original quote.
+  const editCarryOverRef = useRef({
+    is_lift_gate: false,
+    is_residential_address: false,
+    is_inside_delivery: false,
+    coupon_id: null as number | null,
+  });
   const [products, setProducts] = useState<QuoteProduct[]>(INITIAL_PRODUCTS);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -350,7 +396,7 @@ export default function CreateQuotationPage() {
   const customerProfile = useSelector((s: RootState) => s?.profile?.customer );
   const [pendingAddress, setPendingAddress] = useState<DefaultAddressCache | null>(null);
   const autofillDone = useRef(false);
-
+console.log("customerProfile", customerProfile);
   // Fetch country details (dial code + flag icon) once we know the visitor's country
   useEffect(() => {
     if (locationFromRedux?.country) {
@@ -394,41 +440,45 @@ export default function CreateQuotationPage() {
       try {
         // If the customer isn't logged in, register them as a guest (same flow as
         // loginOrder's GuestPanel) and log them in before creating the quote.
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        if (!token) {
-          const guestFormData = new FormData();
-          guestFormData.append("name", values.name.trim());
-          guestFormData.append("email", values.email.trim());
-          guestFormData.append("type", "Business");
-          guestFormData.append("country_code", dialCode);
-          guestFormData.append("is_guest", String(true));
-          guestFormData.append("mobile_number", values.mobile_number.replace(/\D/g, ""));
+        // Editing is only reachable from the dashboard (already logged in), so this
+        // never applies there.
+        if (!isEditMode) {
+          const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+          if (!token) {
+            const guestFormData = new FormData();
+            guestFormData.append("name", values.name.trim());
+            guestFormData.append("email", values.email.trim());
+            guestFormData.append("type", "Business");
+            guestFormData.append("country_code", dialCode);
+            guestFormData.append("is_guest", String(true));
+            guestFormData.append("mobile_number", values.mobile_number.replace(/\D/g, ""));
 
-          const regRes = await makeApiRequest<{
-            success: boolean;
-            message?: string;
-            plain_password?: string;
-          }>(apiUrls.REGISTER, { method: "POST", data: guestFormData });
+            const regRes = await makeApiRequest<{
+              success: boolean;
+              message?: string;
+              plain_password?: string;
+            }>(apiUrls.REGISTER, { method: "POST", data: guestFormData });
 
-          if (!regRes.success) {
-            setSubmitError(regRes.message ?? "Registration failed. Please try again.");
-            return;
+            if (!regRes.success) {
+              setSubmitError(regRes.message ?? "Registration failed. Please try again.");
+              return;
+            }
+            if (!regRes.plain_password) {
+              setSubmitError("Registration succeeded but no password returned. Please try again.");
+              return;
+            }
+
+            await dispatch(
+              loginUser({ email: values.email.trim(), password: regRes.plain_password })
+            ).unwrap();
           }
-          if (!regRes.plain_password) {
-            setSubmitError("Registration succeeded but no password returned. Please try again.");
-            return;
-          }
-
-          await dispatch(
-            loginUser({ email: values.email.trim(), password: regRes.plain_password })
-          ).unwrap();
         }
 
         // Save the shipping address (same Redux add-address flow used elsewhere),
         // always as the default, then read the saved address back from the local cache.
         const addressPayload: AddressPayload = {
           type: "",
-          address: values.address.trim(), 
+          address: values.address.trim(),
           country: values.country,
           state: isUAE ? "" : values.state,
           city: values.city,
@@ -443,6 +493,40 @@ export default function CreateQuotationPage() {
           return;
         }
 
+        const productsPayload = products.map((p) => ({
+          product_id: p.id,
+          vendor_id: p.vendorId ?? 0,
+          quantity: p.qty,
+          shipping_charge: p.shippingCost,
+          accessory_item_ids: p.accessoryItemIds ?? [],
+        }));
+
+        // ── Edit mode: update the existing quote ──────────────────────────────
+        if (isEditMode) {
+          const updatePayload = {
+            company_name: values.company_name.trim() || undefined,
+            customer_address_id: customerAddressId,
+            is_lift_gate: editCarryOverRef.current.is_lift_gate,
+            is_residential_address: editCarryOverRef.current.is_residential_address,
+            is_inside_delivery: editCarryOverRef.current.is_inside_delivery,
+            tax_percentage: isUAE ? UAE_VAT_RATE * 100 : 0,
+            coupon_id: couponInfo?.coupon_id ?? editCarryOverRef.current.coupon_id ?? undefined,
+            discount: discount || undefined,
+            payment_mode: values.payment_mode,
+            products: productsPayload,
+          };
+
+          await makeApiRequest(apiUrls.QUOTE_UPDATE(editId!), {
+            method: "PUT",
+            data: updatePayload,
+          });
+
+          setSubmitted(true);
+          setTimeout(() => router.push(`/dashboard/quotes/${editId}`), 1200);
+          return;
+        }
+
+        // ── Create flow ────────────────────────────────────────────────────────
         const payload = {
           company_name: values.company_name.trim() || undefined,
           name: values.name.trim(),
@@ -455,13 +539,7 @@ export default function CreateQuotationPage() {
           coupon_id: couponInfo?.coupon_id,
           discount: discount || undefined,
           payment_mode: values.payment_mode,
-          products: products.map((p) => ({
-            product_id: p.id,
-            vendor_id: p.vendorId ?? 0,
-            quantity: p.qty,
-            shipping_charge: p.shippingCost,
-            accessory_item_ids: p.accessoryItemIds ?? [],
-          })),
+          products: productsPayload,
           emails: Array.from(
             new Set(
               [values.email.trim(), ...values.additionalEmails.map((e) => e.value.trim())].filter(Boolean)
@@ -494,7 +572,7 @@ export default function CreateQuotationPage() {
           URL.revokeObjectURL(blobUrl);
         }
 
-        window.location.href = "/";
+      router.push("/dashboard/quotes");
       } catch (err: unknown) {
         const msg =
           (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -507,6 +585,75 @@ export default function CreateQuotationPage() {
   });
 
   const isUAE = formik.values.country === UAE;
+  // Sourced from the `frontend/countries/...` API response in Redux (state.country.data),
+  // same as checkout — real currency for whichever country is selected, not a fixed value.
+  const currencySymbol = country?.data?.currency_symbol ?? "$";
+
+  // ── Edit mode: load the existing quote (?id=) and prefill this same form ────────
+  const editFetchDone = useRef(false);
+  useEffect(() => {
+    if (!editId || editFetchDone.current) return;
+    editFetchDone.current = true;
+    (async () => {
+      try {
+        const res = await makeApiRequest<{ success: boolean; data: ApiQuoteDetail }>(
+          `${apiUrls.QUOTES}/${editId}`,
+        );
+        if (!res.success) {
+          setEditLoadError(true);
+          return;
+        }
+        const q = res.data;
+
+        if (q.status !== "Pending") {
+          setEditLoadError(true);
+          return;
+        }
+
+        formik.setFieldValue("company_name", q.company_name ?? "");
+        formik.setFieldValue("name", q.customer?.name ?? "");
+        formik.setFieldValue("email", q.customer?.email ?? "");
+        formik.setFieldValue("mobile_number", q.customer?.mobile_number ?? "");
+        formik.setFieldValue("payment_mode", q.payment_mode || "Credit Card");
+        formik.setFieldValue("register_customer", false);
+
+        editCarryOverRef.current = {
+          is_lift_gate: q.is_lift_gate === 1,
+          is_residential_address: q.is_residential_address === 1,
+          is_inside_delivery: q.is_inside_delivery === 1,
+          coupon_id: q.coupon_id ?? null,
+        };
+        setDiscount(Number(q.discount) || 0);
+
+        setProducts(
+          q.quote_products.map((item) => ({
+            id: item.product.id,
+            name: item.product.name?.en || item.product.name?.ar || "",
+            brand: item.product.brand?.name?.en || item.product.brand?.name?.ar || "",
+            sku: item.product.sku,
+            image: item.product.image_urls?.en?.[0] ?? "",
+            warranty:
+              item.product.warranty_attribute?.en ||
+              item.product.warranty_attribute?.ar ||
+              "—",
+            deliveryDays: item.product_supplier?.delivery_days ?? "",
+            shippingCost: Number(item.shipping_charge) || 0,
+            price: Number(item.unit_price) || 0,
+            qty: item.quantity,
+            vendorId: item.vendor_id ?? 0,
+            accessoryItemIds: (item.accessory_charges ?? []).map(
+              (a) => a.accessory_item_id,
+            ),
+          })),
+        );
+      } catch {
+        setEditLoadError(true);
+      } finally {
+        setEditLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId]);
 
   const phoneValidation = usePhoneValidation(
     formik.values.mobile_number.replace(/\D/g, ""),
@@ -676,7 +823,7 @@ export default function CreateQuotationPage() {
           image: p.images?.en?.[0] ?? "",
           warranty: "—",
           deliveryDays: supplier?.delivery_days ?? "",
-          shippingCost: 0,
+          shippingCost: supplier?.shipping_charge ?? 0,
           price: p.sale_price > 0 ? p.sale_price : p.price,
           qty: 1,
           vendorId: supplier?.vendor_id,
@@ -713,7 +860,7 @@ export default function CreateQuotationPage() {
 
         if (discountAmount > subtotal) {
           setCouponError(
-            `Coupon discount exceeds your order subtotal ($${fmtPrice(subtotal)}). This coupon cannot be applied.`
+            `Coupon discount exceeds your order subtotal (${currencySymbol}${fmtPrice(subtotal)}). This coupon cannot be applied.`
           );
           return;
         }
@@ -756,6 +903,88 @@ export default function CreateQuotationPage() {
     formik.handleSubmit();
   };
 
+  if (isEditMode && editLoading) {
+    return (
+      <>
+        <QuoteBreadcrumb />
+        <main className="min-h-screen bg-gray-50/60">
+          <div className="global-container py-6 sm:py-8 animate-pulse">
+            <div className="mb-6 space-y-2">
+              <div className="h-6 bg-gray-200 rounded w-64" />
+              <div className="h-3 bg-gray-100 rounded w-96 max-w-full" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] gap-6 items-start">
+              {/* LEFT */}
+              <div className="space-y-5">
+                {[6, 4, 3].map((rows, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden"
+                  >
+                    <div className="px-5 py-3.5 border-b border-gray-100">
+                      <div className="h-4 bg-gray-200 rounded w-40" />
+                    </div>
+                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {Array.from({ length: rows }).map((_, j) => (
+                        <div key={j} className="space-y-1.5">
+                          <div className="h-3 bg-gray-100 rounded w-20" />
+                          <div className="h-10 bg-gray-100 rounded-[7px]" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* RIGHT */}
+              <div className="space-y-4">
+                <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-5 py-3.5 border-b border-gray-100">
+                    <div className="h-4 bg-gray-200 rounded w-28" />
+                  </div>
+                  <div className="p-5 space-y-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="flex justify-between">
+                        <div className="h-3 bg-gray-100 rounded w-16" />
+                        <div className="h-3 bg-gray-100 rounded w-14" />
+                      </div>
+                    ))}
+                    <div className="h-11 bg-gray-200 rounded-[7px] mt-2" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (isEditMode && editLoadError) {
+    return (
+      <>
+        <QuoteBreadcrumb />
+        <main className="min-h-screen bg-gray-50/60">
+          <div className="global-container py-6 sm:py-8">
+            <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm py-20 text-center">
+              <AlertCircle size={40} className="mx-auto text-amber-200 mb-3" />
+              <p className="text-sm font-semibold text-gray-500">
+                This quote could not be loaded for editing — it may no longer be Pending.
+              </p>
+              <Link
+                href="/dashboard/quotes"
+                className="mt-3 inline-block text-xs text-[#186737] hover:underline font-medium"
+              >
+                Back to My Quotes
+              </Link>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <QuoteBreadcrumb />
@@ -764,11 +993,12 @@ export default function CreateQuotationPage() {
           {/* Page title */}
           <div className="mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-[#186737]">
-              Your Customized Quotation
+              {isEditMode ? "Edit Your Quotation" : "Your Customized Quotation"}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              Based on your selection, this quotation has been prepared for you.
-              Please review before confirming.
+              {isEditMode
+                ? "Update the details below and save your changes."
+                : "Based on your selection, this quotation has been prepared for you. Please review before confirming."}
             </p>
           </div>
 
@@ -785,7 +1015,7 @@ export default function CreateQuotationPage() {
                 </div>
 
                 <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Company Name">
+                  <Field label="Company Name" required>
                     <div className="relative">
                       <Building2
                         size={14}
@@ -848,7 +1078,8 @@ export default function CreateQuotationPage() {
                       <input
                         type="email"
                         name="email"
-                        className={`${inputCls} pl-9`}
+                        disabled={!!customerProfile}
+                        className={`${inputCls} pl-9 ${customerProfile ? "cursor-not-allowed bg-gray-50 text-gray-400" : ""}`}
                         value={formik.values.email}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -918,7 +1149,8 @@ export default function CreateQuotationPage() {
                         type="tel"
                         name="mobile_number"
                         inputMode="numeric"
-                        className="flex-1 px-3 text-sm outline-none bg-white placeholder:text-gray-400"
+                        // disabled={!!customerProfile}
+                        className={`flex-1 px-3 text-sm outline-none placeholder:text-gray-400 ${customerProfile ? "cursosr-not-allowed bg-gray-50 text-gray-400" : "bg-white"}`}
                         value={formik.values.mobile_number}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -960,7 +1192,7 @@ export default function CreateQuotationPage() {
                     </Select>
                   </Field>
 
-                  <Field label="Quote Name">
+                  <Field label="Quote Name" required>
                     <div className="relative">
                       <Tag
                         size={14}
@@ -1191,16 +1423,17 @@ export default function CreateQuotationPage() {
                                         {p.sku}
                                       </span>
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-0.5">
+                                    {/* <p className="text-xs text-gray-500 mt-0.5">
                                       Warranty:{" "}
                                       <span className="font-medium text-gray-700">
                                         {p.warranty}
                                       </span>
-                                    </p>
+                                    </p> */}
                                     <p className="text-xs text-gray-500 mt-0.5">
                                       {/* Shipping Charge:{" "} */}
-                                      <span className="font-medium text-gray-700">
-                                        ${fmtPrice(p.shippingCost)}
+                                      <span className="font-medium text-gray-700 inline-flex items-center gap-0.5">
+                                        <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                                        {fmtPrice(p.price)}
                                       </span>{" "}
                                       Mostly ships in {p.deliveryDays}
                                     </p>
@@ -1216,7 +1449,8 @@ export default function CreateQuotationPage() {
                               </td>
                               <td className="py-4 pr-4 pl-3.5 whitespace-nowrap">
                                 <span className="text-sm font-semibold text-gray-800">
-                                  ${fmtPrice(p.price)}
+                                  <CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                                  {fmtPrice(p.price)}
                                 </span>
                               </td>
                               <td className="py-4 pr-4">
@@ -1242,7 +1476,8 @@ export default function CreateQuotationPage() {
                               </td>
                               <td className="py-4 whitespace-nowrap">
                                 <span className="text-sm font-bold text-gray-900">
-                                  ${fmtPrice(p.price * p.qty)}
+                                  <CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                                  {fmtPrice(p.price * p.qty)}
                                 </span>
                               </td>
                             </tr>
@@ -1280,15 +1515,23 @@ export default function CreateQuotationPage() {
                             </div>
                           </div>
                           <div className="mt-2.5 space-y-1">
-                            <p className="text-xs text-gray-500">
+                            {/* <p className="text-xs text-gray-500">
                               Warranty:{" "}
                               <span className="font-medium text-gray-700">{p.warranty}</span>
+                            </p> */}
+                            <p className="text-xs text-gray-500 flex items-center flex-wrap gap-x-1">
+                              Ships in {p.deliveryDays} 
+                              {/* <span className="inline-flex items-center gap-0.5">
+                                <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                                {fmtPrice(p.shippingCost)}
+                              </span> */}
                             </p>
-                            <p className="text-xs text-gray-500">
-                              Ships in {p.deliveryDays} · Shipping: ${fmtPrice(p.shippingCost)}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Limit Price: <span className="font-medium text-gray-700"> ${fmtPrice(p.price)}</span>
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                              Limit Price:{" "}
+                              <span className="font-medium text-gray-700 inline-flex items-center gap-0.5">
+                                <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                                {fmtPrice(p.price)}
+                              </span>
                             </p>
                           </div>
                           <div className="mt-3 flex items-center justify-between flex-wrap gap-2">
@@ -1312,8 +1555,9 @@ export default function CreateQuotationPage() {
                               </button>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold text-gray-900">
-                                ${fmtPrice(p.price * p.qty)}
+                              <span className="text-sm font-bold text-gray-900 flex items-center gap-0.5">
+                                <CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                                {fmtPrice(p.price * p.qty)}
                               </span>
                               <button
                                 onClick={() => handleRemove(p.id)}
@@ -1378,7 +1622,7 @@ export default function CreateQuotationPage() {
 
                 <div className="p-5 space-y-3">
                   {/* Coupon */}
-                  <div>
+                  <div className="hidden">
                     <div className="hidden gap-2 mb-2">
                       <div className="relative flex-1">
                         <Tag
@@ -1429,8 +1673,9 @@ export default function CreateQuotationPage() {
                           <p className="text-[12px] font-semibold text-emerald-700">
                             {couponInfo.coupon_code}
                           </p>
-                          <p className="text-[11px] text-emerald-600">
-                            Saving ${fmtPrice(discount)}
+                          <p className="text-[11px] text-emerald-600 flex items-center gap-0.5">
+                            Saving <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                            {fmtPrice(discount)}
                           </p>
                         </div>
                         <Check size={15} className="text-emerald-600" />
@@ -1442,22 +1687,26 @@ export default function CreateQuotationPage() {
                   <div className="space-y-2.5 pt-1 border-t border-gray-50">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Subtotal</span>
-                      <span className="font-semibold text-gray-900">
-                        $ {fmtPrice(subtotal)}
+                      <span className="font-semibold text-gray-900 flex items-center gap-0.5">
+                        <CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                        {fmtPrice(subtotal)}
                       </span>
                     </div>
                     {cappedDiscount > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Discount</span>
-                        <span className="font-semibold text-emerald-600">
-                          - $ {fmtPrice(cappedDiscount)}
+                        <span className="font-semibold text-emerald-600 flex items-center gap-0.5">
+                          -<CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                          {fmtPrice(cappedDiscount)}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Shipping</span>
-                      <span className="font-semibold text-gray-900">
-                        $ {fmtPrice(shipping)}
+                      <span className="font-semibold text-green-600 flex items-center gap-0.5">
+                        {/* <CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                        {fmtPrice(shipping)} */}
+                        Free
                       </span>
                     </div>
                     {isUAE && (
@@ -1466,8 +1715,9 @@ export default function CreateQuotationPage() {
                           VAT ({(UAE_VAT_RATE * 100).toFixed(0)}%)
                           <Info size={12} className="text-gray-300" />
                         </span>
-                        <span className="font-semibold text-gray-900">
-                          $ {fmtPrice(tax)}
+                        <span className="font-semibold text-gray-900 flex items-center gap-0.5">
+                          <CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                          {fmtPrice(tax)}
                         </span>
                       </div>
                     )}
@@ -1477,8 +1727,9 @@ export default function CreateQuotationPage() {
                     <span className="font-bold text-gray-900 text-sm">
                       Grand Total
                     </span>
-                    <span className="font-bold text-gray-900 text-xl">
-                      $ {fmtPrice(grandTotal)}
+                    <span className="font-bold text-gray-900 text-xl flex items-center gap-0.5">
+                      <CurrencySymbol currency={currencySymbol} weight="bold" fontsize="18px" />
+                      {fmtPrice(grandTotal)}
                     </span>
                   </div>
 
@@ -1515,7 +1766,17 @@ export default function CreateQuotationPage() {
                     ) : (
                       <FileText size={15} />
                     )}
-                    {submitting ? "Generating…" : submitted ? "Quotation Sent!" : "Generate & Email Quotation"}
+                    {submitting
+                      ? isEditMode
+                        ? "Saving…"
+                        : "Generating…"
+                      : submitted
+                        ? isEditMode
+                          ? "Saved!"
+                          : "Quotation Sent!"
+                        : isEditMode
+                          ? "Save Changes"
+                          : "Generate & Email Quotation"}
                   </button>
 
                   {/* <button className="w-full py-3 rounded-[7px] font-semibold text-sm flex items-center justify-center gap-2 border border-[#186737] text-[#186737] hover:bg-[#f0f9f4] transition-colors duration-200">
@@ -1565,6 +1826,7 @@ export default function CreateQuotationPage() {
         onClose={() => setAddModalOpen(false)}
         onAdd={handleAddProduct}
         addedIds={products.map((p) => p.id)}
+        isUAE={isUAE}
       />
     </>
   );

@@ -279,7 +279,7 @@ const ProductDetailPage = ({
               activePrice={activePrice}
               activeOriginal={productData.price}
               unit={unit}
-              currency={productData.currency?.symbol}
+              currency={productData.currency?.symbol || "AED"}
               freeShipping={supplier?.free_shipping ?? false}
               deliveryDays={supplier?.delivery_days ?? ""}
               returnPolicy={supplier?.return_policy ?? ""}
@@ -291,7 +291,7 @@ const ProductDetailPage = ({
               activePrice={activePrice}
               activeOriginal={productData.price}
               unit={unit}
-              currency={productData.currency?.symbol}
+              currency={productData.currency?.symbol || "AED"}
               freeShipping={supplier?.free_shipping ?? false}
               deliveryDays={supplier?.delivery_days ?? ""}
               shipTo={
@@ -337,7 +337,7 @@ const ProductDetailPage = ({
                 onClick={() => setOpenOverview((v) => !v)}
               >
                 <h2 className="heading-font-size font-bold text-gray-900">
-                  Product Overview
+                  Product Description
                 </h2>
                 {openOverview ? (
                   <ChevronUp size={18} className="text-gray-500 shrink-0" />
@@ -348,7 +348,7 @@ const ProductDetailPage = ({
               {/* Desktop: static header */}
               <div className="hidden md:block px-6 py-4 border-b border-gray-300">
                 <h2 className="heading-font-size font-bold text-gray-900">
-                  Product Overview
+                  Product Description
                 </h2>
               </div>
               <div
@@ -465,8 +465,8 @@ const ProductDetailPage = ({
           />
         </div>
       </main>
-      <SpinWheelModal />
-      <CompareTray />
+      {/* <SpinWheelModal />
+      <CompareTray /> */}
     </div>
   );
 };

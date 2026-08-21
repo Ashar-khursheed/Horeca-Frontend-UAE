@@ -121,6 +121,8 @@ const Header = ({ navItemData = [] }: HeaderProps) => {
     };
   }, []);
 
+  console.log("Header navItemData:", navItemData);
+
   return (
     <>
       <header

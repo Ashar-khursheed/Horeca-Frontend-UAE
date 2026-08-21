@@ -18,8 +18,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { CartItem, fmtPrice } from "./cart-types";
-import { getTaxRateData } from "@/utils/taxCalculator";
 import CTA from "../cta";
+import { CurrencySymbol } from "../currency-symbol";
+import { UAE_VAT_RATE } from "dirham";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 
@@ -29,7 +30,10 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const taxData = useAppSelector((s) => s.tax.data);
+  const country = useAppSelector((s) => s.country);
+  // Sourced from the `frontend/countries/...` API response in Redux (state.country.data.name) —
+  // VAT and the (lower) processing-fee rate only apply within the UAE.
+  const isUAEUser = country?.data?.name === "United Arab Emirates";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -47,17 +51,15 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
-  // Fall back to localStorage when Redux taxData is null (e.g. on refresh)
-  const effectiveTaxData = taxData ?? getTaxRateData() ?? undefined;
-  // Round rate to 2 decimal places (same as checkout page) so tax amounts match exactly
-  const ratePercent    = effectiveTaxData
-    ? parseFloat((parseFloat(effectiveTaxData.combined_rate || "0") * 100).toFixed(2))
-    : 0;
-  const taxRate        = ratePercent / 100;
-  const taxOnProducts  = taxable * taxRate;
-  const taxOnShipping  = shippingTotal * taxRate;
-  const totalTax       = taxOnProducts + taxOnShipping;
-  const grandTotal     = taxable + shippingTotal + totalTax;
+  // Processing fee: 2.95% for UAE addresses, 3.95% for everywhere else
+  const PAYMENT_PROCESSING_FEE_RATE = isUAEUser ? 2.95 : 3.95;
+  const paymentProcessingFee = (taxable * PAYMENT_PROCESSING_FEE_RATE) / 100;
+  const ratePercent = isUAEUser ? UAE_VAT_RATE * 100 : 0; // VAT applies only within the UAE
+  const taxRate = ratePercent / 100;
+  // VAT calculated on subtotal (after discount) + processing fee + shipping
+  const amountBeforeVAT = taxable + paymentProcessingFee + shippingTotal;
+  const totalTax    = amountBeforeVAT * taxRate;
+  const grandTotal   = amountBeforeVAT + totalTax;
   const totalItems = cartItems.reduce((s, c) => s + c.qty, 0);
 
   // ── Build summary object ───────────────────────────────────────────────────
@@ -74,7 +76,9 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     insideDeliveryFee:       0,
     additionalCharge:        0,
     additionalFees:          0,
-    taxableAmount:           taxable + shippingTotal,
+    paymentProcessingFee:    paymentProcessingFee,
+    paymentProcessingFeeRate: PAYMENT_PROCESSING_FEE_RATE,
+    taxableAmount:           amountBeforeVAT,
     taxAmount:               totalTax,
     total:                   grandTotal,
     taxRatePercentage:       ratePercent,
@@ -88,7 +92,7 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
       localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(buildSummary()));
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cartItems, promoApplied, subtotal, shippingTotal, totalTax, grandTotal, ratePercent]);
+  }, [cartItems, promoApplied, subtotal, shippingTotal, paymentProcessingFee, totalTax, grandTotal, ratePercent]);
 
   // ── Save + navigate on "Confirm & Pay" ────────────────────────────────────
   const handleConfirm = () => {
@@ -121,35 +125,77 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
             <div className="p-5 space-y-3">
               <div className="space-y-2.5 text-sm">
                 <SummaryRow
-                  label={`Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
-                  value={`${currencySymbol}${fmtPrice(subtotal)}`}
+                  label={`Products Subtotal (${totalItems} item${totalItems !== 1 ? "s" : ""})`}
+                  value={
+                    <>
+                      <CurrencySymbol currency={currencySymbol} fontsize="14px" />
+                      {fmtPrice(subtotal)}
+                    </>
+                  }
                 />
-                {shippingTotal > 0 && (
-                  <SummaryRow
-                    label="Shipping & Handling"
-                    value={`${currencySymbol}${fmtPrice(shippingTotal)}`}
-                  />
-                )}
                 {promoApplied && (
                   <SummaryRow
                     label="Promo (HORECA10)"
-                    value={`-${currencySymbol}${fmtPrice(promoDiscount)}`}
+                    value={
+                      <>
+                        -<CurrencySymbol currency={currencySymbol} fontsize="14px" />
+                        {fmtPrice(promoDiscount)}
+                      </>
+                    }
                     green
                     icon={<Tag size={12} />}
                   />
                 )}
+                <SummaryRow
+                  label={`Payment Processing Fee (${PAYMENT_PROCESSING_FEE_RATE}%)`}
+                  value={
+                    <>
+                      <CurrencySymbol currency={currencySymbol} fontsize="14px" />
+                      {fmtPrice(paymentProcessingFee)}
+                    </>
+                  }
+                />
+                <SummaryRow
+                  label="Shipping & Handling"
+                  value={
+                    shippingTotal > 0 ? (
+                      <>
+                        <CurrencySymbol currency={currencySymbol} fontsize="14px" />
+                        {fmtPrice(shippingTotal)}
+                      </>
+                    ) : (
+                      <span className="text-[#186737] font-semibold">Free</span>
+                    )
+                  }
+                />
                 {ratePercent > 0 && (
-                  <SummaryRow
-                    label={`Tax (${ratePercent}%)`}
-                    value={`${currencySymbol}${fmtPrice(totalTax)}`}
-                  />
+                  <>
+                    <SummaryRow
+                      label="Amount Before VAT"
+                      value={
+                        <>
+                          <CurrencySymbol currency={currencySymbol} fontsize="14px" />
+                          {fmtPrice(amountBeforeVAT)}
+                        </>
+                      }
+                    />
+                    <SummaryRow
+                      label={`VAT (${ratePercent.toFixed(2)}%)`}
+                      value={
+                        <>
+                          <CurrencySymbol currency={currencySymbol} fontsize="14px" />
+                          {fmtPrice(totalTax)}
+                        </>
+                      }
+                    />
+                  </>
                 )}
               </div>
 
               <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
-                <span className="font-bold text-gray-900">Total Amount</span>
+                <span className="font-bold text-gray-900">Your Total</span>
                 <span className="font-bold text-gray-900 text-xl">
-                  {currencySymbol}
+                  <CurrencySymbol currency={currencySymbol} weight="bold" fontsize="18px" />
                   {fmtPrice(grandTotal)}
                 </span>
               </div>
@@ -263,7 +309,7 @@ function SummaryRow({
   icon,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   green?: boolean;
   icon?: React.ReactNode;
 }) {

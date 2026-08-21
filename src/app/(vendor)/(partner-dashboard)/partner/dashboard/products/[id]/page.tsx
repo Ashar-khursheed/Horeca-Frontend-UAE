@@ -12,12 +12,12 @@ import {
   Pencil,
   Save,
   Truck,
-  X,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Modal } from "@/components/ui/modal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface VendorPriceProduct {
@@ -364,24 +364,14 @@ function EditPriceStockModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={saving ? undefined : onClose} />
-      <div className="relative bg-white rounded-[10px] shadow-xl w-full max-w-md overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div>
-            <h2 className="font-bold text-gray-900 text-sm">Edit Price &amp; Stock</h2>
-            <p className="text-[11px] text-gray-400 mt-0.5 truncate max-w-70">{product.product.name.en}</p>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={saving}
-            className="w-8 h-8 rounded-[7px] flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors disabled:opacity-50"
-          >
-            <X size={15} />
-          </button>
-        </div>
-
-        <div className="p-5 space-y-4">
+    <Modal
+      isOpen
+      onClose={() => { if (!saving) onClose(); }}
+      title="Edit Price & Stock"
+      width="max-w-md"
+    >
+        <p className="text-xs text-gray-400 -mt-1 mb-4 truncate">{product.product.name.en}</p>
+        <div className="space-y-4">
           {saveError && (
             <div className="flex items-center gap-2 rounded-[7px] border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
               <AlertCircle size={13} className="shrink-0" /> {saveError}
@@ -426,7 +416,7 @@ function EditPriceStockModal({
           </Field>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-2 pt-5 mt-4 border-t border-gray-100">
           <button
             onClick={onClose}
             disabled={saving}
@@ -443,7 +433,6 @@ function EditPriceStockModal({
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

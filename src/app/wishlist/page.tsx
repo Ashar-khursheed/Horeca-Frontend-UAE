@@ -195,6 +195,7 @@ const WishlistCard = ({
   const hasSale = item.originalPrice > item.price;
   const discountPct = hasSale ? ((item.originalPrice - item.price) / item.originalPrice) * 100 : 0;
   const [priceInt, priceDec] = fmtPrice(item.price).split(".");
+  const {country} = useAppSelector((s) => s);
   const dispatch = useDispatch()
   const handleRemove = () => {
     setRemoving(true);
@@ -246,7 +247,7 @@ const WishlistCard = ({
               <div className="flex items-center gap-1.5 flex-wrap mb-1">
                 {item.brand && <span className="text-[11px] font-bold text-[#186737]">{item.brand}</span>}
                 {item.brand && item.modelNo && <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />}
-                {item.modelNo && <span className="text-[11px] text-gray-400">Model: {item.modelNo}</span>}
+                {item.modelNo && <span className="text-[11px] text-gray-400">Item No: {item.modelNo}</span>}
               </div>
               <Link href={item.url}>
                 <h3 className="font-semibold text-[13px] sm:text-[15px] text-gray-900 hover:text-[#186737] transition-colors line-clamp-2 leading-snug">
@@ -281,7 +282,7 @@ const WishlistCard = ({
             <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 flex-wrap">
               <Truck size={13} className="text-[#186737] shrink-0" />
               <span className={item.freeShipping ? "text-[#186737]" : ""}>
-                Shipping Charges Apply
+              Free Delivery in {country?.data?.name}
                 {/* {item.freeShipping ? "Free Shipping" : "Shipping Charges Apply"} */}
               </span>
               {item.deliveryDays && (
@@ -319,7 +320,7 @@ const WishlistCard = ({
           <div className="sm:hidden mt-2 flex items-center  gap-1 text-[10px] text-gray-400">
             <Truck size={10} className="text-[#186737] shrink-0" />
             <span className={item.freeShipping ? "text-[#186737] font-medium" : ""}>
-             Shipping Charges Apply
+   Free Delivery in {country?.data?.name}
               {/* {item.freeShipping ? "Free Shipping" : "Shipping Charges Apply"} */}
             </span>
             {item.deliveryDays && <span>· Ships in {item.deliveryDays}</span>}
@@ -471,7 +472,7 @@ export default function WishlistPage() {
               </div>
             </div>
 
-            {items.length > 0 && (
+            {/* {items.length > 0 && (
               <button
                 onClick={handleShare}
                 className={`flex items-center gap-2 px-4 py-2 rounded-[7px] border text-sm font-semibold transition-all duration-200 ${
@@ -483,7 +484,7 @@ export default function WishlistPage() {
                 {copied ? <CheckCircle size={15} /> : <Share2 size={15} />}
                 {copied ? "Link Copied!" : "Share List"}
               </button>
-            )}
+            )} */}
           </div>
 
           {/* Content */}

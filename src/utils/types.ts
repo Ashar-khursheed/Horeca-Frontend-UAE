@@ -307,6 +307,7 @@ interface SearchProduct {
     vendor_id?: number;
     price?: number;
     sale_price?: number;
+    shipping_charge?: number;
     delivery_days?: string;
     return_policy?: string;
     free_shipping?: boolean | number;

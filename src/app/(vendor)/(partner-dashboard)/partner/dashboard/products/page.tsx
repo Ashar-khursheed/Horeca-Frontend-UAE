@@ -7,14 +7,20 @@ import {
   AlertCircle,
   CheckCircle,
   ChevronRight,
+  Download,
   Eye,
+  FileSpreadsheet,
+  Loader2,
   Package,
   Pencil,
   Search,
+  Upload,
+  UploadCloud,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Modal } from "@/components/ui/modal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface VendorPriceProduct {
@@ -77,6 +83,9 @@ export default function PartnerProductsPage() {
   const [page, setPage]                   = useState(1);
   const [paginationKey, setPaginationKey] = useState(0);
 
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchProducts = useCallback(async (opts: { page: number; search: string; sortBy: string; sortDir: string }) => {
@@ -118,6 +127,11 @@ export default function PartnerProductsPage() {
 
   const resetPagination = () => { setPage(1); setPaginationKey((k) => k + 1); };
 
+  const handleImported = () => {
+    setIsImportModalOpen(false);
+    fetchProducts({ page, search, sortBy, sortDir });
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-[1400px]">
       {/* Breadcrumb */}
@@ -130,9 +144,25 @@ export default function PartnerProductsPage() {
       </nav>
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your product listings, pricing, and stock levels.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage your product listings, pricing, and stock levels.</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setIsExportModalOpen(true)}
+            className="flex items-center gap-1.5 h-9 px-3.5 rounded-[7px] border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors"
+          >
+            <Download size={14} /> Export
+          </button>
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="flex items-center gap-1.5 h-9 px-3.5 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#155c30] transition-colors"
+          >
+            <Upload size={14} /> Import
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -384,6 +414,276 @@ export default function PartnerProductsPage() {
           />
         </div>
       )}
+
+      {isExportModalOpen && (
+        <ExportPriceModal onClose={() => setIsExportModalOpen(false)} />
+      )}
+
+      {isImportModalOpen && (
+        <ImportPriceModal
+          onClose={() => setIsImportModalOpen(false)}
+          onImported={handleImported}
+        />
+      )}
     </div>
+  );
+}
+
+// ── Export modal ─────────────────────────────────────────────────────────────
+function ExportPriceModal({ onClose }: { onClose: () => void }) {
+  const [rangeFrom, setRangeFrom] = useState(1);
+  const [rangeTo, setRangeTo]     = useState(50);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const rangeInvalid = rangeFrom < 1 || rangeTo < rangeFrom;
+
+  const handleExport = async () => {
+    if (rangeInvalid) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const blob = await makeApiRequest<Blob>(apiUrls.VENDOR_PRICE_EXPORT, {
+        method: "POST",
+        data: { range_from: rangeFrom, range_to: rangeTo },
+        responseType: "blob",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `vendor-price-${rangeFrom}-${rangeTo}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      onClose();
+    } catch (err: any) {
+      setExportError(
+        err?.response?.data?.message || "Failed to export file. Please try again."
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <Modal
+      isOpen
+      onClose={() => { if (!exporting) onClose(); }}
+      title="Export Price & Stock"
+      width="max-w-md"
+    >
+        <p className="text-xs text-gray-400 -mt-1 mb-4">Choose a product range to export as Excel.</p>
+        <div className="space-y-4">
+          {exportError && (
+            <div className="flex items-center gap-2 rounded-[7px] border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+              <AlertCircle size={13} className="shrink-0" /> {exportError}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Range From</label>
+              <input
+                type="number"
+                min={1}
+                value={rangeFrom}
+                onChange={(e) => setRangeFrom(Number(e.target.value))}
+                disabled={exporting}
+                className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Range To</label>
+              <input
+                type="number"
+                min={1}
+                value={rangeTo}
+                onChange={(e) => setRangeTo(Number(e.target.value))}
+                disabled={exporting}
+                className="w-full h-9 px-3 rounded-[7px] border border-gray-200 text-sm outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 disabled:opacity-50"
+              />
+            </div>
+          </div>
+          {rangeInvalid && (
+            <p className="text-[11px] text-red-500 -mt-2">&quot;Range To&quot; must be greater than or equal to &quot;Range From&quot;.</p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-5 mt-4 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            disabled={exporting}
+            className="flex items-center gap-1.5 h-9 px-3 rounded-[7px] border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={exporting || rangeInvalid}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#155c30] transition-colors disabled:opacity-60"
+          >
+            {exporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+            {exporting ? "Exporting…" : "Export"}
+          </button>
+        </div>
+    </Modal>
+  );
+}
+
+// ── Import modal ─────────────────────────────────────────────────────────────
+const MAX_IMPORT_SIZE = 2 * 1024 * 1024; // 2MB
+
+function ImportPriceModal({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void;
+  onImported: () => void;
+}) {
+  const [file, setFile]           = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError]     = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const validateAndSetFile = (selected: File | null) => {
+    setUploadError(null);
+    setUploadSuccess(null);
+    if (!selected) {
+      setFile(null);
+      setFileError(null);
+      return;
+    }
+    if (!selected.name.toLowerCase().endsWith(".xlsx")) {
+      setFile(null);
+      setFileError("Only .xlsx files are supported.");
+      return;
+    }
+    if (selected.size > MAX_IMPORT_SIZE) {
+      setFile(null);
+      setFileError("File size must not exceed 2MB.");
+      return;
+    }
+    setFileError(null);
+    setFile(selected);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (uploading) return;
+    validateAndSetFile(e.dataTransfer.files?.[0] ?? null);
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(null);
+    try {
+      const formData = new FormData();
+      formData.append("upload_file", file);
+
+      const res = await makeApiRequest<{ success: boolean; message?: string }>(
+        apiUrls.VENDOR_PRICE_IMPORT,
+        {
+          method: "POST",
+          data: formData,
+        }
+      );
+
+      if (res.success === false) {
+        setUploadError(res.message || "Failed to import file. Please try again.");
+        return;
+      }
+
+      setUploadSuccess(res.message || "Price sheet imported successfully.");
+      setTimeout(() => onImported(), 1200);
+    } catch (err: any) {
+      setUploadError(
+        err?.response?.data?.message || "Failed to import file. Please try again."
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Modal
+      isOpen
+      onClose={() => { if (!uploading) onClose(); }}
+      title="Import Price & Stock"
+      width="max-w-md"
+    >
+        <p className="text-xs text-gray-400 -mt-1 mb-4">Upload an Excel file (.xlsx) to bulk update prices.</p>
+        <div className="space-y-4">
+          {uploadError && (
+            <div className="flex items-center gap-2 rounded-[7px] border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+              <AlertCircle size={13} className="shrink-0" /> {uploadError}
+            </div>
+          )}
+          {uploadSuccess && (
+            <div className="flex items-center gap-2 rounded-[7px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+              <CheckCircle size={13} className="shrink-0" /> {uploadSuccess}
+            </div>
+          )}
+
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+              Excel file (.xlsx) <span className="text-red-500">*</span>
+            </label>
+            <div
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+              className={`rounded-[7px] border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors ${
+                fileError ? "border-red-200 bg-red-50/40" : "border-gray-200 hover:border-[#186737]/40 hover:bg-gray-50"
+              } ${uploading ? "opacity-60 pointer-events-none" : ""}`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx"
+                className="hidden"
+                onChange={(e) => validateAndSetFile(e.target.files?.[0] ?? null)}
+                disabled={uploading}
+              />
+              {file ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-700 font-medium">
+                  <FileSpreadsheet size={16} className="text-[#186737] shrink-0" />
+                  <span className="truncate max-w-56">{file.name}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5 text-gray-400">
+                  <UploadCloud size={22} />
+                  <p className="text-xs font-medium">Click to choose file or drag &amp; drop</p>
+                  <p className="text-[11px] text-gray-300">.xlsx only, max 2MB</p>
+                </div>
+              )}
+            </div>
+            {fileError && <p className="text-[11px] text-red-500 mt-1.5">{fileError}</p>}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-5 mt-4 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            disabled={uploading}
+            className="flex items-center gap-1.5 h-9 px-3 rounded-[7px] border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            disabled={uploading || !file}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-[7px] bg-[#186737] text-white text-sm font-semibold hover:bg-[#155c30] transition-colors disabled:opacity-60"
+          >
+            {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+            {uploading ? "Importing…" : "Import"}
+          </button>
+        </div>
+    </Modal>
   );
 }

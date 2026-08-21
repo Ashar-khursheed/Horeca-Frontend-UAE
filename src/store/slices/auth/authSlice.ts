@@ -3,6 +3,7 @@ import { makeApiRequest, removeAuthToken, setAccountType, setAuthToken } from "@
 import { apiUrls } from "@/apis/api-endpoint";
 import { setProfile, clearProfile } from "@/store/slices/my-profile/profileSlice";
 import type { CustomerProfile } from "@/store/slices/my-profile/profileSlice";
+import { clearVendorProfile } from "@/store/slices/vendor-profile/vendorProfileSlice";
 import { clearCart } from "@/store/slices/cart/cartSlice";
 import { clearWishlist } from "@/store/slices/wishlist/wishlistSlice";
 import { clearCounts } from "@/store/slices/customer-counts/customerCountsSlice";
@@ -91,6 +92,7 @@ export const logoutUser = createAsyncThunk(
     } finally {
       removeAuthToken();
       dispatch(clearProfile());
+      dispatch(clearVendorProfile());
       dispatch(clearCart());
       dispatch(clearWishlist());
       dispatch(clearCounts());

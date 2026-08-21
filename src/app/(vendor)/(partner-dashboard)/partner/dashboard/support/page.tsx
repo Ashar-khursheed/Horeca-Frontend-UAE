@@ -19,14 +19,10 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useRef, useState } from "react";
-
-// ── Mock vendor (UI only — no backend wired up yet) ────────────────────────────
-const MOCK_VENDOR = {
-  name: "Ahmed Al Mansoori",
-  email: "ahmed@gulfkitchenequip.com",
-  store_name: "Gulf Kitchen Equipment Co.",
-};
+import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { fetchVendorProfile } from "@/store/slices/vendor-profile/vendorProfileSlice";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type TicketStatus   = "Open" | "In Progress" | "Resolved" | "Closed";
@@ -116,7 +112,16 @@ const EMPTY_FORM = {
 // Page
 // ══════════════════════════════════════════════════════════════════════════════
 export default function PartnerSupportPage() {
-  const vendor = MOCK_VENDOR;
+  const dispatch = useDispatch<AppDispatch>();
+  const { vendor, contact } = useSelector((state: RootState) => state.vendorProfile);
+
+  useEffect(() => {
+    if (!vendor) dispatch(fetchVendorProfile());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const vendorName  = vendor?.name || contact?.name || "";
+  const vendorEmail = contact?.email || "";
 
   const [view, setView]           = useState<View>("list");
   const [selected, setSelected]   = useState<Ticket | null>(null);
@@ -127,15 +132,24 @@ export default function PartnerSupportPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess]       = useState(false);
-  const [form, setForm] = useState({
-    ...EMPTY_FORM,
-    fullName: vendor.name,
-    email:    vendor.email,
-    company:  vendor.store_name,
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
   const [errors, setErrors]           = useState<Partial<typeof EMPTY_FORM>>({});
   const [attachments, setAttachments] = useState<File[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Prefill contact fields once the vendor profile has loaded, without
+  // clobbering anything the vendor has already typed into the form.
+  const prefilledRef = useRef(false);
+  useEffect(() => {
+    if (prefilledRef.current || (!vendorName && !vendorEmail)) return;
+    prefilledRef.current = true;
+    setForm((p) => ({
+      ...p,
+      fullName: p.fullName || vendorName,
+      email:    p.email || vendorEmail,
+      company:  p.company || vendorName,
+    }));
+  }, [vendorName, vendorEmail]);
 
   const set = (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -193,7 +207,7 @@ export default function PartnerSupportPage() {
     setTimeout(() => {
       setSuccess(false);
       setView("list");
-      setForm({ ...EMPTY_FORM, fullName: vendor.name, email: vendor.email, company: vendor.store_name });
+      setForm({ ...EMPTY_FORM, fullName: vendorName, email: vendorEmail, company: vendorName });
       setAttachments([]);
       setErrors({});
     }, 1800);
