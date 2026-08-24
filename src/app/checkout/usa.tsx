@@ -1,44 +1,43 @@
 "use client";
 
 import { makeApiRequest } from "@/apis/axios-instance";
-import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
-import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
-import {
-  updateProfile,
-  placeOrderWithPayment,
-  parseOrderError,
-} from "./place-order-api";
 import Breadcrumb from "@/components/breadcum";
+import { CurrencySymbol } from "@/components/currency-symbol";
+import { Modal } from "@/components/ui/modal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+  clearApiEntries,
+  clearCart,
   fetchCart,
   hydrateCart,
   resetApiStatus,
-  clearCart,
-  clearApiEntries,
 } from "@/store/slices/cart/cartSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import { TAX_STORAGE_KEY } from "@/store/slices/tax/taxSlice";
+import { useCartId } from "@/utils/cartId";
+import { trackGtmEvent } from "@/utils/gtm";
 import {
   getDefaultAddressCache,
   getLocationData,
 } from "@/utils/locationStorage";
-import { useCartId } from "@/utils/cartId";
 import {
-  getShippingCharge,
-  getShippingChargeFromAddress,
+  getShippingChargeFromAddress
 } from "@/utils/shipping";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
+import { ChevronRight, Tag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
-import { Modal } from "@/components/ui/modal";
-import { trackGtmEvent } from "@/utils/gtm";
-import { CurrencySymbol } from "@/components/currency-symbol";
+import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
+import {
+  parseOrderError,
+  placeOrderWithPayment,
+  updateProfile,
+} from "./place-order-api";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -694,7 +693,11 @@ export default function CheckoutPage() {
     setOrderStep("card");
     let token: any;
     try {
-      token = await paymentHandleRef.current.getPaymentToken();
+      token = await (
+        paymentHandleRef.current as CheckoutPaymentHandle & {
+          getPaymentToken: () => Promise<any>;
+        }
+      ).getPaymentToken();
     } catch {
       setOrderStep("idle");
       return;
@@ -736,6 +739,7 @@ export default function CheckoutPage() {
       // 6. Payment + order + history (all in place-order-api.ts)
       const orderId = await placeOrderWithPayment({
         token,
+        cardDetails: token,
         amount: Number(grandTotal.toFixed(2)),
         firstName,
         lastName,
@@ -747,7 +751,6 @@ export default function CheckoutPage() {
         residential,
         insideDelivery,
         ratePercent,
-        cardDetails: paymentHandleRef.current?.getCardDetails(),
         onStep: setOrderStep,
       });
 
@@ -1451,8 +1454,6 @@ export default function CheckoutPage() {
                 Payment Details
               </h2>
               <CheckoutPayment
-                squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
-                squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
                 onHandleReady={(h) => {
                   paymentHandleRef.current = h;
                 }}
@@ -1739,8 +1740,6 @@ export default function CheckoutPage() {
             {deliveryBlock}
             <div className="h-px bg-gray-200 my-4" />
             <CheckoutPayment
-              squareAppId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
-              squareLocationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
               onHandleReady={(h) => {
                 paymentHandleRef.current = h;
               }}
