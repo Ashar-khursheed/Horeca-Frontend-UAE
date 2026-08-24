@@ -2,6 +2,7 @@
 
 import AddToCartWidget from "@/components/add-to-cart";
 import Breadcrumb from "@/components/breadcum";
+import { CurrencySymbol } from "@/components/currency-symbol";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
 import {
@@ -293,16 +294,16 @@ const WishlistCard = ({
 
           {/* Price + Action */}
           <div className="mt-auto pt-2 sm:pt-4 flex items-center justify-between gap-2 sm:gap-3">
-            <div>
-              <div className="flex items-baseline gap-[2px]">
-                <span className="text-base sm:text-[22px] font-bold text-gray-900">
-                  {item.currencySymbol}{priceInt}
+            <div className="shrink-0">
+              <div className="flex items-baseline gap-[2px] whitespace-nowrap">
+                <span className="text-base sm:text-[22px] font-bold text-gray-900 inline-flex items-baseline whitespace-nowrap">
+                  <CurrencySymbol currency={item.currencySymbol} weight="bold" fontsize="16px" />{priceInt}
                 </span>
                 <span className="text-xs sm:text-sm font-bold text-gray-900">.{priceDec}</span>
               </div>
               {hasSale && (
-                <p className="text-[10px] text-gray-400 line-through">
-                  {item.currencySymbol}{fmtPrice(item.originalPrice)}
+                <p className="text-[10px] text-gray-400 line-through inline-flex items-baseline whitespace-nowrap">
+                  <CurrencySymbol currency={item.currencySymbol} fontsize="10px" />{fmtPrice(item.originalPrice)}
                 </p>
               )}
             </div>
@@ -312,7 +313,7 @@ const WishlistCard = ({
               showCounter={false}
               isWishlist={true}
               onAddedToCart={onAddedToCart}
-              wrapperClassName="flex gap-2 items-center justify-end"
+              wrapperClassName="flex gap-2 items-center justify-end shrink-0"
               buttonClassName="flex items-center gap-1 px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-[7px] text-[10px] sm:text-sm font-semibold bg-[#186737] hover:bg-[#145c30] text-white transition-colors whitespace-nowrap"
             />
           </div>
@@ -366,17 +367,17 @@ const SummaryCard = ({ items }: { items: WishlistItem[] }) => {
       <div className="space-y-2.5 mb-5">
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Items ({items.length})</span>
-          <span className="font-semibold text-gray-900">{sym}{fmtPrice(total)}</span>
+          <span className="font-semibold text-gray-900"><CurrencySymbol currency={sym} fontsize="14px" />{fmtPrice(total)}</span>
         </div>
         {savings > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-[#186737] font-medium">You save</span>
-            <span className="font-bold text-[#186737]">-{sym}{fmtPrice(savings)}</span>
+            <span className="font-bold text-[#186737]">-<CurrencySymbol currency={sym} fontsize="14px" />{fmtPrice(savings)}</span>
           </div>
         )}
         <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
           <span className="font-bold text-gray-900 text-sm">Estimated Total</span>
-          <span className="font-bold text-gray-900 text-lg">{sym}{fmtPrice(total)}</span>
+          <span className="font-bold text-gray-900 text-lg"><CurrencySymbol currency={sym} weight="bold" fontsize="18px" />{fmtPrice(total)}</span>
         </div>
       </div>
 

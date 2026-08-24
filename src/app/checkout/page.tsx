@@ -33,7 +33,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
 import { Modal } from "@/components/ui/modal";
@@ -43,6 +43,8 @@ import { UAE_VAT_RATE } from "dirham";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
+const CCAVENUE_DELIVERY_OPTIONS_KEY = "hc_ccavenue_delivery_options";
+const CCAVENUE_PROCESSED_KEY = "hc_ccavenue_processed_tracking_id";
 
 interface CartSummaryCache {
   subTotal: number;
@@ -110,6 +112,7 @@ function CouponAppliedBadge({
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const rawProducts = useAppSelector((s: any) => s.cart.rawProducts);
   const guestItems = useAppSelector((s: any) => s.cart.items);
@@ -663,6 +666,13 @@ export default function CheckoutPage() {
         );
       }
 
+      // These live only in component state — persist them so the order can be
+      // created correctly once CCAvenue redirects back to a fresh page load.
+      localStorage.setItem(
+        CCAVENUE_DELIVERY_OPTIONS_KEY,
+        JSON.stringify({ liftGate, residential, insideDelivery, ratePercent, paymentProcessingFee }),
+      );
+
       // Keep isPlacingOrder true — the browser is about to navigate away
       window.location.href = res.data.payment_url;
     } catch (err: any) {
@@ -671,6 +681,110 @@ export default function CheckoutPage() {
       setOrderError(parseOrderError(err));
     }
   };
+
+  // ── CCAvenue return leg ───────────────────────────────────────────────────
+  // CCAvenue redirects back here as /checkout?status=complete&encResp=... on a
+  // fresh page load (component state from before the redirect is gone). Decode
+  // the response, and only now create the actual order.
+  const ccavenueHandledRef = useRef(false);
+  useEffect(() => {
+    const encResp = searchParams.get("encResp");
+    if (!encResp) return;
+    if (ccavenueHandledRef.current) return;
+    // Wait for the cart to finish (re)loading on this fresh page load so
+    // rawProducts is populated before the order is built — the effect re-runs
+    // once cart data arrives, since rawProducts is a dependency below.
+    if (rawProducts.length === 0) return;
+    ccavenueHandledRef.current = true;
+
+    (async () => {
+      setIsPlacingOrder(true);
+      setOrderStep("payment");
+      try {
+        const decodeRes = await makeApiRequest<{ success: boolean; data: string }>(
+          apiUrls.CCAVENUE_DECODE_RESPONSE,
+          { method: "POST", data: { encResp } },
+        );
+        if (!decodeRes?.success || !decodeRes?.data) {
+          throw new Error("Could not verify payment. Please contact support.");
+        }
+
+        const parsed = new URLSearchParams(decodeRes.data.replace(/^"|"$/g, ""));
+        const result = {
+          order_id: parsed.get("order_id") ?? "",
+          tracking_id: parsed.get("tracking_id") ?? "",
+          bank_ref_no: parsed.get("bank_ref_no") ?? "",
+          order_status: parsed.get("order_status") ?? "",
+          status_code: parsed.get("status_code") ?? "",
+          payment_mode: parsed.get("payment_mode") ?? "",
+          amount: parsed.get("amount") ?? "",
+          currency: parsed.get("currency") ?? "",
+        };
+
+        // Guard against creating a duplicate order if this page is refreshed
+        // or the effect re-fires for the same CCAvenue transaction.
+        if (
+          result.tracking_id &&
+          localStorage.getItem(CCAVENUE_PROCESSED_KEY) === result.tracking_id
+        ) {
+          router.replace("/checkout");
+          return;
+        }
+
+        if (result.order_status !== "Success" || result.status_code !== "00") {
+          router.replace("/payment-decline");
+          return;
+        }
+
+        if (result.tracking_id) {
+          localStorage.setItem(CCAVENUE_PROCESSED_KEY, result.tracking_id);
+        }
+
+        let savedOptions: {
+          liftGate?: boolean;
+          residential?: boolean;
+          insideDelivery?: boolean;
+          ratePercent?: number;
+          paymentProcessingFee?: number;
+        } = {};
+        try {
+          savedOptions = JSON.parse(
+            localStorage.getItem(CCAVENUE_DELIVERY_OPTIONS_KEY) ?? "{}",
+          );
+        } catch {
+          /* ignore */
+        }
+
+        setOrderStep("order");
+        const orderId = await placeOrderWithPayment({
+          rawProducts,
+          liftGate: savedOptions.liftGate ?? false,
+          residential: savedOptions.residential ?? false,
+          insideDelivery: savedOptions.insideDelivery ?? false,
+          ratePercent: savedOptions.ratePercent ?? ratePercent,
+          paymentProcessingFee: savedOptions.paymentProcessingFee ?? paymentProcessingFee,
+          ccavenue: result,
+          onStep: setOrderStep,
+        });
+        localStorage.removeItem(CCAVENUE_DELIVERY_OPTIONS_KEY);
+
+        setOrderStep("done");
+        dispatch(fetchCounts() as any);
+        dispatch(clearApiEntries());
+        dispatch(clearCart());
+        setTimeout(
+          () => router.replace(`/payment-success?orderID=${orderId}`),
+          1200,
+        );
+      } catch (err: any) {
+        setOrderStep("idle");
+        setIsPlacingOrder(false);
+        setOrderError(parseOrderError(err));
+        router.replace("/checkout");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, rawProducts]);
 
   const crumbs = [
     { label: "Home", href: "/" },

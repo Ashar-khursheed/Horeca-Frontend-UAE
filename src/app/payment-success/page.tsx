@@ -20,6 +20,8 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { ShareButtons } from "./_components/share-buttons";
 import Breadcrumb from "@/components/breadcum";
 import CTA from "@/components/cta";
+import { CurrencySymbol } from "@/components/currency-symbol";
+import { useSelector } from "react-redux";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,6 +70,8 @@ interface OrderData {
   tax_percentage: string;
   tax_amount: string;
   discount?: string;
+  additional_amount_name?: string | null;
+  additional_amount_price?: string | null;
   total_amount: string;
   customer_address: string;
   currency: {
@@ -88,14 +92,21 @@ interface OrderData {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const usd = (n: number) =>
-  n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 const localized = (v: { en: string } | string | null | undefined) =>
-  typeof v === "object" && v !== null ? v.en ?? "" : v ?? "";
+  typeof v === "object" && v !== null ? (v.en ?? "") : (v ?? "");
 
 function parseAddress(raw: string) {
   const clean = (s: string) =>
-    s.split(",").map((p) => p.trim()).filter(Boolean).join(", ");
+    s
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .join(", ");
   const parts = raw.split(/\\n|\n/);
   return {
     line1: clean(parts[0]?.trim() ?? ""),
@@ -107,21 +118,27 @@ function parseAddress(raw: string) {
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
-    const router = useRouter();
+  const router = useRouter();
 
   const orderID = searchParams.get("orderID");
 
-  const [order,   setOrder]   = useState<OrderData | null>(null);
+  const sate = useSelector((state: any) => state?.country?.data);
+
+  const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!orderID) { setLoading(false); setError(true); return; }
+    if (!orderID) {
+      setLoading(false);
+      setError(true);
+      return;
+    }
     (async () => {
       try {
         const [res] = await Promise.all([
           makeApiRequest<{ success: boolean; data: OrderData }>(
-            `frontend/orders/${orderID}`
+            `frontend/orders/${orderID}`,
           ),
           new Promise((r) => setTimeout(r, 3000)), // minimum 3s loading
         ]);
@@ -129,18 +146,18 @@ export default function PaymentSuccessPage() {
           setOrder((res as any).data);
           // ── Clear all cart/checkout/coupon/tax cache after successful order ──
           const KEYS = [
-            "horeca_cart",        // guest cart items
-            "hc_cart_summary",    // pricing summary
-            "hc_coupon",          // coupon code
+            "horeca_cart", // guest cart items
+            "hc_cart_summary", // pricing summary
+            "hc_coupon", // coupon code
             "coupon_id",
             "discount_value",
             "discount_type",
-            "horeca_tax_rate",    // tax rate data
+            "horeca_tax_rate", // tax rate data
           ];
           KEYS.forEach((k) => localStorage.removeItem(k));
           // Reset GTM one-shot flags so next visit fires fresh events
           const w = window as any;
-          w.viewCartEventFired     = false;
+          w.viewCartEventFired = false;
           w.beginCheckoutEventFired = false;
         } else {
           setError(true);
@@ -167,7 +184,6 @@ export default function PaymentSuccessPage() {
     };
   }, [router]);
 
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#E2E8F066]">
@@ -176,8 +192,13 @@ export default function PaymentSuccessPage() {
           <div className="flex items-center gap-2">
             {[80, 50, 70, 110].map((w, i) => (
               <div key={i} className="flex items-center gap-2">
-                {i > 0 && <div className="w-3 h-3 rounded-full bg-gray-200 animate-pulse" />}
-                <div className={`h-3 rounded bg-gray-200 animate-pulse`} style={{ width: w }} />
+                {i > 0 && (
+                  <div className="w-3 h-3 rounded-full bg-gray-200 animate-pulse" />
+                )}
+                <div
+                  className={`h-3 rounded bg-gray-200 animate-pulse`}
+                  style={{ width: w }}
+                />
               </div>
             ))}
           </div>
@@ -252,7 +273,10 @@ export default function PaymentSuccessPage() {
                 </div>
                 <div className="flex gap-2 mb-5">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="w-9 h-9 rounded-full bg-gray-200 animate-pulse" />
+                    <div
+                      key={i}
+                      className="w-9 h-9 rounded-full bg-gray-200 animate-pulse"
+                    />
                   ))}
                 </div>
 
@@ -295,7 +319,10 @@ export default function PaymentSuccessPage() {
                 <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm p-4">
                   <div className="grid grid-cols-3 gap-2">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex flex-col items-center gap-1.5">
+                      <div
+                        key={i}
+                        className="flex flex-col items-center gap-1.5"
+                      >
                         <div className="w-8 h-8 rounded-[7px] bg-gray-200 animate-pulse" />
                         <div className="h-2.5 bg-gray-200 animate-pulse rounded w-10" />
                         <div className="h-2 bg-gray-100 animate-pulse rounded w-14" />
@@ -339,37 +366,38 @@ export default function PaymentSuccessPage() {
     );
   }
 
-  const subtotal        = Number(order.amount);
-  const shippingTotal   = Number(order.shipping_charge);
-  const taxAmount       = Number(order.tax_amount);
-  const taxRate         = Number(order.tax_percentage) / 100;
-  const discount        = Number(order.discount ?? "0");
-  const total           = Number(order.total_amount);
-  const currencySymbol  = order.currency?.target_symbol ?? "$";
-  const address       = parseAddress(order.customer_address ?? "");
-  const rawCode   = order.customer.country_code ?? "";
+  const subtotal = Number(order.amount);
+  const shippingTotal = Number(order.shipping_charge);
+  const taxAmount = Number(order.tax_amount);
+  const taxRate = Number(order.tax_percentage) / 100;
+  const discount = Number(order.discount ?? "0");
+  const additionalFee = Number(order.additional_amount_price ?? "0");
+  const additionalFeeLabel = order.additional_amount_name || "Additional Fee";
+  const total = Number(order.total_amount);
+  const currencySymbol = order.currency?.target_symbol ?? "$";
+  const address = parseAddress(order.customer_address ?? "");
+  const rawCode = order.customer.country_code ?? "";
   const rawMobile = order.customer.mobile_number ?? "";
-  const isUSCode  = rawCode === "+1";
+  const isUSCode = rawCode === "+1";
   const formatUSPhone = (num: string) => {
     const d = num.replace(/\D/g, "").slice(0, 10);
     if (d.length <= 3) return d;
-    if (d.length <= 6) return `(${d.slice(0,3)}) ${d.slice(3)}`;
-    return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
   };
   const phone = isUSCode
     ? `${rawCode} ${formatUSPhone(rawMobile)}`
     : `${rawCode} ${rawMobile}`.trim();
 
-  const hasLiftGate    = order.is_lift_gate           === 1;
+  const hasLiftGate = order.is_lift_gate === 1;
   const hasResidential = order.is_residential_address === 1;
-  const hasInside      = order.is_inside_delivery     === 1;
-  const liftFee        = hasLiftGate    ? 75  : 0;
-  const resFee         = hasResidential ? 199 : 0;
-  const insideFee      = hasInside      ? 249 : 0;
+  const hasInside = order.is_inside_delivery === 1;
+  const liftFee = hasLiftGate ? 75 : 0;
+  const resFee = hasResidential ? 199 : 0;
+  const insideFee = hasInside ? 249 : 0;
 
   return (
     <div className="min-h-screen bg-[#E2E8F066]">
-
       {/* <Breadcrumb crumbs={[
         { label: "Home",           href: "/" },
         { label: "Cart",           href: "/cart" },
@@ -380,16 +408,14 @@ export default function PaymentSuccessPage() {
       {/* ── Main ─────────────────────────────────────────────────────────────── */}
       <div className="global-container py-8">
         <div className="bg-white rounded-[10px] shadow-lg overflow-hidden">
-
           {/* ── Green success stripe ─────────────────────────────────────────── */}
           <div className="h-2 w-full bg-linear-to-r from-[#186737] via-[#22a855] to-[#186737]" />
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_370px] gap-0">
-          {/* <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-0"> */}
+            {/* <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-0"> */}
 
             {/* ── LEFT ──────────────────────────────────────────────────────── */}
             <div className="p-4 sm:p-6 lg:p-8 border-r border-gray-100 order-2 lg:order-1">
-
               {/* Success heading */}
               <div className="flex items-start gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-green-50 border-2 border-[#186737] flex items-center justify-center shrink-0">
@@ -401,7 +427,9 @@ export default function PaymentSuccessPage() {
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">
                     Order Number:{" "}
-                    <span className="text-[#186737] font-bold">#{order.order_number}</span>
+                    <span className="text-[#186737] font-bold">
+                      #{order.order_number}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -414,7 +442,9 @@ export default function PaymentSuccessPage() {
                   <Mail size={15} className="text-[#186737] mt-1 shrink-0" />
                   <p className="text-sm text-gray-600 font-medium leading-relaxed">
                     Confirmation will be sent to your email at{" "}
-                    <span className="text-[#186737] font-bold break-all">{order.customer.email}</span>
+                    <span className="text-[#186737] font-bold break-all">
+                      {order.customer.email}
+                    </span>
                   </p>
                 </div>
                 {phone && (
@@ -422,18 +452,25 @@ export default function PaymentSuccessPage() {
                     <Phone size={15} className="text-[#186737] mt-1 shrink-0" />
                     <p className="text-sm text-gray-600 font-medium leading-relaxed">
                       Our representative will call you at{" "}
-                      <span className="text-[#186737] font-bold whitespace-nowrap">{phone}</span>
-                      . Kindly ensure the number is correct to avoid delivery delays.
+                      <span className="text-[#186737] font-bold whitespace-nowrap">
+                        {phone}
+                      </span>
+                      . Kindly ensure the number is correct to avoid delivery
+                      delays.
                     </p>
                   </div>
                 )}
                 {address.line1 && (
                   <div className="flex items-start gap-2.5">
-                    <MapPin size={15} className="text-[#186737] mt-1 shrink-0" />
+                    <MapPin
+                      size={15}
+                      className="text-[#186737] mt-1 shrink-0"
+                    />
                     <p className="text-sm text-gray-600 font-medium leading-relaxed">
                       Being delivered to{" "}
                       <span className="text-gray-800 font-semibold">
-                        {address.line1}{address.line2 ? `, ${address.line2}` : ""}
+                        {address.line1}
+                        {address.line2 ? `, ${address.line2}` : ""}
                       </span>
                     </p>
                   </div>
@@ -451,29 +488,42 @@ export default function PaymentSuccessPage() {
               <div className="space-y-0 divide-y divide-gray-50 border border-gray-100 rounded-[7px] overflow-hidden">
                 {order.order_products.map((item) => {
                   const iu = item.product.image_urls;
-                  const img = iu && !Array.isArray(iu)
-                    ? (iu as { en: string[] }).en?.[0] ?? ""
-                    : Array.isArray(iu)
-                    ? (iu as string[])[0] ?? ""
-                    : item.product.images?.[0] ?? "";
+                  const img =
+                    iu && !Array.isArray(iu)
+                      ? ((iu as { en: string[] }).en?.[0] ?? "")
+                      : Array.isArray(iu)
+                        ? ((iu as string[])[0] ?? "")
+                        : (item.product.images?.[0] ?? "");
 
-                  const productName = typeof item.product.name === "object"
-                    ? (item.product.name as { en: string }).en ?? ""
-                    : item.product.name ?? item.product.translations?.[0]?.name ?? "";
+                  const productName =
+                    typeof item.product.name === "object"
+                      ? ((item.product.name as { en: string }).en ?? "")
+                      : (item.product.name ??
+                        item.product.translations?.[0]?.name ??
+                        "");
 
-                  const brandName = item.product.brand?.name?.en ?? item.product.brand_name ?? "";
+                  const brandName =
+                    item.product.brand?.name?.en ??
+                    item.product.brand_name ??
+                    "";
 
                   const price = Number(item.unit_price);
                   const itemShipping = Number(item.shipping_charge);
                   const accessories = item.accessory_charges ?? [];
-                  const accessoryTotal = Number(item.accessory_item_charge ?? 0);
-                  const deliveryLabel = item.expected_shipping_date
-                    ?? item.expectedShippingDate
-                    ?? item.product_supplier?.delivery_days
-                    ?? "";
+                  const accessoryTotal = Number(
+                    item.accessory_item_charge ?? 0,
+                  );
+                  const deliveryLabel =
+                    item.expected_shipping_date ??
+                    item.expectedShippingDate ??
+                    item.product_supplier?.delivery_days ??
+                    "";
 
                   return (
-                    <div key={item.id} className="p-4 bg-white hover:bg-gray-50/50 transition-colors">
+                    <div
+                      key={item.id}
+                      className="p-4 bg-white hover:bg-gray-50/50 transition-colors"
+                    >
                       {deliveryLabel && (
                         <p className="text-[#B12704] text-xs font-semibold mb-3 flex items-center gap-1.5">
                           <Truck size={12} />
@@ -497,16 +547,22 @@ export default function PaymentSuccessPage() {
                           {brandName && (
                             <p className="text-xs text-gray-400 mb-0.5">
                               Brand:{" "}
-                              <span className="font-medium text-gray-600">{brandName}</span>
+                              <span className="font-medium text-gray-600">
+                                {brandName}
+                              </span>
                             </p>
                           )}
                           <p className="text-xs text-gray-400 mb-0.5">
                             Model No:{" "}
-                            <span className="font-medium text-gray-600">{item.product.sku}</span>
+                            <span className="font-medium text-gray-600">
+                              {item.product.sku}
+                            </span>
                           </p>
                           <p className="text-xs text-gray-400 mb-2">
                             Qty:{" "}
-                            <span className="font-semibold text-gray-700">{item.quantity}</span>
+                            <span className="font-semibold text-gray-700">
+                              {item.quantity}
+                            </span>
                           </p>
 
                           {accessories.length > 0 && (
@@ -522,13 +578,19 @@ export default function PaymentSuccessPage() {
                                   <span className="text-[11px] text-gray-600">
                                     {localized(acc.product_accessory_name) && (
                                       <span className="text-gray-400">
-                                        {localized(acc.product_accessory_name)}:{" "}
+                                        {localized(acc.product_accessory_name)}
+                                        :{" "}
                                       </span>
                                     )}
-                                    {localized(acc.accessory_item_name) || "Selected option"}
+                                    {localized(acc.accessory_item_name) ||
+                                      "Selected option"}
                                   </span>
-                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
-                                    {currencySymbol}{usd(Number(acc.amount))}
+                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap inline-flex items-baseline">
+                                    <CurrencySymbol
+                                      currency={currencySymbol}
+                                      fontsize="11px"
+                                    />
+                                    {usd(Number(acc.amount))}
                                   </span>
                                 </div>
                               ))}
@@ -536,22 +598,43 @@ export default function PaymentSuccessPage() {
                           )}
 
                           <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className="text-base font-bold text-[#186737]">
-                              {currencySymbol}{usd(price)}
+                            <span className="text-base font-bold text-[#186737] inline-flex items-baseline">
+                              <CurrencySymbol
+                                currency={currencySymbol}
+                                weight="bold"
+                                fontsize="16px"
+                              />
+                              {usd(price)}
                             </span>
-                            <span className="text-xs text-gray-400">/ Each</span>
+                            <span className="text-xs text-gray-400">
+                              / Each
+                            </span>
                             {accessoryTotal > 0 && (
-                              <span className="text-xs text-gray-400">
-                                + {currencySymbol}{usd(accessoryTotal)} accessories
+                              <span className="text-xs text-gray-400 inline-flex items-baseline">
+                                +{" "}
+                                <CurrencySymbol
+                                  currency={currencySymbol}
+                                  fontsize="12px"
+                                />
+                                {usd(accessoryTotal)} accessories
                               </span>
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                             <Truck size={11} className="text-[#186737]" />
                             {itemShipping === 0 ? (
-                              <span className="text-[#186737] font-semibold">Free Charges Apply</span>
+                              <span className="text-[#186737] font-semibold">
+                                Free Delivery in {sate?.name}
+                              </span>
                             ) : (
-                              `Shipping: ${currencySymbol}${usd(itemShipping)}`
+                              <span className="inline-flex items-baseline">
+                                Shipping:{" "}
+                                <CurrencySymbol
+                                  currency={currencySymbol}
+                                  fontsize="12px"
+                                />
+                                {usd(itemShipping)}
+                              </span>
                             )}
                           </p>
                         </div>
@@ -576,9 +659,10 @@ export default function PaymentSuccessPage() {
                   email={order.customer.email}
                   total={total}
                   products={order.order_products.map((p) => ({
-                    name: typeof p.product.name === "object"
-                      ? (p.product.name as { en: string }).en ?? ""
-                      : p.product.name ?? "",
+                    name:
+                      typeof p.product.name === "object"
+                        ? ((p.product.name as { en: string }).en ?? "")
+                        : (p.product.name ?? ""),
                     sku: p.product.sku,
                     quantity: p.quantity,
                     unit_price: p.unit_price,
@@ -613,19 +697,24 @@ export default function PaymentSuccessPage() {
 
             {/* ── RIGHT ─────────────────────────────────────────────────────── */}
             <div className="flex flex-col gap-4 p-4 sm:p-6 order-1 lg:order-2 border-b border-gray-100 lg:border-b-0">
-
               {/* Thank You visual */}
               <div className="flex flex-col items-center justify-center bg-green-50 rounded-[10px] p-6 text-center">
                 <div className="w-20 h-20 rounded-full bg-white border-4 border-[#186737] flex items-center justify-center mb-4 shadow-md">
                   <CheckCircle2 size={38} className="text-[#186737]" />
                 </div>
-                <h2 className="text-2xl font-black text-[#186737]">Thank You!</h2>
+                <h2 className="text-2xl font-black text-[#186737]">
+                  Thank You!
+                </h2>
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                   Your order has been confirmed and is being processed.
                 </p>
                 <div className="mt-4 bg-white rounded-[7px] border border-green-200 px-4 py-2 w-full">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Order ID</p>
-                  <p className="text-sm font-black text-[#186737] mt-0.5">#{order.order_number}</p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                    Order ID
+                  </p>
+                  <p className="text-sm font-black text-[#186737] mt-0.5">
+                    #{order.order_number}
+                  </p>
                 </div>
               </div>
 
@@ -638,31 +727,127 @@ export default function PaymentSuccessPage() {
                 <div className="space-y-2.5 text-sm">
                   <Row
                     label={`Subtotal (${order.order_products.length} item${order.order_products.length !== 1 ? "s" : ""})`}
-                    value={`${currencySymbol}${usd(subtotal)}`}
+                    value={
+                      <>
+                        <CurrencySymbol
+                          currency={currencySymbol}
+                          fontsize="14px"
+                        />
+                        {usd(subtotal)}
+                      </>
+                    }
                   />
-                  {shippingTotal > 0 && (
-                    <Row label="Shipping & Handling" value={`${currencySymbol}${usd(shippingTotal)}`} />
+                  {additionalFee > 0 && (
+                    <Row
+                      label={additionalFeeLabel}
+                      value={
+                        <>
+                          <CurrencySymbol
+                            currency={currencySymbol}
+                            fontsize="14px"
+                          />
+                          {usd(additionalFee)}
+                        </>
+                      }
+                    />
                   )}
-                  {hasLiftGate    && <Row label="Lift Gate Service"   value={`${currencySymbol}${usd(liftFee)}`} />}
-                  {hasResidential && <Row label="Residential Address" value={`${currencySymbol}${usd(resFee)}`} />}
-                  {hasInside      && <Row label="Inside Delivery"     value={`${currencySymbol}${usd(insideFee)}`} />}
+                  {shippingTotal > 0 && (
+                    <Row
+                      label="Shipping & Handling"
+                      value={
+                        <>
+                          <CurrencySymbol
+                            currency={currencySymbol}
+                            fontsize="14px"
+                          />
+                          {usd(shippingTotal)}
+                        </>
+                      }
+                    />
+                  )}
+                  {hasLiftGate && (
+                    <Row
+                      label="Lift Gate Service"
+                      value={
+                        <>
+                          <CurrencySymbol
+                            currency={currencySymbol}
+                            fontsize="14px"
+                          />
+                          {usd(liftFee)}
+                        </>
+                      }
+                    />
+                  )}
+                  {hasResidential && (
+                    <Row
+                      label="Residential Address"
+                      value={
+                        <>
+                          <CurrencySymbol
+                            currency={currencySymbol}
+                            fontsize="14px"
+                          />
+                          {usd(resFee)}
+                        </>
+                      }
+                    />
+                  )}
+                  {hasInside && (
+                    <Row
+                      label="Inside Delivery"
+                      value={
+                        <>
+                          <CurrencySymbol
+                            currency={currencySymbol}
+                            fontsize="14px"
+                          />
+                          {usd(insideFee)}
+                        </>
+                      }
+                    />
+                  )}
                   {taxAmount > 0 && (
                     <Row
-                      label={`Tax (${(taxRate * 100).toFixed(2)}%)`}
-                      value={`${currencySymbol}${usd(taxAmount)}`}
+                      label={`VAT (${(taxRate * 100).toFixed(2)}%)`}
+                      value={
+                        <>
+                          <CurrencySymbol
+                            currency={currencySymbol}
+                            fontsize="14px"
+                          />
+                          {usd(taxAmount)}
+                        </>
+                      }
                     />
                   )}
                   {discount > 0 && (
                     <Row
                       label="Discount"
-                      value={`-${currencySymbol}${usd(discount)}`}
+                      value={
+                        <>
+                          -
+                          <CurrencySymbol
+                            currency={currencySymbol}
+                            fontsize="14px"
+                          />
+                          {usd(discount)}
+                        </>
+                      }
                       valueClass="text-[#186737] font-semibold"
                     />
                   )}
                   <div className="h-px bg-gray-100" />
                   <div className="flex justify-between items-baseline pt-1">
                     <span className="font-bold text-gray-800">Total Paid</span>
-                    <span className="text-lg font-black text-[#186737]">{currencySymbol}{usd(total)}</span>
+                    <span className="text-lg font-black text-[#186737] inline-flex items-baseline whitespace-nowrap">
+                      <CurrencySymbol
+                        currency={currencySymbol}
+                        weight="bold"
+                        fontsize="18px"
+                      />
+                      {usd(total)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -687,7 +872,7 @@ export default function PaymentSuccessPage() {
               </div> */}
 
               {/* Support */}
-              <CTA/>
+              <CTA />
               {/* <div className="bg-white rounded-[7px] border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-4">
                 <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center mb-3">
                   Need Help?
@@ -723,13 +908,17 @@ function Row({
   valueClass,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   valueClass?: string;
 }) {
   return (
     <div className="flex justify-between text-gray-600">
       <span>{label}</span>
-      <span className={`font-medium ${valueClass ?? ""}`}>{value}</span>
+      <span
+        className={`font-medium inline-flex items-baseline whitespace-nowrap ${valueClass ?? ""}`}
+      >
+        {value}
+      </span>
     </div>
   );
 }

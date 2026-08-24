@@ -115,7 +115,7 @@ export default function MyQuotesPage() {
         const params: Record<string, string | number> = {
           page: opts.page,
           length: PER_PAGE,
-          sort_dir: "asc",
+          sort_dir: "desc",
         };
         if (opts.search)                    params.global = opts.search;
         if (opts.status !== "All Status")   params.status = opts.status;

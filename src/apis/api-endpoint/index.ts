@@ -103,6 +103,7 @@ export const apiUrls = {
   MADE_TO_ORDER: "frontend/made-to-orders",
 
   CCAVENUE_INITIATE_PAYMENT: "frontend/ccavenue/initiate-payment",
+  CCAVENUE_DECODE_RESPONSE: "ccavenue/dataEncodeCCavenue",
   PLACE_ORDER:"frontend/orders",
   ADD_RECENT_PRODUCT: "frontend/recent-products/add",
   GET_RECENT_PRODUCTS: (page: number) => `frontend/recent-products?page=${page}`,

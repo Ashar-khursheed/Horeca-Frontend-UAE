@@ -9,20 +9,27 @@ import type { AppDispatch } from "@/store/store";
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
 
+// Decoded fields from the CCAvenue return leg (POST encResp to
+// apiUrls.CCAVENUE_DECODE_RESPONSE, then parse the returned query string).
+export interface CCAvenueResult {
+  order_id: string;
+  tracking_id: string;
+  bank_ref_no: string;
+  order_status: string;
+  status_code: string;
+  payment_mode: string;
+  amount: string;
+  currency: string;
+}
+
 export interface PlaceOrderParams {
-  token: string;
-  amount: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  countryCode: string;
   rawProducts: any[];
   liftGate: boolean;
   residential: boolean;
   insideDelivery: boolean;
   ratePercent: number;
-  cardDetails: any;
+  paymentProcessingFee: number;
+  ccavenue: CCAvenueResult;
   onStep: (step: OrderStep) => void;
 }
 
@@ -104,7 +111,9 @@ async function createOrder(params: PlaceOrderParams) {
       ...(couponId ? { coupon_id: couponId, discount: discountVal } : {}),
       is_reserved: 0,
       pay_with_cheque: 0,
-      payment_mode: "Square",
+      payment_mode: "CC Avenue",
+      additional_amount_price: params.paymentProcessingFee,
+      additional_amount_name: "Payment Processing Fee",
     },
   })) as any;
 
@@ -113,7 +122,7 @@ async function createOrder(params: PlaceOrderParams) {
 }
 
 // ── Payment history (non-blocking) ───────────────────────────────────────────
-async function savePaymentHistory(orderData: any, paymentRes: any) {
+async function savePaymentHistory(orderData: any, ccavenue: CCAvenueResult) {
   try {
     const paymentDate = orderData?.updated_at
       ? orderData.updated_at.split(/[T ]/)[0]
@@ -122,60 +131,18 @@ async function savePaymentHistory(orderData: any, paymentRes: any) {
       method: "POST",
       data: {
         order_id: orderData?.id,
-        transaction_id: paymentRes?.payment?.id,
-        payment_mode: "Credit Card",
+        transaction_id: ccavenue.tracking_id,
+        payment_mode: ccavenue.payment_mode || "Credit Card",
         amount: orderData?.total_amount,
         status: "Completed",
         payment_date: paymentDate,
-        notes: "",
-        payment_details: JSON.stringify(paymentRes?.payment ?? {}),
-        payment_method: "Square",
+        notes: `Bank ref: ${ccavenue.bank_ref_no}`,
+        payment_details: JSON.stringify(ccavenue),
+        payment_method: "CCAvenue",
       },
     });
   } catch {
     console.warn("Payment history failed (non-blocking)");
-  }
-}
-
-// ── Screen transaction (non-blocking) ────────────────────────────────────────
-async function saveScreenTransaction(params: PlaceOrderParams, orderData: any, paymentRes: any) {
-  try {
-    const defaultAddr = getDefaultAddressCache();
-    const user = JSON.parse(localStorage.getItem("user") ?? "{}");
-    const { cardDetails, amount, firstName, lastName, email, phone } = params;
-    const billingFirst = user?.name?.split(" ")?.[0] ?? firstName;
-    const billingLast = user?.name?.split(" ")?.slice(1)?.join(" ") ?? lastName;
-    const billingAddr = defaultAddr?.address ?? "";
-    const billingCity = defaultAddr?.related_city?.name ?? defaultAddr?.city ?? "";
-    const billingState = defaultAddr?.related_state?.name ?? defaultAddr?.state ?? "";
-    const billingZip = defaultAddr?.zip_code ?? "";
-    const codeMap: Record<string, string> = {
-      "united states": "US", canada: "CA", "united kingdom": "GB",
-      australia: "AU", "united arab emirates": "AE", uae: "AE",
-    };
-    const rawCountry = (defaultAddr?.related_country?.name ?? defaultAddr?.country ?? "").toLowerCase().trim();
-    const billingCountry = codeMap[rawCountry] ?? rawCountry.slice(0, 2).toUpperCase();
-    const expMonth = String(cardDetails?.expMonth ?? "").padStart(2, "0");
-    const expYear = String(cardDetails?.expYear ?? "").slice(-2);
-
-    await makeApiRequest(apiUrls.SCREEN_TRANSACTION, {
-      method: "POST",
-      data: {
-        order_id: String(orderData?.id),
-        amount,
-        billing_first_name: billingFirst, billing_last_name: billingLast,
-        billing_email: user?.email ?? email, billing_phone: user?.mobile_number ?? phone,
-        billing_address: billingAddr, billing_city: billingCity,
-        billing_state: billingState, billing_zip: billingZip, billing_country: billingCountry,
-        shipping_first_name: billingFirst, shipping_last_name: billingLast,
-        shipping_address: billingAddr, shipping_city: billingCity,
-        shipping_state: billingState, shipping_zip: billingZip, shipping_country: billingCountry,
-        card_bin: "", card_last4: cardDetails?.last4 ?? "",
-        card_type: cardDetails?.brand ?? "", card_expiration: expMonth + expYear,
-      },
-    });
-  } catch {
-    console.warn("Screen transaction failed (non-blocking)");
   }
 }
 
@@ -189,11 +156,10 @@ async function fetchFullOrder(orderId: number, fallback: any) {
   }
 }
 
-// ── MAIN: Place order with all API calls ─────────────────────────────────────
-// NOTE: not currently called — CCAvenue is a redirect-based gateway (see
-// checkout/page.tsx handlePlaceOrder), and order creation for that flow is
-// still pending backend design. Kept here for the payment methods that create
-// the order up front once that's wired back in.
+// ── MAIN: Place order after a successful CCAvenue payment ────────────────────
+// Called from checkout/page.tsx once the customer is redirected back from
+// CCAvenue's hosted payment page and the encResp has been decoded + confirmed
+// successful — the order is only created now, not before the redirect.
 export async function placeOrderWithPayment(params: PlaceOrderParams): Promise<number> {
   const { onStep } = params;
 
@@ -206,13 +172,10 @@ export async function placeOrderWithPayment(params: PlaceOrderParams): Promise<n
   // 2. Fetch full order details
   const fullOrderData = await fetchFullOrder(orderId, orderData);
 
-  // 3. Non-blocking: payment history + screen transaction (parallel)
-  await Promise.allSettled([
-    savePaymentHistory(fullOrderData, null),
-    saveScreenTransaction(params, fullOrderData, null),
-  ]);
+  // 3. Non-blocking: record the CCAvenue payment against the order
+  await savePaymentHistory(fullOrderData, params.ccavenue);
 
-  // 5. Save to localStorage + clear coupon
+  // 4. Save to localStorage + clear coupon
   localStorage.setItem("recentOrder", JSON.stringify(fullOrderData));
   [COUPON_KEY, CART_SUMMARY_KEY, "coupon_id", "discount_value", "discount_type"]
     .forEach((k) => localStorage.removeItem(k));
