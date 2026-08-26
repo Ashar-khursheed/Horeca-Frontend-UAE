@@ -33,13 +33,25 @@ export function persistPaymentAuthBackup() {
   }
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${name}=`));
+  if (!match) return null;
+  const value = decodeURIComponent(match.slice(name.length + 1));
+  return isUsable(value) ? value : null;
+}
+
 /** Re-attach session cookies from localStorage after a gateway return. */
 export function restorePaymentAuthCookies(): boolean {
   if (typeof window === "undefined") return false;
   const token =
     localStorage.getItem("token") ||
     sessionStorage.getItem(TOKEN_KEY) ||
-    localStorage.getItem(TOKEN_KEY);
+    localStorage.getItem(TOKEN_KEY) ||
+    readCookie("token");
   if (!isUsable(token)) return false;
 
   const user =

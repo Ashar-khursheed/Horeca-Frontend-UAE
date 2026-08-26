@@ -40,11 +40,14 @@ import { trackGtmEvent } from "@/utils/gtm";
 import { CurrencySymbol } from "@/components/currency-symbol";
 import { UAE_VAT_RATE } from "dirham";
 import {
+  CCAVENUE_CART_KEY,
   CCAVENUE_DELIVERY_OPTIONS_KEY,
   CCAVENUE_PROCESSED_KEY,
+  clearCCAvenueCheckout,
   decodeCCAvenueResponse,
   initiateCCAvenuePayment,
   persistCCAvenueDeliveryOptions,
+  readCCAvenueCartBackup,
   readCCAvenueDeliveryOptions,
 } from "./payments/ccavenue";
 import {
@@ -60,7 +63,7 @@ import {
 } from "./payments/touras";
 import { chargeStripe } from "./payments/stripe";
 import { placeCodOrder } from "./payments/cod";
-import { persistPaymentAuthBackup } from "@/utils/payment-auth";
+import { persistPaymentAuthBackup, restorePaymentAuthCookies } from "@/utils/payment-auth";
 import {
   resolveCurrencyCode,
   toIsoCountry,
@@ -303,6 +306,10 @@ export default function CheckoutPage() {
     } catch {
       /* ignore */
     }
+
+    // Restore session before reading token — payment returns can drop cookies
+    // while localStorage (or the payment backup) still has the token.
+    restorePaymentAuthCookies();
 
     // Fetch cart
     const token = getToken();
@@ -705,13 +712,16 @@ export default function CheckoutPage() {
 
       if (method === "ccavenue") {
         setOrderStep("payment");
-        persistCCAvenueDeliveryOptions({
-          liftGate,
-          residential,
-          insideDelivery,
-          ratePercent,
-          paymentProcessingFee,
-        });
+        persistCCAvenueDeliveryOptions(
+          {
+            liftGate,
+            residential,
+            insideDelivery,
+            ratePercent,
+            paymentProcessingFee,
+          },
+          rawProducts,
+        );
         persistPaymentAuthBackup();
         const paymentUrl = await initiateCCAvenuePayment({
           amount: grandTotal,
@@ -796,7 +806,11 @@ export default function CheckoutPage() {
     const encResp = searchParams.get("encResp");
     if (!encResp) return;
     if (ccavenueHandledRef.current) return;
-    if (rawProducts.length === 0) return;
+
+    restorePaymentAuthCookies();
+    const products =
+      rawProducts.length > 0 ? rawProducts : readCCAvenueCartBackup();
+    if (!products.length) return;
     ccavenueHandledRef.current = true;
 
     (async () => {
@@ -824,7 +838,7 @@ export default function CheckoutPage() {
 
         const savedOptions = readCCAvenueDeliveryOptions();
         const orderId = await placeOrderWithPayment({
-          rawProducts,
+          rawProducts: products,
           liftGate: savedOptions.liftGate ?? false,
           residential: savedOptions.residential ?? false,
           insideDelivery: savedOptions.insideDelivery ?? false,
@@ -842,6 +856,8 @@ export default function CheckoutPage() {
           onStep: setOrderStep,
         });
         localStorage.removeItem(CCAVENUE_DELIVERY_OPTIONS_KEY);
+        localStorage.removeItem(CCAVENUE_CART_KEY);
+        clearCCAvenueCheckout();
         finishSuccessfulOrder(orderId);
       } catch (err: any) {
         setOrderStep("idle");

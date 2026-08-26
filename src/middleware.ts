@@ -1,13 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getAuthCookieDomain,
+  getBareHostname,
+  getCanonicalHostname,
+  getRequestHostname,
+  getRequestProtocol,
+  isLocalHost,
+} from "@/utils/canonical-origin";
 
 const CUSTOMER_PROTECTED_ROUTES = ["/dashboard", "/checkout"];
 const VENDOR_PROTECTED_ROUTES = ["/partner"];
 const AUTH_ROUTES = [ "/forgot-password"];
 const AUTH_MAX_MS = 259200 * 1000; // 72 hours
-function clearAuthCookies(response: NextResponse): NextResponse {
-  response.cookies.set("token", "", { maxAge: 0, path: "/" });
-  response.cookies.set("login_time", "", { maxAge: 0, path: "/" });
-  response.cookies.set("account_type", "", { maxAge: 0, path: "/" });
+
+function expireCookie(
+  response: NextResponse,
+  name: string,
+  domain?: string,
+) {
+  response.cookies.set(name, "", {
+    maxAge: 0,
+    path: "/",
+    ...(domain ? { domain } : {}),
+  });
+}
+
+function clearAuthCookies(
+  response: NextResponse,
+  hostname?: string,
+): NextResponse {
+  const names = ["token", "login_time", "account_type"] as const;
+  const domains = new Set<string | undefined>([undefined]);
+  if (hostname && !isLocalHost(hostname)) {
+    domains.add(hostname);
+    domains.add(getBareHostname(hostname));
+  }
+  names.forEach((name) => {
+    domains.forEach((domain) => expireCookie(response, name, domain));
+  });
   return response;
 }
 
@@ -53,14 +83,6 @@ async function resolveCountryCode(request: NextRequest): Promise<string> {
   return "US";
 }
 
-function isLocalHost(hostname: string): boolean {
-  return (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "::1"
-  );
-}
-
 function isPaymentGatewayReturn(request: NextRequest): boolean {
   const q = request.nextUrl.searchParams;
   return (
@@ -76,20 +98,21 @@ function isPaymentGatewayReturn(request: NextRequest): boolean {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hostname = request.nextUrl.hostname;
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const proto = (forwardedProto ?? request.nextUrl.protocol.replace(":", "")).split(",")[0]?.trim();
+  const hostname = getRequestHostname(request.headers, request.nextUrl.hostname);
+  const proto = getRequestProtocol(request.headers, request.nextUrl.protocol);
 
-  // Payment gateways sometimes return to http:// while the session lives on https://
-  // (separate cookies + localStorage). Upgrade before any auth check.
-  if (
-    pathname.startsWith("/checkout") &&
-    proto === "http" &&
-    !isLocalHost(hostname)
-  ) {
-    const httpsUrl = request.nextUrl.clone();
-    httpsUrl.protocol = "https:";
-    return NextResponse.redirect(httpsUrl, 308);
+  // Collapse http/https and www/non-www onto one origin before auth checks.
+  // Payment gateways (and users) hit any of:
+  // http://staging-uae..., https://www.staging-uae..., etc.
+  const canonicalHost = getCanonicalHostname(hostname);
+  if (proto !== "https" || canonicalHost !== hostname) {
+    if (!isLocalHost(hostname)) {
+      const url = request.nextUrl.clone();
+      url.protocol = "https:";
+      url.hostname = canonicalHost;
+      url.port = "";
+      return NextResponse.redirect(url, 308);
+    }
   }
 
   const token        = request.cookies.get("token")?.value?.trim();
@@ -109,7 +132,9 @@ export async function middleware(request: NextRequest) {
     const url = new URL("/login", request.url);
     url.searchParams.set("type", "vendor");
     url.searchParams.set("redirect", pathname);
-    return isTokenValid ? NextResponse.redirect(url) : clearAuthCookies(NextResponse.redirect(url));
+    return isTokenValid
+      ? NextResponse.redirect(url)
+      : clearAuthCookies(NextResponse.redirect(url), hostname);
   }
 
   // Customer-only pages: require a valid, non-vendor session. A vendor token
@@ -130,7 +155,7 @@ export async function middleware(request: NextRequest) {
       const tokenExpired =
         !!token && !!loginTime && Date.now() - loginTime >= AUTH_MAX_MS;
       return tokenExpired
-        ? clearAuthCookies(NextResponse.redirect(url))
+        ? clearAuthCookies(NextResponse.redirect(url), hostname)
         : NextResponse.redirect(url);
     }
     if (isTokenValid && isVendor) {
@@ -152,10 +177,16 @@ export async function middleware(request: NextRequest) {
 
   // Always update cookie when country changes (handles VPN switches)
   if (request.cookies.get("hc_cc")?.value !== countryCode) {
-    response.cookies.set("hc_cc", countryCode, { maxAge: 60 * 60 * 24 * 3, path: "/", sameSite: "lax" });
+    const cookieDomain = getAuthCookieDomain(hostname);
+    response.cookies.set("hc_cc", countryCode, {
+      maxAge: 60 * 60 * 24 * 3,
+      path: "/",
+      sameSite: "lax",
+      ...(cookieDomain ? { domain: cookieDomain } : {}),
+    });
   }
 
-  if (token && !isTokenValid) clearAuthCookies(response);
+  if (token && !isTokenValid) clearAuthCookies(response, hostname);
 
   return response;
 }

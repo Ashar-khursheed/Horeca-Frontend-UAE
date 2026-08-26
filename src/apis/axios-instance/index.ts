@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { getAuthCookieDomain } from "@/utils/canonical-origin";
 import { getCountryCodeClient } from "@/utils/country";
 
 const axiosInstance = axios.create({
@@ -27,14 +28,49 @@ const getAuthToken = (): string | null => {
 const AUTH_MAX_AGE = 259200; // 72 hours
 const AUTH_MAX_MS = AUTH_MAX_AGE * 1000;
 
-function cookieSuffix(maxAge: number, clear = false): string {
+function cookieSuffix(maxAge: number, clear = false, domain?: string): string {
   const isHttps =
     typeof window !== "undefined" && window.location.protocol === "https:";
   // SameSite=None; Secure so CCAvenue/Touras cross-site (and http→https)
   // returns still include the session cookie. Lax cookies are dropped on
   // gateway POSTs and are not sent from http to https (schemeful same-site).
   const sameSite = isHttps ? "None; Secure" : "Lax";
-  return `path=/; SameSite=${sameSite}; max-age=${clear ? 0 : maxAge}`;
+  const domainPart = domain ? `; Domain=${domain}` : "";
+  return `path=/; SameSite=${sameSite}; max-age=${clear ? 0 : maxAge}${domainPart}`;
+}
+
+function writeAuthCookies(parts: string[]) {
+  if (typeof window === "undefined") return;
+  const host = window.location.hostname;
+  const parent = getAuthCookieDomain(host);
+  const suffixes = [
+    cookieSuffix(AUTH_MAX_AGE),
+    ...(parent ? [cookieSuffix(AUTH_MAX_AGE, false, parent)] : []),
+  ];
+  parts.forEach((part) => {
+    suffixes.forEach((suffix) => {
+      document.cookie = `${part}; ${suffix}`;
+    });
+  });
+}
+
+function expireAuthCookies() {
+  if (typeof window === "undefined") return;
+  const names = ["token", "login_time", "account_type"];
+  const host = window.location.hostname;
+  const parent = getAuthCookieDomain(host);
+  const domains = [undefined, host, parent].filter(
+    (value, index, list): value is string | undefined =>
+      list.indexOf(value) === index,
+  );
+  names.forEach((name) => {
+    domains.forEach((domain) => {
+      document.cookie = `${name}=; ${cookieSuffix(0, true, domain)}`;
+      document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax${
+        domain ? `; Domain=${domain}` : ""
+      }`;
+    });
+  });
 }
 
 export const setAuthToken = (token: string): void => {
@@ -43,9 +79,7 @@ export const setAuthToken = (token: string): void => {
   const loginTime = Date.now().toString();
   localStorage.setItem("token", clean);
   localStorage.setItem("login_time", loginTime);
-  const suffix = cookieSuffix(AUTH_MAX_AGE);
-  document.cookie = `token=${clean}; ${suffix}`;
-  document.cookie = `login_time=${loginTime}; ${suffix}`;
+  writeAuthCookies([`token=${clean}`, `login_time=${loginTime}`]);
 };
 
 export const removeAuthToken = (): void => {
@@ -54,13 +88,7 @@ export const removeAuthToken = (): void => {
   localStorage.removeItem("user");
   localStorage.removeItem("login_time");
   localStorage.removeItem("account_type");
-  const expired = cookieSuffix(0, true);
-  document.cookie = `token=; ${expired}`;
-  document.cookie = `login_time=; ${expired}`;
-  document.cookie = `account_type=; ${expired}`;
-  document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
-  document.cookie = "login_time=; path=/; max-age=0; SameSite=Lax";
-  document.cookie = "account_type=; path=/; max-age=0; SameSite=Lax";
+  expireAuthCookies();
 };
 
 // A vendor's token is only valid against vendor/* endpoints — customer/*
@@ -72,7 +100,7 @@ export const removeAuthToken = (): void => {
 export const setAccountType = (type: "customer" | "vendor"): void => {
   if (typeof window === "undefined") return;
   localStorage.setItem("account_type", type);
-  document.cookie = `account_type=${type}; ${cookieSuffix(AUTH_MAX_AGE)}`;
+  writeAuthCookies([`account_type=${type}`]);
 };
 
 export const getAccountType = (): "customer" | "vendor" | null => {

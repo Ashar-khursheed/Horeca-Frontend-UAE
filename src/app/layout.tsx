@@ -13,6 +13,7 @@ import "./globals.css";
 import CountryDetector from "@/components/country-detector";
 import GlobalPrefetch from "@/components/global-prefetch";
 import CustomScriptsRenderer from "@/components/custom-scripts-renderer";
+import CanonicalOrigin from "@/components/canonical-origin";
 import ForceClear from "@/components/force-clear";
 import { revalidate } from "@/utils";
 import PostHogProvider from "@/components/posthog-provider";
@@ -137,6 +138,7 @@ export default async function RootLayout({
         <PostHogProvider>
           <NextIntlClientProvider messages={messages}>
             <GlobalLayout navItemData={navItemData}>
+              <CanonicalOrigin />
               <ForceClear />
               <WebVitals />
               <CountryDetector />

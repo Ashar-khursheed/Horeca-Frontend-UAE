@@ -1,3 +1,5 @@
+import { getAuthCookieDomain } from "@/utils/canonical-origin";
+
 const GEO_API = `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/location`;
 const FALLBACK = "IN";
 const COOKIE_NAME = "hc_cc";
@@ -52,7 +54,10 @@ export async function getCountryCodeClient(): Promise<string> {
             const code = data.countryCode;
             localStorage.setItem(CC_KEY, code);
             localStorage.setItem(CC_TIME_KEY, Date.now().toString());
-            document.cookie = `${COOKIE_NAME}=${code}; path=/; max-age=3600; SameSite=Lax`;
+            const parent = getAuthCookieDomain(window.location.hostname);
+            document.cookie = `${COOKIE_NAME}=${code}; path=/; max-age=3600; SameSite=Lax${
+              parent ? `; Domain=${parent}` : ""
+            }`;
           }
         })
         .catch(() => {})

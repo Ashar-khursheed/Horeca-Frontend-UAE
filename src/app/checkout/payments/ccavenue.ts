@@ -3,6 +3,7 @@ import { makeApiRequest } from "@/apis/axios-instance";
 
 export const CCAVENUE_DELIVERY_OPTIONS_KEY = "hc_ccavenue_delivery_options";
 export const CCAVENUE_PROCESSED_KEY = "hc_ccavenue_processed_tracking_id";
+export const CCAVENUE_CART_KEY = "hc_ccavenue_cart_backup";
 
 export interface CCAvenueResult {
   order_id: string;
@@ -25,8 +26,26 @@ export interface CCAvenueDeliveryOptions {
 
 export function persistCCAvenueDeliveryOptions(
   options: CCAvenueDeliveryOptions,
+  products?: unknown[],
 ) {
   localStorage.setItem(CCAVENUE_DELIVERY_OPTIONS_KEY, JSON.stringify(options));
+  if (products) {
+    localStorage.setItem(CCAVENUE_CART_KEY, JSON.stringify(products));
+  }
+}
+
+export function readCCAvenueCartBackup<T = unknown>(): T[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CCAVENUE_CART_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function clearCCAvenueCheckout() {
+  localStorage.removeItem(CCAVENUE_DELIVERY_OPTIONS_KEY);
+  localStorage.removeItem(CCAVENUE_CART_KEY);
 }
 
 export function readCCAvenueDeliveryOptions(): Partial<CCAvenueDeliveryOptions> {
