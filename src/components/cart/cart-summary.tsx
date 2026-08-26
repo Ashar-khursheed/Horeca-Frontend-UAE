@@ -20,6 +20,11 @@ import { useAppSelector } from "@/store/hooks";
 import { CartItem, fmtPrice } from "./cart-types";
 import CTA from "../cta";
 import { CurrencySymbol } from "../currency-symbol";
+import {
+  getUaeOrderShipping,
+  isUaeShippingMarket,
+  UAE_FREE_SHIPPING_MIN,
+} from "@/utils/shipping";
 import { UAE_VAT_RATE } from "dirham";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
@@ -48,7 +53,20 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
     );
     return s + (c.price + accessoriesTotal) * c.qty;
   }, 0);
-  const shippingTotal = cartItems.reduce((s, c) => s + c.shippingCost * c.qty, 0);
+  const isUaeShipping = isUaeShippingMarket({
+    countryName: country?.data?.name,
+    currencySymbol,
+  });
+  const itemShippingTotal = cartItems.reduce(
+    (s, c) => s + c.shippingCost * c.qty,
+    0,
+  );
+  const shippingTotal = isUaeShipping
+    ? getUaeOrderShipping(subtotal)
+    : itemShippingTotal;
+  const freeShippingRemaining = isUaeShipping
+    ? Math.max(0, UAE_FREE_SHIPPING_MIN - subtotal)
+    : 0;
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
   // Processing fee: 2.95% for UAE addresses, 3.95% for everywhere else
@@ -155,19 +173,33 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                     </>
                   }
                 />
-                <SummaryRow
-                  label="Shipping & Handling"
-                  value={
-                    shippingTotal > 0 ? (
-                      <>
-                        <CurrencySymbol currency={currencySymbol} fontsize="14px" />
-                        {fmtPrice(shippingTotal)}
-                      </>
-                    ) : (
-                      <span className="text-[#186737] font-semibold">Free</span>
-                    )
-                  }
-                />
+                {isUaeShipping && (
+                  <>
+                    <SummaryRow
+                      label="Shipping & Handling"
+                      value={
+                        shippingTotal > 0 ? (
+                          <>
+                            <CurrencySymbol currency={currencySymbol} fontsize="14px" />
+                            {fmtPrice(shippingTotal)}
+                          </>
+                        ) : (
+                          <span className="text-[#186737] font-semibold">Free</span>
+                        )
+                      }
+                    />
+                    {freeShippingRemaining > 0 && (
+                      <p className="text-[11px] text-gray-500">
+                        Add{" "}
+                        <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                        {fmtPrice(freeShippingRemaining)} more for free shipping
+                        (orders of{" "}
+                        <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                        {fmtPrice(UAE_FREE_SHIPPING_MIN)}+)
+                      </p>
+                    )}
+                  </>
+                )}
                 {ratePercent > 0 && (
                   <>
                     <SummaryRow

@@ -26,8 +26,10 @@ import {
 } from "@/utils/locationStorage";
 import { useCartId } from "@/utils/cartId";
 import {
-  getShippingCharge,
   getShippingChargeFromAddress,
+  getUaeOrderShipping,
+  isUaeShippingMarket,
+  UAE_FREE_SHIPPING_MIN,
 } from "@/utils/shipping";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
@@ -330,25 +332,49 @@ export default function CheckoutPage() {
     if (location?.country) dispatch(fetchCountryByName(location.country));
   }, [dispatch]);
 
-  // ── Recalculate shipping & tax when default address changes ──────────────────
+  // ── Recalculate shipping & tax when default address / cart changes ─────────
   useEffect(() => {
     const defaultAddr = addresses.find((a) => a.is_default);
-    if (!defaultAddr) return;
-
-    // Flat rate for the new address (per-unit, same tiers as cart page)
-    const flatRatePerUnit = getShippingChargeFromAddress(defaultAddr as any);
-
-    // Sum per-item shipping the same way the cart page does:
-    // If the product has its own shippingCharge → use that × qty
-    // Otherwise fall back to the address flat-rate × qty
-    const newTotalShipping = (rawProducts as any[]).reduce((sum, cp) => {
+    const products = rawProducts as any[];
+    const liveSubtotal = products.reduce((sum, cp) => {
       const qty = Number(cp.quantity) || 1;
-      const productOwn =
-        Number(cp.shipping_charge) || Number(cp.product?.shipping_charge) || 0;
-      const itemShipping =
-        productOwn > 0 ? productOwn * qty : flatRatePerUnit * qty;
-      return sum + itemShipping;
+      const price = parseFloat(cp.unit_price ?? cp.product?.price ?? 0);
+      const accessories = (cp.accessory_charges ?? []).reduce(
+        (s: number, a: any) => s + parseFloat(a.accessory_item_price ?? 0),
+        0,
+      );
+      return sum + (price + accessories) * qty;
     }, 0);
+    const loc = getLocationData();
+    const currencySymbol =
+      products[0]?.product?.currency?.symbol ??
+      (loc?.countryCode === "AE" ? "AED" : undefined);
+    const uaeShipping = isUaeShippingMarket({
+      countryName:
+        country?.data?.name ??
+        defaultAddr?.related_country?.name ??
+        defaultAddr?.country,
+      countryCode: loc?.countryCode,
+      currencySymbol,
+    });
+
+    let newTotalShipping = 0;
+    if (uaeShipping) {
+      newTotalShipping = getUaeOrderShipping(liveSubtotal);
+    } else if (defaultAddr) {
+      // Flat rate for the new address (per-unit, same tiers as cart page)
+      const flatRatePerUnit = getShippingChargeFromAddress(defaultAddr as any);
+      newTotalShipping = products.reduce((sum, cp) => {
+        const qty = Number(cp.quantity) || 1;
+        const productOwn =
+          Number(cp.shipping_charge) || Number(cp.product?.shipping_charge) || 0;
+        const itemShipping =
+          productOwn > 0 ? productOwn * qty : flatRatePerUnit * qty;
+        return sum + itemShipping;
+      }, 0);
+    } else {
+      return;
+    }
 
     // UAE VAT + processing-fee recompute (no US zip-based sales tax lookup)
     setCartSummary((prev) => {
@@ -400,12 +426,27 @@ export default function CheckoutPage() {
   const cartItems = isLoggedIn ? apiCartItems : guestCartItems;
   const currencySymbolICON: string =
     (rawProducts[0] as any)?.product?.currency?.symbol ?? "$";
+  const isUaeShipping = isUaeShippingMarket({
+    countryName: country?.data?.name,
+    countryCode: getLocationData()?.countryCode,
+    currencySymbol: currencySymbolICON,
+  });
 
   // â"€â"€ Pricing (UAE: flat VAT + card processing fee, no US zip-based sales tax)
   // Processing fee: 2.95% for UAE addresses, 3.95% for everywhere else
   const PAYMENT_PROCESSING_FEE_RATE = isUAEUser ? 2.95 : 3.95;
-  const baseSubtotal = cartSummary?.subTotal ?? 0;
-  const baseShipping = cartSummary?.totalShippingCharges ?? 0;
+  const liveSubtotal = cartItems.reduce(
+    (s: number, c: { price: number; accessories: number; qty: number }) =>
+      s + (c.price + c.accessories) * c.qty,
+    0,
+  );
+  const baseSubtotal = liveSubtotal > 0 ? liveSubtotal : (cartSummary?.subTotal ?? 0);
+  const baseShipping = isUaeShipping
+    ? getUaeOrderShipping(baseSubtotal)
+    : (cartSummary?.totalShippingCharges ?? 0);
+  const freeShippingRemaining = isUaeShipping
+    ? Math.max(0, UAE_FREE_SHIPPING_MIN - baseSubtotal)
+    : 0;
   const ratePercent = isUAEUser ? UAE_VAT_RATE * 100 : 0; // VAT applies only within the UAE
   const taxRate = ratePercent / 100;
   const liftFee = liftGate ? 75 : 0;
@@ -655,6 +696,10 @@ export default function CheckoutPage() {
     const method = payment?.selectedMethod;
     if (!payment || !method) {
       setOrderError("Please select a payment method to continue.");
+      return;
+    }
+    if (!isUaeShipping && method !== "stripe") {
+      setOrderError("Please pay with Stripe to continue.");
       return;
     }
 
@@ -1297,27 +1342,40 @@ export default function CheckoutPage() {
               </>
             }
           />
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 flex items-center gap-1">
-              Shipping &amp; Handling
-              <button
-                type="button"
-                onClick={() => setShowShippingPolicyModal(true)}
-                className="w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors leading-none"
-                aria-label="Shipping policy info"
-              >
-                ?
-              </button>
-            </span>
-            {baseShipping > 0 ? (
-              <span className="font-medium text-gray-800">
-                <CurrencySymbol currency={currencySymbolICON} fontsize="14px" />
-                {usd(baseShipping)}
-              </span>
-            ) : (
-              <span className="font-medium text-[#186737]">Free</span>
-            )}
-          </div>
+          {isUaeShipping && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 flex items-center gap-1">
+                  Shipping &amp; Handling
+                  <button
+                    type="button"
+                    onClick={() => setShowShippingPolicyModal(true)}
+                    className="w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors leading-none"
+                    aria-label="Shipping policy info"
+                  >
+                    ?
+                  </button>
+                </span>
+                {baseShipping > 0 ? (
+                  <span className="font-medium text-gray-800">
+                    <CurrencySymbol currency={currencySymbolICON} fontsize="14px" />
+                    {usd(baseShipping)}
+                  </span>
+                ) : (
+                  <span className="font-medium text-[#186737]">Free</span>
+                )}
+              </div>
+              {freeShippingRemaining > 0 && (
+                <p className="text-[11px] text-gray-500 -mt-1">
+                  Add{" "}
+                  <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
+                  {usd(freeShippingRemaining)} more for free shipping (orders of{" "}
+                  <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
+                  {usd(UAE_FREE_SHIPPING_MIN)}+)
+                </p>
+              )}
+            </>
+          )}
           {liftGate && (
             <PriceRow
               label="Lift Gate Service"
@@ -1646,6 +1704,7 @@ export default function CheckoutPage() {
               </h2>
               {!isDesktop ? (
                 <CheckoutPayment
+                  isUae={isUaeShipping}
                   onHandleReady={(h) => {
                     paymentHandleRef.current = h;
                   }}
@@ -1934,6 +1993,7 @@ export default function CheckoutPage() {
             <div className="h-px bg-gray-200 my-4" />
             {isDesktop ? (
               <CheckoutPayment
+                isUae={isUaeShipping}
                 onHandleReady={(h) => {
                   paymentHandleRef.current = h;
                 }}

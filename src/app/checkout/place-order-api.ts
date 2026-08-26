@@ -1,7 +1,11 @@
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { getDefaultAddressCache, getLocationData } from "@/utils/locationStorage";
-import { getShippingCharge } from "@/utils/shipping";
+import {
+  getShippingCharge,
+  getUaeOrderShipping,
+  isUaeShippingMarket,
+} from "@/utils/shipping";
 import type { OrderStep } from "./order-processing-modal";
 import { updateProfile as updateProfileThunk } from "@/store/slices/my-profile/profileSlice";
 import type { AppDispatch } from "@/store/store";
@@ -50,6 +54,42 @@ export async function updateProfile(
 function buildProducts(rawProducts: any[]) {
   const defaultAddr = getDefaultAddressCache();
   const location = getLocationData();
+  const currencySymbol = rawProducts[0]?.product?.currency?.symbol;
+  const uaeShipping = isUaeShippingMarket({
+    countryName:
+      defaultAddr?.related_country?.name ??
+      defaultAddr?.country ??
+      location?.country,
+    countryCode: location?.countryCode,
+    currencySymbol,
+  });
+
+  if (uaeShipping) {
+    const subtotal = rawProducts.reduce((sum, cp) => {
+      const qty = Number(cp.quantity) || 1;
+      const price = parseFloat(cp.unit_price ?? cp.product?.price ?? 0);
+      const accessories = (cp.accessory_charges ?? []).reduce(
+        (s: number, a: any) => s + parseFloat(a.accessory_item_price ?? 0),
+        0,
+      );
+      return sum + (price + accessories) * qty;
+    }, 0);
+    const orderShipping = getUaeOrderShipping(subtotal);
+    return rawProducts.map((cp: any, index: number) => {
+      const qty = Number(cp.quantity) || 1;
+      return {
+        product_id: cp.product_id ?? cp.id,
+        vendor_id: cp.vendor_product_supplier?.vendor_id,
+        quantity: qty,
+        shipping_charge: index === 0 ? orderShipping : 0,
+        unit_price: parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
+        accessory_item_ids: (cp.accessory_charges ?? []).map(
+          (a: any) => a.accessory_item_id,
+        ),
+      };
+    });
+  }
+
   const deliveryCharge = getShippingCharge(
     defaultAddr?.city ?? location?.city ?? "",
     defaultAddr?.state ?? location?.regionName ?? "",

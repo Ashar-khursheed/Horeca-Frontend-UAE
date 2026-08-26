@@ -2,7 +2,7 @@
 
 import type { Stripe } from "@stripe/stripe-js";
 import { Banknote, CreditCard, Globe, Lock, Wallet } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   StripeCardForm,
   type StripeCardHandle,
@@ -23,16 +23,29 @@ export interface CheckoutPaymentHandle {
   getStripe: () => Stripe | null;
 }
 
-interface Props {
+export interface CheckoutPaymentProps {
   onHandleReady?: (handle: CheckoutPaymentHandle) => void;
+  /** UAE: CCAvenue, Touras, Stripe, COD. Outside UAE: Stripe only. */
+  isUae?: boolean;
 }
 
-export default function CheckoutPayment({ onHandleReady }: Props) {
-  const [selected, setSelected] = useState<PaymentMethod>("ccavenue");
+export default function CheckoutPayment({
+  onHandleReady,
+  isUae = process.env.NEXT_PUBLIC_REGION === "UAE",
+}: CheckoutPaymentProps) {
+  const [selected, setSelected] = useState<PaymentMethod>(
+    isUae ? "ccavenue" : "stripe",
+  );
   const stripeCardRef = useRef<StripeCardHandle>(null);
 
+  useEffect(() => {
+    if (!isUae && selected !== "stripe") {
+      setSelected("stripe");
+    }
+  }, [isUae, selected]);
+
   const handleRef = useRef<CheckoutPaymentHandle>({
-    selectedMethod: "ccavenue",
+    selectedMethod: isUae ? "ccavenue" : "stripe",
     async createStripePaymentMethod() {
       throw new Error("Stripe is not selected.");
     },
@@ -65,47 +78,51 @@ export default function CheckoutPayment({ onHandleReady }: Props) {
       </div>
 
       <div className="px-6">
-        <PaymentOption
-          id="pm-ccavenue"
-          title="Credit / Debit Card"
-          subtitle="Pay securely with CCAvenue — Visa, Mastercard, Amex & more"
-          icon={<CreditCard size={20} />}
-          selected={selected === "ccavenue"}
-          onSelect={() => setSelected("ccavenue")}
-          badge={
-            <div className="hidden md:flex shrink-0 items-center gap-1.5 self-center">
-              <CardBadge label="VISA" bg="bg-[#1a1f71]" color="text-white" />
-              <CardBadge label="MC" bg="bg-[#eb001b]" color="text-white" />
-              <CardBadge label="AMEX" bg="bg-[#007bc1]" color="text-white" />
-            </div>
-          }
-        >
-          <p className="mt-2 text-xs text-gray-500">
-            You will be redirected to CCAvenue to complete your payment
-            securely. Your order is created only after payment succeeds.
-          </p>
-        </PaymentOption>
+        {isUae && (
+          <>
+            <PaymentOption
+              id="pm-ccavenue"
+              title="Credit / Debit Card"
+              subtitle="Pay securely with CCAvenue — Visa, Mastercard, Amex & more"
+              icon={<CreditCard size={20} />}
+              selected={selected === "ccavenue"}
+              onSelect={() => setSelected("ccavenue")}
+              badge={
+                <div className="hidden md:flex shrink-0 items-center gap-1.5 self-center">
+                  <CardBadge label="VISA" bg="bg-[#1a1f71]" color="text-white" />
+                  <CardBadge label="MC" bg="bg-[#eb001b]" color="text-white" />
+                  <CardBadge label="AMEX" bg="bg-[#007bc1]" color="text-white" />
+                </div>
+              }
+            >
+              <p className="mt-2 text-xs text-gray-500">
+                You will be redirected to CCAvenue to complete your payment
+                securely. Your order is created only after payment succeeds.
+              </p>
+            </PaymentOption>
 
-        <PaymentOption
-          id="pm-touras"
-          title="ADCB Touras"
-          subtitle="Pay securely with ADCB Touras — Visa, Mastercard, Amex & more"
-          icon={<Globe size={20} />}
-          selected={selected === "touras"}
-          onSelect={() => setSelected("touras")}
-          badge={
-            <div className="hidden md:flex shrink-0 items-center gap-1.5 self-center">
-              <CardBadge label="VISA" bg="bg-[#1a1f71]" color="text-white" />
-              <CardBadge label="MC" bg="bg-[#eb001b]" color="text-white" />
-              <CardBadge label="AMEX" bg="bg-[#007bc1]" color="text-white" />
-            </div>
-          }
-        >
-          <p className="mt-2 text-xs text-gray-500">
-            You will be redirected to ADCB Touras to complete your payment
-            securely. Your order is created only after payment succeeds.
-          </p>
-        </PaymentOption>
+            <PaymentOption
+              id="pm-touras"
+              title="ADCB Touras"
+              subtitle="Pay securely with ADCB Touras — Visa, Mastercard, Amex & more"
+              icon={<Globe size={20} />}
+              selected={selected === "touras"}
+              onSelect={() => setSelected("touras")}
+              badge={
+                <div className="hidden md:flex shrink-0 items-center gap-1.5 self-center">
+                  <CardBadge label="VISA" bg="bg-[#1a1f71]" color="text-white" />
+                  <CardBadge label="MC" bg="bg-[#eb001b]" color="text-white" />
+                  <CardBadge label="AMEX" bg="bg-[#007bc1]" color="text-white" />
+                </div>
+              }
+            >
+              <p className="mt-2 text-xs text-gray-500">
+                You will be redirected to ADCB Touras to complete your payment
+                securely. Your order is created only after payment succeeds.
+              </p>
+            </PaymentOption>
+          </>
+        )}
 
         <PaymentOption
           id="pm-stripe"
@@ -114,24 +131,27 @@ export default function CheckoutPayment({ onHandleReady }: Props) {
           icon={<Wallet size={20} />}
           selected={selected === "stripe"}
           onSelect={() => setSelected("stripe")}
+          isLast={!isUae}
         >
           <StripeCardForm ref={stripeCardRef} />
         </PaymentOption>
 
-        <PaymentOption
-          id="pm-cod"
-          title="Cash On Delivery"
-          subtitle="Pay in cash when your order is delivered"
-          icon={<Banknote size={20} />}
-          selected={selected === "cod"}
-          onSelect={() => setSelected("cod")}
-          isLast
-        >
-          <p className="mt-2 text-xs text-gray-500">
-            No card is charged now. Please keep the exact amount ready for the
-            delivery agent.
-          </p>
-        </PaymentOption>
+        {isUae && (
+          <PaymentOption
+            id="pm-cod"
+            title="Cash On Delivery"
+            subtitle="Pay in cash when your order is delivered"
+            icon={<Banknote size={20} />}
+            selected={selected === "cod"}
+            onSelect={() => setSelected("cod")}
+            isLast
+          >
+            <p className="mt-2 text-xs text-gray-500">
+              No card is charged now. Please keep the exact amount ready for the
+              delivery agent.
+            </p>
+          </PaymentOption>
+        )}
       </div>
 
       <div className="flex items-center gap-2 bg-[#F8FAFC] px-6 py-3 text-xs text-gray-500">

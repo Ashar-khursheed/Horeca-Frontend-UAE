@@ -1,5 +1,29 @@
 import type { DefaultAddressCache } from "./locationStorage";
 
+/** UAE: flat 30 AED shipping below 500 AED subtotal; free at 500+. */
+export const UAE_FREE_SHIPPING_MIN = 500;
+export const UAE_FLAT_SHIPPING = 30;
+
+export function isUaeShippingMarket(opts?: {
+  countryName?: string | null;
+  countryCode?: string | null;
+  currencySymbol?: string | null;
+}): boolean {
+  const region = process.env.NEXT_PUBLIC_REGION;
+  const cur = (opts?.currencySymbol ?? "").trim();
+  if (region === "UAE") return true;
+  if (cur === "AED" || cur === "د.إ") return true;
+  if (region === "US") return false;
+  const name = (opts?.countryName ?? "").toLowerCase();
+  const code = (opts?.countryCode ?? "").toLowerCase();
+  return name.includes("arab emirates") || code === "ae";
+}
+
+export function getUaeOrderShipping(subtotal: number): number {
+  if (!(subtotal > 0)) return 0;
+  return subtotal < UAE_FREE_SHIPPING_MIN ? UAE_FLAT_SHIPPING : 0;
+}
+
 const usChargeByLocation = (city: string, regionName: string): number => {
   const c = (city ?? "").toLowerCase().trim();
   const r = (regionName ?? "").toLowerCase().trim();

@@ -391,7 +391,10 @@ export default function OrderDetailPage() {
   const liftFee    = order.is_lift_gate           === 1 ? 75  : 0;
   const resFee     = order.is_residential_address === 1 ? 199 : 0;
   const insideFee  = order.is_inside_delivery     === 1 ? 249 : 0;
-  const shipping = total - subtotal - tax + discount + additionalDiscount - liftFee - resFee - insideFee;
+  // Read shipping straight from the API instead of backing it out of
+  // total - subtotal - tax — that subtraction drifts by a cent whenever the
+  // stored total was itself rounded during checkout (e.g. 30.00 → 29.99).
+  const shipping = Number(order.shipping_charge);
 
   const addressLines = order.customer_address.split(/\\n|\n/).filter(Boolean);
   const firstPayment = order.payments[0];
