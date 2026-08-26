@@ -1,4 +1,4 @@
-export type PaymentMethod = "ccavenue" | "stripe" | "cod";
+export type PaymentMethod = "ccavenue" | "touras" | "stripe" | "cod";
 
 export interface StripeBillingDetails {
   name: string;

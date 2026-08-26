@@ -104,6 +104,8 @@ export const apiUrls = {
 
   CCAVENUE_INITIATE_PAYMENT: "frontend/ccavenue/initiate-payment",
   CCAVENUE_DECODE_RESPONSE: "ccavenue/dataEncodeCCavenue",
+  TOURAS_INITIATE: "frontend/touras/initiate",
+  TOURAS_CALLBACK: "frontend/touras/callback",
   STRIPE_CREATE_PAYMENT_INTENT: "stripe/create-payment-intent",
   PLACE_ORDER:"frontend/orders",
   ADD_RECENT_PRODUCT: "frontend/recent-products/add",

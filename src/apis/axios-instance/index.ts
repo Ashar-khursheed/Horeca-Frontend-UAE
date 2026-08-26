@@ -27,14 +27,25 @@ const getAuthToken = (): string | null => {
 const AUTH_MAX_AGE = 259200; // 72 hours
 const AUTH_MAX_MS = AUTH_MAX_AGE * 1000;
 
+function cookieSuffix(maxAge: number, clear = false): string {
+  const isHttps =
+    typeof window !== "undefined" && window.location.protocol === "https:";
+  // SameSite=None; Secure so CCAvenue/Touras cross-site (and http→https)
+  // returns still include the session cookie. Lax cookies are dropped on
+  // gateway POSTs and are not sent from http to https (schemeful same-site).
+  const sameSite = isHttps ? "None; Secure" : "Lax";
+  return `path=/; SameSite=${sameSite}; max-age=${clear ? 0 : maxAge}`;
+}
+
 export const setAuthToken = (token: string): void => {
   if (typeof window === "undefined") return;
   const clean = token.trim().replace(/^["']|["']$/g, "");
   const loginTime = Date.now().toString();
   localStorage.setItem("token", clean);
   localStorage.setItem("login_time", loginTime);
-  document.cookie = `token=${clean}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
-  document.cookie = `login_time=${loginTime}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
+  const suffix = cookieSuffix(AUTH_MAX_AGE);
+  document.cookie = `token=${clean}; ${suffix}`;
+  document.cookie = `login_time=${loginTime}; ${suffix}`;
 };
 
 export const removeAuthToken = (): void => {
@@ -43,6 +54,10 @@ export const removeAuthToken = (): void => {
   localStorage.removeItem("user");
   localStorage.removeItem("login_time");
   localStorage.removeItem("account_type");
+  const expired = cookieSuffix(0, true);
+  document.cookie = `token=; ${expired}`;
+  document.cookie = `login_time=; ${expired}`;
+  document.cookie = `account_type=; ${expired}`;
   document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
   document.cookie = "login_time=; path=/; max-age=0; SameSite=Lax";
   document.cookie = "account_type=; path=/; max-age=0; SameSite=Lax";
@@ -57,7 +72,7 @@ export const removeAuthToken = (): void => {
 export const setAccountType = (type: "customer" | "vendor"): void => {
   if (typeof window === "undefined") return;
   localStorage.setItem("account_type", type);
-  document.cookie = `account_type=${type}; path=/; SameSite=Lax; max-age=${AUTH_MAX_AGE}`;
+  document.cookie = `account_type=${type}; ${cookieSuffix(AUTH_MAX_AGE)}`;
 };
 
 export const getAccountType = (): "customer" | "vendor" | null => {
@@ -97,16 +112,25 @@ axiosInstance.interceptors.response.use(
       url.includes("payments") ||
       url.includes("screen-transaction") ||
       url.includes("payment-history") ||
-      url.includes("stripe");
+      url.includes("stripe") ||
+      url.includes("ccavenue") ||
+      url.includes("touras");
     // A logged-in vendor hitting any non-vendor endpoint always 401s — that's
     // expected (vendor tokens aren't valid for customer/frontend endpoints),
     // not an expired session, so don't wipe the vendor token for it.
     const isVendorHittingNonVendorEndpoint = getAccountType() === "vendor" && !url.includes("vendor/");
+    const isPaymentReturnPage =
+      typeof window !== "undefined" &&
+      window.location.pathname.startsWith("/checkout") &&
+      /encResp=|success=|transaction_id=|order_no=|order_number=|response=/.test(
+        window.location.search,
+      );
     if (
       error.response?.status === 401 &&
       !isAuthEndpoint &&
       !isPaymentEndpoint &&
-      !isVendorHittingNonVendorEndpoint
+      !isVendorHittingNonVendorEndpoint &&
+      !isPaymentReturnPage
     ) {
       removeAuthToken();
       if (typeof window !== "undefined") {

@@ -126,6 +126,17 @@ function LoginPageInner() {
     clearGoogleStateCookie();
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    if (isVendor) return;
+    setAuthToken(token);
+    const redirect = searchParams.get("redirect");
+    if (redirect?.startsWith("/checkout") || redirect?.startsWith("/payment")) {
+      window.location.replace(redirect);
+    }
+  }, [isVendor, searchParams]);
+
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (!credentialResponse.credential) {
       setApiError("Google login failed. No credential received.");

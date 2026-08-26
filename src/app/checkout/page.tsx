@@ -47,8 +47,20 @@ import {
   persistCCAvenueDeliveryOptions,
   readCCAvenueDeliveryOptions,
 } from "./payments/ccavenue";
+import {
+  TOURAS_PROCESSED_KEY,
+  clearTourasCheckout,
+  initiateTourasPayment,
+  isTourasReturn,
+  persistTourasCheckout,
+  readTourasCartBackup,
+  readTourasCheckout,
+  redirectToTouras,
+  resolveTourasReturn,
+} from "./payments/touras";
 import { chargeStripe } from "./payments/stripe";
 import { placeCodOrder } from "./payments/cod";
+import { persistPaymentAuthBackup } from "@/utils/payment-auth";
 import {
   resolveCurrencyCode,
   toIsoCountry,
@@ -700,11 +712,30 @@ export default function CheckoutPage() {
           ratePercent,
           paymentProcessingFee,
         });
+        persistPaymentAuthBackup();
         const paymentUrl = await initiateCCAvenuePayment({
           amount: grandTotal,
           currency: currencySymbolICON,
         });
         window.location.href = paymentUrl;
+        return;
+      }
+
+      if (method === "touras") {
+        setOrderStep("payment");
+        persistTourasCheckout(
+          {
+            liftGate,
+            residential,
+            insideDelivery,
+            ratePercent,
+            paymentProcessingFee,
+          },
+          rawProducts,
+        );
+        persistPaymentAuthBackup();
+        const tourasData = await initiateTourasPayment(grandTotal);
+        redirectToTouras(tourasData);
         return;
       }
 
@@ -811,6 +842,77 @@ export default function CheckoutPage() {
           onStep: setOrderStep,
         });
         localStorage.removeItem(CCAVENUE_DELIVERY_OPTIONS_KEY);
+        finishSuccessfulOrder(orderId);
+      } catch (err: any) {
+        setOrderStep("idle");
+        setIsPlacingOrder(false);
+        setOrderError(parseOrderError(err));
+        router.replace("/checkout");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, rawProducts]);
+
+  const tourasHandledRef = useRef(false);
+  useEffect(() => {
+    if (!isTourasReturn(searchParams)) return;
+    if (tourasHandledRef.current) return;
+
+    if (searchParams.get("success") === "0") {
+      tourasHandledRef.current = true;
+      clearTourasCheckout();
+      router.replace("/payment-decline");
+      return;
+    }
+
+    const products =
+      rawProducts.length > 0 ? rawProducts : readTourasCartBackup();
+    if (!products.length) return;
+
+    tourasHandledRef.current = true;
+
+    (async () => {
+      setIsPlacingOrder(true);
+      setOrderStep("payment");
+      try {
+        const result = await resolveTourasReturn(searchParams);
+        const txnKey = result.transactionId || result.orderNo;
+
+        if (txnKey && localStorage.getItem(TOURAS_PROCESSED_KEY) === txnKey) {
+          router.replace("/checkout");
+          return;
+        }
+
+        if (!result.success) {
+          clearTourasCheckout();
+          router.replace("/payment-decline");
+          return;
+        }
+
+        if (txnKey) {
+          localStorage.setItem(TOURAS_PROCESSED_KEY, txnKey);
+        }
+
+        const savedOptions = readTourasCheckout();
+        const orderId = await placeOrderWithPayment({
+          rawProducts: products,
+          liftGate: savedOptions.liftGate ?? false,
+          residential: savedOptions.residential ?? false,
+          insideDelivery: savedOptions.insideDelivery ?? false,
+          ratePercent: savedOptions.ratePercent ?? ratePercent,
+          paymentProcessingFee:
+            savedOptions.paymentProcessingFee ?? paymentProcessingFee,
+          paymentMode: "ADCB Touras",
+          payment: {
+            transactionId: result.transactionId || result.orderNo,
+            paymentMode: "ADCB Touras",
+            paymentMethod: "ADCB Touras",
+            details: result,
+            notes: result.orderNo ? `Order no: ${result.orderNo}` : undefined,
+          },
+          onStep: setOrderStep,
+        });
+        clearTourasCheckout();
         finishSuccessfulOrder(orderId);
       } catch (err: any) {
         setOrderStep("idle");

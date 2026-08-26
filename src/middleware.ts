@@ -53,8 +53,45 @@ async function resolveCountryCode(request: NextRequest): Promise<string> {
   return "US";
 }
 
+function isLocalHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
+  );
+}
+
+function isPaymentGatewayReturn(request: NextRequest): boolean {
+  const q = request.nextUrl.searchParams;
+  return (
+    q.has("encResp") ||
+    q.has("response") ||
+    q.get("success") === "1" ||
+    q.get("success") === "0" ||
+    q.has("transaction_id") ||
+    q.has("order_no") ||
+    q.has("order_number")
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = request.nextUrl.hostname;
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const proto = (forwardedProto ?? request.nextUrl.protocol.replace(":", "")).split(",")[0]?.trim();
+
+  // Payment gateways sometimes return to http:// while the session lives on https://
+  // (separate cookies + localStorage). Upgrade before any auth check.
+  if (
+    pathname.startsWith("/checkout") &&
+    proto === "http" &&
+    !isLocalHost(hostname)
+  ) {
+    const httpsUrl = request.nextUrl.clone();
+    httpsUrl.protocol = "https:";
+    return NextResponse.redirect(httpsUrl, 308);
+  }
+
   const token        = request.cookies.get("token")?.value?.trim();
   const loginTimeStr = request.cookies.get("login_time")?.value;
   const accountType  = request.cookies.get("account_type")?.value;
@@ -81,12 +118,22 @@ export async function middleware(request: NextRequest) {
   // session, so letting them through here just renders a broken half-empty
   // page. Send vendor sessions to their own dashboard instead.
   if (isCustomerProtected) {
-    if (!isTokenValid) {
+    const paymentReturn =
+      pathname.startsWith("/checkout") && isPaymentGatewayReturn(request);
+
+    if (!isTokenValid && !paymentReturn) {
       const url = new URL("/login", request.url);
-      url.searchParams.set("redirect", pathname);
-      return clearAuthCookies(NextResponse.redirect(url));
+      url.searchParams.set("redirect", pathname + request.nextUrl.search);
+      // Do NOT clear cookies when none were sent — a CCAvenue/Touras return
+      // often omits SameSite=Lax cookies; Set-Cookie max-age=0 would wipe
+      // the real HTTPS session.
+      const tokenExpired =
+        !!token && !!loginTime && Date.now() - loginTime >= AUTH_MAX_MS;
+      return tokenExpired
+        ? clearAuthCookies(NextResponse.redirect(url))
+        : NextResponse.redirect(url);
     }
-    if (isVendor) {
+    if (isTokenValid && isVendor) {
       return NextResponse.redirect(new URL("/partner/dashboard", request.url));
     }
   }

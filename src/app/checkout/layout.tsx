@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { STATIC_SEO } from "@/data/seo/static-pages-seo";
+import PaymentAuthRestore from "./payment-auth-restore";
 
 const s = STATIC_SEO.checkout;
 
@@ -11,5 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <PaymentAuthRestore />
+      {children}
+    </>
+  );
 }

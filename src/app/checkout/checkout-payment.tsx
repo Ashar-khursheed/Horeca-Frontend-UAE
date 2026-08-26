@@ -1,7 +1,7 @@
 "use client";
 
 import type { Stripe } from "@stripe/stripe-js";
-import { Banknote, CreditCard, Lock, Wallet } from "lucide-react";
+import { Banknote, CreditCard, Globe, Lock, Wallet } from "lucide-react";
 import { useRef, useState } from "react";
 import {
   StripeCardForm,
@@ -82,6 +82,27 @@ export default function CheckoutPayment({ onHandleReady }: Props) {
         >
           <p className="mt-2 text-xs text-gray-500">
             You will be redirected to CCAvenue to complete your payment
+            securely. Your order is created only after payment succeeds.
+          </p>
+        </PaymentOption>
+
+        <PaymentOption
+          id="pm-touras"
+          title="ADCB Touras"
+          subtitle="Pay securely with ADCB Touras — Visa, Mastercard, Amex & more"
+          icon={<Globe size={20} />}
+          selected={selected === "touras"}
+          onSelect={() => setSelected("touras")}
+          badge={
+            <div className="hidden md:flex shrink-0 items-center gap-1.5 self-center">
+              <CardBadge label="VISA" bg="bg-[#1a1f71]" color="text-white" />
+              <CardBadge label="MC" bg="bg-[#eb001b]" color="text-white" />
+              <CardBadge label="AMEX" bg="bg-[#007bc1]" color="text-white" />
+            </div>
+          }
+        >
+          <p className="mt-2 text-xs text-gray-500">
+            You will be redirected to ADCB Touras to complete your payment
             securely. Your order is created only after payment succeeds.
           </p>
         </PaymentOption>
