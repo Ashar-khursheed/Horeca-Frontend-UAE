@@ -22,6 +22,14 @@ import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+      (process.env.NODE_ENV === "production"
+        ? process.env.REACT_APP_STRIPE_LIVE_PUBLISHABLE_KEY
+        : process.env.REACT_APP_STRIPE_TEST_PUBLISHABLE_KEY) ||
+      "",
+  },
   compress: true,
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
@@ -32,6 +40,8 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'lucide-react',
       'swiper',
+      '@stripe/stripe-js',
+      '@stripe/react-stripe-js',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-select',

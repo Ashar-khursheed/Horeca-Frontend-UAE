@@ -200,7 +200,7 @@ export function AddProductModal({
                         <CurrencySymbol currency={p.currency?.symbol} fontsize="15px" />
                         {fmt(price)}
                       </p>
-                      {isUAE && (
+                      {/* {isUAE && (
                         <>
                           <p className="text-[11px] text-gray-400 mt-0.5">
                             VAT (5%): <CurrencySymbol currency={p.currency?.symbol} fontsize="11px" />
@@ -211,7 +211,7 @@ export function AddProductModal({
                             {fmt(totalWithVat)}
                           </p>
                         </>
-                      )}
+                      )} */}
                       {supplier?.delivery_days && (
                         <p className="text-[11px] text-gray-400 mt-0.5">
                           Ships in {supplier.delivery_days}

@@ -5,22 +5,10 @@ import { getShippingCharge } from "@/utils/shipping";
 import type { OrderStep } from "./order-processing-modal";
 import { updateProfile as updateProfileThunk } from "@/store/slices/my-profile/profileSlice";
 import type { AppDispatch } from "@/store/store";
+import type { OrderPaymentRecord } from "./payments/types";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
-
-// Decoded fields from the CCAvenue return leg (POST encResp to
-// apiUrls.CCAVENUE_DECODE_RESPONSE, then parse the returned query string).
-export interface CCAvenueResult {
-  order_id: string;
-  tracking_id: string;
-  bank_ref_no: string;
-  order_status: string;
-  status_code: string;
-  payment_mode: string;
-  amount: string;
-  currency: string;
-}
 
 export interface PlaceOrderParams {
   rawProducts: any[];
@@ -29,11 +17,12 @@ export interface PlaceOrderParams {
   insideDelivery: boolean;
   ratePercent: number;
   paymentProcessingFee: number;
-  ccavenue: CCAvenueResult;
+  paymentMode?: string;
+  isCod?: boolean;
+  payment?: OrderPaymentRecord | null;
   onStep: (step: OrderStep) => void;
 }
 
-// ── Update profile (non-blocking) ────────────────────────────────────────────
 export async function updateProfile(
   params: {
     firstName: string;
@@ -58,9 +47,7 @@ export async function updateProfile(
   }
 }
 
-// ── Build products array ──────────────────────────────────────────────────────
 function buildProducts(rawProducts: any[]) {
-  console.log("aspodasjdasdjasdfasu",rawProducts)
   const defaultAddr = getDefaultAddressCache();
   const location = getLocationData();
   const deliveryCharge = getShippingCharge(
@@ -85,7 +72,6 @@ function buildProducts(rawProducts: any[]) {
   });
 }
 
-// ── Place order ───────────────────────────────────────────────────────────────
 async function createOrder(params: PlaceOrderParams) {
   const defaultAddr = getDefaultAddressCache();
   const user = JSON.parse(localStorage.getItem("user") ?? "{}");
@@ -111,7 +97,9 @@ async function createOrder(params: PlaceOrderParams) {
       ...(couponId ? { coupon_id: couponId, discount: discountVal } : {}),
       is_reserved: 0,
       pay_with_cheque: 0,
-      payment_mode: "CC Avenue",
+      is_cod: params.isCod ? 1 : 0,
+      ...(params.isCod ? { paid_amount: 0 } : {}),
+      payment_mode: params.isCod ? "Cash on Delivery" : (params.paymentMode ?? null),
       additional_amount_price: params.paymentProcessingFee,
       additional_amount_name: "Payment Processing Fee",
     },
@@ -121,8 +109,7 @@ async function createOrder(params: PlaceOrderParams) {
   return res?.data;
 }
 
-// ── Payment history (non-blocking) ───────────────────────────────────────────
-async function savePaymentHistory(orderData: any, ccavenue: CCAvenueResult) {
+async function savePaymentHistory(orderData: any, payment: OrderPaymentRecord) {
   try {
     const paymentDate = orderData?.updated_at
       ? orderData.updated_at.split(/[T ]/)[0]
@@ -131,14 +118,14 @@ async function savePaymentHistory(orderData: any, ccavenue: CCAvenueResult) {
       method: "POST",
       data: {
         order_id: orderData?.id,
-        transaction_id: ccavenue.tracking_id,
-        payment_mode: ccavenue.payment_mode || "Credit Card",
+        transaction_id: payment.transactionId,
+        payment_mode: payment.paymentMode,
         amount: orderData?.total_amount,
         status: "Completed",
         payment_date: paymentDate,
-        notes: `Bank ref: ${ccavenue.bank_ref_no}`,
-        payment_details: JSON.stringify(ccavenue),
-        payment_method: "CCAvenue",
+        notes: payment.notes ?? "",
+        payment_details: JSON.stringify(payment.details ?? {}),
+        payment_method: payment.paymentMethod,
       },
     });
   } catch {
@@ -146,7 +133,6 @@ async function savePaymentHistory(orderData: any, ccavenue: CCAvenueResult) {
   }
 }
 
-// ── Fetch full order details ──────────────────────────────────────────────────
 async function fetchFullOrder(orderId: number, fallback: any) {
   try {
     const res = (await makeApiRequest(apiUrls.ORDER_DETAIL(orderId), { method: "GET" })) as any;
@@ -156,26 +142,20 @@ async function fetchFullOrder(orderId: number, fallback: any) {
   }
 }
 
-// ── MAIN: Place order after a successful CCAvenue payment ────────────────────
-// Called from checkout/page.tsx once the customer is redirected back from
-// CCAvenue's hosted payment page and the encResp has been decoded + confirmed
-// successful — the order is only created now, not before the redirect.
 export async function placeOrderWithPayment(params: PlaceOrderParams): Promise<number> {
   const { onStep } = params;
 
-  // 1. Create order
   onStep("order");
   const orderData = await createOrder(params);
   const orderId = orderData?.id;
   localStorage.removeItem(CART_SUMMARY_KEY);
 
-  // 2. Fetch full order details
   const fullOrderData = await fetchFullOrder(orderId, orderData);
 
-  // 3. Non-blocking: record the CCAvenue payment against the order
-  await savePaymentHistory(fullOrderData, params.ccavenue);
+  if (params.payment) {
+    await savePaymentHistory(fullOrderData, params.payment);
+  }
 
-  // 4. Save to localStorage + clear coupon
   localStorage.setItem("recentOrder", JSON.stringify(fullOrderData));
   [COUPON_KEY, CART_SUMMARY_KEY, "coupon_id", "discount_value", "discount_type"]
     .forEach((k) => localStorage.removeItem(k));
@@ -183,10 +163,9 @@ export async function placeOrderWithPayment(params: PlaceOrderParams): Promise<n
   return orderId;
 }
 
-// ── Parse API error to user-friendly message ─────────────────────────────────
 export function parseOrderError(err: any): string {
   const resData = err?.response?.data;
-  const raw: string = resData?.errors?.[0] ?? resData?.message ?? err?.message ?? "";
+  const raw: string = resData?.errors?.[0] ?? resData?.error ?? resData?.message ?? err?.message ?? "";
   if (raw.includes("VALUE_TOO_HIGH")) return "Payment could not be processed. Please contact support.";
   if (raw.includes("INSUFFICIENT_FUNDS")) return "Insufficient funds. Please use a different card.";
   if (raw.includes("CVV") || raw.includes("cvv")) return "Invalid CVV. Please check your card details.";

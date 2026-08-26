@@ -18,6 +18,7 @@ import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { addAddress, type AddressPayload } from "@/store/slices/customer-address/customerAddressSlice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { getDefaultAddressCache, useLocationData, type DefaultAddressCache } from "@/utils/locationStorage";
+import { buildQuotePdfFilename } from "@/utils/quote-filename";
 import { createQuotationSchema } from "@/validation/schema";
 import { useFormik } from "formik";
 import {
@@ -115,6 +116,107 @@ const fmtPrice = (n: number) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
+const ALREADY_REGISTERED = "you are already registered";
+
+const generateGuestPassword = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
+  return Array.from({ length: 16 }, () =>
+    chars[Math.floor(Math.random() * chars.length)],
+  ).join("");
+};
+
+function isAlreadyRegisteredMessage(msg: string | undefined): boolean {
+  const text = (msg ?? "").toLowerCase();
+  return text.includes(ALREADY_REGISTERED) || text.includes("please login to continue");
+}
+
+function apiErrorMessage(err: unknown): string {
+  return (
+    (err as { response?: { data?: { message?: string } } })?.response?.data
+      ?.message ?? (err as { message?: string })?.message ?? ""
+  );
+}
+
+type AuthApiBody = {
+  success?: boolean;
+  message?: string;
+  token?: string;
+  plain_password?: string;
+  dummy_password?: string;
+  password?: string;
+  data?: { plain_password?: string; dummy_password?: string; password?: string };
+  user?: { plain_password?: string; password?: string };
+  customer?: { plain_password?: string; password?: string };
+};
+
+function extractPlainPassword(body: AuthApiBody | undefined): string | undefined {
+  if (!body) return undefined;
+  const candidates = [
+    body.plain_password,
+    body.dummy_password,
+    body.password,
+    body.data?.plain_password,
+    body.data?.dummy_password,
+    body.data?.password,
+    body.user?.plain_password,
+    body.user?.password,
+    body.customer?.plain_password,
+    body.customer?.password,
+  ];
+  return candidates.find((p): p is string => typeof p === "string" && p.length > 0);
+}
+
+function authBodyFromUnknown(err: unknown): AuthApiBody | undefined {
+  return (err as { response?: { data?: AuthApiBody } })?.response?.data;
+}
+
+/** Guest register (loginOrder) then login with the API dummy password.
+ *  `success: false` + "already registered / please login" still logs in. */
+async function registerGuestAndLogin(
+  dispatch: AppDispatch,
+  email: string,
+  name: string,
+  dialCode: string,
+  mobile: string,
+): Promise<boolean> {
+  const guestPassword = generateGuestPassword();
+  const guestFormData = new FormData();
+  guestFormData.append("name", name);
+  guestFormData.append("email", email);
+  guestFormData.append("type", "Business");
+  guestFormData.append("country_code", dialCode);
+  guestFormData.append("is_guest", String(true));
+  guestFormData.append("mobile_number", mobile);
+
+  let body: AuthApiBody | undefined;
+  try {
+    body = await makeApiRequest<AuthApiBody>(apiUrls.REGISTER, {
+      method: "POST",
+      data: guestFormData,
+    });
+  } catch (authErr: unknown) {
+    body = authBodyFromUnknown(authErr);
+    const msg = body?.message ?? apiErrorMessage(authErr);
+    if (!isAlreadyRegisteredMessage(msg) && !extractPlainPassword(body)) {
+      throw authErr;
+    }
+  }
+
+  const alreadyOrPleaseLogin = isAlreadyRegisteredMessage(body?.message);
+  const password = extractPlainPassword(body) || guestPassword;
+
+  // Dummy password (API or generated) — also login when success is false / please login.
+  try {
+    await dispatch(loginUser({ email, password })).unwrap();
+    return true;
+  } catch (loginErr) {
+    if (alreadyOrPleaseLogin) {
+      return !!(typeof window !== "undefined" && localStorage.getItem("token"));
+    }
+    throw loginErr;
+  }
+}
 
 // ── Small Breadcrumb ──────────────────────────────────────────────────────────
 const QuoteBreadcrumb = () => (
@@ -396,7 +498,6 @@ export default function CreateQuotationPage() {
   const customerProfile = useSelector((s: RootState) => s?.profile?.customer );
   const [pendingAddress, setPendingAddress] = useState<DefaultAddressCache | null>(null);
   const autofillDone = useRef(false);
-console.log("customerProfile", customerProfile);
   // Fetch country details (dial code + flag icon) once we know the visitor's country
   useEffect(() => {
     if (locationFromRedux?.country) {
@@ -424,7 +525,7 @@ console.log("customerProfile", customerProfile);
       zip_code: "",
       payment_mode: "Credit Card",
       quote_name: "",
-      register_customer: true,
+      register_customer: false,
       notes: "",
     },
     validationSchema: createQuotationSchema,
@@ -438,59 +539,38 @@ console.log("customerProfile", customerProfile);
       setSubmitError("");
       setSubmitting(true);
       try {
-        // If the customer isn't logged in, register them as a guest (same flow as
-        // loginOrder's GuestPanel) and log them in before creating the quote.
-        // Editing is only reachable from the dashboard (already logged in), so this
-        // never applies there.
-        if (!isEditMode) {
-          const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-          if (!token) {
-            const guestFormData = new FormData();
-            guestFormData.append("name", values.name.trim());
-            guestFormData.append("email", values.email.trim());
-            guestFormData.append("type", "Business");
-            guestFormData.append("country_code", dialCode);
-            guestFormData.append("is_guest", String(true));
-            guestFormData.append("mobile_number", values.mobile_number.replace(/\D/g, ""));
+        const email = values.email.trim();
+        const mobile = values.mobile_number.replace(/\D/g, "");
+        const countryIsUAE = values.country === UAE;
+        let loggedIn = !!(
+          customerProfile ||
+          (typeof window !== "undefined" && localStorage.getItem("token"))
+        );
+        const shouldCreateAccount =
+          !isEditMode && values.register_customer && !loggedIn;
 
-            const regRes = await makeApiRequest<{
-              success: boolean;
-              message?: string;
-              plain_password?: string;
-            }>(apiUrls.REGISTER, { method: "POST", data: guestFormData });
-
-            if (!regRes.success) {
-              setSubmitError(regRes.message ?? "Registration failed. Please try again.");
-              return;
-            }
-            if (!regRes.plain_password) {
-              setSubmitError("Registration succeeded but no password returned. Please try again.");
-              return;
-            }
-
-            await dispatch(
-              loginUser({ email: values.email.trim(), password: regRes.plain_password })
-            ).unwrap();
-          }
-        }
-
-        // Save the shipping address (same Redux add-address flow used elsewhere),
-        // always as the default, then read the saved address back from the local cache.
-        const addressPayload: AddressPayload = {
-          type: "",
-          address: values.address.trim(),
-          country: values.country,
-          state: isUAE ? "" : values.state,
-          city: values.city,
-          zip_code: values.zip_code.trim(),
-          is_default: true,
+        const saveShippingAddress = async (): Promise<number | undefined> => {
+          const addressPayload: AddressPayload = {
+            type: "",
+            address: values.address.trim(),
+            country: values.country,
+            state: countryIsUAE ? "" : values.state,
+            city: values.city,
+            zip_code: values.zip_code.trim(),
+            is_default: true,
+          };
+          await dispatch(addAddress(addressPayload)).unwrap();
+          return getDefaultAddressCache()?.id;
         };
-        await dispatch(addAddress(addressPayload)).unwrap();
 
-        const customerAddressId = getDefaultAddressCache()?.id;
-        if (!customerAddressId) {
-          setSubmitError("Failed to save shipping address. Please try again.");
-          return;
+        // Address API needs a logged-in customer. Guest quotes send address on the quote itself.
+        let customerAddressId: number | undefined;
+        if (loggedIn) {
+          customerAddressId = await saveShippingAddress();
+          if (!customerAddressId) {
+            setSubmitError("Failed to save shipping address. Please try again.");
+            return;
+          }
         }
 
         const productsPayload = products.map((p) => ({
@@ -509,7 +589,7 @@ console.log("customerProfile", customerProfile);
             is_lift_gate: editCarryOverRef.current.is_lift_gate,
             is_residential_address: editCarryOverRef.current.is_residential_address,
             is_inside_delivery: editCarryOverRef.current.is_inside_delivery,
-            tax_percentage: isUAE ? UAE_VAT_RATE * 100 : 0,
+            tax_percentage: countryIsUAE ? UAE_VAT_RATE * 100 : 0,
             coupon_id: couponInfo?.coupon_id ?? editCarryOverRef.current.coupon_id ?? undefined,
             discount: discount || undefined,
             payment_mode: values.payment_mode,
@@ -526,33 +606,125 @@ console.log("customerProfile", customerProfile);
           return;
         }
 
-        // ── Create flow ────────────────────────────────────────────────────────
-        const payload = {
+        // Checkbox ON: register → login (dummy password) first, including
+        // "already registered / please login". Then create quote + download.
+        if (shouldCreateAccount) {
+          loggedIn = (await registerGuestAndLogin(
+            dispatch,
+            email,
+            values.name.trim(),
+            dialCode,
+            mobile,
+          )) || loggedIn;
+          if (loggedIn && !customerAddressId) {
+            customerAddressId = await saveShippingAddress();
+            if (!customerAddressId) {
+              setSubmitError("Failed to save shipping address. Please try again.");
+              return;
+            }
+          }
+        }
+
+        const buildQuotePayload = (addressId: number | undefined) => ({
           company_name: values.company_name.trim() || undefined,
           name: values.name.trim(),
-          email: values.email.trim(),
+          email,
           country_code: dialCode,
-          mobile_number: values.mobile_number.replace(/\D/g, ""),
-          register_customer: values.register_customer,
-          customer_address_id: customerAddressId,
-          tax_percentage: isUAE ? UAE_VAT_RATE * 100 : 0,
+          mobile_number: mobile,
+          quote_name: values.quote_name.trim(),
+          customer_notes: values.notes.trim() || undefined,
+          register_customer: false,
+          ...(addressId
+            ? { customer_address_id: addressId }
+            : {
+                address: values.address.trim(),
+                address2: values.address2.trim() || undefined,
+                country: values.country,
+                state: countryIsUAE ? "" : values.state,
+                city: values.city,
+                zip_code: values.zip_code.trim(),
+              }),
+          tax_percentage: countryIsUAE ? UAE_VAT_RATE * 100 : 0,
           coupon_id: couponInfo?.coupon_id,
           discount: discount || undefined,
           payment_mode: values.payment_mode,
           products: productsPayload,
           emails: Array.from(
             new Set(
-              [values.email.trim(), ...values.additionalEmails.map((e) => e.value.trim())].filter(Boolean)
+              [email, ...values.additionalEmails.map((e) => e.value.trim())].filter(Boolean)
             )
           ),
-        };
+        });
 
-        const res = await makeApiRequest<{
+        type QuoteCreateRes = {
           success?: boolean;
-          data?: { id?: number; quote_id?: number };
+          message?: string;
+          data?: {
+            id?: number;
+            quote_id?: number;
+            quote_number?: string;
+            quote_name?: string;
+            company_name?: string;
+          };
           id?: number;
           quote_id?: number;
-        }>(apiUrls.QUOTES, { method: "POST", data: payload });
+          quote_number?: string;
+        };
+
+        const postQuote = (addressId: number | undefined) =>
+          makeApiRequest<QuoteCreateRes>(apiUrls.QUOTES, {
+            method: "POST",
+            data: buildQuotePayload(addressId),
+          });
+
+        const loginFromAuthBody = async (body: AuthApiBody | undefined) => {
+          const password = extractPlainPassword(body);
+          if (!password) return false;
+          await dispatch(loginUser({ email, password })).unwrap();
+          return true;
+        };
+
+        let res: QuoteCreateRes;
+        try {
+          res = await postQuote(customerAddressId);
+          if (res?.success === false) {
+            const err = { response: { data: res } };
+            throw err;
+          }
+        } catch (quoteErr: unknown) {
+          const body = authBodyFromUnknown(quoteErr) ?? (quoteErr as { response?: { data?: AuthApiBody } })?.response?.data;
+          const msg = body?.message ?? apiErrorMessage(quoteErr);
+
+          if (!isAlreadyRegisteredMessage(msg)) {
+            throw quoteErr;
+          }
+
+          // "Please login to continue" — always log in, then retry quote.
+          let didLogin = await loginFromAuthBody(body);
+          if (!didLogin) {
+            didLogin = await registerGuestAndLogin(
+              dispatch,
+              email,
+              values.name.trim(),
+              dialCode,
+              mobile,
+            );
+          }
+          if (!didLogin) {
+            throw quoteErr;
+          }
+
+          loggedIn = true;
+          customerAddressId = await saveShippingAddress();
+          if (!customerAddressId) {
+            setSubmitError("Failed to save shipping address. Please try again.");
+            return;
+          }
+          res = await postQuote(customerAddressId);
+          if (res?.success === false) {
+            throw { response: { data: res } };
+          }
+        }
 
         setSubmitted(true);
         setTimeout(() => setSubmitted(false), 2500);
@@ -565,14 +737,21 @@ console.log("customerProfile", customerProfile);
           const blobUrl = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = blobUrl;
-          a.download = `quote_${quoteId}.pdf`;
+          a.download = buildQuotePdfFilename({
+            quoteName: res?.data?.quote_name || values.quote_name,
+            businessName: res?.data?.company_name || values.company_name,
+            quoteNumber: res?.data?.quote_number ?? res?.quote_number,
+            quoteId,
+          });
           document.body.appendChild(a);
           a.click();
           a.remove();
           URL.revokeObjectURL(blobUrl);
         }
 
-      router.push("/dashboard/quotes");
+        if (typeof window !== "undefined" && localStorage.getItem("token")) {
+          router.push("/dashboard/quotes");
+        }
       } catch (err: unknown) {
         const msg =
           (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -587,7 +766,7 @@ console.log("customerProfile", customerProfile);
   const isUAE = formik.values.country === UAE;
   // Sourced from the `frontend/countries/...` API response in Redux (state.country.data),
   // same as checkout — real currency for whichever country is selected, not a fixed value.
-  const currencySymbol = country?.data?.currency_symbol ?? "$";
+  const currencySymbol = country?.data?.currency_symbol ?? "";
 
   // ── Edit mode: load the existing quote (?id=) and prefill this same form ────────
   const editFetchDone = useRef(false);

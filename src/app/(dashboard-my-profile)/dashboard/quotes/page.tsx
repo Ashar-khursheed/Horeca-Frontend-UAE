@@ -30,11 +30,13 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CurrencySymbol } from "@/components/currency-symbol";
+import { buildQuotePdfFilename } from "@/utils/quote-filename";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ApiQuote {
   id: number;
   quote_number: string;
+  quote_name?: string | null;
   company_name: string | null;
   total_amount: string;
   status: string;
@@ -88,6 +90,19 @@ const fmtDate = (s: string) => {
   if (Number.isNaN(d.getTime())) return s;
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
+
+// A quote whose expiry date has passed but whose status hasn't been
+// updated by the backend yet (still "Pending") should still read as expired.
+const isPastExpiry = (s: string) => {
+  if (!s) return false;
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return d < today;
+};
+const EXPIRED_CONFIG = { bg: "bg-red-50", text: "text-red-600", icon: XCircle };
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function MyQuotesPage() {
@@ -162,7 +177,12 @@ export default function MyQuotesPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${quote.quote_number}.pdf`;
+      a.download = buildQuotePdfFilename({
+        quoteName: quote.quote_name,
+        businessName: quote.company_name,
+        quoteNumber: quote.quote_number,
+        quoteId: quote.id,
+      });
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -346,9 +366,11 @@ export default function MyQuotesPage() {
                   </tr>
                 ) : (
                   quotes.map((quote) => {
-                    const sc = STATUS_CONFIG[quote.status] ?? DEFAULT_STATUS;
+                    const pastExpiry = quote.status === "Pending" && isPastExpiry(quote.expired_at);
+                    const displayStatus = pastExpiry ? "Expired" : quote.status;
+                    const sc = pastExpiry ? EXPIRED_CONFIG : (STATUS_CONFIG[quote.status] ?? DEFAULT_STATUS);
                     const StatusIcon = sc.icon;
-                    const isExpired = quote.status === "Expired" || quote.status === "Cancelled";
+                    const isExpired = quote.status === "Expired" || quote.status === "Cancelled" || pastExpiry;
                     const sym = quote.currency?.target_symbol ?? "$";
 
                     return (
@@ -383,7 +405,7 @@ export default function MyQuotesPage() {
                         <td className="px-5 py-4">
                           <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>
                             <StatusIcon size={10} />
-                            {quote.status}
+                            {displayStatus}
                           </span>
                         </td>
 
@@ -451,9 +473,11 @@ export default function MyQuotesPage() {
               </div>
             ) : (
               quotes.map((quote) => {
-                const sc = STATUS_CONFIG[quote.status] ?? DEFAULT_STATUS;
+                const pastExpiry = quote.status === "Pending" && isPastExpiry(quote.expired_at);
+                const displayStatus = pastExpiry ? "Expired" : quote.status;
+                const sc = pastExpiry ? EXPIRED_CONFIG : (STATUS_CONFIG[quote.status] ?? DEFAULT_STATUS);
                 const StatusIcon = sc.icon;
-                const isExpired = quote.status === "Expired" || quote.status === "Cancelled";
+                const isExpired = quote.status === "Expired" || quote.status === "Cancelled" || pastExpiry;
                 const sym = quote.currency?.target_symbol ?? "$";
 
                 return (
@@ -466,7 +490,7 @@ export default function MyQuotesPage() {
                       </div>
                       <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
                         <StatusIcon size={10} />
-                        {quote.status}
+                        {displayStatus}
                       </span>
                     </div>
 

@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CurrencySymbol } from "@/components/currency-symbol";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -397,7 +398,10 @@ export default function MyOrdersPage() {
                         </td>
 
                         <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">
-                          {order.currency_symbol}{Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <span className="inline-flex items-center">
+                            <CurrencySymbol currency={order.currency_symbol} fontsize="14px" />
+                            {Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
                         </td>
 
 
@@ -476,8 +480,9 @@ export default function MyOrdersPage() {
 
                     <div className="flex items-center justify-between mb-3">
                       <span />
-                      <p className="text-sm font-bold text-gray-900">
-                        {order.currency_symbol}{Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <p className="text-sm font-bold text-gray-900 inline-flex items-baseline">
+                        <CurrencySymbol currency={order.currency_symbol} fontsize="14px" />
+                        {Number(order.total_amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
 

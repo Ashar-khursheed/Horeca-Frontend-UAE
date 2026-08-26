@@ -87,8 +87,17 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     const url = error.config?.url ?? "";
-    const isAuthEndpoint    = url.includes("/auth/");
-    const isPaymentEndpoint = url.includes("payments") || url.includes("screen-transaction") || url.includes("payment-history");
+    const isAuthEndpoint =
+      url.includes("/auth/") ||
+      url.includes("frontend/login") ||
+      url.includes("vendor/login") ||
+      url.includes("frontend/customer/register") ||
+      url.includes("vendor/register");
+    const isPaymentEndpoint =
+      url.includes("payments") ||
+      url.includes("screen-transaction") ||
+      url.includes("payment-history") ||
+      url.includes("stripe");
     // A logged-in vendor hitting any non-vendor endpoint always 401s — that's
     // expected (vendor tokens aren't valid for customer/frontend endpoints),
     // not an expired session, so don't wipe the vendor token for it.

@@ -26,6 +26,7 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { buildQuotePdfFilename } from "@/utils/quote-filename";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ interface ApiQuoteProduct {
 interface ApiQuoteDetail {
   id: number;
   quote_number: string;
+  quote_name?: string | null;
   company_name: string | null;
   customer_address: string;
   shipping_charge: string;
@@ -129,6 +131,19 @@ function formatDate(str: string) {
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
+// A quote whose expiry date has passed but whose status hasn't been
+// updated by the backend yet (still "Pending") should still read as expired.
+function isPastExpiry(str: string) {
+  if (!str) return false;
+  const d = new Date(str);
+  if (Number.isNaN(d.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return d < today;
+}
+const EXPIRED_SC = { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", icon: AlertCircle };
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function QuoteDetailPage() {
@@ -165,7 +180,12 @@ export default function QuoteDetailPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${quote.quote_number}.pdf`;
+      a.download = buildQuotePdfFilename({
+        quoteName: quote.quote_name,
+        businessName: quote.company_name,
+        quoteNumber: quote.quote_number,
+        quoteId: quote.id,
+      });
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -180,7 +200,9 @@ export default function QuoteDetailPage() {
   if (loading) return <LoadingSkeleton />;
   if (error || !quote) return <ErrorState />;
 
-  const sc = STATUS_CFG[quote.status] ?? DEFAULT_SC;
+  const pastExpiry = quote.status === "Pending" && isPastExpiry(quote.expired_at);
+  const displayStatus = pastExpiry ? "Expired" : quote.status;
+  const sc = pastExpiry ? EXPIRED_SC : (STATUS_CFG[quote.status] ?? DEFAULT_SC);
   const StatusIcon = sc.icon;
 
   const subtotal = Number(quote.amount);
@@ -223,7 +245,7 @@ export default function QuoteDetailPage() {
                 <h1 className="text-xl font-bold text-gray-900">Quote #{quote.quote_number}</h1>
                 <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${sc.bg} ${sc.text} ${sc.border}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
-                  {quote.status}
+                  {displayStatus}
                 </span>
               </div>
               <p className="text-xs text-gray-400 mt-1.5">
@@ -537,7 +559,7 @@ export default function QuoteDetailPage() {
               <DetailRow label="Created On" value={formatDate(quote.created_at)} />
               <DetailRow>
                 <span className="text-xs text-gray-400 shrink-0 mt-0.5">Expires</span>
-                <span className={`text-xs font-semibold ${quote.status === "Expired" ? "text-red-500" : "text-gray-800"}`}>
+                <span className={`text-xs font-semibold ${quote.status === "Expired" || pastExpiry ? "text-red-500" : "text-gray-800"}`}>
                   {formatDate(quote.expired_at)}
                 </span>
               </DetailRow>

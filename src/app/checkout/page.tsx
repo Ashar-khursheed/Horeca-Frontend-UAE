@@ -1,7 +1,6 @@
 "use client";
 
 import { makeApiRequest } from "@/apis/axios-instance";
-import { apiUrls } from "@/apis/api-endpoint";
 import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
 import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
 import {
@@ -40,11 +39,24 @@ import { Modal } from "@/components/ui/modal";
 import { trackGtmEvent } from "@/utils/gtm";
 import { CurrencySymbol } from "@/components/currency-symbol";
 import { UAE_VAT_RATE } from "dirham";
+import {
+  CCAVENUE_DELIVERY_OPTIONS_KEY,
+  CCAVENUE_PROCESSED_KEY,
+  decodeCCAvenueResponse,
+  initiateCCAvenuePayment,
+  persistCCAvenueDeliveryOptions,
+  readCCAvenueDeliveryOptions,
+} from "./payments/ccavenue";
+import { chargeStripe } from "./payments/stripe";
+import { placeCodOrder } from "./payments/cod";
+import {
+  resolveCurrencyCode,
+  toIsoCountry,
+  type StripePaymentMethodResult,
+} from "./payments/types";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
-const CCAVENUE_DELIVERY_OPTIONS_KEY = "hc_ccavenue_delivery_options";
-const CCAVENUE_PROCESSED_KEY = "hc_ccavenue_processed_tracking_id";
 
 interface CartSummaryCache {
   subTotal: number;
@@ -180,6 +192,15 @@ export default function CheckoutPage() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderStep, setOrderStep] = useState<OrderStep>("idle");
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const [phoneError, setPhoneError] = useState("");
   const [addressStepError, setAddressStepError] = useState("");
@@ -562,16 +583,22 @@ export default function CheckoutPage() {
     setCodeError("");
   };
 
+  const finishSuccessfulOrder = (orderId: number) => {
+    setOrderStep("done");
+    dispatch(fetchCounts() as any);
+    dispatch(clearApiEntries());
+    dispatch(clearCart());
+    setTimeout(() => router.replace(`/payment-success?orderID=${orderId}`), 1200);
+  };
+
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
-    // 0. Terms check
     if (!termsAccepted) {
       setTermsError(true);
       return;
     }
 
-    // 1. Phone check
     if (!phone) {
       setPhoneError("Phone number is required");
       setTimeout(() => {
@@ -583,7 +610,6 @@ export default function CheckoutPage() {
     }
     setPhoneError("");
 
-    // 2. Address validate (no API)
     if (addressCheckoutRef.current) {
       const ok = await addressCheckoutRef.current.validate();
       if (!ok) {
@@ -606,18 +632,39 @@ export default function CheckoutPage() {
       }
     }
 
-    // 3. Payment method check
-    if (
-      !paymentHandleRef.current ||
-      paymentHandleRef.current.selectedMethod !== "ccavenue"
-    ) {
+    const payment = paymentHandleRef.current;
+    const method = payment?.selectedMethod;
+    if (!payment || !method) {
       setOrderError("Please select a payment method to continue.");
       return;
     }
 
+    const defaultAddr = getDefaultAddressCache();
+    const billing = {
+      name: `${firstName} ${lastName}`.trim(),
+      email,
+      phone,
+      address: {
+        line1: defaultAddr?.address ?? "",
+        city: defaultAddr?.city ?? "",
+        state: defaultAddr?.state ?? "",
+        postal_code: defaultAddr?.zip_code ?? "",
+        country: toIsoCountry(
+          defaultAddr?.related_country?.name ??
+            defaultAddr?.country ??
+            getLocationData()?.countryCode,
+        ),
+      },
+    };
+
     setIsPlacingOrder(true);
     try {
-      // 4. Address save
+      let stripePm: StripePaymentMethodResult | null = null;
+      if (method === "stripe") {
+        setOrderStep("card");
+        stripePm = await payment.createStripePaymentMethod(billing);
+      }
+
       setOrderStep("address");
       const addressSaved = await addressCheckoutRef.current?.save();
       if (!addressSaved) {
@@ -632,7 +679,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 5. Profile update
       setOrderStep("profile");
       await updateProfile(
         {
@@ -645,36 +691,68 @@ export default function CheckoutPage() {
         dispatch,
       );
 
-      // 6. CCAvenue: start hosted payment and redirect there
-      setOrderStep("payment");
-      const res = await makeApiRequest<{
-        success: boolean;
-        message: string;
-        data: { payment_url: string; order_id: number; amount: string; currency: string };
-      }>(apiUrls.CCAVENUE_INITIATE_PAYMENT, {
-        method: "POST",
-        data: {
-          order_id: `ORD-${Date.now()}`,
+      if (method === "ccavenue") {
+        setOrderStep("payment");
+        persistCCAvenueDeliveryOptions({
+          liftGate,
+          residential,
+          insideDelivery,
+          ratePercent,
+          paymentProcessingFee,
+        });
+        const paymentUrl = await initiateCCAvenuePayment({
           amount: grandTotal,
           currency: currencySymbolICON,
-        },
-      });
-
-      if (!res?.success || !res?.data?.payment_url) {
-        throw new Error(
-          res?.message ?? "Could not start payment. Please try again.",
-        );
+        });
+        window.location.href = paymentUrl;
+        return;
       }
 
-      // These live only in component state — persist them so the order can be
-      // created correctly once CCAvenue redirects back to a fresh page load.
-      localStorage.setItem(
-        CCAVENUE_DELIVERY_OPTIONS_KEY,
-        JSON.stringify({ liftGate, residential, insideDelivery, ratePercent, paymentProcessingFee }),
-      );
+      if (method === "stripe") {
+        setOrderStep("payment");
+        const stripe = payment.getStripe();
+        if (!stripe || !stripePm) {
+          throw new Error("Stripe is not ready. Please try again.");
+        }
+        const charged = await chargeStripe({
+          stripe,
+          paymentMethodId: stripePm.paymentMethodId,
+          amount: grandTotal,
+          currency: resolveCurrencyCode(rawProducts, isUAEUser),
+          country: getLocationData()?.countryCode ?? billing.address.country,
+          customer: billing,
+          card: stripePm.card,
+        });
+        const orderId = await placeOrderWithPayment({
+          rawProducts,
+          liftGate,
+          residential,
+          insideDelivery,
+          ratePercent,
+          paymentProcessingFee,
+          paymentMode: "Stripe",
+          payment: {
+            transactionId: charged.paymentIntentId,
+            paymentMode: "Credit Card",
+            paymentMethod: "Stripe",
+            details: charged,
+          },
+          onStep: setOrderStep,
+        });
+        finishSuccessfulOrder(orderId);
+        return;
+      }
 
-      // Keep isPlacingOrder true — the browser is about to navigate away
-      window.location.href = res.data.payment_url;
+      const orderId = await placeCodOrder({
+        rawProducts,
+        liftGate,
+        residential,
+        insideDelivery,
+        ratePercent,
+        paymentProcessingFee,
+        onStep: setOrderStep,
+      });
+      finishSuccessfulOrder(orderId);
     } catch (err: any) {
       setOrderStep("idle");
       setIsPlacingOrder(false);
@@ -682,18 +760,11 @@ export default function CheckoutPage() {
     }
   };
 
-  // ── CCAvenue return leg ───────────────────────────────────────────────────
-  // CCAvenue redirects back here as /checkout?status=complete&encResp=... on a
-  // fresh page load (component state from before the redirect is gone). Decode
-  // the response, and only now create the actual order.
   const ccavenueHandledRef = useRef(false);
   useEffect(() => {
     const encResp = searchParams.get("encResp");
     if (!encResp) return;
     if (ccavenueHandledRef.current) return;
-    // Wait for the cart to finish (re)loading on this fresh page load so
-    // rawProducts is populated before the order is built — the effect re-runs
-    // once cart data arrives, since rawProducts is a dependency below.
     if (rawProducts.length === 0) return;
     ccavenueHandledRef.current = true;
 
@@ -701,28 +772,8 @@ export default function CheckoutPage() {
       setIsPlacingOrder(true);
       setOrderStep("payment");
       try {
-        const decodeRes = await makeApiRequest<{ success: boolean; data: string }>(
-          apiUrls.CCAVENUE_DECODE_RESPONSE,
-          { method: "POST", data: { encResp } },
-        );
-        if (!decodeRes?.success || !decodeRes?.data) {
-          throw new Error("Could not verify payment. Please contact support.");
-        }
+        const result = await decodeCCAvenueResponse(encResp);
 
-        const parsed = new URLSearchParams(decodeRes.data.replace(/^"|"$/g, ""));
-        const result = {
-          order_id: parsed.get("order_id") ?? "",
-          tracking_id: parsed.get("tracking_id") ?? "",
-          bank_ref_no: parsed.get("bank_ref_no") ?? "",
-          order_status: parsed.get("order_status") ?? "",
-          status_code: parsed.get("status_code") ?? "",
-          payment_mode: parsed.get("payment_mode") ?? "",
-          amount: parsed.get("amount") ?? "",
-          currency: parsed.get("currency") ?? "",
-        };
-
-        // Guard against creating a duplicate order if this page is refreshed
-        // or the effect re-fires for the same CCAvenue transaction.
         if (
           result.tracking_id &&
           localStorage.getItem(CCAVENUE_PROCESSED_KEY) === result.tracking_id
@@ -740,42 +791,27 @@ export default function CheckoutPage() {
           localStorage.setItem(CCAVENUE_PROCESSED_KEY, result.tracking_id);
         }
 
-        let savedOptions: {
-          liftGate?: boolean;
-          residential?: boolean;
-          insideDelivery?: boolean;
-          ratePercent?: number;
-          paymentProcessingFee?: number;
-        } = {};
-        try {
-          savedOptions = JSON.parse(
-            localStorage.getItem(CCAVENUE_DELIVERY_OPTIONS_KEY) ?? "{}",
-          );
-        } catch {
-          /* ignore */
-        }
-
-        setOrderStep("order");
+        const savedOptions = readCCAvenueDeliveryOptions();
         const orderId = await placeOrderWithPayment({
           rawProducts,
           liftGate: savedOptions.liftGate ?? false,
           residential: savedOptions.residential ?? false,
           insideDelivery: savedOptions.insideDelivery ?? false,
           ratePercent: savedOptions.ratePercent ?? ratePercent,
-          paymentProcessingFee: savedOptions.paymentProcessingFee ?? paymentProcessingFee,
-          ccavenue: result,
+          paymentProcessingFee:
+            savedOptions.paymentProcessingFee ?? paymentProcessingFee,
+          paymentMode: "CC Avenue",
+          payment: {
+            transactionId: result.tracking_id,
+            paymentMode: result.payment_mode || "Credit Card",
+            paymentMethod: "CCAvenue",
+            details: result,
+            notes: `Bank ref: ${result.bank_ref_no}`,
+          },
           onStep: setOrderStep,
         });
         localStorage.removeItem(CCAVENUE_DELIVERY_OPTIONS_KEY);
-
-        setOrderStep("done");
-        dispatch(fetchCounts() as any);
-        dispatch(clearApiEntries());
-        dispatch(clearCart());
-        setTimeout(
-          () => router.replace(`/payment-success?orderID=${orderId}`),
-          1200,
-        );
+        finishSuccessfulOrder(orderId);
       } catch (err: any) {
         setOrderStep("idle");
         setIsPlacingOrder(false);
@@ -1490,11 +1526,13 @@ export default function CheckoutPage() {
               <h2 className="text-sm font-bold text-gray-800 mb-4">
                 Payment Details
               </h2>
-              <CheckoutPayment
-                onHandleReady={(h) => {
-                  paymentHandleRef.current = h;
-                }}
-              />
+              {!isDesktop ? (
+                <CheckoutPayment
+                  onHandleReady={(h) => {
+                    paymentHandleRef.current = h;
+                  }}
+                />
+              ) : null}
             </div>
             {/* Fixed bottom Place Order CTA */}
             <div className=" bg-white border-t border-gray-100 px-4 py-3 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.07)]">
@@ -1776,11 +1814,13 @@ export default function CheckoutPage() {
             <div className="h-px bg-gray-200 my-4" />
             {deliveryBlock}
             <div className="h-px bg-gray-200 my-4" />
-            <CheckoutPayment
-              onHandleReady={(h) => {
-                paymentHandleRef.current = h;
-              }}
-            />
+            {isDesktop ? (
+              <CheckoutPayment
+                onHandleReady={(h) => {
+                  paymentHandleRef.current = h;
+                }}
+              />
+            ) : null}
             {placeOrderBtn}
           </div>
 
