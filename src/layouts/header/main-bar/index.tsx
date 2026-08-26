@@ -4,6 +4,7 @@ import Logo from "@/assets/logo.png";
 import {
   ChevronDown,
   ChevronRight,
+  FileText,
   Heart,
   LogOut,
   MapPin,
@@ -710,26 +711,38 @@ export default function NavigationStatic({
                       )}
 
                       {/* Nav links */}
-                      {NAV_LINKS.map((link) => (
-                        <>
-                          {" "}
-                          {link.isModal ? (
-                            <button
-                              onClick={handleModalOpen}
-                              className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors ${link.label === "Mega Sale" ? "text-red-500" : "text-gray-900"}`}
-                            >
-                              {link.label}
-                            </button>
-                          ) : (
-                            <Link
-                              href={link.href}
-                              className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors ${link.label === "Mega Sale" ? "text-red-500" : "text-gray-900"}`}
-                            >
-                              {link.label}
-                            </Link>
-                          )}
-                        </>
-                      ))}
+                      {NAV_LINKS.map((link) => {
+                        const isQuote = link.label === "Request a Quote";
+                        const isSale = link.label === "Mega Sale";
+
+                        const rowClass = isQuote
+                          ? "flex items-center gap-2.5 px-5 py-[13px] border-b border-gray-100 text-[15px] font-bold bg-[#f0f9f4] text-[#186737] hover:bg-[#e5f4ea] transition-colors"
+                          : `flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium hover:bg-gray-50 transition-colors ${isSale ? "text-red-500" : "text-gray-900"}`;
+
+                        const content = isQuote ? (
+                          <>
+                            <span className="w-7 h-7 rounded-full bg-[#186737] flex items-center justify-center shrink-0">
+                              <FileText size={13} className="text-white" />
+                            </span>
+                            <span className="flex-1">{link.label}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-wide bg-[#186737] text-white px-2 py-0.5 rounded-full shrink-0">
+                              Free
+                            </span>
+                          </>
+                        ) : (
+                          link.label
+                        );
+
+                        return link.isModal ? (
+                          <button key={link.label} onClick={handleModalOpen} className={rowClass}>
+                            {content}
+                          </button>
+                        ) : (
+                          <Link key={link.label} href={link.href} className={rowClass}>
+                            {content}
+                          </Link>
+                        );
+                      })}
                       {/* <Link
                                           href={"/brands"}
                                         className={`flex items-center px-5 py-[14px] border-b border-gray-100 text-[15px] font-medium  hover:bg-gray-50 transition-colors "text-gray-900"}` }
