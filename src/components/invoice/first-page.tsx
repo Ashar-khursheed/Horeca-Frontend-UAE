@@ -358,7 +358,7 @@
 // // //         <p className="font-bold">THE HORECA STORE INC.</p>
 // // //         <p>8800 Bissonnet Street, Ste A,</p>
 // // //         <p>Houston, Texas 77074</p>
-// // //         <p>Phone: 1 (866) 446-7322</p>
+// // //         <p>Phone: 1 800-467-322</p>
 // // //         <p>Email: sales@thehorecastore.com</p>
 // // //         <p>www.thehorecastore.com</p>
 // // //       </div>
@@ -1731,7 +1731,7 @@
 //   name: "THE HORECA STORE INC.",
 //   address1: "8800 Bissonnet Street, Ste A,",
 //   address2: "Houston, Texas 77074",
-//   phone: "1 (866) 446-7322",
+//   phone: "1 800-467-322",
 //   email: "sales@thehorecastore.com",
 //   website: "www.thehorecastore.com",
 //   logoUrl: "https://thehorecastore.com/logo.png",

@@ -36,7 +36,10 @@ import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import CheckoutPayment, { CheckoutPaymentHandle } from "./checkout-payment";
+import CheckoutPayment, {
+  CheckoutPaymentHandle,
+  CheckoutPaymentSkeleton,
+} from "./checkout-payment";
 import { Modal } from "@/components/ui/modal";
 import { trackGtmEvent } from "@/utils/gtm";
 import { CurrencySymbol } from "@/components/currency-symbol";
@@ -1056,6 +1059,8 @@ export default function CheckoutPage() {
             {phoneError && (
               <p className="text-[11px] text-red-500 mt-1">{phoneError}</p>
             )}
+                          <p className="text-[11px] text-green-500 mt-1">WhatsApp Number (Required for Delivery Updates)
+                          </p>
           </div>
         </div>
       </div>
@@ -1347,14 +1352,14 @@ export default function CheckoutPage() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 flex items-center gap-1">
                   Shipping &amp; Handling
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => setShowShippingPolicyModal(true)}
                     className="w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center hover:border-[#186737] hover:text-[#186737] transition-colors leading-none"
                     aria-label="Shipping policy info"
                   >
                     ?
-                  </button>
+                  </button> */}
                 </span>
                 {baseShipping > 0 ? (
                   <span className="font-medium text-gray-800">
@@ -1486,7 +1491,7 @@ export default function CheckoutPage() {
             Please read our Terms and conditions before proceeding with the
             payments.
           </label>
-          <button
+          {/* <button
             type="button"
             onClick={() => setShowTermsModal(true)}
             className="flex items-center gap-1 text-[#186737] text-sm font-medium hover:underline mt-0.5"
@@ -1495,7 +1500,7 @@ export default function CheckoutPage() {
             <span className="w-4 h-4 rounded-full border border-[#186737] text-[10px] font-bold flex items-center justify-center leading-none">
               ?
             </span>
-          </button>
+          </button> */}
           {termsError && (
             <p className="text-xs text-red-500 mt-1">
               ⚠ Please accept the terms and conditions to proceed
@@ -1703,12 +1708,16 @@ export default function CheckoutPage() {
                 Payment Details
               </h2>
               {!isDesktop ? (
-                <CheckoutPayment
-                  isUae={isUaeShipping}
-                  onHandleReady={(h) => {
-                    paymentHandleRef.current = h;
-                  }}
-                />
+                isCartLoading ? (
+                  <CheckoutPaymentSkeleton isUae={isUaeShipping} />
+                ) : (
+                  <CheckoutPayment
+                    isUae={isUaeShipping}
+                    onHandleReady={(h) => {
+                      paymentHandleRef.current = h;
+                    }}
+                  />
+                )
               ) : null}
             </div>
             {/* Fixed bottom Place Order CTA */}
@@ -1992,12 +2001,16 @@ export default function CheckoutPage() {
             {deliveryBlock}
             <div className="h-px bg-gray-200 my-4" />
             {isDesktop ? (
-              <CheckoutPayment
-                isUae={isUaeShipping}
-                onHandleReady={(h) => {
-                  paymentHandleRef.current = h;
-                }}
-              />
+              isCartLoading ? (
+                <CheckoutPaymentSkeleton isUae={isUaeShipping} />
+              ) : (
+                <CheckoutPayment
+                  isUae={isUaeShipping}
+                  onHandleReady={(h) => {
+                    paymentHandleRef.current = h;
+                  }}
+                />
+              )
             ) : null}
             {placeOrderBtn}
           </div>

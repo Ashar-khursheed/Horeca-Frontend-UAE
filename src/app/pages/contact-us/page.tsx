@@ -8,30 +8,30 @@ import logo4 from "@/assets/banners/contact-us/4.png";
 import logo5 from "@/assets/banners/contact-us/5.png";
 import BannerContact from "@/assets/banners/contact-us/contactMainBanner.jpg";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ContactUsFAQ } from "@/data";
 import { useAppSelector } from "@/store/hooks";
 import {
-  CheckCircle2,
-  Globe,
-  Headphones,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Package,
-  Paperclip,
-  Phone,
-  RotateCcw,
-  Send,
-  Star,
-  Truck,
-  UtensilsCrossed,
-  X,
-  XCircle,
+    CheckCircle2,
+    Globe,
+    Headphones,
+    Mail,
+    MapPin,
+    MessageCircle,
+    Package,
+    Paperclip,
+    Phone,
+    RotateCcw,
+    Send,
+    Star,
+    Truck,
+    UtensilsCrossed,
+    X,
+    XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -433,7 +433,7 @@ export default function ContactUsPage() {
                           }
                         }}
                         maxLength={14}
-                        placeholder="(866) 446-7322"
+                        placeholder="800-467-322"
                         className="flex-1 px-3 text-sm outline-none bg-white placeholder:text-gray-300"
                       />
                     </div>
@@ -664,7 +664,7 @@ export default function ContactUsPage() {
                   href="tel:+18664467322"
                   className="flex items-center gap-2 text-sm font-semibold text-[#186737] hover:underline"
                 >
-                  <Phone size={13} />  (866) 446-7322
+                  <Phone size={13} />  800-467-322
                 </a>
                 {/* <a
                   href="tel:+18664467323"

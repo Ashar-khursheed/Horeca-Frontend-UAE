@@ -1,10 +1,10 @@
 import {
-  Document,
-  Image,
-  Page,
-  StyleSheet,
-  Text,
-  View,
+    Document,
+    Image,
+    Page,
+    StyleSheet,
+    Text,
+    View,
 } from "@react-pdf/renderer";
 import React from "react";
 
@@ -372,7 +372,7 @@ const Header = () => (
       <Text style={S.headerRightBold}>THE HORECA STORE INC.</Text>
       <Text style={S.headerRightText}>8800 Bissonnet Street, Ste A,</Text>
       <Text style={S.headerRightText}>Houston, Texas 77074</Text>
-      <Text style={S.headerRightText}>Phone: 1 (866) 446-7322</Text>
+      <Text style={S.headerRightText}>Phone: 1 800-467-322</Text>
       <Text style={S.headerRightText}>Email: sales@thehorecastore.com</Text>
       <Text style={[S.headerRightText, S.footerGreen]}>www.thehorecastore.com</Text>
     </View>

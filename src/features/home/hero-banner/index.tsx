@@ -1,15 +1,15 @@
 "use client";
 
 import BannerImg from "@/assets/Desktop/True Refrigeration.webp";
+import NoImage from "@/assets/NoImage.jpg";
 import chefImge from "@/assets/static/chefImg.svg";
 import FinancingModal from "@/components/financing-modal";
 import { Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Autoplay, EffectFade, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import NoImage from "@/assets/NoImage.jpg";
 
 export interface SliderItem {
   id: number;
@@ -79,7 +79,7 @@ const CTACard = ({ onQuoteClick }: { onQuoteClick: () => void }) => (
                   href="tel:+18664467322"
                   className="text-[#186737] 2xl:text-base text-[13px] underline font-bold"
                 >
-                   (866) 446-7322
+                   800-467-322
                 </a>
               </div>
               <div>

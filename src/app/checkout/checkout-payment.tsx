@@ -257,3 +257,44 @@ function CardBadge({
     </span>
   );
 }
+
+export function CheckoutPaymentSkeleton({
+  isUae = process.env.NEXT_PUBLIC_REGION === "UAE",
+}: {
+  isUae?: boolean;
+}) {
+  const rows = isUae ? 4 : 1;
+  return (
+    <div className="mt-5 rounded-[7px] border-2 border-[#E2E8F0] overflow-hidden">
+      <div className="flex items-center justify-between bg-[#E2E8F0] px-6 py-3">
+        <div className="h-5 w-40 rounded bg-gray-300/80 animate-pulse" />
+      </div>
+      <div className="px-6">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div
+            key={i}
+            className={`flex items-start gap-3 py-4 animate-pulse ${
+              i < rows - 1 ? "border-b-2 border-[#E2E8F0]" : ""
+            }`}
+          >
+            <div className="mt-0.5 h-4 w-4 shrink-0 rounded-full bg-gray-200" />
+            <div className="h-9 w-9 shrink-0 rounded-full bg-gray-200" />
+            <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+              <div className="h-4 w-44 max-w-full rounded bg-gray-200" />
+              <div className="h-3 w-64 max-w-full rounded bg-gray-100" />
+            </div>
+            <div className="hidden md:flex shrink-0 items-center gap-1.5 self-center">
+              <div className="h-5 w-10 rounded bg-gray-200" />
+              <div className="h-5 w-8 rounded bg-gray-200" />
+              <div className="h-5 w-12 rounded bg-gray-200" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 bg-[#F8FAFC] px-6 py-3">
+        <div className="h-3 w-3 rounded bg-gray-200 animate-pulse" />
+        <div className="h-3 w-56 max-w-full rounded bg-gray-200 animate-pulse" />
+      </div>
+    </div>
+  );
+}

@@ -41,11 +41,12 @@ import {
   fetchWishlist,
 } from "@/store/slices/wishlist/wishlistSlice";
 import { AppDispatch, RootState } from "@/store/store";
+import { useCartId } from "@/utils/cartId";
 import { useLocationData } from "@/utils/locationStorage";
+import { isUaeAddressCountry } from "@/utils/uae-address";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "./SearchBar";
-import { useCartId } from "@/utils/cartId";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CategoryName {
@@ -345,9 +346,14 @@ export default function NavigationStatic({
                               {[
                                 resolvedDefault.address?.replace(/,\s*$/, ""),
                                 resolvedDefault.city,
-                                resolvedDefault.state,
+                                isUaeAddressCountry(resolvedDefault.country)
+                                  ? null
+                                  : resolvedDefault.state,
                               ].filter(Boolean).join(", ")}
-                              {resolvedDefault.zip_code ? ` ${resolvedDefault.zip_code}` : ""}
+                              {!isUaeAddressCountry(resolvedDefault.country) &&
+                              resolvedDefault.zip_code
+                                ? ` ${resolvedDefault.zip_code}`
+                                : ""}
                             </p>
                             <p className="text-gray-500">{resolvedDefault.country}</p>
                           </div>
@@ -408,7 +414,7 @@ export default function NavigationStatic({
                       Call Us
                     </span>
                     <span className="text-[10px] xl:text-[11px] 2xl:text-xs font-semibold text-green-900 leading-tight group-hover:text-[#186737] transition-colors">
-                      (866) 446-7322
+                      800-467-322
                     </span>
                   </div>
                   <ChevronDown

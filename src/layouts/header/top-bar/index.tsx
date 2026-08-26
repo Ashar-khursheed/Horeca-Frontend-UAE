@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { label: "Contact Us", href: "/pages/contact-us", isModal: false, modalTitle: "", highlight: false, variant: undefined },
   { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false, modalTitle: "", highlight: false, variant: undefined },
   // { label: "Become a Partner", href: "/register?type=vendor", isModal: false, modalTitle: "", highlight: true, variant: "partner" as HighlightVariant },
-   { label: "Request a Quote", href: "/create-quotation", isModal: false, modalTitle: "", highlight: true, variant: "quote" as HighlightVariant },
+   { label: "Create Quotation", href: "/create-quotation", isModal: false, modalTitle: "", highlight: true, variant: "quote" as HighlightVariant },
 ];
 
 const linkClass = `

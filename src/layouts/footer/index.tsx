@@ -3,12 +3,12 @@
 import FinancingModal from "@/components/financing-modal";
 import { ApiCategory, ApiCategoryName } from "@/features/category";
 import {
-  ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
-  Mail,
-  MapPin,
-  Phone,
+    ArrowUpRight,
+    ChevronDown,
+    ChevronUp,
+    Mail,
+    MapPin,
+    Phone,
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
@@ -364,7 +364,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                     </p>
                     <p className="text-black font-semibold text-base">
                       {" "}
-                      (866) 446-7322
+                      800-467-322
                     </p>
                   </div>
                 </a>
@@ -558,7 +558,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       href="tel:+18664467322"
                       className="text-[13px] text-gray-700 hover:text-[#186737] transition-colors font-medium"
                     >
-                      (866) 446-7322
+                      800-467-322
                     </a>
                   </div>
                 </li>

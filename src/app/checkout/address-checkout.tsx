@@ -450,6 +450,7 @@ import {
 } from "@/store/slices/customer-address/customerAddressSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useLocationData } from "@/utils/locationStorage";
+import { isUaeAddressCountry } from "@/utils/uae-address";
 import { useFormik } from "formik";
 import { useEffect, useImperativeHandle, forwardRef, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -469,18 +470,23 @@ export interface AddressCheckoutHandle {
   save: () => Promise<boolean>;
 }
 
-const addressSchema = Yup.object({
-  address: Yup.string().trim().required("Address is required"),
-  country: Yup.string().required("Country is required"),
-  state: Yup.string().trim().required("State is required"),
-  city: Yup.string().trim().required("City is required"),
-  zip_code: Yup.string()
-    .trim()
-    .required("ZIP code is required")
-    .matches(/^\d+$/, "ZIP code must contain numbers only")
-    .min(3, "ZIP code must be at least 3 digits")
-    .max(10, "ZIP code must be at most 10 digits"),
-});
+const getAddressSchema = (isUae: boolean) =>
+  Yup.object({
+    address: Yup.string().trim().required("Address is required"),
+    country: Yup.string().required("Country is required"),
+    state: isUae
+      ? Yup.string().trim()
+      : Yup.string().trim().required("State is required"),
+    city: Yup.string().trim().required("City is required"),
+    zip_code: isUae
+      ? Yup.string().trim()
+      : Yup.string()
+          .trim()
+          .required("ZIP code is required")
+          .matches(/^\d+$/, "ZIP code must contain numbers only")
+          .min(3, "ZIP code must be at least 3 digits")
+          .max(10, "ZIP code must be at most 10 digits"),
+  });
 
 const inputCls =
   "w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-[#186737] focus:ring-1 focus:ring-[#186737]/20 bg-white placeholder:text-gray-400 transition-all";
@@ -513,6 +519,7 @@ const InlineAddressForm = forwardRef<
   const countryId = country?.data?.id as number | undefined;
   const countryName = (country?.data?.name as string) ?? "";
   const countryIcon = (country?.data?.icon as string) ?? "";
+  const isUAE = isUaeAddressCountry(countryName);
 
   const [states, setStates] = useState<LookupItem[]>([]);
   const [cities, setCities] = useState<LookupItem[]>([]);
@@ -531,7 +538,7 @@ const InlineAddressForm = forwardRef<
       city: editAddress?.city ?? "",
       zip_code: editAddress?.zip_code ?? "",
     },
-    validationSchema: addressSchema,
+    validationSchema: getAddressSchema(isUAE),
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values) => {
@@ -541,9 +548,9 @@ const InlineAddressForm = forwardRef<
         type: "",
         address: values.address.trim(),
         country: countryName || values.country,
-        state: values.state?.trim() ?? "",
+        state: isUAE ? "" : (values.state?.trim() ?? ""),
         city: values.city.trim(),
-        zip_code: values.zip_code.trim(),
+        zip_code: isUAE ? "" : values.zip_code.trim(),
         is_default: true,
       };
       if (editAddress) {
@@ -595,8 +602,9 @@ const InlineAddressForm = forwardRef<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values]);
 
-  // Auto-save jab pura form valid ho
+  // Auto-save when the full form is valid (non-UAE). UAE saves on city select.
   useEffect(() => {
+    if (isUAE) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     if (formik.isValid && formik.dirty && saveStatus === "idle") {
       autoSaveTimer.current = setTimeout(() => {
@@ -605,7 +613,7 @@ const InlineAddressForm = forwardRef<
     }
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values, formik.isValid, formik.dirty]);
+  }, [formik.values, formik.isValid, formik.dirty, isUAE]);
 
   useEffect(() => {
     if (locationData?.country) {
@@ -622,18 +630,28 @@ const InlineAddressForm = forwardRef<
 
   useEffect(() => {
     if (!countryId) return;
-    setStatesLoading(true);
     setStates([]);
     setCities([]);
     setSelectedStateId(null);
+    if (isUAE) {
+      setCitiesLoading(true);
+      makeApiRequest<LookupResponse>("frontend/countries/lookup", {
+        params: { country_id: countryId, type: "cities" },
+      })
+        .then((res) => setCities(res.data ?? []))
+        .finally(() => setCitiesLoading(false));
+      return;
+    }
+    setStatesLoading(true);
     makeApiRequest<LookupResponse>("frontend/countries/lookup", {
       params: { country_id: countryId, type: "states" },
     })
       .then((res) => setStates(res.data ?? []))
       .finally(() => setStatesLoading(false));
-  }, [countryId]);
+  }, [countryId, isUAE]);
 
   useEffect(() => {
+    if (isUAE) return;
     const editState = editAddress?.state;
     if (!editState || states.length === 0) return;
     const match = states.find(
@@ -641,9 +659,10 @@ const InlineAddressForm = forwardRef<
     );
     if (match) setSelectedStateId(match.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [states]);
+  }, [states, isUAE]);
 
   useEffect(() => {
+    if (isUAE) return;
     if (!selectedStateId) {
       setCities([]);
       return;
@@ -655,7 +674,7 @@ const InlineAddressForm = forwardRef<
     })
       .then((res) => setCities(res.data ?? []))
       .finally(() => setCitiesLoading(false));
-  }, [selectedStateId]);
+  }, [selectedStateId, isUAE]);
 
   const err = (field: keyof typeof formik.values) =>
     formik.touched[field] && formik.errors[field]
@@ -664,36 +683,42 @@ const InlineAddressForm = forwardRef<
   const errCls = (field: keyof typeof formik.values) =>
     err(field) ? "border-red-400 focus:ring-red-100" : "";
 
-  if (saveStatus === "saving") {
-    return (
-      <div className="space-y-4 animate-pulse">
-        {/* Street Address skeleton */}
-        <div>
-          <div className="h-3 w-28 bg-gray-200 rounded mb-1.5" />
-          <div className="h-9 bg-gray-200 rounded-md w-full" />
-        </div>
-        {/* Country | State | City skeleton */}
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i}>
-              <div className="h-3 w-16 bg-gray-200 rounded mb-1.5" />
-              <div className="h-9 bg-gray-200 rounded-md" />
-            </div>
-          ))}
-        </div>
-        {/* ZIP skeleton */}
-        <div>
-          <div className="h-3 w-20 bg-gray-200 rounded mb-1.5" />
-          <div className="h-9 bg-gray-200 rounded-md w-40" />
-        </div>
-      </div>
-    );
-  }
+  const saveUaeOnCity = async (cityName: string) => {
+    const street = formik.values.address.trim();
+    if (!street || !cityName.trim() || saveStatus === "saving") return;
+    setApiError(null);
+    setSaveStatus("saving");
+    try {
+      const payload: AddressPayload = {
+        type: "",
+        address: street,
+        country: countryName || formik.values.country,
+        state: "",
+        city: cityName.trim(),
+        zip_code: "",
+        is_default: true,
+      };
+      if (editAddress) {
+        await dispatch(updateAddress({ id: editAddress.id, payload })).unwrap();
+      } else {
+        await dispatch(addAddress(payload)).unwrap();
+      }
+      setSaveStatus("saved");
+      onSaved?.();
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch {
+      setApiError(error ?? "Could not save address. Please try again.");
+      setSaveStatus("idle");
+    }
+  };
 
   return (
     <form onSubmit={formik.handleSubmit} noValidate>
       {/* Save status */}
       <div className="flex items-center gap-1.5 h-5 mb-2">
+        {saveStatus === "saving" && (
+          <span className="text-[11px] text-gray-500">Saving address…</span>
+        )}
         {saveStatus === "saved" && (
           <span className="text-[11px] text-emerald-600 flex items-center gap-1">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -715,7 +740,12 @@ const InlineAddressForm = forwardRef<
             name="address"
             value={formik.values.address}
             onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
+            onBlur={(e) => {
+              formik.handleBlur(e);
+              if (isUAE && formik.values.city) {
+                void saveUaeOnCity(formik.values.city);
+              }
+            }}
             placeholder="Business/House No., Street"
             className={`${inputCls} ${errCls("address")}`}
           />
@@ -726,7 +756,7 @@ const InlineAddressForm = forwardRef<
       </div>
 
       {/* Country | State | City */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+      <div className={`grid grid-cols-1 gap-4 mb-4 ${isUAE ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
         <div>
           <FormField label="Country *">
             <div className="flex gap-1.5 items-center w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-white text-gray-600 cursor-default outline-none h-[38px]">
@@ -738,27 +768,29 @@ const InlineAddressForm = forwardRef<
           </FormField>
         </div>
 
-        <div>
-          <FormField label="State *">
-            <SearchableSelect
-              options={states}
-              value={formik.values.state}
-              onChange={(name, id) => {
-                formik.setFieldValue("state", name);
-                formik.setFieldValue("city", "");
-                setSelectedStateId(id);
-              }}
-              placeholder="Select State"
-              searchPlaceholder="Search state…"
-              loading={statesLoading}
-              disabled={!countryId}
-              error={!!err("state")}
-            />
-            {err("state") && (
-              <p className="text-[11px] text-red-500 mt-1">{err("state")}</p>
-            )}
-          </FormField>
-        </div>
+        {!isUAE && (
+          <div>
+            <FormField label="State *">
+              <SearchableSelect
+                options={states}
+                value={formik.values.state}
+                onChange={(name, id) => {
+                  formik.setFieldValue("state", name);
+                  formik.setFieldValue("city", "");
+                  setSelectedStateId(id);
+                }}
+                placeholder="Select State"
+                searchPlaceholder="Search state…"
+                loading={statesLoading}
+                disabled={!countryId}
+                error={!!err("state")}
+              />
+              {err("state") && (
+                <p className="text-[11px] text-red-500 mt-1">{err("state")}</p>
+              )}
+            </FormField>
+          </div>
+        )}
 
         <div>
           <FormField label="City *">
@@ -767,12 +799,25 @@ const InlineAddressForm = forwardRef<
               value={formik.values.city}
               onChange={(name) => {
                 formik.setFieldValue("city", name);
-                formik.setFieldValue("zip_code", "");
+                formik.setFieldTouched("city", true, false);
+                if (isUAE) {
+                  formik.setFieldValue("state", "");
+                  formik.setFieldValue("zip_code", "");
+                  void saveUaeOnCity(name);
+                } else {
+                  formik.setFieldValue("zip_code", "");
+                }
               }}
-              placeholder={!selectedStateId ? "Select State first" : "Select City"}
+              placeholder={
+                isUAE
+                  ? "Select City"
+                  : !selectedStateId
+                    ? "Select State first"
+                    : "Select City"
+              }
               searchPlaceholder="Search city…"
               loading={citiesLoading}
-              disabled={!selectedStateId}
+              disabled={isUAE ? !countryId : !selectedStateId}
               error={!!err("city")}
             />
             {err("city") && (
@@ -782,28 +827,29 @@ const InlineAddressForm = forwardRef<
         </div>
       </div>
 
-      {/* Zip Code */}
-      <div>
-        <FormField label="ZIP Code *">
-          <input
-            name="zip_code"
-            value={formik.values.zip_code}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-              formik.setFieldValue("zip_code", val);
-              formik.setFieldTouched("zip_code", true, false);
-            }}
-            onBlur={formik.handleBlur}
-            placeholder="12345"
-            inputMode="numeric"
-            maxLength={10}
-            className={`${inputCls} ${errCls("zip_code")} sm:max-w-[200px]`}
-          />
-          {err("zip_code") && (
-            <p className="text-[11px] text-red-500 mt-1">{err("zip_code")}</p>
-          )}
-        </FormField>
-      </div>
+      {!isUAE && (
+        <div>
+          <FormField label="ZIP Code *">
+            <input
+              name="zip_code"
+              value={formik.values.zip_code}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                formik.setFieldValue("zip_code", val);
+                formik.setFieldTouched("zip_code", true, false);
+              }}
+              onBlur={formik.handleBlur}
+              placeholder="12345"
+              inputMode="numeric"
+              maxLength={10}
+              className={`${inputCls} ${errCls("zip_code")} sm:max-w-[200px]`}
+            />
+            {err("zip_code") && (
+              <p className="text-[11px] text-red-500 mt-1">{err("zip_code")}</p>
+            )}
+          </FormField>
+        </div>
+      )}
     </form>
   );
 });

@@ -1428,7 +1428,7 @@ export const NAV_LINKS = [
   { label: "Track Your Order", href: "/track-order", isModal: false },
 //   { label: "Financing", href: "#", isModal: true },
   { label: "Mega Sale", href: "/mega-sale", isModal: false },
-  { label: "Request a Quote", href: "/create-quotation", isModal: false },
+  { label: "Create Quotation", href: "/create-quotation", isModal: false },
 ];
 
 

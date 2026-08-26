@@ -364,7 +364,7 @@ NEXT_PUBLIC_CURRENCY=USD
 NEXT_PUBLIC_CURRENCY_SYMBOL=$
 NEXT_PUBLIC_VAT_RATE=0
 NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
-NEXT_PUBLIC_PHONE=+1 (866) 446-7322
+NEXT_PUBLIC_PHONE=+1 800-467-322
 NEXT_PUBLIC_PHONE_TEL=tel:+18664467322
 
 # .env.uae
@@ -404,7 +404,7 @@ export const siteConfig = {
 | Language | English | English + Arabic RTL |
 | Payment Gateways | Square, Stripe, Stax | CCAvenue, Paymob, Tamara |
 | Shipping Tiers | Houston $99 / Texas $199 / Rest $299 | UAE flat rate |
-| Phone | +1 (866) 446-7322 | +971 4 XXX XXXX |
+| Phone | +1 800-467-322 | +971 4 XXX XXXX |
 | GTM ID | US GTM ID | UAE GTM ID |
 | Chat Widget | Freshchat US | Freshchat UAE |
 
@@ -602,7 +602,7 @@ NEXT_PUBLIC_API_BASE_URL=https://pim.thehorecastore.co/api
 NEXT_PUBLIC_CURRENCY=USD
 NEXT_PUBLIC_CURRENCY_SYMBOL=$
 NEXT_PUBLIC_VAT_RATE=0
-NEXT_PUBLIC_PHONE=+1 (866) 446-7322
+NEXT_PUBLIC_PHONE=+1 800-467-322
 NEXT_PUBLIC_PHONE_TEL=tel:+18664467322
 
 # ── Analytics ────────────────────────────────────
