@@ -2,6 +2,7 @@
 
 import { makeApiRequest } from "@/apis/axios-instance";
 import CTA from "@/components/cta";
+import { CurrencySymbol } from "@/components/currency-symbol";
 import { useInvoiceDownload } from "@/components/download-invoice";
 // import HorecaInvoicePDF from "@/components/invoice/first-page";
 // import { PDFDownloadLink } from "@react-pdf/renderer";
@@ -475,7 +476,7 @@ export default function OrderDetailPage() {
               <RotateCcw size={14} />
               Return
             </Link> */}
-            <button
+            {/* <button
               onClick={handleDownload}
               disabled={loadings}
               className="flex items-center gap-2 px-4 py-2.5 rounded-[7px] text-sm font-semibold bg-[#186737] text-white hover:bg-[#145c30] transition-all shadow-sm shadow-[#186737]/20 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -485,7 +486,7 @@ export default function OrderDetailPage() {
               ) : (
                 <><Download size={14} /> Download Invoice</>
               )}
-            </button>
+            </button> */}
 {/* 
             <PDFDownloadLink
   document={<HorecaInvoicePDF order={order} />}
@@ -614,8 +615,8 @@ export default function OrderDetailPage() {
                                     </span>{" "}
                                     {acc.accessory_item_name?.en?.replace(/^"|"$/g, "")}
                                   </span>
-                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
-                                    {sym}{fmt(Number(acc.amount))}
+                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap inline-flex items-baseline">
+                                    <CurrencySymbol currency={sym} fontsize="11px" />{fmt(Number(acc.amount))}
                                   </span>
                                 </div>
                               ))}
@@ -624,17 +625,17 @@ export default function OrderDetailPage() {
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <p className="text-base font-bold text-gray-900">
-                            {sym}{fmt(lineTotal + accessoryTotal)}
+                          <p className="text-base font-bold text-gray-900 inline-flex items-baseline">
+                            <CurrencySymbol currency={sym} weight="bold" fontsize="15px" />{fmt(lineTotal + accessoryTotal)}
                           </p>
                           {item.quantity > 1 && (
-                            <p className="text-[11px] text-gray-400 mt-0.5">
-                              {sym}{fmt(Number(item.unit_price))} each
+                            <p className="text-[11px] text-gray-400 mt-0.5 inline-flex items-baseline">
+                              <CurrencySymbol currency={sym} fontsize="11px" />{fmt(Number(item.unit_price))} each
                             </p>
                           )}
                           {accessoryTotal > 0 && (
-                            <p className="text-[11px] text-gray-400 mt-0.5">
-                              incl. {sym}{fmt(accessoryTotal)} accessories
+                            <p className="text-[11px] text-gray-400 mt-0.5 inline-flex items-baseline">
+                              incl. <CurrencySymbol currency={sym} fontsize="11px" />{fmt(accessoryTotal)} accessories
                             </p>
                           )}
                         </div>
@@ -649,8 +650,8 @@ export default function OrderDetailPage() {
               <span className="text-xs text-gray-500 font-medium">
                 Items Subtotal
               </span>
-              <span className="text-sm font-bold text-gray-900">
-                {sym}{fmt(subtotal)}
+              <span className="text-sm font-bold text-gray-900 inline-flex items-baseline">
+                <CurrencySymbol currency={sym} fontsize="14px" />{fmt(subtotal)}
               </span>
             </div>
           </div>
@@ -814,56 +815,56 @@ export default function OrderDetailPage() {
             </div>
             <div className="p-5 space-y-3">
               <div className="space-y-2.5">
-                <SummaryRow label="Subtotal" value={`${sym}${fmt(subtotal)}`} />
+                <SummaryRow label="Subtotal" value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(subtotal)}</>} />
                 {discount > 0 && (
                   <SummaryRow
                     label="Coupon Discount"
-                    value={`-${sym}${fmt(discount)}`}
+                    value={<>-<CurrencySymbol currency={sym} fontsize="14px" />{fmt(discount)}</>}
                     green
                   />
                 )}
                 {additionalDiscount > 0 && (
                   <SummaryRow
                     label="Additional Discount"
-                    value={`-${sym}${fmt(additionalDiscount)}`}
+                    value={<>-<CurrencySymbol currency={sym} fontsize="14px" />{fmt(additionalDiscount)}</>}
                     green
                   />
                 )}
                 {shipping > 0 && (
-                  <SummaryRow label="Shipping" value={`${sym}${fmt(shipping)}`} />
+                  <SummaryRow label="Shipping" value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(shipping)}</>} />
                 )}
-                {order.is_lift_gate           === 1 && <SummaryRow label="Lift Gate Service"   value={`${sym}${fmt(liftFee)}`} />}
-                {order.is_residential_address === 1 && <SummaryRow label="Residential Address" value={`${sym}${fmt(resFee)}`} />}
-                {order.is_inside_delivery     === 1 && <SummaryRow label="Inside Delivery"     value={`${sym}${fmt(insideFee)}`} />}
+                {order.is_lift_gate           === 1 && <SummaryRow label="Lift Gate Service"   value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(liftFee)}</>} />}
+                {order.is_residential_address === 1 && <SummaryRow label="Residential Address" value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(resFee)}</>} />}
+                {order.is_inside_delivery     === 1 && <SummaryRow label="Inside Delivery"     value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(insideFee)}</>} />}
                 {tax > 0 && (
                   <SummaryRow
-                    label={`Tax (${Number(order.tax_percentage).toFixed(2)}%)`}
-                    value={`${sym}${fmt(tax)}`}
+                    label={`VAT (${Number(order.tax_percentage).toFixed(2)}%)`}
+                    value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(tax)}</>}
                   />
                 )}
-              
+
               </div>
 
               <div className="border-t border-gray-100 pt-3.5 mt-1 space-y-2.5">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total Amount</span>
-                  <span className="font-black text-xl text-gray-900">
-                    {sym}{fmt(total)}
+                  <span className="font-black text-xl text-gray-900 inline-flex items-baseline">
+                    <CurrencySymbol currency={sym} weight="bold" fontsize="20px" />{fmt(total)}
                   </span>
                 </div>
                 {order.is_paid === 0 && Number(order.paid_amount) > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Paid Amount</span>
-                    <span className="text-sm font-semibold text-[#186737]">
-                      {sym}{fmt(Number(order.paid_amount))}
+                    <span className="text-sm font-semibold text-[#186737] inline-flex items-baseline">
+                      <CurrencySymbol currency={sym} fontsize="14px" />{fmt(Number(order.paid_amount))}
                     </span>
                   </div>
                 )}
                 {order.is_paid === 0 && Number(order.pending_amount) > 0 && (
                   <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
                     <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
-                    <span className="text-sm font-black text-amber-700">
-                      {sym}{fmt(Number(order.pending_amount))}
+                    <span className="text-sm font-black text-amber-700 inline-flex items-baseline">
+                      <CurrencySymbol currency={sym} fontsize="14px" />{fmt(Number(order.pending_amount))}
                     </span>
                   </div>
                 )}
@@ -899,7 +900,9 @@ export default function OrderDetailPage() {
                   <div key={payment.id} className="p-5 space-y-2.5">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-gray-700">Payment #{idx + 1}</span>
-                      <span className="text-sm font-black text-gray-900">{sym}{fmt(Number(payment.amount))}</span>
+                      <span className="text-sm font-black text-gray-900 inline-flex items-baseline">
+                        <CurrencySymbol currency={sym} fontsize="14px" />{fmt(Number(payment.amount))}
+                      </span>
                     </div>
                     <DetailRow
                       label="Method"
@@ -944,7 +947,9 @@ export default function OrderDetailPage() {
                 <div className="px-5 pb-5 space-y-3">
                   <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
                     <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
-                    <span className="text-sm font-black text-amber-700">{sym}{fmt(Number(order.pending_amount))}</span>
+                    <span className="text-sm font-black text-amber-700 inline-flex items-baseline">
+                      <CurrencySymbol currency={sym} fontsize="14px" />{fmt(Number(order.pending_amount))}
+                    </span>
                   </div>
                   {order.payment_link && (
                     <a
@@ -1044,14 +1049,14 @@ function SummaryRow({
   green,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   green?: boolean;
 }) {
   return (
     <div className="flex justify-between items-center text-sm">
       <span className="text-gray-500">{label}</span>
       <span
-        className={`font-semibold ${green ? "text-[#186737]" : "text-gray-900"}`}
+        className={`font-semibold inline-flex items-baseline whitespace-nowrap ${green ? "text-[#186737]" : "text-gray-900"}`}
       >
         {value}
       </span>
