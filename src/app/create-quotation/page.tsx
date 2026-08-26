@@ -1363,10 +1363,10 @@ export default function CreateQuotationPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Credit Card">Credit Card</SelectItem>
-                        <SelectItem value="Net 30">Net 30</SelectItem>
+                        {/* <SelectItem value="Net 30">Net 30</SelectItem>
                         <SelectItem value="Net 60">Net 60</SelectItem>
                         <SelectItem value="Wire Transfer">Wire Transfer</SelectItem>
-                        <SelectItem value="Check">Check</SelectItem>
+                        <SelectItem value="Check">Check</SelectItem> */}
                       </SelectContent>
                     </Select>
                   </Field>
