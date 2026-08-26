@@ -366,12 +366,14 @@ export default function PaymentSuccessPage() {
     );
   }
 
-  const subtotal = Number(order.amount);
   const shippingTotal = Number(order.shipping_charge);
   const taxAmount = Number(order.tax_amount);
   const taxRate = Number(order.tax_percentage) / 100;
   const discount = Number(order.discount ?? "0");
   const additionalFee = Number(order.additional_amount_price ?? "0");
+  // order.amount is the pre-tax base (product subtotal + processing fee), so
+  // the product-only subtotal shown to the customer backs the fee out of it.
+  const subtotal = Number(order.amount) - additionalFee;
   const additionalFeeLabel = order.additional_amount_name || "Additional Fee";
   const total = Number(order.total_amount);
   const currencySymbol = order.currency?.target_symbol ?? "$";

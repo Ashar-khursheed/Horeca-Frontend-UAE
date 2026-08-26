@@ -93,6 +93,8 @@ interface ApiOrderDetail {
   shipping_charge: number;
   discount: string;
   additional_discount_amount: string;
+  additional_amount_name?: string | null;
+  additional_amount_price?: string | null;
   is_lift_gate: number;
   is_residential_address: number;
   is_inside_delivery: number;
@@ -380,6 +382,12 @@ export default function OrderDetailPage() {
   const discount = Number(order.discount);
   const additionalDiscount = Number(order.additional_discount_amount);
   const total = Number(order.total_amount);
+  const additionalFee = Number(order.additional_amount_price ?? "0");
+  const additionalFeeLabel = order.additional_amount_name || "Additional Fee";
+  // order.amount is the pre-tax base (product subtotal + processing fee +
+  // shipping/addon fees), so the product-only subtotal shown to the customer
+  // has to back the processing fee out of it.
+  const displaySubtotal = subtotal - additionalFee;
   const liftFee    = order.is_lift_gate           === 1 ? 75  : 0;
   const resFee     = order.is_residential_address === 1 ? 199 : 0;
   const insideFee  = order.is_inside_delivery     === 1 ? 249 : 0;
@@ -651,7 +659,7 @@ export default function OrderDetailPage() {
                 Items Subtotal
               </span>
               <span className="text-sm font-bold text-gray-900 inline-flex items-baseline">
-                <CurrencySymbol currency={sym} fontsize="14px" />{fmt(subtotal)}
+                <CurrencySymbol currency={sym} fontsize="14px" />{fmt(displaySubtotal)}
               </span>
             </div>
           </div>
@@ -815,7 +823,10 @@ export default function OrderDetailPage() {
             </div>
             <div className="p-5 space-y-3">
               <div className="space-y-2.5">
-                <SummaryRow label="Subtotal" value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(subtotal)}</>} />
+                <SummaryRow label="Subtotal" value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(displaySubtotal)}</>} />
+                {additionalFee > 0 && (
+                  <SummaryRow label={additionalFeeLabel} value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(additionalFee)}</>} />
+                )}
                 {discount > 0 && (
                   <SummaryRow
                     label="Coupon Discount"
