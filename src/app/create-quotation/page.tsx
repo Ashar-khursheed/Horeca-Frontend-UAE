@@ -18,6 +18,11 @@ import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { addAddress, type AddressPayload } from "@/store/slices/customer-address/customerAddressSlice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { getDefaultAddressCache, useLocationData, type DefaultAddressCache } from "@/utils/locationStorage";
+import { isGccCountryName } from "@/utils/uae-address";
+import {
+  getUaeOrderShipping,
+  UAE_FREE_SHIPPING_MIN,
+} from "@/utils/shipping";
 import { buildQuotePdfFilename } from "@/utils/quote-filename";
 import { createQuotationSchema } from "@/validation/schema";
 import { useFormik } from "formik";
@@ -542,6 +547,7 @@ export default function CreateQuotationPage() {
         const email = values.email.trim();
         const mobile = values.mobile_number.replace(/\D/g, "");
         const countryIsUAE = values.country === UAE;
+        const hideState = isGccCountryName(values.country);
         let loggedIn = !!(
           customerProfile ||
           (typeof window !== "undefined" && localStorage.getItem("token"))
@@ -554,7 +560,7 @@ export default function CreateQuotationPage() {
             type: "",
             address: values.address.trim(),
             country: values.country,
-            state: countryIsUAE ? "" : values.state,
+            state: hideState ? "" : values.state,
             city: values.city,
             zip_code: values.zip_code.trim(),
             is_default: true,
@@ -573,11 +579,15 @@ export default function CreateQuotationPage() {
           }
         }
 
-        const productsPayload = products.map((p) => ({
+        const quoteSubtotal = products.reduce((s, p) => s + p.price * p.qty, 0);
+        const uaeShipping = countryIsUAE ? getUaeOrderShipping(quoteSubtotal) : null;
+        const productsPayload = products.map((p, index) => ({
           product_id: p.id,
           vendor_id: p.vendorId ?? 0,
           quantity: p.qty,
-          shipping_charge: p.shippingCost,
+          shipping_charge: countryIsUAE
+            ? (index === 0 ? (uaeShipping ?? 0) : 0)
+            : p.shippingCost,
           accessory_item_ids: p.accessoryItemIds ?? [],
         }));
 
@@ -640,7 +650,7 @@ export default function CreateQuotationPage() {
                 address: values.address.trim(),
                 address2: values.address2.trim() || undefined,
                 country: values.country,
-                state: countryIsUAE ? "" : values.state,
+                state: hideState ? "" : values.state,
                 city: values.city,
                 zip_code: values.zip_code.trim(),
               }),
@@ -764,6 +774,7 @@ export default function CreateQuotationPage() {
   });
 
   const isUAE = formik.values.country === UAE;
+  const hideState = isGccCountryName(formik.values.country);
   // Sourced from the `frontend/countries/...` API response in Redux (state.country.data),
   // same as checkout — real currency for whichever country is selected, not a fixed value.
   const currencySymbol = country?.data?.currency_symbol ?? "";
@@ -921,6 +932,7 @@ export default function CreateQuotationPage() {
 
   // Once the restored country's states have loaded, auto-select the matching state
   useEffect(() => {
+    if (hideState) return;
     if (!pendingAddress?.state || states.length === 0) return;
     const match = states.find((s) => s.name.toLowerCase() === pendingAddress.state!.toLowerCase());
     if (match) {
@@ -928,7 +940,7 @@ export default function CreateQuotationPage() {
       setSelectedStateId(match.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [states]);
+  }, [states, hideState]);
 
   // Once the resulting cities have loaded (via state, or directly for UAE), auto-select the matching city
   useEffect(() => {
@@ -941,14 +953,14 @@ export default function CreateQuotationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cities]);
 
-  // Whenever the selected country changes: UAE → cities directly (no state step),
+  // Whenever the selected country changes: GCC → cities directly (no state step),
   // any other country → states first, then cities under the chosen state.
   useEffect(() => {
     if (!countryId) return;
     setSelectedStateId(null);
     setStates([]);
     setCities([]);
-    if (isUAE) {
+    if (hideState) {
       setCitiesLoading(true);
       makeApiRequest<LookupResponse>("frontend/countries/lookup", {
         params: { country_id: countryId, type: "cities" },
@@ -964,11 +976,11 @@ export default function CreateQuotationPage() {
         .finally(() => setStatesLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, isUAE]);
+  }, [countryId, hideState]);
 
-  // Fetch cities once a state is chosen (non-UAE flow only)
+  // Fetch cities once a state is chosen (non-GCC flow only)
   useEffect(() => {
-    if (isUAE) return;
+    if (hideState) return;
     if (!selectedStateId) { setCities([]); return; }
     setCitiesLoading(true);
     setCities([]);
@@ -978,7 +990,7 @@ export default function CreateQuotationPage() {
       .then((res) => setCities(res.data ?? []))
       .finally(() => setCitiesLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStateId, isUAE]);
+  }, [selectedStateId, hideState]);
 
   const handleQtyChange = (id: number, qty: number) =>
     setProducts((prev) =>
@@ -1070,7 +1082,11 @@ export default function CreateQuotationPage() {
 
   // ── Totals ────────────────────────────────────────────────────────────────────
   const subtotal = products.reduce((s, p) => s + p.price * p.qty, 0);
-  const shipping = products.reduce((s, p) => s + p.shippingCost * p.qty, 0);
+  const itemShipping = products.reduce((s, p) => s + p.shippingCost * p.qty, 0);
+  const shipping = isUAE ? getUaeOrderShipping(subtotal) : itemShipping;
+  const freeShippingRemaining = isUAE
+    ? Math.max(0, UAE_FREE_SHIPPING_MIN - subtotal)
+    : 0;
   const cappedDiscount = Math.min(discount, subtotal);
   const taxableAmount = Math.max(0, subtotal - cappedDiscount + shipping);
   const taxRate = isUAE ? UAE_VAT_RATE : 0;
@@ -1469,7 +1485,7 @@ export default function CreateQuotationPage() {
                     )}
                   </Field>
 
-                  {!isUAE && (
+                  {!hideState && (
                     <Field label="State" required>
                       <SearchableSelect
                         options={states}
@@ -1499,11 +1515,18 @@ export default function CreateQuotationPage() {
                       onChange={(name) => {
                         formik.setFieldValue("city", name);
                         formik.setFieldTouched("city", true, false);
+                        if (hideState) formik.setFieldValue("state", "");
                       }}
-                      placeholder="Select City"
+                      placeholder={
+                        hideState
+                          ? "Select City"
+                          : !selectedStateId
+                            ? "Select State first"
+                            : "Select City"
+                      }
                       searchPlaceholder="Search city…"
                       loading={citiesLoading}
-                      disabled={isUAE ? !countryId : !selectedStateId}
+                      disabled={hideState ? !countryId : !selectedStateId}
                       error={!!err("city")}
                     />
                     {err("city") && (
@@ -1882,12 +1905,28 @@ export default function CreateQuotationPage() {
                     )}
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Shipping</span>
-                      <span className="font-semibold text-green-600 flex items-center gap-0.5">
-                        {/* <CurrencySymbol currency={currencySymbol} fontsize="15px" />
-                        {fmtPrice(shipping)} */}
-                        Free
-                      </span>
+                      {isUAE ? (
+                        shipping > 0 ? (
+                          <span className="font-semibold text-gray-900 flex items-center gap-0.5">
+                            <CurrencySymbol currency={currencySymbol} fontsize="15px" />
+                            {fmtPrice(shipping)}
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-green-600">Free</span>
+                        )
+                      ) : (
+                        <span className="font-semibold text-green-600">Free</span>
+                      )}
                     </div>
+                    {isUAE && freeShippingRemaining > 0 && (
+                      <p className="text-[11px] text-gray-500 -mt-1">
+                        Add{" "}
+                        <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                        {fmtPrice(freeShippingRemaining)} more for free shipping (orders of{" "}
+                        <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                        {fmtPrice(UAE_FREE_SHIPPING_MIN)}+)
+                      </p>
+                    )}
                     {isUAE && (
                       <div className="flex justify-between text-sm items-center">
                         <span className="text-gray-500 flex items-center gap-1">

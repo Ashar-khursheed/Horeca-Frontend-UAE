@@ -1,3 +1,4 @@
+import { isGccCountryName } from "@/utils/uae-address";
 import * as Yup from "yup";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
@@ -146,7 +147,7 @@ export const createQuotationSchema = Yup.object({
   address2: Yup.string().trim().max(200, "Maximum 200 characters."),
   country: Yup.string().required("Country is required."),
   state: Yup.string().when("country", {
-    is: (country: string) => country !== "United Arab Emirates",
+    is: (country: string) => !isGccCountryName(country),
     then: (schema) => schema.trim().required("State is required."),
   }),
   city: Yup.string().trim().required("City is required."),

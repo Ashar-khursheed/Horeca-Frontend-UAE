@@ -16,7 +16,7 @@ import {
 } from "@/store/slices/customer-address/customerAddressSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useLocationData, DEFAULT_ADDRESS_EVENT } from "@/utils/locationStorage";
-import { isUaeAddressCountry } from "@/utils/uae-address";
+import { isGccAddressCountry, isGccCountryName, isUaeAddressCountry } from "@/utils/uae-address";
 import { useFormik } from "formik";
 import { ArrowLeft, CheckCircle, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -27,15 +27,15 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Field, inputCls } from "./shared";
 
 // ── Validation schema ──────────────────────────────────────────────────────────
-const getAddressSchema = (isUae: boolean) =>
+const getAddressSchema = (hideState: boolean, hideZip: boolean) =>
   Yup.object({
     address: Yup.string().trim().required("Address is required"),
     country: Yup.string().required("Country is required"),
-    state: isUae
+    state: hideState
       ? Yup.string().trim()
       : Yup.string().trim().required("State is required"),
     city: Yup.string().trim().required("City is required"),
-    zip_code: isUae
+    zip_code: hideZip
       ? Yup.string().trim()
       : Yup.string()
           .trim()
@@ -46,8 +46,8 @@ const getAddressSchema = (isUae: boolean) =>
     is_default: Yup.boolean(),
   });
 
-const getAddressEditSchema = (isUae: boolean) =>
-  getAddressSchema(isUae).shape({
+const getAddressEditSchema = (hideState: boolean, hideZip: boolean) =>
+  getAddressSchema(hideState, hideZip).shape({
     is_default: Yup.boolean().oneOf(
       [true],
       "You must set this as your default address",
@@ -74,6 +74,7 @@ const AddressForm = ({
   const countryName   = (country?.data?.name as string) ?? "";
   const countryIcon   = (country?.data?.icon as string) ?? "";
   const isUAE         = isUaeAddressCountry(countryName);
+  const hideState     = isGccAddressCountry(countryName);
 
   const [states, setStates]               = useState<LookupItem[]>([]);
   const [cities, setCities]               = useState<LookupItem[]>([]);
@@ -92,7 +93,7 @@ const AddressForm = ({
       zip_code:   editAddress?.zip_code   ?? "",
       is_default: editAddress?.is_default ?? true,
     },
-    validationSchema: editAddress ? getAddressEditSchema(isUAE) : getAddressSchema(isUAE),
+    validationSchema: editAddress ? getAddressEditSchema(hideState, isUAE) : getAddressSchema(hideState, isUAE),
     validateOnBlur:   true,
     validateOnChange: true,
     onSubmit: async (values) => {
@@ -101,7 +102,7 @@ const AddressForm = ({
         type:       values.type.trim(),
         address:    values.address.trim(),
         country:    countryName || values.country,
-        state:      isUAE ? "" : (values.state?.trim() ?? ""),
+        state:      hideState ? "" : (values.state?.trim() ?? ""),
         city:       values.city.trim(),
         zip_code:   isUAE ? "" : values.zip_code.trim(),
     is_default: values.is_default, // ✅ Add mode mein bhi user ki value use karo
@@ -136,13 +137,13 @@ const AddressForm = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countryName]);
 
-  // Fetch states (non-UAE) or cities (UAE) when countryId is known
+  // Fetch states (non-GCC) or cities (GCC) when countryId is known
   useEffect(() => {
     if (!countryId) return;
     setStates([]);
     setCities([]);
     setSelectedStateId(null);
-    if (isUAE) {
+    if (hideState) {
       setCitiesLoading(true);
       makeApiRequest<LookupResponse>("frontend/countries/lookup", {
         params: { country_id: countryId, type: "cities" },
@@ -157,11 +158,11 @@ const AddressForm = ({
     })
       .then((res) => setStates(res.data ?? []))
       .finally(() => setStatesLoading(false));
-  }, [countryId, isUAE]);
+  }, [countryId, hideState]);
 
   // In edit mode: once states load, auto-select the matching state ID
   useEffect(() => {
-    if (isUAE) return;
+    if (hideState) return;
     const editState = editAddress?.state;
     if (!editState || states.length === 0) return;
     const match = states.find(
@@ -169,11 +170,11 @@ const AddressForm = ({
     );
     if (match) setSelectedStateId(match.id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [states, isUAE]);
+  }, [states, hideState]);
 
-  // Fetch cities when selectedStateId changes (non-UAE)
+  // Fetch cities when selectedStateId changes (non-GCC)
   useEffect(() => {
-    if (isUAE) return;
+    if (hideState) return;
     if (!selectedStateId) { setCities([]); return; }
     setCitiesLoading(true);
     setCities([]);
@@ -182,7 +183,7 @@ const AddressForm = ({
     })
       .then((res) => setCities(res.data ?? []))
       .finally(() => setCitiesLoading(false));
-  }, [selectedStateId, isUAE]);
+  }, [selectedStateId, hideState]);
 
   const err = (field: keyof typeof formik.values) =>
     formik.touched[field] && formik.errors[field] ? formik.errors[field] : null;
@@ -219,7 +220,7 @@ const AddressForm = ({
       </div>
 
       {/* Country | State | City */}
-      <div className={`grid grid-cols-1 gap-4 mb-4 ${isUAE ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+      <div className={`grid grid-cols-1 gap-4 mb-4 ${hideState ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
 
         {/* Country — read-only */}
         <div>
@@ -235,7 +236,7 @@ const AddressForm = ({
           </Field>
         </div>
 
-        {!isUAE && (
+        {!hideState && (
         <div>
           <Field label="State *">
             <SearchableSelect
@@ -265,8 +266,8 @@ const AddressForm = ({
               onChange={(name) => {
                 formik.setFieldValue("city", name);
                 formik.setFieldTouched("city", true, false);
+                if (hideState) formik.setFieldValue("state", "");
                 if (isUAE) {
-                  formik.setFieldValue("state", "");
                   formik.setFieldValue("zip_code", "");
                   if (formik.values.address.trim()) {
                     void formik.setFieldValue("city", name).then(() => formik.submitForm());
@@ -274,7 +275,7 @@ const AddressForm = ({
                 }
               }}
               placeholder={
-                isUAE
+                hideState
                   ? "Select City"
                   : !selectedStateId
                     ? "Select State first"
@@ -282,7 +283,7 @@ const AddressForm = ({
               }
               searchPlaceholder="Search city…"
               loading={citiesLoading}
-              disabled={isUAE ? !countryId : !selectedStateId}
+              disabled={hideState ? !countryId : !selectedStateId}
               error={!!err("city")}
             />
             {err("city") && <p className="text-[11px] text-red-500 mt-1">{err("city")}</p>}
@@ -534,7 +535,12 @@ export const AddressesTab = ({ checkoutMode = false }: { checkoutMode?: boolean 
                     </div>
                     <p className="text-sm text-gray-800 leading-snug">{addr.address}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {[addr.city, addr.state, addr.country, addr.zip_code]
+                      {[
+                        addr.city,
+                        isGccCountryName(addr.country) ? null : addr.state,
+                        addr.country,
+                        addr.zip_code,
+                      ]
                         .filter(Boolean)
                         .join(", ")}
                     </p>
