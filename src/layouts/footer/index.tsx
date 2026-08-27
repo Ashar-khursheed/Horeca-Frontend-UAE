@@ -3,12 +3,12 @@
 import FinancingModal from "@/components/financing-modal";
 import { ApiCategory, ApiCategoryName } from "@/features/category";
 import {
-    ArrowUpRight,
-    ChevronDown,
-    ChevronUp,
-    Mail,
-    MapPin,
-    Phone,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  Mail,
+  MapPin,
+  Phone,
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
@@ -369,7 +369,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                   </div>
                 </a>
                 <a
-                  href="mailto:sales@thehorecastore.com"
+                  href="mailto:sales@horecastore.ae"
                   className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-[7px] transition-all duration-200"
                 >
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -380,7 +380,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       Email Support
                     </p>
                     <p className="text-black font-semibold text-base">
-                      sales@thehorecastore.com
+                      sales@horecastore.ae
                     </p>
                   </div>
                 </a>
@@ -571,10 +571,10 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       Email
                     </p>
                     <a
-                      href="mailto:sales@thehorecastore.com"
+                      href="mailto:sales@horecastore.ae"
                       className="text-[13px] text-gray-700 hover:text-[#186737] transition-colors font-medium"
                     >
-                      sales@thehorecastore.com
+                      sales@horecastore.ae
                     </a>
                   </div>
                 </li>
@@ -587,9 +587,13 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       Address
                     </p>
                     <p className="text-[13px] text-gray-700 leading-relaxed">
-                      Horecastore Showroom
+                            Showroom 01 - Building No 9 19th Street
                       <span className="block">
-                        8800 Bissonnet Street, Ste A, Houston, Texas 77074
+          
+
+Al Quoz - Al Quoz Industrial Area 3 - Dubai - United Arab Emirates
+
+
                       </span>
                     </p>
                   </div>

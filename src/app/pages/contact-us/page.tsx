@@ -8,30 +8,30 @@ import logo4 from "@/assets/banners/contact-us/4.png";
 import logo5 from "@/assets/banners/contact-us/5.png";
 import BannerContact from "@/assets/banners/contact-us/contactMainBanner.jpg";
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ContactUsFAQ } from "@/data";
 import { useAppSelector } from "@/store/hooks";
 import {
-    CheckCircle2,
-    Globe,
-    Headphones,
-    Mail,
-    MapPin,
-    MessageCircle,
-    Package,
-    Paperclip,
-    Phone,
-    RotateCcw,
-    Send,
-    Star,
-    Truck,
-    UtensilsCrossed,
-    X,
-    XCircle,
+  CheckCircle2,
+  Globe,
+  Headphones,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Package,
+  Paperclip,
+  Phone,
+  RotateCcw,
+  Send,
+  Star,
+  Truck,
+  UtensilsCrossed,
+  X,
+  XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -699,7 +699,7 @@ export default function ContactUsPage() {
               <div className="rounded-[10px] overflow-hidden border border-gray-100 mb-4">
                 <iframe
                   title="HorecaStore Showroom"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3465.7!2d-95.3698!3d29.7604!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjnCsDQ1JzM3LjQiTiA5NcKwMjInMTEuMyJX!5e0!3m2!1sen!2sus!4v1600000000000"
+                  src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d14465.471118310705!2d55.152984!3d24.987616!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f696ace7f836b%3A0x21daeb3972b6e8f8!2sHORECASTORE!5e0!3m2!1sen!2sae!4v1787865617317!5m2!1sen!2sae"
                   width="100%"
                   height="160"
                   style={{ border: 0 }}
@@ -712,10 +712,11 @@ export default function ContactUsPage() {
 
               <div className="space-y-1 mb-4">
                 <p className="text-xs font-semibold text-gray-700">
-                  HorecaStore Showroom
+               Showroom 01 - Building No 9 19th Street
+
                 </p>
                 <p className="text-xs text-gray-500">
-                8800 Bissonnet Street, Ste A, Houston, Texas 77074
+              Al Quoz - Al Quoz Industrial Area 3 - Dubai - United Arab Emirates
                 </p>
               </div>
 
@@ -768,10 +769,10 @@ export default function ContactUsPage() {
                   Email Us Directly
                 </p>
                 <a
-                  href="mailto:sales@thehorecastore.com"
+                  href="mailto:sales@horecastore.ae"
                   className="text-xs text-[#186737] hover:underline break-all"
                 >
-                  sales@thehorecastore.com
+                  sales@horecastore.ae
                 </a>
               </div>
             </div>
