@@ -22,6 +22,7 @@ import { ProductVariant } from "./product-variant";
 import { RatingStars } from "./rating-stars";
 import type { Accessory, AccessoryItem, VariantItem } from "./types";
 import AddToCartWidget from "@/components/add-to-cart";
+import { CurrencySymbol } from "@/components/currency-symbol";
 import { useAppSelector } from "@/store/hooks";
 
 type BenefitFeature = { benefit: string; feature: string };
@@ -162,8 +163,8 @@ export const ProductInfo = ({
                 </span>
               )}
               <div className="flex items-baseline gap-0.5">
-                <span className="text-3xl font-bold text-gray-900">
-                  {currency}
+                <span className="text-3xl font-bold text-gray-900 flex items-baseline gap-1">
+                  <CurrencySymbol currency={currency} weight="bold" />
                   {priceInt}
                 </span>
                 <span className="text-lg font-bold text-gray-900">.{priceDec}</span>
@@ -171,8 +172,8 @@ export const ProductInfo = ({
               <span className="text-sm text-gray-500 font-medium">/{unit}</span>
             </div>
             {hasSale && (
-              <p className="text-gray-400 text-sm line-through mt-0.5">
-                Was {currency}
+              <p className="text-gray-400 text-sm line-through mt-0.5 flex items-baseline gap-1">
+                Was <CurrencySymbol currency={currency} />
                 {fmtPrice(activeOriginal)}
               </p>
             )}
@@ -242,7 +243,9 @@ export const ProductInfo = ({
                 <SelectContent>
                   {acc.accessory_item.map((item) => (
                     <SelectItem key={item?.id} value={item?.id?.toString()}>
-                      {formatAccessoryName(item?.name)} — +{fmtPrice(item?.price)}
+                      {formatAccessoryName(item?.name)} — +
+                      <CurrencySymbol currency={currency} size="0.85em" fontsize="12px" />
+                      {fmtPrice(item?.price)}
                     </SelectItem>
                   ))}
                 </SelectContent>
