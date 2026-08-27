@@ -367,10 +367,10 @@ export default function FAQPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="tel:+18664467322"
+              href="tel:+971800467322"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#186737] text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
             >
-              Call +1 866-446-7322
+              Call +971 800-467-322
             </a>
             <Link
               href="/pages/contact-us"
