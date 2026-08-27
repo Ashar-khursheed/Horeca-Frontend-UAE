@@ -450,7 +450,7 @@ import {
 } from "@/store/slices/customer-address/customerAddressSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { useLocationData } from "@/utils/locationStorage";
-import { isUaeAddressCountry } from "@/utils/uae-address";
+import { isGccAddressCountry, isUaeAddressCountry } from "@/utils/uae-address";
 import { useFormik } from "formik";
 import { useEffect, useImperativeHandle, forwardRef, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -470,15 +470,15 @@ export interface AddressCheckoutHandle {
   save: () => Promise<boolean>;
 }
 
-const getAddressSchema = (isUae: boolean) =>
+const getAddressSchema = (hideState: boolean, hideZip: boolean) =>
   Yup.object({
     address: Yup.string().trim().required("Address is required"),
     country: Yup.string().required("Country is required"),
-    state: isUae
+    state: hideState
       ? Yup.string().trim()
       : Yup.string().trim().required("State is required"),
     city: Yup.string().trim().required("City is required"),
-    zip_code: isUae
+    zip_code: hideZip
       ? Yup.string().trim()
       : Yup.string()
           .trim()
@@ -520,6 +520,7 @@ const InlineAddressForm = forwardRef<
   const countryName = (country?.data?.name as string) ?? "";
   const countryIcon = (country?.data?.icon as string) ?? "";
   const isUAE = isUaeAddressCountry(countryName);
+  const hideState = isGccAddressCountry(countryName);
 
   const [states, setStates] = useState<LookupItem[]>([]);
   const [cities, setCities] = useState<LookupItem[]>([]);
@@ -538,7 +539,7 @@ const InlineAddressForm = forwardRef<
       city: editAddress?.city ?? "",
       zip_code: editAddress?.zip_code ?? "",
     },
-    validationSchema: getAddressSchema(isUAE),
+    validationSchema: getAddressSchema(hideState, isUAE),
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values) => {
@@ -548,7 +549,7 @@ const InlineAddressForm = forwardRef<
         type: "",
         address: values.address.trim(),
         country: countryName || values.country,
-        state: isUAE ? "" : (values.state?.trim() ?? ""),
+        state: hideState ? "" : (values.state?.trim() ?? ""),
         city: values.city.trim(),
         zip_code: isUAE ? "" : values.zip_code.trim(),
         is_default: true,
@@ -633,7 +634,7 @@ const InlineAddressForm = forwardRef<
     setStates([]);
     setCities([]);
     setSelectedStateId(null);
-    if (isUAE) {
+    if (hideState) {
       setCitiesLoading(true);
       makeApiRequest<LookupResponse>("frontend/countries/lookup", {
         params: { country_id: countryId, type: "cities" },
@@ -648,10 +649,10 @@ const InlineAddressForm = forwardRef<
     })
       .then((res) => setStates(res.data ?? []))
       .finally(() => setStatesLoading(false));
-  }, [countryId, isUAE]);
+  }, [countryId, hideState]);
 
   useEffect(() => {
-    if (isUAE) return;
+    if (hideState) return;
     const editState = editAddress?.state;
     if (!editState || states.length === 0) return;
     const match = states.find(
@@ -659,10 +660,10 @@ const InlineAddressForm = forwardRef<
     );
     if (match) setSelectedStateId(match.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [states, isUAE]);
+  }, [states, hideState]);
 
   useEffect(() => {
-    if (isUAE) return;
+    if (hideState) return;
     if (!selectedStateId) {
       setCities([]);
       return;
@@ -674,7 +675,7 @@ const InlineAddressForm = forwardRef<
     })
       .then((res) => setCities(res.data ?? []))
       .finally(() => setCitiesLoading(false));
-  }, [selectedStateId, isUAE]);
+  }, [selectedStateId, hideState]);
 
   const err = (field: keyof typeof formik.values) =>
     formik.touched[field] && formik.errors[field]
@@ -756,7 +757,7 @@ const InlineAddressForm = forwardRef<
       </div>
 
       {/* Country | State | City */}
-      <div className={`grid grid-cols-1 gap-4 mb-4 ${isUAE ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+      <div className={`grid grid-cols-1 gap-4 mb-4 ${hideState ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
         <div>
           <FormField label="Country *">
             <div className="flex gap-1.5 items-center w-full border border-gray-100 rounded-md py-2 px-3 text-sm bg-white text-gray-600 cursor-default outline-none h-[38px]">
@@ -768,7 +769,7 @@ const InlineAddressForm = forwardRef<
           </FormField>
         </div>
 
-        {!isUAE && (
+        {!hideState && (
           <div>
             <FormField label="State *">
               <SearchableSelect
@@ -800,8 +801,8 @@ const InlineAddressForm = forwardRef<
               onChange={(name) => {
                 formik.setFieldValue("city", name);
                 formik.setFieldTouched("city", true, false);
+                if (hideState) formik.setFieldValue("state", "");
                 if (isUAE) {
-                  formik.setFieldValue("state", "");
                   formik.setFieldValue("zip_code", "");
                   void saveUaeOnCity(name);
                 } else {
@@ -809,7 +810,7 @@ const InlineAddressForm = forwardRef<
                 }
               }}
               placeholder={
-                isUAE
+                hideState
                   ? "Select City"
                   : !selectedStateId
                     ? "Select State first"
@@ -817,7 +818,7 @@ const InlineAddressForm = forwardRef<
               }
               searchPlaceholder="Search city…"
               loading={citiesLoading}
-              disabled={isUAE ? !countryId : !selectedStateId}
+              disabled={hideState ? !countryId : !selectedStateId}
               error={!!err("city")}
             />
             {err("city") && (
