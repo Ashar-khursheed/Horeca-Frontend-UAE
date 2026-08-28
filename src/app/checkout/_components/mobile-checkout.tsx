@@ -17,7 +17,7 @@ import {
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { Switch } from '@/components/ui/switch'
-import type { MobileCheckoutProps } from './types'
+import type { CartItem, MobileCheckoutProps } from './types'
 import { useCartId } from '@/utils/cartId'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ function StepSummary(p: StepSummaryProps) {
 
       {/* Items */}
       <div className="bg-white mt-2 divide-y divide-gray-50">
-        {p.cartItems.map((item) => (
+        {p.cartItems.map((item: CartItem) => (
           <div key={item.id} className="p-4">
             <div className="flex gap-3">
               <div className="w-20 h-20 bg-gray-100 rounded-lg shrink-0 overflow-hidden flex items-center justify-center">

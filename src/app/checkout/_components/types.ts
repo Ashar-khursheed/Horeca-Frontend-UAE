@@ -8,6 +8,7 @@ export interface Address {
 export interface CartItem {
   id: number
   name: string
+  image?: string
   qty: number
   price: number
   shipping: number
