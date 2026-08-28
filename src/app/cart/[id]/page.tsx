@@ -46,6 +46,13 @@ import { useEffect, useRef, useState } from "react";
 import TaxInitializer from "@/components/TaxInitializer";
 import { COUPON_KEY } from "../../checkout/page";
 import { trackGtmEvent } from "@/utils/gtm";
+import {
+  cartProductImage,
+  cartProductName,
+  cartProductSupplier,
+  cartProductUnit,
+  resolveCartLocale,
+} from "@/utils/cart-product";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -57,42 +64,40 @@ const getToken = (): string | null => {
   }
 };
 
-const resolveStr = (
-  v: { en?: string; ar?: string } | string | null | undefined,
-): string => {
-  if (!v) return "";
-  if (typeof v === "string") return v;
-  return v.en ?? v.ar ?? "";
-};
+const resolveStr = resolveCartLocale;
 
 // ── Transform API cart product → CartItem ─────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const apiProductToCartItem = (cp: any): CartItem => ({
-  id: cp.product_id ?? cp.id,
-  cartItemId: cp.id,
-  vendorId: cp.vendor_id ?? cp.product?.vendor_id ?? 1,
-  name: resolveStr(cp.product?.name),
-  brand: "",
-  modelNo: cp.product?.sku ?? "",
-  image: cp.product?.images?.en?.[0] ?? cp.product?.images?.ar?.[0] ?? "",
-  price: parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
-  originalPrice: parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
-  currencySymbol: cp.product?.currency?.symbol ?? "$",
-  unit: resolveStr(cp.product?.selling_type?.attribute_value_unit) || "Each",
-  shippingCost: parseFloat(cp.shipping_charge ?? 0),
-  deliveryDays: cp.delivery_days ?? "",
-  shipBy: cp.delivery_days ?? "",
-  qty: cp.quantity ?? 1,
-  minQty: cp.product?.suppliers?.[0]?.min_quantity ?? 1,
-  isFixed: !!cp.product?.suppliers?.[0]?.is_fixed,
-  inWishlist: false,
-  selectedAccessories: (cp.accessory_charges ?? []).map((acc: any) => ({
-    id: acc.accessory_item_id,
-    name: resolveStr(acc.accessory_item_name),
-    price: parseFloat(acc.accessory_item_price ?? 0),
-  })),
-  url: cp.product?.url ?? "#",
-});
+const apiProductToCartItem = (cp: any): CartItem => {
+  const product = cp.product;
+  const supplier = cartProductSupplier(product);
+  return {
+    id: cp.product_id ?? cp.id,
+    cartItemId: cp.id,
+    vendorId: cp.vendor_id ?? product?.vendor_id ?? supplier?.vendor_id ?? 1,
+    name: cartProductName(product),
+    brand: "",
+    modelNo: product?.sku ?? "",
+    image: cartProductImage(product),
+    price: parseFloat(cp.unit_price ?? product?.price ?? 0),
+    originalPrice: parseFloat(cp.unit_price ?? product?.price ?? 0),
+    currencySymbol: product?.currency?.symbol ?? "$",
+    unit: cartProductUnit(product),
+    shippingCost: parseFloat(cp.shipping_charge ?? 0),
+    deliveryDays: cp.delivery_days ?? supplier?.delivery_days ?? "",
+    shipBy: cp.delivery_days ?? supplier?.delivery_days ?? "",
+    qty: cp.quantity ?? 1,
+    minQty: supplier?.min_quantity ?? 1,
+    isFixed: !!supplier?.is_fixed,
+    inWishlist: false,
+    selectedAccessories: (cp.accessory_charges ?? []).map((acc: any) => ({
+      id: acc.accessory_item_id,
+      name: resolveStr(acc.accessory_item_name),
+      price: parseFloat(acc.accessory_item_price ?? 0),
+    })),
+    url: product?.url ?? "#",
+  };
+};
 
 // ── Transform localStorage Redux CartItem → display CartItem ──────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

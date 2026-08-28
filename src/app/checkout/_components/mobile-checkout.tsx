@@ -306,8 +306,16 @@ function StepSummary(p: StepSummaryProps) {
         {p.cartItems.map((item) => (
           <div key={item.id} className="p-4">
             <div className="flex gap-3">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg shrink-0 flex items-center justify-center">
-                <Package size={28} className="text-gray-300" />
+              <div className="w-20 h-20 bg-gray-100 rounded-lg shrink-0 overflow-hidden flex items-center justify-center">
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-contain p-1"
+                  />
+                ) : (
+                  <Package size={28} className="text-gray-300" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-700 line-clamp-2 leading-snug mb-1.5">{item.name}</p>

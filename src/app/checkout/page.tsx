@@ -25,6 +25,7 @@ import {
   getLocationData,
 } from "@/utils/locationStorage";
 import { useCartId } from "@/utils/cartId";
+import { cartProductImage, cartProductName } from "@/utils/cart-product";
 import {
   getShippingChargeFromAddress,
   getUaeOrderShipping,
@@ -91,14 +92,6 @@ const usd = (n: number) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-
-const resolveStr = (
-  v: { en?: string; ar?: string } | string | null | undefined,
-): string => {
-  if (!v) return "";
-  if (typeof v === "string") return v;
-  return v.en ?? v.ar ?? "";
-};
 
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -400,8 +393,8 @@ export default function CheckoutPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const apiCartItems = rawProducts.map((cp: any) => ({
     id: cp.id as number,
-    name: resolveStr(cp.product?.name),
-    image: cp.product?.images?.en?.[0] ?? cp.product?.images?.ar?.[0] ?? "",
+    name: cartProductName(cp.product),
+    image: cartProductImage(cp.product),
     qty: cp.quantity as number,
     price: parseFloat(cp.unit_price ?? cp.product?.price ?? 0),
     shipping: parseFloat(cp.shipping_charge ?? 0),
