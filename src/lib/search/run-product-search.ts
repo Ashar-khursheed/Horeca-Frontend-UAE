@@ -6,6 +6,7 @@ import {
 import { toSearchSuggestionsFromIndex } from "@/utils/adapt-index-search";
 import { attachBrandLogos } from "./brand-logo-lookup";
 import { shouldUseMeilisearch } from "./config";
+import { searchWithLocalIndex } from "./load-local-index";
 import {
   searchWithMeilisearch,
   type SearchQueryParams,
@@ -48,8 +49,15 @@ export async function runProductSearch(
         return attachBrandLogos(toSearchSuggestionsFromIndex(indexed, term));
       }
     } catch (err) {
-      console.error("[search] Meilisearch failed, falling back to NLP:", err);
+      console.error("[search] Meilisearch failed, falling back to local index:", err);
     }
+  }
+
+  try {
+    const local = await searchWithLocalIndex(params);
+    if (local) return attachBrandLogos(local);
+  } catch (err) {
+    console.error("[search] Local index failed, falling back to NLP:", err);
   }
 
   const nlp = await searchWithNlp(params);

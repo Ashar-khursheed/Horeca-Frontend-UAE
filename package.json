@@ -11,6 +11,7 @@
     "format": "biome format --write",
     "doctor": "npx react-doctor@latest",
     "search:sync": "node scripts/sync-search-index.mjs",
+    "search:export": "node scripts/export-search-suggest.mjs",
     "search:up": "docker compose up -d meilisearch"
   },
   "dependencies": {

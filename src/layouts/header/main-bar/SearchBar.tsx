@@ -1,5 +1,6 @@
 "use client";
 
+import { prefetchSuggestIndex, searchClientSuggest } from "@/lib/search/client-suggest";
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
 import {
   toSearchSuggestions,
@@ -176,6 +177,14 @@ export default function SearchBar() {
       setLoading(false);
     }
     try {
+      const local = await searchClientSuggest(term, SUGGEST_LENGTH);
+      if (requestId !== requestIdRef.current) return;
+      if (local?.data) {
+        cacheSet(term, local.data);
+        setLiveData(local.data);
+        return;
+      }
+
       const url = `${NLP_SEARCH_API}?query=${encodeURIComponent(term)}&page=1&length=${SUGGEST_LENGTH}`;
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw new Error("search failed");
@@ -249,6 +258,7 @@ export default function SearchBar() {
           placeholder="Search 100,000+ products trusted by hotels & restaurants..."
           className="flex-1 bg-white text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
           onFocus={() => {
+            prefetchSuggestIndex();
             if (searchQuery.trim() || hasResults) setSearchFocused(true);
           }}
           autoComplete="off"
