@@ -889,7 +889,7 @@ const PageFooter = ({ page, total }: { page: number; total: number }) => (
   <View style={S.footer}>
     <Text style={S.footerText}>
       Order Online at{" "}
-      <Text style={S.footerGreen}>www.thehorecastore.com</Text>
+      <Text style={S.footerGreen}>www.horecastore.ae</Text>
     </Text>
     <Text style={S.footerText}>
       Page {page} of {total}
