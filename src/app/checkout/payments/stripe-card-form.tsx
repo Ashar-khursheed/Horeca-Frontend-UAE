@@ -1,7 +1,9 @@
 "use client";
 
 import {
-  CardElement,
+  CardCvcElement,
+  CardExpiryElement,
+  CardNumberElement,
   Elements,
   useElements,
   useStripe,
@@ -21,17 +23,14 @@ export interface StripeCardHandle {
   getStripe: () => Stripe | null;
 }
 
-const cardElementOptions = {
-  hidePostalCode: false,
-  style: {
-    base: {
-      fontSize: "16px",
-      color: "#212121",
-      fontFamily: "inherit",
-      "::placeholder": { color: "#9ca3af" },
-    },
-    invalid: { color: "#dc2626" },
+const cardElementStyle = {
+  base: {
+    fontSize: "16px",
+    color: "#212121",
+    fontFamily: "inherit",
+    "::placeholder": { color: "#9ca3af" },
   },
+  invalid: { color: "#dc2626" },
 };
 
 const StripeCardInner = forwardRef<StripeCardHandle>(
@@ -51,7 +50,7 @@ const StripeCardInner = forwardRef<StripeCardHandle>(
             );
           }
 
-          const card = elements.getElement(CardElement);
+          const card = elements.getElement(CardNumberElement);
           if (!card) {
             throw new Error("Card form is not ready. Please try again.");
           }
@@ -92,11 +91,27 @@ const StripeCardInner = forwardRef<StripeCardHandle>(
 
     return (
       <div className="mt-3 space-y-2">
-        <div className="rounded-md border border-gray-200 bg-white px-3 py-3">
-          <CardElement
-            options={cardElementOptions}
-            onChange={(event) => setError(event.error?.message ?? "")}
-          />
+        <div className="space-y-2.5">
+          <div className="rounded-md border border-gray-200 bg-white px-3 py-3">
+            <CardNumberElement
+              options={{ style: cardElementStyle }}
+              onChange={(event) => setError(event.error?.message ?? "")}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="rounded-md border border-gray-200 bg-white px-3 py-3">
+              <CardExpiryElement
+                options={{ style: cardElementStyle }}
+                onChange={(event) => setError(event.error?.message ?? "")}
+              />
+            </div>
+            <div className="rounded-md border border-gray-200 bg-white px-3 py-3">
+              <CardCvcElement
+                options={{ style: cardElementStyle }}
+                onChange={(event) => setError(event.error?.message ?? "")}
+              />
+            </div>
+          </div>
         </div>
         {error ? <p className="text-[11px] text-red-500">{error}</p> : null}
         {getStripePublishableKey().startsWith("pk_test_") ? (

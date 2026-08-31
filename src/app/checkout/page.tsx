@@ -1739,7 +1739,7 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => setShowTermsModal(true)}
-                    className="flex items-center gap-1 text-[#186737] text-xs font-medium hover:underline mt-0.5"
+                    className="hidden items-center gap-1 text-[#186737] text-xs font-medium hover:underline mt-0.5"
                   >
                     Terms and Conditions
                     <span className="w-3.5 h-3.5 rounded-full border border-[#186737] text-[9px] font-bold flex items-center justify-center leading-none">
