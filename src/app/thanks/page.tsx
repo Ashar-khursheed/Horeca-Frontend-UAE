@@ -48,7 +48,7 @@ export default function ThanksPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#E2E8F066] flex items-center justify-center px-4 py-10">
+    <div className="min-h-screens bg-[#fffefe] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-xl bg-white rounded-[10px] shadow-lg overflow-hidden">
         {/* ── Green stripe ─────────────────────────────────────────────────── */}
         <div className="h-2 w-full bg-linear-to-r from-[#186737] via-[#22a855] to-[#186737]" />
