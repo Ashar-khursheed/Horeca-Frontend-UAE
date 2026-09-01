@@ -108,6 +108,7 @@ const getToken = (): string | null => {
 function CouponAppliedBadge({
   couponInfo,
   discount,
+  currency,
 }: {
   couponInfo: {
     coupon_code: string;
@@ -115,19 +116,27 @@ function CouponAppliedBadge({
     discount_value: number;
   };
   discount: number;
+  currency: string;
 }) {
-  const label =
-    couponInfo.discount_type === "fixed"
-      ? "$" + couponInfo.discount_value.toFixed(2) + " off"
-      : couponInfo.discount_value + "% off";
   return (
     <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-3 py-2 mb-2">
       <div>
         <p className="text-[12px] font-semibold text-green-700">
           {couponInfo.coupon_code}
         </p>
-        <p className="text-[11px] text-green-600">
-          {label} &mdash; saving ${discount.toFixed(2)}
+        <p className="text-[11px] text-green-600 inline-flex items-baseline flex-wrap gap-x-1">
+          {couponInfo.discount_type === "fixed" ? (
+            <span className="inline-flex items-baseline">
+              <CurrencySymbol currency={currency} fontsize="11px" />
+              {couponInfo.discount_value.toFixed(2)} off
+            </span>
+          ) : (
+            <span>{couponInfo.discount_value}% off</span>
+          )}
+          <span>
+            &mdash; saving <CurrencySymbol currency={currency} fontsize="11px" />
+            {discount.toFixed(2)}
+          </span>
         </p>
       </div>
       <span className="text-[11px] font-bold text-green-700">Applied</span>
@@ -1215,7 +1224,7 @@ export default function CheckoutPage() {
       )}
 
       {codeApplied && couponInfo && (
-        <CouponAppliedBadge couponInfo={couponInfo} discount={discount} />
+        <CouponAppliedBadge couponInfo={couponInfo} discount={discount} currency={currencySymbolICON} />
       )}
     </>
   );
