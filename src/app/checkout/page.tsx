@@ -698,6 +698,12 @@ export default function CheckoutPage() {
       setOrderError("Please pay with Stripe to continue.");
       return;
     }
+    if (method === "cod" && grandTotal >= 3000) {
+      setOrderError(
+        "Cash on Delivery is not available for orders of AED 3,000 or more. Please pay by card.",
+      );
+      return;
+    }
 
     const defaultAddr = getDefaultAddressCache();
     const billing = {
@@ -1706,6 +1712,7 @@ export default function CheckoutPage() {
                 ) : (
                   <CheckoutPayment
                     isUae={isUaeShipping}
+                    orderTotal={grandTotal}
                     onHandleReady={(h) => {
                       paymentHandleRef.current = h;
                     }}
@@ -1999,6 +2006,7 @@ export default function CheckoutPage() {
               ) : (
                 <CheckoutPayment
                   isUae={isUaeShipping}
+                  orderTotal={grandTotal}
                   onHandleReady={(h) => {
                     paymentHandleRef.current = h;
                   }}

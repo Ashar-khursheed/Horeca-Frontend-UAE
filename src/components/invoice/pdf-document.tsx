@@ -810,7 +810,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
             <View style={S.totalsDivider} />
             <View style={S.totalsRow}>
               <Text style={[S.totalsLabel, bold]}>
-                Sales Tax {Number(order.tax_percentage).toFixed(2)}%
+                Sales Vat {Number(order.tax_percentage).toFixed(2)}%
               </Text>
               <Text style={[S.totalsValue, bold]}>{currency}{toUSD(order.tax_amount)}</Text>
             </View>
@@ -821,7 +821,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
 
       {/* 9. NET TOTAL Bar */}
       <View style={S.totalsNetBar}>
-        <Text style={S.totalsNetText}>NET TOTAL INCL. SALES TAX</Text>
+        <Text style={S.totalsNetText}>NET TOTAL INCL. SALES Vat</Text>
         <Text style={S.totalsNetText}>{currency}{toUSD(total)}</Text>
       </View>
 

@@ -27,22 +27,34 @@ export interface CheckoutPaymentProps {
   onHandleReady?: (handle: CheckoutPaymentHandle) => void;
   /** UAE: CCAvenue, Touras, Stripe, COD. Outside UAE: Stripe only. */
   isUae?: boolean;
+  /** Order total — COD is blocked at AED 3,000 and above. */
+  orderTotal?: number;
 }
+
+const COD_MAX_AED = 3000;
 
 export default function CheckoutPayment({
   onHandleReady,
   isUae = process.env.NEXT_PUBLIC_REGION === "UAE",
+  orderTotal = 0,
 }: CheckoutPaymentProps) {
   const [selected, setSelected] = useState<PaymentMethod>(
     isUae ? "ccavenue" : "stripe",
   );
   const stripeCardRef = useRef<StripeCardHandle>(null);
+  const codBlocked = isUae && orderTotal >= COD_MAX_AED;
 
   useEffect(() => {
     if (!isUae && selected !== "stripe") {
       setSelected("stripe");
     }
   }, [isUae, selected]);
+
+  useEffect(() => {
+    if (codBlocked && selected === "cod") {
+      setSelected("ccavenue");
+    }
+  }, [codBlocked, selected]);
 
   const handleRef = useRef<CheckoutPaymentHandle>({
     selectedMethod: isUae ? "ccavenue" : "stripe",
@@ -140,10 +152,17 @@ export default function CheckoutPayment({
           <PaymentOption
             id="pm-cod"
             title="Cash On Delivery"
-            subtitle="Pay in cash when your order is delivered"
+            subtitle={
+              codBlocked
+                ? "Not available for orders of AED 3,000 or more"
+                : "Pay in cash when your order is delivered"
+            }
             icon={<Banknote size={20} />}
             selected={selected === "cod"}
-            onSelect={() => setSelected("cod")}
+            disabled={codBlocked}
+            onSelect={() => {
+              if (!codBlocked) setSelected("cod");
+            }}
             isLast
           >
             <p className="mt-2 text-xs text-gray-500">
@@ -151,6 +170,12 @@ export default function CheckoutPayment({
               delivery agent.
             </p>
           </PaymentOption>
+        )}
+        {codBlocked && (
+          <p className="pb-4 text-xs text-red-500">
+            Cash on Delivery is not available because your order is AED 3,000 or
+            more. Please pay by card.
+          </p>
         )}
       </div>
 
