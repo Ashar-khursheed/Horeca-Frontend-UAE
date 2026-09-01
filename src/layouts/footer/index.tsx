@@ -39,12 +39,12 @@ const QUICK_LINKS: LinkItem[] = [
   //   isModal: true,
   //   modalTitle: "Financing Options",
   // },
-  {
-    label: "Request a Quote",
-    href: "#",
-    isModal: true,
-    modalTitle: "Request a Quote",
-  },
+  // {
+  //   label: "Request a Quote",
+  //   href: "#",
+  //   isModal: true,
+  //   modalTitle: "Request a Quote",
+  // },
   { label: "Track Your Order", href: "/track-order" },
   { label: "Returns & Refunds", href: "/pages/return-policy" },
   { label: "Warranty Info", href: "/pages/extended-warranty" },
