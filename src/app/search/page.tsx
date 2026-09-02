@@ -1,11 +1,11 @@
 import SearchFeature from "@/features/search";
-import type { SearchSuggestions } from "@/utils/types";
 import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
-import { Suspense } from "react";
 import { SITE_URL } from "@/utils/site-url";
+import type { SearchSuggestions } from "@/utils/types";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
-const NLP_SEARCH_API = "https://nlpus.thehorecastore.co/search";
+const NLP_SEARCH_API = "https://nlpuae-temp.thehorecastore.co/search";
 
 interface PageProps {
   searchParams: Promise<{

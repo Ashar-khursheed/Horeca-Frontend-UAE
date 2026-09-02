@@ -16,12 +16,12 @@ import {
   type CompareProduct,
 } from "@/utils/compareStorage";
 import type { SearchProduct } from "@/utils/types";
-import { Loader2, Package, Plus, Scale, Search, Star, X } from "lucide-react";
+import { Loader2, Package, Plus, Scale, Search, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const SEARCH_API = "https://nlpus.thehorecastore.co/search";
+const SEARCH_API = "https://nlpuae-temp.thehorecastore.co/search";
 
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

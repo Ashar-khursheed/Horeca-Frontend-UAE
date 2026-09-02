@@ -2,8 +2,8 @@
 
 import AddToCartWidget from "@/components/add-to-cart";
 import type { RawApiProduct } from "@/components/product-card";
-import type { SearchProduct, SearchSuggestions } from "@/utils/types";
 import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
+import type { SearchProduct, SearchSuggestions } from "@/utils/types";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,7 +13,7 @@ const productHref = (p: SearchProduct) =>
   p.url?.startsWith("/") ? p.url : `/${p.parent_category_url_resolved}/${p.url}`;
 
 const API_BASE =
-  "https://nlpus.thehorecastore.co/";
+  "https://nlpuae-temp.thehorecastore.co/";
 
 export default function SearchBar() {
   const router = useRouter();
@@ -68,7 +68,7 @@ export default function SearchBar() {
     if (defaultFetchedRef.current) return;
     defaultFetchedRef.current = true;
     setLoading(true);
-    fetch(`${API_BASE}search?query=true&page=1&length=5`)
+    fetch(`${API_BASE}search?query=hoshizaki&page=1&length=5`)
       .then((res) => {
         if (!res.ok) throw new Error("search failed");
         return res.json();
