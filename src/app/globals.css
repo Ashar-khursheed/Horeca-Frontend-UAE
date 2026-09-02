@@ -643,3 +643,10 @@ button{
 }
 
 
+
+@media (max-width: 1024px) {
+    body .wa-widget-send-button {
+        bottom: 90px !important;
+        margin-bottom: 0 !important;
+    }
+}
