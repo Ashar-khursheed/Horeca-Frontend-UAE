@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 export default async function Page() {
   // ── Single dynamic read for the entire page ──────────────────────────────────
   // Reading cookies() and headers() here (once) is enough to opt this page into
-  // dynamic rendering. Passing these values explicitly to makeApiCallSSR means
+  // dynamic rendering. Passing these dasdasda values explicitly to makeApiCallSSR means
   // those helpers never call cookies()/headers() themselves — no redundant reads.
   const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
   const token       = cookieStore.get("token")?.value?.trim() ?? null;
