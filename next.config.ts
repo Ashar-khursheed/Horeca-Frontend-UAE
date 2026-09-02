@@ -59,6 +59,18 @@ const nextConfig: NextConfig = {
       'date-fns',
     ],
   },
+  async redirects() {
+    return [
+      {
+        // Payment gateway sends declined payments back to /payment/decline,
+        // but the actual page lives at /payment-decline. Query params
+        // (order_no, message, status, etc.) are passed through automatically.
+        source: '/payment/decline',
+        destination: '/payment-decline',
+        permanent: false,
+      },
+    ];
+  },
 
 };
 

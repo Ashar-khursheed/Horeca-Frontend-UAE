@@ -1380,7 +1380,7 @@ export default function CreateQuotationPage() {
                       <SelectContent>
                         <SelectItem value="Credit Card">Credit Card</SelectItem>
                         {/* <SelectItem value="Net 30">Net 30</SelectItem>
-                        <SelectItem value="Net 60">Net 60</SelectItem>
+                        <SedsadsadasdasdasdasdasdasdlectItem value="Net 60">Net 60</SedsadsadasdasdasdasdasdasdlectItem>
                         <SelectItem value="Wire Transfer">Wire Transfer</SelectItem>
                         <SelectItem value="Check">Check</SelectItem> */}
                       </SelectContent>
