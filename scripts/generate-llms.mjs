@@ -12,7 +12,7 @@ const APP_DIR    = join(ROOT, "src", "app");
 const PUBLIC_DIR = join(ROOT, "public");
 
 const SITE = "https://www.horecastore.ae";
-const API  = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.horecastore.co/api/").replace(/([^/])$/, "$1/");
+const API  = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.horecastore.ae/api/").replace(/([^/])$/, "$1/");
 console.log(`Using API: ${API}`);
 
 
