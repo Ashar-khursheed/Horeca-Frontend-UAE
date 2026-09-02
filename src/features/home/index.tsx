@@ -20,6 +20,7 @@ import { HomeBlogsSection } from "./HomeBlogsSection";
 import type { FeaturedCategory } from "@/utils/types";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
+import Link from "next/link";
 
 export const Home = ({
   sliderItems = [],
@@ -56,6 +57,7 @@ export const Home = ({
       <div className="w-full md:py-10 py-4">
         <div className="global-container">
           <div className="grid grid-cols-1">
+            <Link href={"/kitchen-equipment"}>
             <Image
               src={FoodTruckBanner}
               alt="Food Truck Banner"
@@ -63,7 +65,7 @@ export const Home = ({
               className="rounded-[7px] w-full h-auto"
               sizes="100vw"
               decoding="async"
-            />
+            /></Link>
           </div>
         </div>
       </div>
