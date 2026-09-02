@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { headers, cookies } from "next/headers";
 import { apiUrls } from "@/apis/api-endpoint";
-import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
 import { revalidate as fetchRevalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
+import type { Metadata } from "next";
+import { cookies, headers } from "next/headers";
+import { notFound } from "next/navigation";
+import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 
 // ISR — revalidate every hour
 export const revalidate = 3600;
