@@ -692,7 +692,7 @@ export default function ContactUsPage() {
                   <h3 className="text-sm font-bold text-gray-800">
                     Visit Our Showroom
                   </h3>
-                  <p className="text-[11px] text-gray-400">Houston, Texas</p>
+                  <p className="text-[11px] text-gray-400">Al Quoz , UAE</p>
                 </div>
               </div>
 

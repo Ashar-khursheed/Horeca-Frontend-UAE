@@ -23,7 +23,8 @@ import {
 import { useEffect, useState } from "react";
 import { PriceComparisonCard } from "./price-comparison-card";
 import { ReportErrorModal } from "./report-error-modal";
-import type { Accessory, AccessoryItem } from "./types";
+import { NutritionFactsCard } from "./nutrition-facts-card";
+import type { Accessory, AccessoryItem, NutritionFact } from "./types";
 import { useAppSelector } from "@/store/hooks";
 import { CurrencySymbol } from "@/components/currency-symbol";
 
@@ -48,6 +49,7 @@ type PurchasePanelProps = {
   brandLogo: string;
   brandUrl: string;
   productData: any;
+  nutritionFacts?: NutritionFact[];
 };
 
 export const PurchasePanel = ({
@@ -65,6 +67,7 @@ export const PurchasePanel = ({
   brandLogo,
   brandUrl,
   productData,
+  nutritionFacts = [],
 }: PurchasePanelProps) => {
   // Per-accessory selections: { [accessoryId]: selectedItem | null }
   const [selectedItems, setSelectedItems] = useState<
@@ -334,6 +337,9 @@ export const PurchasePanel = ({
           </div>
         </div>
       )}
+
+      {/* Nutrition Facts */}
+      <NutritionFactsCard facts={nutritionFacts} />
 
       {/* <div className="mt-3 flex items-center justify-center gap-1.5 py-3">
         <span className="text-base text-gray-400">Spot something off?</span>

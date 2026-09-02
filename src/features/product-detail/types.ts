@@ -30,6 +30,8 @@ export type Accessory = {
 
 export type Spec = { attribute_name: string; attribute_value: string };
 
+export type NutritionFact = { name: string; value: string };
+
 export type ProductAttribute = {
   attribute_name: string;
   attribute_value: string;

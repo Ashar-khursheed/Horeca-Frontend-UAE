@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 import AddToCartWidget from "@/components/add-to-cart";
+import { CurrencySymbol } from "@/components/currency-symbol";
 
 type Product = {
   id: number;
@@ -115,7 +116,8 @@ const ProductCard = ({ product }: { product: Product }) => {
           <p
             className={`font-bold text-xs ${product.hasSale ? "text-[#186737]" : "text-[#145c30]"}`}
           >
-            {product.currencySymbol}
+            {/* {product.currencySymbol} */}
+            <CurrencySymbol currency={product.currencySymbol} />
             {fmtPrice(product.price)}
             <span className="text-gray-400 font-normal text-[9px]">
               /{product.unit}

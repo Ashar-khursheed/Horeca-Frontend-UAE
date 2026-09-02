@@ -83,12 +83,18 @@ const CTACard = ({ onQuoteClick }: { onQuoteClick: () => void }) => (
                 </a>
               </div>
               <div>
-                <button
-                  onClick={onQuoteClick}
-                  className="bg-[#186737] text-white 2xl:px-4 px-2.5 2xl:py-3 py-1.5 rounded  2xl:text-[14px] text-[12px] mt-4"
+                <Link
+                  href="/create-quotation"
+                  className="no-underline cursor-pointer "
                 >
-                  Request a Free Quote
+                  <button
+                  // onClick={onQuoteClick}
+                  className="bg-[#186737] text-white 2xl:px-4 px-2.5 2xl:py-3 py-1.5 rounded  2xl:text-[14px] text-[12px] mt-4"
+                  // onClick={(e) => 
+                >
+             Create Quotation
                 </button>
+                </Link>
               </div>
             </div>
 

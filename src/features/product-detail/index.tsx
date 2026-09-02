@@ -17,6 +17,7 @@ import { QASection } from "./qa-section";
 import { ReviewsSection } from "./reviews-section";
 import { SpecificationsSection } from "./specifications-section";
 import type {
+  NutritionFact,
   ProductDetailResponse,
   ProductReview,
   VariantItem,
@@ -40,6 +41,7 @@ interface Props {
   similarProductsGuest?: any[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   alternateProducts?: any[];
+  nutritionFacts?: NutritionFact[];
 }
 
 const slugToLabel = (slug: string) =>
@@ -63,6 +65,7 @@ const ProductDetailPage = ({
   subCategorySlug,
   similarProductsGuest = [],
   alternateProducts = [],
+  nutritionFacts = [],
 }: Props) => {
   const name = productData.name ?? "";
   const images = productData.images ?? [];
@@ -306,6 +309,7 @@ const ProductDetailPage = ({
               brandLogo=""
               brandUrl=""
               productData={productData}
+              nutritionFacts={nutritionFacts}
             />
 
            <div className="md:hidden block">

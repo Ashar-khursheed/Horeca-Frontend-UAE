@@ -6,7 +6,7 @@ import { apiUrls } from '@/apis/api-endpoint'
 import { makeApiCallSSR } from '@/apis/ssr-fetch'
 import ProductDetailPage from '@/features/product-detail'
 import ProductJsonLd from '@/features/product-detail/json-ld-schema'
-import type { ProductDetailResponse } from '@/features/product-detail/types'
+import type { NutritionFact, ProductDetailResponse } from '@/features/product-detail/types'
 import { cookies, headers } from 'next/headers'
 import { revalidate } from '@/utils'
 import { SITE_URL } from '@/utils/site-url'
@@ -37,6 +37,13 @@ async function fetchSimilarProductsForGuestUser(slug: string, locale: string, wi
 async function fetchAlternateProducts(slug: string, locale: string, withAuth: boolean, countryCode: string) {
   return makeApiCallSSR<{ data: any[] }>(
     apiUrls.ALTERNATE_PRODUCTS_FOR_AUTHENTIC_USERS(slug),
+    { lang: locale },
+    { revalidate: revalidate, withAuth, countryCode },
+  )
+}
+async function fetchNutritionFacts(productId: number, locale: string, withAuth: boolean, countryCode: string) {
+  return makeApiCallSSR<{ data: NutritionFact[] }>(
+    apiUrls.NUTRITION_FACTS(productId),
     { lang: locale },
     { revalidate: revalidate, withAuth, countryCode },
   )
@@ -127,13 +134,15 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
     'US'
   const locale = await getLocale()
 
-  const [productData, similarProductsGuest, alternateProducts] = await Promise.all([
-    fetchProduct(productSlug, locale, isLoggedIn, countryCode),
-    fetchSimilarProductsForGuestUser(productSlug, locale, isLoggedIn, countryCode),
-    fetchAlternateProducts(productSlug, locale, isLoggedIn, countryCode),
-  ])
+  const productData = await fetchProduct(productSlug, locale, isLoggedIn, countryCode)
 
   if (!productData?.data) notFound()
+
+  const [similarProductsGuest, alternateProducts, nutritionFacts] = await Promise.all([
+    fetchSimilarProductsForGuestUser(productSlug, locale, isLoggedIn, countryCode),
+    fetchAlternateProducts(productSlug, locale, isLoggedIn, countryCode),
+    fetchNutritionFacts(productData.data.id, locale, isLoggedIn, countryCode),
+  ])
 
   // If category/subcategory in the URL don't match the product's canonical path,
   // redirect to product.data.url instead of 404ing a product that exists.
@@ -172,6 +181,7 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
         subCategorySlug={subCategorySlug}
         similarProductsGuest={similarProductsGuest?.data ?? []}
         alternateProducts={alternateProducts?.data ?? []}
+        nutritionFacts={nutritionFacts?.data ?? []}
       />
     </>
   )
