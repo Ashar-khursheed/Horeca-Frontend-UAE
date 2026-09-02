@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
-import ProductCard, { ApiProduct } from "@/components/product-card";
-import Pagination from "@/components/pagination";
-import { Search, X, SlidersHorizontal } from "lucide-react";
-import Image from "next/image";
-import BannerMegaSale from "@/assets/banners/mega-sale/sale-horeca.48eebdaf2a1a79520430.png";
-import { generateDynamicCSSProductCard } from "@/utils/dynamic-css";
 import { makeApiRequest } from "@/apis/axios-instance";
-import { useLocale } from "next-intl";
-import { ProductCardSkeleton } from "@/components/loading-sketlon";
 import FilterSidebar from "@/components/filters";
-
+import { ProductCardSkeleton } from "@/components/loading-sketlon";
+import Pagination from "@/components/pagination";
+import ProductCard, { ApiProduct } from "@/components/product-card";
+import { Search, SlidersHorizontal, X } from "lucide-react";
+import { useLocale } from "next-intl";
+import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
+// import Imag13 from "../../Asset/opporitnytu/landing page-Picsart-AiImageEnhancer.jpg"
+import Imag13 from "@/assets/banners/opporitnytu/landing page-Picsart-AiImageEnhancer.jpg";
+// import Imag12 from "../../Asset/opporitnytu/main desktop-Picsart-AiImageEnhancer.jpg";
+import Imag12 from "@/assets/banners/opporitnytu/main desktop-Picsart-AiImageEnhancer.jpg";
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MegaSalePage() {
   const locale = useLocale();
@@ -77,11 +78,11 @@ export default function MegaSalePage() {
   }, [activeCategoryId, filtersData, locale]);
 
   const activeCategoryName = useMemo(() => {
-    if (!activeCategoryId) return "Horeca Sale";
+    if (!activeCategoryId) return " Dubai Summer Sale";
     const found = filtersData?.categories?.find(
       (c: any) => c.id === activeCategoryId || c.slug === activeCategoryId
     );
-    return found ? resolveStr(found.name, locale) : "Horeca Sale";
+    return found ? resolveStr(found.name, locale) : " Dubai Summer Sale";
   }, [activeCategoryId, filtersData, locale]);
 
   // Debounce search query
@@ -234,22 +235,34 @@ export default function MegaSalePage() {
 
   return (
     <>
-      <div>
-        <Image src={BannerMegaSale} alt="Horeca Sale Banner" className="w-full h-auto object-cover" />
+      {/* <div>
+        <Image src={BannerMegaSale} alt=" Dubai Summer Sale Banner" className="w-full h-auto object-cover" />
+      </div> */}
+ <div className="w-full">
+        <Image
+          className="w-full md:block hidden"
+          src={Imag13}
+          loading="lazy"
+          alt="Essential hotel supplies including black and red mini fridges, microwave, coffee maker, showcasing convenience and style for modern guest rooms."
+        />
+        <Image
+          className="w-full md:hidden block"
+          src={Imag12}
+          loading="lazy"
+          alt="Essential hotel supplies including black and red mini fridges, microwave, coffee maker, showcasing convenience and style for modern guest rooms."
+        />
       </div>
-
       {/* ── Promo strip ────────────────────────────────────────────────── */}
       <div className="bg-[#E2E8F04D] border-b-2 border-[#E2E8F0] py-6">
         <div className="global-container">
           <p className="text-sm md:text-base text-black font-normal">
-            Enjoy <b>up to 50%</b> OFF on your favourite kitchen and horeca essentials.
-            Don&apos;t miss these exclusive deals — shop now and upgrade your kitchen before the offers are gone.
+          The heat is on, and so are the deals! Enjoy up to <b>60% OFF</b> during our Dubai Summer Sale on your favorite picks. Limited-time offers, limited stock—shop now before they're gone!
           </p>
         </div>
       </div>
 
       {/* ── Hero text ──────────────────────────────────────────────────── */}
-      <div className="py-10 pb-4 bg-white">
+      <div className="py-10 pb-4 bg-white hidden">
         <div className="global-container text-center">
           <h1 className="text-base md:text-lg lg:text-2xl font-extrabold text-[#186737] mb-3 leading-tight">
             Restaurant Equipment Sale

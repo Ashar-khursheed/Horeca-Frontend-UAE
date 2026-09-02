@@ -1,6 +1,5 @@
 "use client";
 
-import { CATEGORIESNAVBAR } from "@/data";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
@@ -463,7 +462,7 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
               {" "}
               <div className="flex gap-3 items-center justify-end text-white font-normal ">
                 {/* Financing */}
-                <Link href="/mega-sale" style={{ textDecoration: "none" }}>
+                <Link href="/dubai-summer-sale" style={{ textDecoration: "none" }}>
                   <button className="mega-sale-pill  relative inline-flex items-center px-4 py-1  font-extrabold text-white  tracking-wider">
                     <span className="relative z-10">Mega Sale</span>
 
