@@ -35,6 +35,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
     minimumCacheTTL: 60 * 60 * 24 * 30,
     formats: ['image/avif', 'image/webp'],
+    // CloudFront/S3 serves product & category images with
+    // Content-Type: binary/octet-stream instead of image/*, which makes
+    // Next's Image Optimizer reject them with 400. Browsers render the
+    // images fine via content-sniffing, so skip the optimizer entirely.
+    unoptimized: true,
   },
   experimental: {
     optimizePackageImports: [
