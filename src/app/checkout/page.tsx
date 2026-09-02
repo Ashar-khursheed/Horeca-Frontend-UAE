@@ -704,7 +704,7 @@ export default function CheckoutPage() {
       return;
     }
     if (!isUaeShipping && method !== "stripe") {
-      setOrderError("Please pay with Stripe to continue.");
+      setOrderError("Please pay online to continue.");
       return;
     }
     if (method === "cod" && grandTotal >= 3000) {

@@ -138,8 +138,8 @@ export default function CheckoutPayment({
 
         <PaymentOption
           id="pm-stripe"
-          title="Pay With Stripe"
-          subtitle="Pay by card on this page — Visa, Mastercard, Amex & more"
+          title="Pay Online"
+          subtitle="Pay securely by card on this page — Visa, Mastercard, Amex & more"
           icon={<Wallet size={20} />}
           selected={selected === "stripe"}
           onSelect={() => setSelected("stripe")}
