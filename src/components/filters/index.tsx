@@ -1,6 +1,7 @@
 "use client";
 
 import { Slider } from "@/components/ui/slider";
+import { CurrencySymbol } from "@/components/currency-symbol";
 import type { FixedFilterItem, RangeFilterItem } from "@/utils/types";
 import { ChevronDown, ChevronUp, Shield, SlidersHorizontal, Truck, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -118,7 +119,6 @@ export default function FilterSidebar({
 
   const rangeFilterList = Object.values(rangeFilters ?? {});
   const fixedFilterList = Object.values(fixedFilters ?? {});
-  const currencySymbol = currency
 
   const totalActive =
     selectedBrands.length +
@@ -170,7 +170,7 @@ export default function FilterSidebar({
         ) : (
           <div className="space-y-3 pt-2">
             <p className="text-center text-[12px] font-semibold text-gray-700">
-              {currencySymbol} {localPrice.min.toLocaleString()} &ndash; {currencySymbol} {localPrice.max.toLocaleString()}
+              <CurrencySymbol currency={currency} weight="bold" fontsize="12px" /> {localPrice.min.toLocaleString()} &ndash; <CurrencySymbol currency={currency} weight="bold" fontsize="12px" /> {localPrice.max.toLocaleString()}
             </p>
             <Slider
               min={priceMin}
@@ -181,8 +181,8 @@ export default function FilterSidebar({
               onValueCommit={([min, max]) => onPriceChange({ min, max })}
             />
             <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
-              <span>{currencySymbol} {priceMin.toLocaleString()} (Min)</span>
-              <span>{currencySymbol} {priceMax.toLocaleString()} (Max)</span>
+              <span><CurrencySymbol currency={currency} fontsize="10px" /> {priceMin.toLocaleString()} (Min)</span>
+              <span><CurrencySymbol currency={currency} fontsize="10px" /> {priceMax.toLocaleString()} (Max)</span>
             </div>
           </div>
         )}
