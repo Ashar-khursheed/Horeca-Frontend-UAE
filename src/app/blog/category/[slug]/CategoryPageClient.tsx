@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { BookOpen, ChevronRight, Home, LayoutGrid } from "lucide-react";
 import { BlogsCard } from "@/components/blog-card";
 import Pagination from "@/components/pagination";
@@ -18,12 +18,10 @@ interface Props {
 
 export default function CategoryPageClient({ category, blogs, totalPages, currentPage }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    router.push(`/blog/category/${category.url.url}?${params.toString()}`);
+    const slug = category.url?.url ?? "";
+    router.push(page > 1 ? `/blog/category/${slug}?page=${page}` : `/blog/category/${slug}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

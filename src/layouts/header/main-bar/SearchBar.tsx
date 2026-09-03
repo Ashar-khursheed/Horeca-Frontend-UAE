@@ -3,6 +3,7 @@
 import AddToCartWidget from "@/components/add-to-cart";
 import type { RawApiProduct } from "@/components/product-card";
 import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-search";
+import { getCountryCodeClient } from "@/utils/country";
 import type { SearchProduct, SearchSuggestions } from "@/utils/types";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
@@ -68,7 +69,9 @@ export default function SearchBar() {
     if (defaultFetchedRef.current) return;
     defaultFetchedRef.current = true;
     setLoading(true);
-    fetch(`${API_BASE}search?query=hoshizaki&page=1&length=5`)
+    getCountryCodeClient().then((countryCode) =>
+      fetch(`${API_BASE}search?query=hoshizaki&page=1&length=5&force_country=${countryCode}`),
+    )
       .then((res) => {
         if (!res.ok) throw new Error("search failed");
         return res.json();
@@ -92,7 +95,8 @@ export default function SearchBar() {
     }
     setLoading(true);
     try {
-      const url = `${API_BASE}search?query=${encodeURIComponent(query.trim())}&page=1&length=5`;
+      const countryCode = await getCountryCodeClient();
+      const url = `${API_BASE}search?query=${encodeURIComponent(query.trim())}&page=1&length=5&force_country=${countryCode}`;
       const res = await fetch(url);
 
       if (!res.ok) throw new Error("search failed");

@@ -15,6 +15,7 @@ import {
   useCompareList,
   type CompareProduct,
 } from "@/utils/compareStorage";
+import { getCountryCodeClient } from "@/utils/country";
 import type { SearchProduct } from "@/utils/types";
 import { Loader2, Package, Plus, Scale, Search, X } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -94,7 +95,10 @@ export default function ComparePage() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${SEARCH_API}?query=${encodeURIComponent(q.trim())}&page=1&length=6`);
+      const countryCode = await getCountryCodeClient();
+      const res = await fetch(
+        `${SEARCH_API}?query=${encodeURIComponent(q.trim())}&page=1&length=6&force_country=${countryCode}`,
+      );
       if (!res.ok) throw new Error("failed");
       const raw: NlpSearchResponse = await res.json();
       const adapted = toSearchSuggestions(raw);

@@ -53,7 +53,7 @@ const QUICK_LINKS: LinkItem[] = [
 
 const SUPPORT_LINKS: LinkItem[] = [
   { label: "Help Center", href: "/pages/contact-us" },
-  { label: "Contact Us", href: "/contact" },
+  { label: "Contact Us", href: "/pages/contact-us" },
   { label: "FAQs", href: "/faq" },
   { label: "Shipping Policy", href: "/pages/shipping-policy" },
   { label: "Terms of Service", href: "/pages/cancellation-policy" },

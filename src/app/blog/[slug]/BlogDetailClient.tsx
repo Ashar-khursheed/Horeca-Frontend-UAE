@@ -88,18 +88,38 @@ const formatDate = (iso: string) => {
   return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 };
 
+// CMS sends either raw HTML or a JSON array of `{ value: html }` blocks.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const parseDescriptionBlocks = (raw: any): { id: string; value: string }[] => {
   if (!raw) return [];
-  try {
-    const arr = typeof raw === "string" ? JSON.parse(raw) : raw;
-    if (Array.isArray(arr)) {
-      return arr.map((item, i) => ({ id: `block-${i}`, value: item?.value ?? "" }));
+
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed.startsWith("[") && !trimmed.startsWith("{")) {
+      return [{ id: "block-0", value: raw }];
     }
-  } catch {
-    return [{ id: "block-0", value: typeof raw === "string" ? raw : "" }];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item, i) => ({
+          id: `block-${i}`,
+          value: item?.value ?? "",
+        }));
+      }
+      if (typeof parsed === "string") {
+        return [{ id: "block-0", value: parsed }];
+      }
+    } catch {
+      return [{ id: "block-0", value: raw }];
+    }
+    return [{ id: "block-0", value: raw }];
   }
-  return [];
+
+  if (Array.isArray(raw)) {
+    return raw.map((item, i) => ({ id: `block-${i}`, value: item?.value ?? "" }));
+  }
+
+  return [{ id: "block-0", value: String(raw) }];
 };
 
 const extractToc = (blocks: { value: string }[]): { id: string; text: string }[] => {
@@ -504,7 +524,7 @@ useEffect(() => {
       <div className="bg-white md:py-10 py-3 pb-0">
         <SeoContent dataAPI={blog?.seo} />
       </div>
-      <style jsx global>{`
+      <style>{`
         .blog-content h1,
         .blog-content h2,
         .blog-content h3,

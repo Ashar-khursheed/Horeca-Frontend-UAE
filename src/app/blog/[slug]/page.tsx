@@ -1,29 +1,26 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { apiUrls } from "@/apis/api-endpoint";
+import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
 import { revalidate as fetchRevalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
-import type { Metadata } from "next";
-import { cookies, headers } from "next/headers";
-import { notFound } from "next/navigation";
-import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 
-// ISR — revalidate every hour
-export const revalidate = 3600;
+// Must stay dynamic. Pairing generateStaticParams/ISR with cookies()/headers()
+// (or leftover static shells) made Next.js 16 serve HTTP 500 on every slug.
+export const dynamic = "force-dynamic";
 
-// New slugs not in generateStaticParams are SSR'd on-demand, then cached
-export const dynamicParams = true;
+const API_BASE = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.horecastore.ae/api"
+).replace(/\/?$/, "/");
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://test-us.thehorecastore.co/api";
+// This UAE storefront always queries the AE catalogue. Do not read
+// headers()/cookies() here — that pair with generateStaticParams makes
+// Next.js 16 serve a 500 for every prerendered /blog/[slug] route.
+const COUNTRY_CODE = process.env.NEXT_PUBLIC_FORCE_COUNTRY ?? "AE";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-}
-
-interface BlogListResponse {
-  data: { url: string }[];
-  last_page: number;
 }
 
 interface CommentsResponse {
@@ -33,19 +30,17 @@ interface CommentsResponse {
   };
 }
 
-// ─── Direct fetch helper (no headers()/cookies() at build time) ──────────────
 async function fetchApi<T>(
   path: string,
   params: Record<string, string | number | boolean | undefined | null> = {},
   revalidateOpt: number | false = 60,
-  countryCode?: string,
 ): Promise<T | null> {
   try {
     const qs = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
     });
-    qs.set("force_country", countryCode ?? "US");
+    qs.set("force_country", COUNTRY_CODE);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url = qs.toString() ? `${base}?${qs}` : base;
@@ -63,67 +58,65 @@ async function fetchApi<T>(
   }
 }
 
-// Reads the request-scoped country cookie/header — only callable where a
-// request context exists (generateMetadata / page render), never at build time.
-async function getCountryCode(): Promise<string> {
-  const [reqHeaders, cookieStore] = await Promise.all([headers(), cookies()]);
-  return reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
+function unwrapBlog(payload: unknown): ApiBlogDetail | null {
+  if (!payload || typeof payload !== "object") return null;
+  const obj = payload as Record<string, unknown>;
+  if ("title" in obj || "description" in obj || typeof obj.id === "number") {
+    return obj as unknown as ApiBlogDetail;
+  }
+  if (obj.data && typeof obj.data === "object") {
+    return unwrapBlog(obj.data);
+  }
+  return null;
 }
 
-// Some CMS entries have images pasted directly into the editor as inline
-// base64 data URIs instead of uploaded URLs, ballooning a single blog's
-// `description` to tens of MBs. That blows past the hosting platform's
-// response-size limit (raw HTTP 413) before React ever gets to render it,
-// so it has to be stripped server-side, before the payload is sent to the client.
 function stripInlineBase64Images(raw: string): string {
   return raw.replace(/data:[a-z]+\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+/gi, "");
 }
 
-// ─── SSG: pre-build all blog slugs ────────────────────────────────────────────
-export async function generateStaticParams() {
-  const first = await fetchApi<BlogListResponse>(
-    apiUrls.BLOGS,
-    { per_page: 100, lang: "en", page: 1 },
-    false,
-  );
-
-  if (!first) return [];
-
-  const { last_page } = first;
-
-  // Fetch remaining pages in parallel if more than 1
-  const pageNums = Array.from({ length: last_page - 1 }, (_, i) => i + 2);
-  const rest = await Promise.all(
-    pageNums.map((page) =>
-      fetchApi<BlogListResponse>(
-        apiUrls.BLOGS,
-        { per_page: 100, lang: "en", page },
-        false,
-      ),
-    ),
-  );
-
-  const allBlogs = [first, ...rest].flatMap((res) => res?.data ?? []);
-
-  return allBlogs
-    .map((blog) => ({
-      slug: blog.url?.replace(/^\//, "") ?? "",
-    }))
-    .filter((p) => p.slug);
+function sanitizeDescription(description: ApiBlogDetail["description"]) {
+  if (typeof description === "string") {
+    return stripInlineBase64Images(description);
+  }
+  if (Array.isArray(description)) {
+    return description.map((item) =>
+      item && typeof item === "object"
+        ? {
+            ...item,
+            value:
+              typeof item.value === "string"
+                ? stripInlineBase64Images(item.value)
+                : item.value,
+          }
+        : item,
+    );
+  }
+  return description;
 }
 
-// ─── Metadata ─────────────────────────────────────────────────────────────────
+function jsonLdHtml(schema: unknown): string | null {
+  if (!schema) return null;
+  try {
+    const raw =
+      typeof schema === "string" ? schema.trim() : JSON.stringify(schema);
+    if (!raw || raw === "null" || raw === "{}") return null;
+    return raw.replace(/</g, "\\u003c");
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const countryCode = await getCountryCode();
 
-  const blog = await fetchApi<ApiBlogDetail>(
-    apiUrls.BLOG_SINGLE(slug),
-    {},
-    fetchRevalidate,
-    countryCode,
+  const blog = unwrapBlog(
+    await fetchApi<unknown>(
+      apiUrls.BLOG_SINGLE(slug),
+      {},
+      fetchRevalidate,
+    ),
   );
 
   if (!blog) return { title: "Blog Not Found" };
@@ -158,50 +151,39 @@ export async function generateMetadata({
   };
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function BlogDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const countryCode = await getCountryCode();
 
-  const blog = await fetchApi<ApiBlogDetail>(
-    apiUrls.BLOG_SINGLE(slug),
-    {},
-    fetchRevalidate,
-    countryCode,
+  const blog = unwrapBlog(
+    await fetchApi<unknown>(
+      apiUrls.BLOG_SINGLE(slug),
+      {},
+      fetchRevalidate,
+    ),
   );
 
   if (!blog) notFound();
 
-  if (typeof blog.description === "string") {
-    blog.description = stripInlineBase64Images(blog.description);
-  }
+  blog.description = sanitizeDescription(blog.description);
 
   const commentsRes = await fetchApi<CommentsResponse>(
     apiUrls.BLOG_COMMENTS(blog.id),
     {},
     60,
-    countryCode,
   );
 
-  const initialComments = commentsRes?.data?.comments ?? undefined;
-
-
-  console.log("BlogDetailPage: blog", blog);
+  const initialComments = commentsRes?.data?.comments ?? [];
+  const jsonLd = jsonLdHtml(blog.seo?.schema);
 
   return (
     <>
-      {blog.seo?.schema && (
+      {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html:
-              typeof blog.seo.schema === "string"
-                ? blog.seo.schema
-                : JSON.stringify(blog.seo.schema),
-          }}
+          dangerouslySetInnerHTML={{ __html: jsonLd }}
         />
       )}
-      <BlogDetailClient blog={blog} initialComments={initialComments ?? []} />
+      <BlogDetailClient blog={blog} initialComments={initialComments} />
     </>
   );
 }

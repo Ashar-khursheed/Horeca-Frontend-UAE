@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, Home } from "lucide-react";
-import { BlogCard } from "@/components/blog-card";
 import BannerImg from "@/assets/banners/blog/Blog Banner 1920 x 500.webp";
+import { BlogCard } from "@/components/blog-card";
+import { ChevronLeft, ChevronRight, Home } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import type { BlogCategory } from "./page";
 
 // ─── Horizontal slider per category ──────────────────────────────────────────

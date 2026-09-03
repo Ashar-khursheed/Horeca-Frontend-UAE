@@ -2,6 +2,7 @@
 
 import { makeApiRequest } from "@/apis/axios-instance";
 import CTA from "@/components/cta";
+import { CurrencySymbol } from "@/components/currency-symbol";
 import { useInvoiceDownload } from "@/components/download-invoice";
 import {
   AlertCircle,
@@ -12,7 +13,6 @@ import {
   CreditCard,
   Download,
   FileText,
-  Headphones,
   Loader2,
   Mail,
   MapPin,
@@ -21,10 +21,9 @@ import {
   Phone,
   Search,
   Shield,
-  Star,
   Truck,
   User,
-  X,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -114,6 +113,8 @@ interface ApiTrackingOrder {
   pending_amount: string;
   payment_link: string | null;
   payment_mode: string | null;
+  additional_amount_name?: string | null;
+  additional_amount_price?: string | null;
   created_at: string;
   customer: ApiCustomer;
   customer_address: string;
@@ -464,10 +465,16 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
   const discount           = Number(order.discount);
   const additionalDiscount = Number(order.additional_discount_amount);
   const total              = Number(order.total_amount);
+  const additionalFee      = Number(order.additional_amount_price ?? "0");
+  const additionalFeeLabel = order.additional_amount_name || "Additional Fee";
+  // order.amount is the pre-tax base (product subtotal + processing fee +
+  // shipping/addon fees), so the product-only subtotal shown to the customer
+  // has to back the processing fee out of it.
+  const displaySubtotal = subtotal - additionalFee;
   const liftFee    = order.is_lift_gate           === 1 ? 75  : 0;
   const resFee     = order.is_residential_address === 1 ? 199 : 0;
   const insideFee  = order.is_inside_delivery     === 1 ? 249 : 0;
-  const shipping = total - subtotal - tax + discount + additionalDiscount - liftFee - resFee - insideFee;
+  const shipping = Number(order.shipping_charge);
 
   const addressLines = order.customer_address
     ? order.customer_address.split(/\\n|\n/)
@@ -664,8 +671,9 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                                     </span>{" "}
                                     {acc.accessory_item_name?.replace(/^"|"$/g, "")}
                                   </span>
-                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">
-                                    {sym}{fmt(Number(acc.amount))}
+                                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap inline-flex items-baseline">
+                                    <CurrencySymbol currency={sym} fontsize="11px" />
+                                    {fmt(Number(acc.amount))}
                                   </span>
                                 </div>
                               ))}
@@ -673,15 +681,20 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                           )}
                         </div>
                         <div className="shrink-0 text-right">
-                          <p className="text-base font-bold text-gray-900">
-                            {sym}{fmt(lineTotal + accessoryTotal)}
+                          <p className="text-base font-bold text-gray-900 inline-flex items-baseline">
+                            <CurrencySymbol currency={sym} fontsize="16px" />
+                            {fmt(lineTotal + accessoryTotal)}
                           </p>
                           {op.quantity > 1 && (
-                            <p className="text-[11px] text-gray-400 mt-0.5">{sym}{fmt(price)} each</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5 inline-flex items-baseline">
+                              <CurrencySymbol currency={sym} fontsize="11px" />
+                              {fmt(price)} each
+                            </p>
                           )}
                           {accessoryTotal > 0 && (
-                            <p className="text-[11px] text-gray-400 mt-0.5">
-                              incl. {sym}{fmt(accessoryTotal)} accessories
+                            <p className="text-[11px] text-gray-400 mt-0.5 inline-flex items-baseline">
+                              incl. <CurrencySymbol currency={sym} fontsize="11px" />
+                              {fmt(accessoryTotal)} accessories
                             </p>
                           )}
                         </div>
@@ -694,7 +707,10 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
 
             <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
               <span className="text-xs text-gray-500 font-medium">Items Subtotal</span>
-              <span className="text-sm font-bold text-gray-900">{sym}{fmt(subtotal)}</span>
+              <span className="text-sm font-bold text-gray-900 inline-flex items-baseline">
+                <CurrencySymbol currency={sym} fontsize="14px" />
+                {fmt(displaySubtotal)}
+              </span>
             </div>
           </div>
 
@@ -840,23 +856,58 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
             </div>
             <div className="p-5 space-y-3">
               <div className="space-y-2.5">
-                <SummaryRow label="Subtotal" value={`${sym}${fmt(subtotal)}`} />
+                <SummaryRow
+                  label="Subtotal"
+                  value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(displaySubtotal)}</>}
+                />
+                {additionalFee > 0 && (
+                  <SummaryRow
+                    label={additionalFeeLabel}
+                    value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(additionalFee)}</>}
+                  />
+                )}
                 {discount > 0 && (
-                  <SummaryRow label="Coupon Discount" value={`-${sym}${fmt(discount)}`} green />
+                  <SummaryRow
+                    label="Coupon Discount"
+                    value={<>-<CurrencySymbol currency={sym} fontsize="14px" />{fmt(discount)}</>}
+                    green
+                  />
                 )}
                 {additionalDiscount > 0 && (
-                  <SummaryRow label="Additional Discount" value={`-${sym}${fmt(additionalDiscount)}`} green />
+                  <SummaryRow
+                    label="Additional Discount"
+                    value={<>-<CurrencySymbol currency={sym} fontsize="14px" />{fmt(additionalDiscount)}</>}
+                    green
+                  />
                 )}
                 {shipping > 0 && (
-                  <SummaryRow label="Shipping" value={`${sym}${fmt(shipping)}`} />
+                  <SummaryRow
+                    label="Shipping"
+                    value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(shipping)}</>}
+                  />
                 )}
-                {order.is_lift_gate           === 1 && <SummaryRow label="Lift Gate Service"   value={`${sym}${fmt(liftFee)}`} />}
-                {order.is_residential_address === 1 && <SummaryRow label="Residential Address" value={`${sym}${fmt(resFee)}`} />}
-                {order.is_inside_delivery     === 1 && <SummaryRow label="Inside Delivery"     value={`${sym}${fmt(insideFee)}`} />}
+                {order.is_lift_gate === 1 && (
+                  <SummaryRow
+                    label="Lift Gate Service"
+                    value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(liftFee)}</>}
+                  />
+                )}
+                {order.is_residential_address === 1 && (
+                  <SummaryRow
+                    label="Residential Address"
+                    value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(resFee)}</>}
+                  />
+                )}
+                {order.is_inside_delivery === 1 && (
+                  <SummaryRow
+                    label="Inside Delivery"
+                    value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(insideFee)}</>}
+                  />
+                )}
                 {tax > 0 && (
                   <SummaryRow
-                    label={`Tax (${Number(order.tax_percentage).toFixed(2)}%)`}
-                    value={`${sym}${fmt(tax)}`}
+                    label={`Vat (${Number(order.tax_percentage).toFixed(2)}%)`}
+                    value={<><CurrencySymbol currency={sym} fontsize="14px" />{fmt(tax)}</>}
                   />
                 )}
               </div>
@@ -864,21 +915,26 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
               <div className="border-t border-gray-100 pt-3.5 mt-1 space-y-2.5">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total Amount</span>
-                  <span className="font-black text-xl text-gray-900">{sym}{fmt(total)}</span>
+                  <span className="font-black text-xl text-gray-900 inline-flex items-baseline">
+                    <CurrencySymbol currency={sym} weight="bold" fontsize="20px" />
+                    {fmt(total)}
+                  </span>
                 </div>
                 {order.is_paid === 0 && Number(order.paid_amount) > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Paid Amount</span>
-                    <span className="text-sm font-semibold text-[#186737]">
-                      {sym}{fmt(Number(order.paid_amount))}
+                    <span className="text-sm font-semibold text-[#186737] inline-flex items-baseline">
+                      <CurrencySymbol currency={sym} fontsize="14px" />
+                      {fmt(Number(order.paid_amount))}
                     </span>
                   </div>
                 )}
                 {order.is_paid === 0 && Number(order.pending_amount) > 0 && (
                   <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
                     <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
-                    <span className="text-sm font-black text-amber-700">
-                      {sym}{fmt(Number(order.pending_amount))}
+                    <span className="text-sm font-black text-amber-700 inline-flex items-baseline">
+                      <CurrencySymbol currency={sym} fontsize="14px" />
+                      {fmt(Number(order.pending_amount))}
                     </span>
                   </div>
                 )}
@@ -902,7 +958,10 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                   <div key={payment.id} className="p-5 space-y-2.5">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-gray-700">Payment #{idx + 1}</span>
-                      <span className="text-sm font-black text-gray-900">{sym}{fmt(Number(payment.amount))}</span>
+                      <span className="text-sm font-black text-gray-900 inline-flex items-baseline">
+                        <CurrencySymbol currency={sym} fontsize="14px" />
+                        {fmt(Number(payment.amount))}
+                      </span>
                     </div>
                     <DetailRow
                       label="Method"
@@ -935,7 +994,10 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
                 <div className="px-5 pb-5 space-y-3">
                   <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-[7px] px-3 py-2">
                     <span className="text-sm font-semibold text-amber-700">Pending Amount</span>
-                    <span className="text-sm font-black text-amber-700">{sym}{fmt(Number(order.pending_amount))}</span>
+                    <span className="text-sm font-black text-amber-700 inline-flex items-baseline">
+                      <CurrencySymbol currency={sym} fontsize="14px" />
+                      {fmt(Number(order.pending_amount))}
+                    </span>
                   </div>
                   {order.payment_link && (
                     <a
@@ -995,11 +1057,11 @@ function OrderDetail({ order, onReset }: { order: ApiTrackingOrder; onReset: () 
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function SummaryRow({ label, value, green }: { label: string; value: string; green?: boolean }) {
+function SummaryRow({ label, value, green }: { label: string; value: React.ReactNode; green?: boolean }) {
   return (
     <div className="flex justify-between items-center text-sm">
       <span className="text-gray-500">{label}</span>
-      <span className={`font-semibold ${green ? "text-[#186737]" : "text-gray-900"}`}>{value}</span>
+      <span className={`font-semibold inline-flex items-baseline whitespace-nowrap ${green ? "text-[#186737]" : "text-gray-900"}`}>{value}</span>
     </div>
   );
 }

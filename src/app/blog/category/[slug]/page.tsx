@@ -1,38 +1,35 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { headers, cookies } from "next/headers";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { ApiBlog } from "@/components/blog-card";
-import type { BlogCategory } from "@/app/blog/page";
 import CategoryPageClient from "./CategoryPageClient";
-import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
 
-// export const revalidate = 3600;
-export const dynamicParams = true;
+export const dynamic = "force-dynamic";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://test-us.thehorecastore.co/api";
+const API_BASE = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.horecastore.ae/api"
+).replace(/\/?$/, "/");
+
+// UAE storefront — never read headers()/cookies() on this prerendered route.
+const COUNTRY_CODE = process.env.NEXT_PUBLIC_FORCE_COUNTRY ?? "AE";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
 }
 
-// ─── Direct fetch helper (no headers()/cookies() at build time) ──────────────
 async function fetchApi<T>(
   path: string,
   params: Record<string, string | number | boolean | undefined | null> = {},
   revalidateOpt: number | false = 60,
-  countryCode?: string,
 ): Promise<T | null> {
   try {
     const qs = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
     });
-    qs.set("force_country", countryCode ?? "US");
+    qs.set("force_country", COUNTRY_CODE);
 
     const base = path.startsWith("http") ? path : `${API_BASE}${path}`;
     const url = qs.toString() ? `${base}?${qs}` : base;
@@ -48,13 +45,6 @@ async function fetchApi<T>(
     console.error(err);
     return null;
   }
-}
-
-// Reads the request-scoped country cookie/header — only callable where a
-// request context exists (generateMetadata / page render), never at build time.
-async function getCountryCode(): Promise<string> {
-  const [reqHeaders, cookieStore] = await Promise.all([headers(), cookies()]);
-  return reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
 }
 
 export interface CategoryInfo {
@@ -73,28 +63,13 @@ interface CategoryBlogsResponse {
   };
 }
 
-// ─── SSG ──────────────────────────────────────────────────────────────────────
-export async function generateStaticParams() {
-  const categories = await fetchApi<BlogCategory[]>(
-    apiUrls.BLOG_CATEGORIES_WITH_BLOGS,
-    { lang: "en" },
-    false,
-  );
-  return (categories ?? [])
-    .map((cat: BlogCategory) => ({ slug: cat.url?.url ?? "" }))
-    .filter((p: { slug: string }) => p.slug);
-}
-
-// ─── Metadata ─────────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const countryCode = await getCountryCode();
 
   const res = await fetchApi<CategoryBlogsResponse>(
     apiUrls.BLOG_CATEGORY_BLOGS(slug),
     { lang: "en", page: 1, per_page: 1 },
-    0,
-    countryCode,
+    3600,
   );
 
   const category = res?.category;
@@ -118,18 +93,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  const countryCode = await getCountryCode();
 
   const res = await fetchApi<CategoryBlogsResponse>(
     apiUrls.BLOG_CATEGORY_BLOGS(slug),
     { lang: "en", page, per_page: 20 },
-    0,
-    countryCode,
+    3600,
   );
   if (!res?.category) notFound();
 

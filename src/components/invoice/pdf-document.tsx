@@ -821,7 +821,7 @@ const TotalsBox = ({ order, currency }: { order: PdfOrderDetail; currency: strin
 
       {/* 9. NET TOTAL Bar */}
       <View style={S.totalsNetBar}>
-        <Text style={S.totalsNetText}>NET TOTAL INCL. SALES Vat</Text>
+        <Text style={S.totalsNetText}>Vat</Text>
         <Text style={S.totalsNetText}>{currency}{toUSD(total)}</Text>
       </View>
 

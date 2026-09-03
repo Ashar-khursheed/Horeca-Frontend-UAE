@@ -3,6 +3,7 @@ import { toSearchSuggestions, type NlpSearchResponse } from "@/utils/adapt-nlp-s
 import { SITE_URL } from "@/utils/site-url";
 import type { SearchSuggestions } from "@/utils/types";
 import { Metadata } from "next";
+import { cookies, headers } from "next/headers";
 import { Suspense } from "react";
 
 const NLP_SEARCH_API = "https://nlpuae-temp.thehorecastore.co/search";
@@ -27,14 +28,21 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/search` },
 };
 
+async function getCountryCode(): Promise<string> {
+  const [reqHeaders, cookieStore] = await Promise.all([headers(), cookies()]);
+  return reqHeaders.get("x-country-code") ?? cookieStore.get("hc_cc")?.value ?? "US";
+}
+
 async function fetchSearchResults(
   params: Record<string, string | number | undefined>,
 ): Promise<SearchSuggestions | null> {
   try {
+    const countryCode = await getCountryCode();
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
     }
+    qs.set("force_country", countryCode);
     const res = await fetch(`${NLP_SEARCH_API}?${qs.toString()}`, {
       next: { revalidate: 0 },
     });
