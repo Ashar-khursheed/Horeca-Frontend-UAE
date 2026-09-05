@@ -11,6 +11,7 @@ import {
 import { useLocationData } from "@/utils/locationStorage";
 import {
   ArrowRight,
+  CheckCircle,
   ChevronRight,
   ClipboardList,
   FileText,
@@ -20,6 +21,7 @@ import {
   ShieldCheck,
   Truck,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PriceComparisonCard } from "./price-comparison-card";
 import { ReportErrorModal } from "./report-error-modal";
@@ -27,6 +29,7 @@ import { NutritionFactsCard } from "./nutrition-facts-card";
 import type { Accessory, AccessoryItem, NutritionFact } from "./types";
 import { useAppSelector } from "@/store/hooks";
 import { CurrencySymbol } from "@/components/currency-symbol";
+import { addToQuote, useQuoteList } from "@/utils/quoteStorage";
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -77,7 +80,11 @@ export const PurchasePanel = ({
   const locationState = useLocationData();
     const {country} = useAppSelector((s) => s);
   const [reportOpen, setReportOpen] = useState(false);
+  const [quoteAdded, setQuoteAdded] = useState(false);
   const [deliverTo, setDeliverTo] = useState<string | null>(null);
+  const router = useRouter();
+  const quoteItems = useQuoteList();
+  const inQuoteList = quoteItems.some((item) => item.id === productData?.id);
   useEffect(() => {
     try {
       const raw = localStorage.getItem("hc_default_address");
@@ -112,6 +119,28 @@ export const PurchasePanel = ({
     ? ((activeOriginal - activePrice) / activeOriginal) * 100
     : 0;
   const [priceInt, priceDec] = fmtPrice(activePrice).split(".");
+  const alreadyInQuote = inQuoteList || quoteAdded;
+
+  const addCurrentProductToQuote = () => {
+    if (alreadyInQuote || !productData?.id) return;
+    const supplier = productData?.suppliers?.[0];
+    addToQuote({
+      id: productData.id,
+      name: productData.name ?? "",
+      brand: brand ?? "",
+      sku: productData.sku ?? "",
+      image: productData.images?.[0] ?? "",
+      warranty: "—",
+      deliveryDays: deliveryDays ?? "",
+      shippingCost: Number(supplier?.shipping_charge ?? 0),
+      price: activePrice,
+      qty: productData.min_quantity ?? supplier?.min_quantity ?? 1,
+      vendorId: supplier?.vendor_id,
+      accessoryItemIds: selectedItemIds,
+      product: productData,
+    });
+    setQuoteAdded(true);
+  };
 
   return (
     <div className="space-y-3">
@@ -262,6 +291,36 @@ export const PurchasePanel = ({
             buttonClassName={`flex-1 h-11 rounded-[7px] text-sm font-bold text-white ${productData?.quote_available ? "bg-[#A6131D] hover:bg-[#8b1018]" : "bg-[#186737] hover:bg-[#145c30]"}`}
           />
         </div>
+        <button
+          type="button"
+          onClick={addCurrentProductToQuote}
+          className={`w-full h-11 rounded-[7px] text-sm font-semibold flex items-center justify-center gap-1.5 text-white transition-all ${
+            alreadyInQuote
+              ? "bg-[#8B1515]"
+              : "hover:brightness-110 hover:shadow-md"
+          }`}
+          style={
+            alreadyInQuote
+              ? undefined
+              : {
+                  background: "#FD1D1D",
+                  backgroundImage:
+                    "linear-gradient(220deg, rgba(253, 29, 29, 1) 9%, rgba(252, 176, 69, 1) 79%)",
+                }
+          }
+        >
+          {alreadyInQuote ? (
+            <>
+              <CheckCircle size={16} strokeWidth={2} />
+              Added to Quote
+            </>
+          ) : (
+            <>
+              <FileText size={16} strokeWidth={2} />
+              Add to Quote
+            </>
+          )}
+        </button>
       </div>
 
       {/* Create a Quotation */}
@@ -281,13 +340,17 @@ export const PurchasePanel = ({
               Get a custom quotation for this product with pricing tailored
               to your order.
             </p>
-            <a
-              href="/create-quotation"
+            <button
+              type="button"
+              onClick={() => {
+                addCurrentProductToQuote();
+                router.push("/create-quotation");
+              }}
               className="inline-flex items-center gap-1.5 mt-3 bg-white text-[#186737] font-bold text-xs px-3.5 py-2 rounded-[7px] hover:bg-white/90 transition-colors"
             >
               Create a Quotation
               <ArrowRight size={13} />
-            </a>
+            </button>
           </div>
         </div>
       </div>
