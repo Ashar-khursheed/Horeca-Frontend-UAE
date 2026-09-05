@@ -32,9 +32,15 @@ const getName = (name: CategoryName | string, locale: string): string => {
     : (name?.en ?? name?.ar ?? "");
 };
 
+const isBrandsNav = (cat: { slug?: string }) =>
+  cat.slug === "shop-by-brands" || cat.slug === "brands";
+
+const hasNavChildren = (cat: { children?: unknown[]; slug?: string }) =>
+  !isBrandsNav(cat) && (cat.children?.length ?? 0) > 0;
+
 // ── getCategoryPath helper ─────────────────────────────────────────────────────
 const getCategoryPath = (cat: Category): string => {
-  if (cat.slug === "shop-by-brands") return "/brands";
+  if (isBrandsNav(cat)) return "/brands";
   if (cat.slug === "sale") return "/sale";
   return `/${cat.slug}`;
 };
@@ -351,8 +357,8 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
       //   category,
       // );
 
-      /* No children or brands → schedule close */
-      if (!children.length || category.slug === "shop-by-brands") {
+      /* No children or brands → no dropdown */
+      if (!children.length || isBrandsNav(category)) {
         handleCloseDropdown();
         return;
       }
@@ -437,7 +443,7 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
                   `}
                   >
                     {getName(category.name, locale)}
-                    {category.slug !== "shop-by-brands" && (
+                    {hasNavChildren(category) && (
                       <ChevronDown
                         size={15}
                         className="text-white opacity-80"
@@ -476,7 +482,7 @@ const HeaderMenu = ({ navItemData }: { navItemData: unknown[] }) => {
         </div>
 
         {activeCategory &&
-          activeCategory.slug !== "shop-by-brands" &&
+          hasNavChildren(activeCategory) &&
           isDropdownOpen && (
             <DropdownPanel
               key={activeCategory.id}

@@ -73,6 +73,8 @@ const ProductDetailPage = ({
   const benefitsFeatures = productData.benefits_features ?? [];
   const state = useLocationData();
   const router = useRouter();
+  console.log("productData", productData);
+  console.log("nutritionFacts", nutritionFacts);
   useEffect(() => {
     if (!productData.id) return;
     const token = localStorage.getItem("token");

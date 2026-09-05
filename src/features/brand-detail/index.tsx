@@ -5,9 +5,10 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import ProductCard, { type RawApiProduct } from "@/components/product-card";
 import SeoContent, { type SeoApiData } from "@/seo/seo-content";
 import { ChevronLeft, ChevronRight, Globe, Home } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-
+import Banner from "@/assets/banners/brands/BrandBanner.jpg";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface BrandCategoryProductsResponse {
@@ -352,7 +353,7 @@ export default function BrandDetailFeature({
       </nav>
 
       {/* Desktop Banner */}
-      {bannerUrl && (
+      {/* {bannerUrl ? (
         <div className="w-full">
           <img
             src={bannerUrl}
@@ -360,7 +361,37 @@ export default function BrandDetailFeature({
             className="w-full h-auto object-cover"
           />
         </div>
-      )}
+      ) : (
+     */}
+        <div
+        className="relative w-full h-[120px] sm:h-auto bg-gray-200 overflow-hidden"
+        style={{ aspectRatio: "1920 / 500" }}
+      >
+        <Image
+          src={Banner}
+          alt="Brands"
+          fill
+          sizes="100vw"
+          className="object-cover"
+          priority
+        />
+
+        {/* Text overlay */}
+        <div className="absolute inset-0 flex items-center pl-8 md:pl-16">
+          <div className="max-w-md space-y-1 md:space-y-2 lg:space-y-2">
+            <h1 className="text-[12px] md:text-2xl lg:text-[30px] font-bold text-yellow-400 leading-tight">
+              Get to Know Why Leading<br />Brands Choose Us as Their<br />Trusted Dealer
+            </h1>
+            <h2 className="text-white text-[8px] md:text-[12px] lg:text-[16px] mt-1.25 md:mt-3 lg:mt-4 md:block hidden">
+              Everything you need in one B2B integrated platform.<br />It&apos;s easier with Horecastore.
+            </h2>
+            {/* <button type="button" className="bg-white text-red-600 font-semibold px-2 pt-0.5 pb-0.5 md:px-2 md:py-3 md:text-[12px] lg:text-lg text-[8px] rounded hover:bg-gray-100 transition">
+              Join Marketplace
+            </button> */}
+          </div>
+        </div>
+      </div>
+      {/* // )} */}
 
       {/* Brand header */}
       <div className="bg-white border-b border-gray-100">
