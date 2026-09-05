@@ -883,7 +883,10 @@ export default function CheckoutPage() {
           return;
         }
 
-        if (result.order_status !== "Success" || result.status_code !== "00") {
+        const isSuccess =
+          result.order_status?.toLowerCase() === "success";
+
+        if (!isSuccess) {
           router.replace("/payment-decline");
           return;
         }
