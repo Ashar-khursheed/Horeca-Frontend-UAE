@@ -8,6 +8,7 @@ import {
 } from "@/store/slices/wishlist/wishlistSlice";
 import {
   CheckCircle,
+  FileText,
   Heart,
   Minus,
   Plus,
@@ -16,6 +17,7 @@ import {
   Star,
   Truck,
 } from "lucide-react";
+import { addToQuote, useQuoteList } from "@/utils/quoteStorage";
 import { useLocale } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -383,6 +385,9 @@ export const ProductCard = ({
   const isQuote = !!(
     product.quote_available ?? (product as RawApiProduct).for_quotes
   );
+  const quoteItems = useQuoteList();
+  const inQuoteList = quoteItems.some((item) => item.id === product.id);
+  const [quoteAdded, setQuoteAdded] = useState(false);
 
   // Hydrate guest wishlist from localStorage (guarded inside reducer — runs once)
   // and seed logged-in wishlist from product's in_wishlist field
@@ -868,6 +873,64 @@ export const ProductCard = ({
             onAddedToCart={onAddedToCart}
           />
         </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (inQuoteList || quoteAdded) return;
+            const supplier =
+              (product as RawApiProduct).suppliers?.[0] ??
+              (product as RawApiProduct).best_supplier;
+            const quotePrice = salePrice > 0 ? salePrice : originalPrice;
+            addToQuote({
+              id: product.id,
+              name,
+              brand: "",
+              sku: product.sku ?? "",
+              image: images_[0] ?? "",
+              warranty: "—",
+              deliveryDays: deliveryDays,
+              shippingCost: Number(
+                (supplier as { shipping_charge?: number } | undefined)
+                  ?.shipping_charge ?? 0,
+              ),
+              price: quotePrice,
+              qty: minQty || 1,
+              vendorId: supplier?.vendor_id,
+              accessoryItemIds: selectedAccessoryIds,
+              product,
+            });
+            setQuoteAdded(true);
+          }}
+          className={`w-full mt-2 3xl:h-[44px] 2xl:h-[36px] md:h-[34px] h-[29px] rounded-[4px] 3xl:text-[14px] 2xl:text-[12px] text-[10px] font-semibold flex items-center justify-center gap-1.5 text-white transition-all ${
+            inQuoteList || quoteAdded
+              ? "bg-[#8B1515]"
+              : "hover:brightness-110 hover:shadow-md"
+          }`}
+          style={
+            inQuoteList || quoteAdded
+              ? undefined
+              : {
+                  background: "#FD1D1D",
+                  backgroundImage:
+                    "linear-gradient(220deg, rgba(253, 29, 29, 1) 9%, rgba(252, 176, 69, 1) 79%)",
+                }
+          }
+        >
+          {inQuoteList || quoteAdded ? (
+            <>
+              <CheckCircle size={14} strokeWidth={2} />
+              Added to Quote
+            </>
+          ) : (
+            <>
+              <FileText size={14} strokeWidth={2} />
+              Add to Quote
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

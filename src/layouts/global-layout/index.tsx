@@ -8,6 +8,7 @@ import AppInitializer from "@/components/app-initializer";
 import TaxInitializer from "@/components/TaxInitializer";
 import store from "@/store/store";
 import type { ApiCategory } from "@/utils/types";
+import { QuoteBar } from "@/components/quote-bar";
 import Footer from "../footer";
 import Header from "../header";
 
@@ -43,6 +44,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({
           <Header navItemData={navItemData} />
           <main className="flex-grow">{children}</main>
           <Footer navItemData={navItemData ?? []} />
+          <QuoteBar />
         </div>
       )}
     </Provider>

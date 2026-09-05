@@ -5,20 +5,11 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import CTA from "@/components/cta";
 import { CurrencySymbol } from "@/components/currency-symbol";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { loginUser } from "@/store/slices/auth/authSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
-import { addAddress, type AddressPayload } from "@/store/slices/customer-address/customerAddressSlice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { getDefaultAddressCache, useLocationData, type DefaultAddressCache } from "@/utils/locationStorage";
-import { isGccCountryName } from "@/utils/uae-address";
 import {
   getUaeOrderShipping,
   UAE_FREE_SHIPPING_MIN,
@@ -33,24 +24,31 @@ import {
   CheckCircle,
   ChevronRight,
   FileText,
-  Hash,
   Home,
   Info,
   Loader2,
   Mail,
-  MapPin,
   Minus,
   Plus,
   Tag,
   Trash2,
   User,
-  X
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AddProductModal, type SearchProduct } from "./_components/add-product-modal";
+import QuoteProcessingModal, {
+  type QuoteProcessStep,
+} from "./_components/quote-processing-modal";
+import {
+  addToQuote,
+  clearQuoteList,
+  getQuoteList,
+  removeFromQuote,
+  updateQuoteQty,
+} from "@/utils/quoteStorage";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type QuoteProduct = {
@@ -114,7 +112,6 @@ const INITIAL_PRODUCTS: QuoteProduct[] = [
 
 const UAE_VAT_RATE = 0.05;
 const UAE = "United Arab Emirates";
-const MAX_EMAILS = 5;
 
 const fmtPrice = (n: number) =>
   Number(n).toLocaleString("en-US", {
@@ -257,7 +254,7 @@ const Field = ({
   children: React.ReactNode;
 }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-xs font-semibold text-gray-700">
+    <label className="text-xs font-semibold text-[#145c30]">
       {label}
       {required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
@@ -266,7 +263,7 @@ const Field = ({
 );
 
 const inputCls =
-  "w-full h-10 px-3 rounded-[7px] border border-gray-200 text-sm text-gray-900 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all placeholder:text-gray-400 bg-white";
+  "w-full h-10 px-3 rounded-[7px] border border-emerald-200 text-sm text-gray-900 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/15 transition-all placeholder:text-emerald-700/40 bg-white";
 
 // ── Product Row ───────────────────────────────────────────────────────────────
 const ProductRow = ({
@@ -469,9 +466,12 @@ export default function CreateQuotationPage() {
     coupon_id: null as number | null,
   });
   const [products, setProducts] = useState<QuoteProduct[]>(INITIAL_PRODUCTS);
+  const quoteHydrated = useRef(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [quoteStep, setQuoteStep] = useState<QuoteProcessStep>("idle");
+  const [quoteSuccess, setQuoteSuccess] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const locationFromRedux = useLocationData();
@@ -480,10 +480,7 @@ export default function CreateQuotationPage() {
   // ── Country / State / City lookup state ─────────────────────────────────────
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
-  const [states, setStates] = useState<LookupItem[]>([]);
   const [cities, setCities] = useState<LookupItem[]>([]);
-  const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
-  const [statesLoading, setStatesLoading] = useState(false);
   const [citiesLoading, setCitiesLoading] = useState(false);
 
   // ── Coupon state ──────────────────────────────────────────────────────────────
@@ -515,23 +512,20 @@ export default function CreateQuotationPage() {
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
   const countryId = country.data?.id as number | undefined;
 
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+
   const formik = useFormik({
     initialValues: {
       company_name: "",
       name: "",
       email: "",
-      additionalEmails: [] as { value: string }[],
       mobile_number: "",
-      address: "",
-      address2: "",
       country: "",
       state: "",
       city: "",
-      zip_code: "",
-      payment_mode: "Credit Card",
+      payment_mode: "",
       quote_name: "",
       register_customer: false,
-      notes: "",
     },
     validationSchema: createQuotationSchema,
     validateOnBlur: true,
@@ -543,41 +537,13 @@ export default function CreateQuotationPage() {
       }
       setSubmitError("");
       setSubmitting(true);
+      setQuoteSuccess(false);
+      setQuoteStep("details");
       try {
         const email = values.email.trim();
         const mobile = values.mobile_number.replace(/\D/g, "");
         const countryIsUAE = values.country === UAE;
-        const hideState = isGccCountryName(values.country);
-        let loggedIn = !!(
-          customerProfile ||
-          (typeof window !== "undefined" && localStorage.getItem("token"))
-        );
-        const shouldCreateAccount =
-          !isEditMode && values.register_customer && !loggedIn;
-
-        const saveShippingAddress = async (): Promise<number | undefined> => {
-          const addressPayload: AddressPayload = {
-            type: "",
-            address: values.address.trim(),
-            country: values.country,
-            state: hideState ? "" : values.state,
-            city: values.city,
-            zip_code: values.zip_code.trim(),
-            is_default: true,
-          };
-          await dispatch(addAddress(addressPayload)).unwrap();
-          return getDefaultAddressCache()?.id;
-        };
-
-        // Address API needs a logged-in customer. Guest quotes send address on the quote itself.
         let customerAddressId: number | undefined;
-        if (loggedIn) {
-          customerAddressId = await saveShippingAddress();
-          if (!customerAddressId) {
-            setSubmitError("Failed to save shipping address. Please try again.");
-            return;
-          }
-        }
 
         const quoteSubtotal = products.reduce((s, p) => s + p.price * p.qty, 0);
         const uaeShipping = countryIsUAE ? getUaeOrderShipping(quoteSubtotal) : null;
@@ -602,68 +568,43 @@ export default function CreateQuotationPage() {
             tax_percentage: countryIsUAE ? UAE_VAT_RATE * 100 : 0,
             coupon_id: couponInfo?.coupon_id ?? editCarryOverRef.current.coupon_id ?? undefined,
             discount: discount || undefined,
-            payment_mode: values.payment_mode,
+            payment_mode: values.payment_mode || "",
             products: productsPayload,
           };
 
+          setQuoteStep("quote");
           await makeApiRequest(apiUrls.QUOTE_UPDATE(editId!), {
             method: "PUT",
             data: updatePayload,
           });
-
+          setQuoteStep("done");
           setSubmitted(true);
-          setTimeout(() => router.push(`/dashboard/quotes/${editId}`), 1200);
+          setQuoteSuccess(true);
+          setTimeout(() => router.push("/"), 5000);
           return;
         }
 
-        // Checkbox ON: register → login (dummy password) first, including
-        // "already registered / please login". Then create quote + download.
-        if (shouldCreateAccount) {
-          loggedIn = (await registerGuestAndLogin(
-            dispatch,
-            email,
-            values.name.trim(),
-            dialCode,
-            mobile,
-          )) || loggedIn;
-          if (loggedIn && !customerAddressId) {
-            customerAddressId = await saveShippingAddress();
-            if (!customerAddressId) {
-              setSubmitError("Failed to save shipping address. Please try again.");
-              return;
-            }
-          }
-        }
-
-        const buildQuotePayload = (addressId: number | undefined) => ({
-          company_name: values.company_name.trim() || undefined,
+        const buildQuotePayload = (_addressId: number | undefined) => ({
+          company_name: values.company_name.trim(),
           name: values.name.trim(),
           email,
           country_code: dialCode,
           mobile_number: mobile,
-          quote_name: values.quote_name.trim(),
-          customer_notes: values.notes.trim() || undefined,
-          register_customer: false,
-          ...(addressId
-            ? { customer_address_id: addressId }
-            : {
-                address: values.address.trim(),
-                address2: values.address2.trim() || undefined,
-                country: values.country,
-                state: hideState ? "" : values.state,
-                city: values.city,
-                zip_code: values.zip_code.trim(),
-              }),
+          quote_name: "",
+          customer_notes: "",
+          register_customer: values.register_customer,
+          address: "",
+          address2: "",
+          country: values.country,
+          state: "",
+          city: values.city.trim(),
+          zip_code: "",
           tax_percentage: countryIsUAE ? UAE_VAT_RATE * 100 : 0,
           coupon_id: couponInfo?.coupon_id,
           discount: discount || undefined,
-          payment_mode: values.payment_mode,
+          payment_mode: "",
           products: productsPayload,
-          emails: Array.from(
-            new Set(
-              [email, ...values.additionalEmails.map((e) => e.value.trim())].filter(Boolean)
-            )
-          ),
+          emails: [email],
         });
 
         type QuoteCreateRes = {
@@ -681,11 +622,21 @@ export default function CreateQuotationPage() {
           quote_number?: string;
         };
 
-        const postQuote = (addressId: number | undefined) =>
-          makeApiRequest<QuoteCreateRes>(apiUrls.QUOTES, {
-            method: "POST",
-            data: buildQuotePayload(addressId),
+        const postQuote = (addressId: number | undefined) => {
+          const payload = buildQuotePayload(addressId);
+          const fd = new FormData();
+          Object.entries(payload).forEach(([key, val]) => {
+            if (val === undefined || val === null) return;
+            if (typeof val === "object") fd.append(key, JSON.stringify(val));
+            else fd.append(key, String(val));
           });
+          if (licenseFile) fd.append("trade_license", licenseFile);
+          else fd.append("trade_license", "");
+          return makeApiRequest<QuoteCreateRes>(apiUrls.QUOTES, {
+            method: "POST",
+            data: fd,
+          });
+        };
 
         const loginFromAuthBody = async (body: AuthApiBody | undefined) => {
           const password = extractPlainPassword(body);
@@ -694,6 +645,7 @@ export default function CreateQuotationPage() {
           return true;
         };
 
+        setQuoteStep("quote");
         let res: QuoteCreateRes;
         try {
           res = await postQuote(customerAddressId);
@@ -724,45 +676,47 @@ export default function CreateQuotationPage() {
             throw quoteErr;
           }
 
-          loggedIn = true;
-          customerAddressId = await saveShippingAddress();
-          if (!customerAddressId) {
-            setSubmitError("Failed to save shipping address. Please try again.");
-            return;
-          }
-          res = await postQuote(customerAddressId);
+          res = await postQuote(undefined);
           if (res?.success === false) {
             throw { response: { data: res } };
           }
         }
 
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 2500);
-
+        setQuoteStep("email");
         const quoteId = res?.data?.id ?? res?.data?.quote_id ?? res?.id ?? res?.quote_id;
         if (quoteId) {
-          const blob = await makeApiRequest<Blob>(apiUrls.QUOTE_DOWNLOAD_PDF(quoteId), {
-            responseType: "blob",
-          });
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = blobUrl;
-          a.download = buildQuotePdfFilename({
-            quoteName: res?.data?.quote_name || values.quote_name,
-            businessName: res?.data?.company_name || values.company_name,
-            quoteNumber: res?.data?.quote_number ?? res?.quote_number,
-            quoteId,
-          });
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(blobUrl);
+          try {
+            const blob = await makeApiRequest<Blob>(apiUrls.QUOTE_DOWNLOAD_PDF(quoteId), {
+              responseType: "blob",
+            });
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = buildQuotePdfFilename({
+              quoteName: res?.data?.quote_name || values.quote_name,
+              businessName: res?.data?.company_name || values.company_name,
+              quoteNumber: res?.data?.quote_number ?? res?.quote_number,
+              quoteId,
+            });
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(blobUrl);
+          } catch {
+            /* quote already created */
+          }
         }
 
-        if (typeof window !== "undefined" && localStorage.getItem("token")) {
-          router.push("/dashboard/quotes");
-        }
+        setQuoteStep("done");
+        setSubmitted(true);
+        clearQuoteList();
+        setProducts([]);
+
+        setQuoteSuccess(true);
+        setTimeout(() => router.push("/"), 5000);
       } catch (err: unknown) {
+        setQuoteStep("idle");
+        setQuoteSuccess(false);
         const msg =
           (err as { response?: { data?: { message?: string } } })?.response?.data
             ?.message ?? "Failed to generate quotation. Please try again.";
@@ -774,7 +728,6 @@ export default function CreateQuotationPage() {
   });
 
   const isUAE = formik.values.country === UAE;
-  const hideState = isGccCountryName(formik.values.country);
   // Sourced from the `frontend/countries/...` API response in Redux (state.country.data),
   // same as checkout — real currency for whichever country is selected, not a fixed value.
   const currencySymbol = country?.data?.currency_symbol ?? "";
@@ -834,7 +787,7 @@ export default function CreateQuotationPage() {
             accessoryItemIds: (item.accessory_charges ?? []).map(
               (a) => a.accessory_item_id,
             ),
-          })),
+          })).reverse(),
         );
       } catch {
         setEditLoadError(true);
@@ -855,34 +808,6 @@ export default function CreateQuotationPage() {
     const error = formik.errors[field];
     return touched ? (error as string | undefined) : undefined;
   };
-
-  const emailErr = (i: number) => {
-    const touched = formik.touched.additionalEmails?.[i]?.value;
-    const errors = formik.errors.additionalEmails;
-    if (!touched || !Array.isArray(errors)) return undefined;
-    const entry = errors[i];
-    return typeof entry === "object" && entry ? (entry as { value?: string }).value : undefined;
-  };
-
-  const addEmailField = () => {
-    if (formik.values.additionalEmails.length >= MAX_EMAILS - 1) return;
-    formik.setFieldValue("additionalEmails", [...formik.values.additionalEmails, { value: "" }]);
-  };
-
-  const removeEmailField = (i: number) =>
-    formik.setFieldValue(
-      "additionalEmails",
-      formik.values.additionalEmails.filter((_, idx) => idx !== i)
-    );
-
-  const setEmailField = (i: number, value: string) =>
-    formik.setFieldValue(
-      "additionalEmails",
-      formik.values.additionalEmails.map((e, idx) => (idx === i ? { value } : e))
-    );
-
-  const touchEmailField = (i: number) =>
-    formik.setFieldTouched(`additionalEmails[${i}].value`, true);
 
   // Fetch full countries list for the dropdown (once)
   useEffect(() => {
@@ -917,32 +842,16 @@ export default function CreateQuotationPage() {
     }
 
     const cached = getDefaultAddressCache();
-    if (cached) {
-      formik.setFieldValue("address", cached.address ?? "");
-      formik.setFieldValue("address2", cached.address2 ?? "");
-      formik.setFieldValue("zip_code", cached.zip_code ?? "");
-      if (cached.country) {
-        formik.setFieldValue("country", cached.country);
-        dispatch(fetchCountryByName(cached.country));
-        setPendingAddress(cached);
-      }
+    if (cached?.country) {
+      formik.setFieldValue("country", cached.country);
+      if (cached.city) formik.setFieldValue("city", cached.city);
+      dispatch(fetchCountryByName(cached.country));
+      setPendingAddress(cached);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerProfile]);
 
-  // Once the restored country's states have loaded, auto-select the matching state
-  useEffect(() => {
-    if (hideState) return;
-    if (!pendingAddress?.state || states.length === 0) return;
-    const match = states.find((s) => s.name.toLowerCase() === pendingAddress.state!.toLowerCase());
-    if (match) {
-      formik.setFieldValue("state", match.name);
-      setSelectedStateId(match.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [states, hideState]);
-
-  // Once the resulting cities have loaded (via state, or directly for UAE), auto-select the matching city
+  // Once cities have loaded, auto-select the matching cached city
   useEffect(() => {
     if (!pendingAddress?.city || cities.length === 0) return;
     const match = cities.find((c) => c.name.toLowerCase() === pendingAddress.city!.toLowerCase());
@@ -953,74 +862,61 @@ export default function CreateQuotationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cities]);
 
-  // Whenever the selected country changes: GCC → cities directly (no state step),
-  // any other country → states first, then cities under the chosen state.
   useEffect(() => {
     if (!countryId) return;
-    setSelectedStateId(null);
-    setStates([]);
     setCities([]);
-    if (hideState) {
-      setCitiesLoading(true);
-      makeApiRequest<LookupResponse>("frontend/countries/lookup", {
-        params: { country_id: countryId, type: "cities" },
-      })
-        .then((res) => setCities(res.data ?? []))
-        .finally(() => setCitiesLoading(false));
-    } else {
-      setStatesLoading(true);
-      makeApiRequest<LookupResponse>("frontend/countries/lookup", {
-        params: { country_id: countryId, type: "states" },
-      })
-        .then((res) => setStates(res.data ?? []))
-        .finally(() => setStatesLoading(false));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, hideState]);
-
-  // Fetch cities once a state is chosen (non-GCC flow only)
-  useEffect(() => {
-    if (hideState) return;
-    if (!selectedStateId) { setCities([]); return; }
     setCitiesLoading(true);
-    setCities([]);
     makeApiRequest<LookupResponse>("frontend/countries/lookup", {
-      params: { state_id: selectedStateId, type: "cities" },
+      params: { country_id: countryId, type: "cities" },
     })
       .then((res) => setCities(res.data ?? []))
+      .catch(() => setCities([]))
       .finally(() => setCitiesLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStateId, hideState]);
+  }, [countryId]);
 
-  const handleQtyChange = (id: number, qty: number) =>
+  useEffect(() => {
+    if (isEditMode || quoteHydrated.current) return;
+    quoteHydrated.current = true;
+    const stored = getQuoteList();
+    if (stored.length) {
+      setProducts(
+        stored.map(({ product: _product, ...item }) => item),
+      );
+    }
+  }, [isEditMode]);
+
+  const handleQtyChange = (id: number, qty: number) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, qty } : p))
     );
+    updateQuoteQty(id, qty);
+  };
 
-  const handleRemove = (id: number) =>
+  const handleRemove = (id: number) => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
+    removeFromQuote(id);
+  };
 
   const handleAddProduct = (p: SearchProduct) => {
     setProducts((prev) => {
       if (prev.some((existing) => existing.id === p.id)) return prev;
       const supplier = p.suppliers?.[0];
-      return [
-        ...prev,
-        {
-          id: p.id,
-          name: p.name?.en ?? "",
-          brand: "",
-          sku: p.sku,
-          image: p.images?.en?.[0] ?? "",
-          warranty: "—",
-          deliveryDays: supplier?.delivery_days ?? "",
-          shippingCost: supplier?.shipping_charge ?? 0,
-          price: p.sale_price > 0 ? p.sale_price : p.price,
-          qty: 1,
-          vendorId: supplier?.vendor_id,
-          accessoryItemIds: [],
-        },
-      ];
+      const next = {
+        id: p.id,
+        name: p.name?.en ?? "",
+        brand: "",
+        sku: p.sku,
+        image: p.images?.en?.[0] ?? "",
+        warranty: "—",
+        deliveryDays: supplier?.delivery_days ?? "",
+        shippingCost: supplier?.shipping_charge ?? 0,
+        price: p.sale_price > 0 ? p.sale_price : p.price,
+        qty: 1,
+        vendorId: supplier?.vendor_id,
+        accessoryItemIds: [] as number[],
+      };
+      addToQuote({ ...next, product: p });
+      return [next, ...prev];
     });
   };
 
@@ -1186,59 +1082,38 @@ export default function CreateQuotationPage() {
       <main className="min-h-screen bg-gray-50/60">
         <div className="global-container py-6 sm:py-8">
           {/* Page title */}
-          <div className="mb-6">
+          <div className="mb-4">
             <h1 className="text-xl sm:text-2xl font-bold text-[#186737]">
               {isEditMode ? "Edit Your Quotation" : "Your Customized Quotation"}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               {isEditMode
                 ? "Update the details below and save your changes."
-                : "Based on your selection, this quotation has been prepared for you. Please review before confirming."}
+                : "Fill in your details and review the products before confirming."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] gap-6 items-start">
-            {/* ── LEFT COLUMN ───────────────────────────────────────────── */}
-            <div className="space-y-5">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(0,1fr)] gap-5 items-stretch">
               {/* Customer Information */}
-              <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
-                  <User size={15} className="text-[#186737]" />
-                  <h2 className="font-bold text-gray-900 text-sm">
-                    Customer Information
+              <section className="rounded-[7px] border border-emerald-200 shadow-sm overflow-hidden h-fit bg-gradient-to-b from-[#e8f6ee] via-white to-[#fff8e8]">
+                <div className="px-4 py-2.5 flex items-center gap-2 bg-[#186737]">
+                  <User size={15} className="text-[#f5c451]" />
+                  <h2 className="font-bold text-white text-sm">
+                    Your Information
                   </h2>
                 </div>
 
-                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Company Name" required>
-                    <div className="relative">
-                      <Building2
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-                      <input
-                        name="company_name"
-                        className={`${inputCls} pl-9`}
-                        value={formik.values.company_name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        placeholder="Your company name"
-                      />
-                    </div>
-                    {err("company_name") && (
-                      <p className="text-[11px] text-red-500 mt-1">{err("company_name")}</p>
-                    )}
-                  </Field>
-
-                  <Field label="Contact Name" required>
+                <div className="p-4 grid grid-cols-1 gap-3">
+                  <Field label="Name" required>
                     <div className="relative">
                       <User
                         size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-[#186737]"
                       />
                       <input
                         name="name"
-                        className={`${inputCls} pl-9`}
+                        className={`${inputCls} pl-9 h-9`}
                         value={formik.values.name}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -1250,31 +1125,37 @@ export default function CreateQuotationPage() {
                     )}
                   </Field>
 
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-gray-700">
-                        Email Address<span className="text-red-500 ml-0.5">*</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={addEmailField}
-                        disabled={formik.values.additionalEmails.length >= MAX_EMAILS - 1}
-                        className="w-5 h-5 rounded-full flex items-center justify-center bg-[#186737]/10 text-[#186737] hover:bg-[#186737] hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                        title="Add another email"
-                      >
-                        <Plus size={12} />
-                      </button>
+                  <Field label="Company Name" required>
+                    <div className="relative">
+                      <Building2
+                        size={14}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-[#186737]"
+                      />
+                      <input
+                        name="company_name"
+                        className={`${inputCls} pl-9 h-9`}
+                        value={formik.values.company_name}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="Your company name"
+                      />
                     </div>
+                    {err("company_name") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("company_name")}</p>
+                    )}
+                  </Field>
+
+                  <Field label="Email" required>
                     <div className="relative">
                       <Mail
                         size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-[#186737]"
                       />
                       <input
                         type="email"
                         name="email"
                         disabled={!!customerProfile}
-                        className={`${inputCls} pl-9 ${customerProfile ? "cursor-not-allowed bg-gray-50 text-gray-400" : ""}`}
+                        className={`${inputCls} pl-9 h-9 ${customerProfile ? "cursor-not-allowed bg-gray-50 text-gray-400" : ""}`}
                         value={formik.values.email}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -1284,49 +1165,17 @@ export default function CreateQuotationPage() {
                     {err("email") && (
                       <p className="text-[11px] text-red-500 mt-1">{err("email")}</p>
                     )}
+                  </Field>
 
-                    {formik.values.additionalEmails.map((addr, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <div className="flex-1">
-                          <div className="relative">
-                            <Mail
-                              size={14}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                            />
-                            <input
-                              type="email"
-                              value={addr.value}
-                              onChange={(e) => setEmailField(i, e.target.value)}
-                              onBlur={() => touchEmailField(i)}
-                              placeholder="additional@company.com"
-                              className={`${inputCls} pl-9`}
-                            />
-                          </div>
-                          {emailErr(i) && (
-                            <p className="text-[11px] text-red-500 mt-1">{emailErr(i)}</p>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeEmailField(i)}
-                          className="w-10 h-10 shrink-0 rounded-[7px] flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
-                          title="Remove email"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Field label="Mobile Number" required>
+                  <Field label="Cell Phone Number" required>
                     <div
-                      className={`flex h-10 rounded-[7px] border overflow-hidden transition-all ${
+                      className={`flex h-9 rounded-[7px] border overflow-hidden transition-all ${
                         err("mobile_number") || phoneValidation.isInvalid
                           ? "border-red-400"
-                          : "border-gray-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/10"
+                          : "border-emerald-200 focus-within:border-[#186737] focus-within:ring-2 focus-within:ring-[#186737]/15"
                       }`}
                     >
-                      <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-200 shrink-0">
+                      <div className="flex items-center gap-1.5 px-3 bg-emerald-50 border-r border-emerald-200 shrink-0">
                         {country.loading ? (
                           <span className="text-xs text-gray-400 animate-pulse">...</span>
                         ) : (
@@ -1344,123 +1193,18 @@ export default function CreateQuotationPage() {
                         type="tel"
                         name="mobile_number"
                         inputMode="numeric"
-                        // disabled={!!customerProfile}
-                        className={`flex-1 px-3 text-sm outline-none placeholder:text-gray-400 ${customerProfile ? "cursosr-not-allowed bg-gray-50 text-gray-400" : "bg-white"}`}
+                        className="flex-1 px-3 text-sm outline-none placeholder:text-gray-400 bg-white"
                         value={formik.values.mobile_number}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        placeholder="(555) 000-0000"
+                        placeholder="50 123 4567"
                       />
                     </div>
-                    {detectedCountry && !err("mobile_number") && !phoneValidation.isInvalid && !phoneValidation.validating && (
-                      <p className="text-[11px] text-gray-400 mt-1">Detected: {detectedCountry}</p>
-                    )}
-                    {phoneValidation.validating && !err("mobile_number") && (
-                      <p className="text-[11px] text-gray-400 mt-1">Validating...</p>
-                    )}
                     {err("mobile_number") && (
                       <p className="text-[11px] text-red-500 mt-1">{err("mobile_number")}</p>
                     )}
                     {!err("mobile_number") && phoneValidation.isInvalid && (
                       <p className="text-[11px] text-red-500 mt-1">{phoneValidation.errorMsg}</p>
-                    )}
-                  </Field>
-
-                  <Field label="Payment Terms">
-                    <Select
-                      value={formik.values.payment_mode}
-                      onValueChange={(val) => {
-                        formik.setFieldValue("payment_mode", val);
-                        formik.setFieldTouched("payment_mode", true);
-                      }}
-                    >
-                      <SelectTrigger className={`${inputCls} cursor-pointer`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Credit Card">Credit Card</SelectItem>
-                        {/* <SelectItem value="Net 30">Net 30</SelectItem>
-                        <SedsadsadasdasdasdasdasdasdlectItem value="Net 60">Net 60</SedsadsadasdasdasdasdasdasdlectItem>
-                        <SelectItem value="Wire Transfer">Wire Transfer</SelectItem>
-                        <SelectItem value="Check">Check</SelectItem> */}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-
-                  <Field label="Quote Name" required>
-                    <div className="relative">
-                      <Tag
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-                      <input
-                        name="quote_name"
-                        className={`${inputCls} pl-9`}
-                        value={formik.values.quote_name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        placeholder="Enter your quote name"
-                      />
-                    </div>
-                    {err("quote_name") && (
-                      <p className="text-[11px] text-red-500 mt-1">{err("quote_name")}</p>
-                    )}
-                  </Field>
-
-                  {!customerProfile && (
-                    <div className="sm:col-span-2">
-                      <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="register_customer"
-                          checked={formik.values.register_customer}
-                          onChange={formik.handleChange}
-                          className="w-4 h-4 rounded border-gray-300 text-[#186737] focus:ring-[#186737]/30 cursor-pointer"
-                        />
-                        <span className="text-xs font-medium text-gray-600">
-                          Kindly create an account using the details below so my information can be securely saved for future quotations.
-                        </span>
-                      </label>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {/* Shipping Address */}
-              <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm">
-                <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
-                  <MapPin size={15} className="text-[#186737]" />
-                  <h2 className="font-bold text-gray-900 text-sm">
-                    Shipping Address
-                  </h2>
-                </div>
-
-                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Address" required={!formik.values.address2.trim()}>
-                    <input
-                      name="address"
-                      className={inputCls}
-                      value={formik.values.address}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      placeholder="Street address, building, etc."
-                    />
-                    {err("address") && (
-                      <p className="text-[11px] text-red-500 mt-1">{err("address")}</p>
-                    )}
-                  </Field>
-
-                  <Field label="Address 2">
-                    <input
-                      name="address2"
-                      className={inputCls}
-                      value={formik.values.address2}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      placeholder="Apartment, suite, unit, etc. (optional)"
-                    />
-                    {err("address2") && (
-                      <p className="text-[11px] text-red-500 mt-1">{err("address2")}</p>
                     )}
                   </Field>
 
@@ -1485,88 +1229,95 @@ export default function CreateQuotationPage() {
                     )}
                   </Field>
 
-                  {!hideState && (
-                    <Field label="State" required>
-                      <SearchableSelect
-                        options={states}
-                        value={formik.values.state}
-                        onChange={(name, id) => {
-                          formik.setFieldValue("state", name);
-                          formik.setFieldValue("city", "");
-                          formik.setFieldTouched("state", true, false);
-                          setSelectedStateId(id);
-                        }}
-                        placeholder="Select State"
-                        searchPlaceholder="Search state…"
-                        loading={statesLoading}
-                        disabled={!countryId}
-                        error={!!err("state")}
-                      />
-                      {err("state") && (
-                        <p className="text-[11px] text-red-500 mt-1">{err("state")}</p>
-                      )}
-                    </Field>
-                  )}
-
                   <Field label="City" required>
-                    <SearchableSelect
-                      options={cities}
-                      value={formik.values.city}
-                      onChange={(name) => {
-                        formik.setFieldValue("city", name);
-                        formik.setFieldTouched("city", true, false);
-                        if (hideState) formik.setFieldValue("state", "");
-                      }}
-                      placeholder={
-                        hideState
-                          ? "Select City"
-                          : !selectedStateId
-                            ? "Select State first"
-                            : "Select City"
-                      }
-                      searchPlaceholder="Search city…"
-                      loading={citiesLoading}
-                      disabled={hideState ? !countryId : !selectedStateId}
-                      error={!!err("city")}
-                    />
+                    {cities.length > 0 ? (
+                      <SearchableSelect
+                        options={cities}
+                        value={formik.values.city}
+                        onChange={(name) => {
+                          formik.setFieldValue("city", name);
+                          formik.setFieldTouched("city", true, false);
+                        }}
+                        placeholder="Select City"
+                        searchPlaceholder="Search city…"
+                        loading={citiesLoading}
+                        disabled={!countryId}
+                        error={!!err("city")}
+                      />
+                    ) : (
+                      <input
+                        name="city"
+                        className={`${inputCls} h-9`}
+                        value={formik.values.city}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder={countryId ? "Enter city" : "Select country first"}
+                        disabled={!countryId && !formik.values.country}
+                      />
+                    )}
                     {err("city") && (
                       <p className="text-[11px] text-red-500 mt-1">{err("city")}</p>
                     )}
                   </Field>
 
-                  <Field label="Zip Code" required>
-                    <div className="relative">
-                      <Hash
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
+                  <Field label="Trade License (optional)">
+                    <label className="flex items-center gap-2 h-9 px-3 rounded-[7px] border border-dashed border-[#186737]/50 bg-emerald-50 cursor-pointer hover:border-[#186737] hover:bg-emerald-100/70 transition-colors">
+                      <FileText size={14} className="text-[#186737] shrink-0" />
+                      <span className="text-xs text-[#186737] truncate">
+                        {licenseFile ? licenseFile.name : "Upload trade license"}
+                      </span>
                       <input
-                        name="zip_code"
-                        className={`${inputCls} pl-9`}
-                        value={formik.values.zip_code}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        placeholder="00000"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          setLicenseFile(file);
+                        }}
                       />
-                    </div>
-                    {err("zip_code") && (
-                      <p className="text-[11px] text-red-500 mt-1">{err("zip_code")}</p>
-                    )}
+                    </label>
                   </Field>
+
+                  {!customerProfile && (
+                    <div>
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="register_customer"
+                          checked={formik.values.register_customer}
+                          onChange={formik.handleChange}
+                          className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#186737] focus:ring-[#186737]/30 cursor-pointer"
+                        />
+                        <span className="text-xs font-medium text-gray-600">
+                          Kindly create an account using the details below so my information can be securely saved for future quotations.
+                        </span>
+                      </label>
+                    </div>
+                  )}
                 </div>
               </section>
 
               {/* Quotation Details */}
-              <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
+              <section className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-0 lg:h-0 lg:min-h-full">
+                <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2 shrink-0">
                   <FileText size={15} className="text-[#186737]" />
                   <h2 className="font-bold text-gray-900 text-sm">
                     Quotation Details
                   </h2>
-                  <span className="ml-auto text-xs text-gray-400 font-medium">
+                  <span className="mr-auto text-xs text-gray-400 font-medium">
                     {products.length} product{products.length !== 1 ? "s" : ""}
                   </span>
+               
+                  <button
+                    onClick={() => setAddModalOpen(true)}
+                    className="flex items-center gap-1.5 bg-transparent text-[#186737] text-sm font-semibold underline underline-offset-2 hover:text-[#145c30] transition-colors"
+                  >
+                    <Plus size={15} strokeWidth={2.5} />
+                    Add More Products
+                  </button>
+           
                 </div>
+               
 
                 {products.length === 0 ? (
                   <div className="p-10 text-center">
@@ -1576,9 +1327,9 @@ export default function CreateQuotationPage() {
                 ) : (
                   <>
                     {/* Desktop table */}
-                    <div className="hidden md:block overflow-x-auto">
+                    <div className="quote-scroll hidden md:block flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                       <table className="w-full">
-                        <thead>
+                        <thead className="sticky top-0 z-10">
                           <tr className="bg-gray-50 border-b border-gray-100">
                             <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">
                               Product Details
@@ -1689,7 +1440,7 @@ export default function CreateQuotationPage() {
                     </div>
 
                     {/* Mobile cards */}
-                    <div className="md:hidden p-4 space-y-3">
+                    <div className="quote-scroll md:hidden p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
                       {products.map((p) => (
                         <div key={p.id} className="border border-gray-100 rounded-[7px] p-4">
                           <div className="flex gap-3">
@@ -1776,7 +1527,7 @@ export default function CreateQuotationPage() {
                 )}
 
                 {/* Add More Products */}
-                <div className="px-5 py-4 border-t border-gray-100 flex justify-end">
+                {/* <div className="px-5 py-4 border-t border-gray-100 flex justify-end shrink-0">
                   <button
                     onClick={() => setAddModalOpen(true)}
                     className="flex items-center gap-1.5 bg-[#186737] hover:bg-[#145c30] text-white text-sm font-semibold px-4 py-2 rounded-[7px] transition-colors duration-200"
@@ -1784,36 +1535,12 @@ export default function CreateQuotationPage() {
                     <Plus size={15} strokeWidth={2.5} />
                     Add More Products
                   </button>
-                </div>
-              </section>
-
-              {/* Notes */}
-              <section className="hidden bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-gray-100">
-                  <h2 className="font-bold text-gray-900 text-sm">
-                    Add notes to horecastore{" "}
-                    <span className="text-gray-400 font-normal text-xs">(optional)</span>
-                  </h2>
-                </div>
-                <div className="p-5">
-                  <textarea
-                    name="notes"
-                    rows={4}
-                    className="w-full px-3 py-2.5 rounded-[7px] border border-gray-200 text-sm text-gray-900 outline-none focus:border-[#186737] focus:ring-2 focus:ring-[#186737]/10 transition-all placeholder:text-gray-400 resize-none bg-white"
-                    placeholder="Add special instruction or notes for our team..."
-                    value={formik.values.notes}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  />
-                  {err("notes") && (
-                    <p className="text-[11px] text-red-500 mt-1">{err("notes")}</p>
-                  )}
-                </div>
+                </div> */}
               </section>
             </div>
 
             {/* ── RIGHT SIDEBAR ─────────────────────────────────────────── */}
-            <div className="sticky top-[180px] space-y-4">
+            <div className="sticky top-[0px] space-y-4">
               {/* Quote Summary */}
               <div className="bg-white rounded-[7px] border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-gray-100">
@@ -2038,6 +1765,12 @@ export default function CreateQuotationPage() {
           </div>
         </div>
       </main>
+
+      <QuoteProcessingModal
+        step={quoteStep}
+        success={quoteSuccess}
+        onGoHome={() => router.push("/")}
+      />
 
       <AddProductModal
         isOpen={addModalOpen}

@@ -1,4 +1,3 @@
-import { isGccCountryName } from "@/utils/uae-address";
 import * as Yup from "yup";
 
 const isUS = process.env.NEXT_PUBLIC_REGION === "US";
@@ -120,45 +119,17 @@ export const createQuotationSchema = Yup.object({
   company_name: Yup.string().trim().max(120, "Maximum 120 characters.").required("Company name is required."),
   name: Yup.string()
     .trim()
-    .required("Contact name is required.")
+    .required("Name is required.")
     .test("no-blank", "Name cannot be blank spaces.", (v) => !!v && v.trim().length > 0)
     .min(2, "Minimum 2 characters.")
     .max(60, "Maximum 60 characters."),
   email: Yup.string()
     .trim()
-    .required("Email address is required.")
+    .required("Email is required.")
     .email("Enter a valid email address."),
-  additionalEmails: Yup.array().of(
-    Yup.object({
-      value: Yup.string()
-        .trim()
-        .required("Email is required.")
-        .email("Enter a valid email address."),
-    })
-  ),
-  mobile_number: Yup.string().required("Mobile number is required."),
-  address: Yup.string()
-    .trim()
-    .max(200, "Maximum 200 characters.")
-    .when("address2", {
-      is: (address2?: string) => !address2 || !address2.trim(),
-      then: (schema) => schema.required("Enter Address or Address ."),
-    }),
-  address2: Yup.string().trim().max(200, "Maximum 200 characters."),
+  mobile_number: Yup.string().required("Cell phone number is required."),
   country: Yup.string().required("Country is required."),
-  state: Yup.string().when("country", {
-    is: (country: string) => !isGccCountryName(country),
-    then: (schema) => schema.trim().required("State is required."),
-  }),
   city: Yup.string().trim().required("City is required."),
-  zip_code: Yup.string()
-    .trim()
-    .required("Zip code is required.")
-    .matches(/^[A-Za-z0-9\s-]{3,10}$/, "Enter a valid zip/postal code."),
-  payment_mode: Yup.string().required("Please select payment terms."),
-  quote_name: Yup.string().trim().max(80, "Maximum 80 characters.").required("Quote name is required."),
-  notes: Yup.string().trim().max(500, "Maximum 500 characters."),
-  register_customer: Yup.boolean(),
 });
 
 export const changePasswordSchema = Yup.object({
