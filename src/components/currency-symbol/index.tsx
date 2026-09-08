@@ -26,7 +26,12 @@ export function CurrencySymbol({
   weight = "regular",
   fontsize
 }: CurrencySymbolProps) {
-  if ((currency ?? "AED").trim().toUpperCase() === "AED") {
+  const raw = (currency ?? "").trim();
+  const upper = raw.toUpperCase();
+  if (upper === "INR" || upper === "RS" || upper === "RS." || raw === "₹") {
+    return <span aria-label="INR" style={{ marginRight: "3px" }}>₹</span>;
+  }
+  if (!raw || upper === "AED") {
     return <DirhamSymbol size={size} weight={weight} aria-label="AED" fontSize={fontsize || "25px"} style={{
       marginRight:"3px"
     }} />;

@@ -82,7 +82,7 @@ export function QuoteBar() {
 
           <Link
             href="/create-quotation"
-            className="group inline-flex shrink-0 items-center gap-1 rounded-[7px] bg-[#186737] px-4 py-3 text-md font-bold text-white transition-colors hover:bg-[#145c30]"
+            className="group inline-flex shrink-0 items-center gap-1 rounded-[7px] bg-gradient-to-r from-[#ff3b0a] to-[red] px-4 py-3 text-md font-bold text-white transition-colors hover:bg-[#145c30]"
           >
             <FileText size={13} strokeWidth={2.4} />
             Complete Your Quote

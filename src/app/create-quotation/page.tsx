@@ -510,7 +510,6 @@ export default function CreateQuotationPage() {
   const dialCode = country.data?.phone_code ?? "";
   const isoCode = locationFromRedux?.countryCode ?? "";
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
-  const countryId = country.data?.id as number | undefined;
 
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
 
@@ -521,6 +520,8 @@ export default function CreateQuotationPage() {
       email: "",
       mobile_number: "",
       country: "",
+      nationality: "",
+      gender: "",
       state: "",
       city: "",
       payment_mode: "",
@@ -542,7 +543,7 @@ export default function CreateQuotationPage() {
       try {
         const email = values.email.trim();
         const mobile = values.mobile_number.replace(/\D/g, "");
-        const countryIsUAE = values.country === UAE;
+        const countryIsUAE = (isoCode || "").toUpperCase() === "AE";
         let customerAddressId: number | undefined;
 
         const quoteSubtotal = products.reduce((s, p) => s + p.price * p.qty, 0);
@@ -596,6 +597,8 @@ export default function CreateQuotationPage() {
           address: "",
           address2: "",
           country: values.country,
+          nationality: values.nationality,
+          gender: values.gender,
           state: "",
           city: values.city.trim(),
           zip_code: "",
@@ -727,10 +730,17 @@ export default function CreateQuotationPage() {
     },
   });
 
-  const isUAE = formik.values.country === UAE;
-  // Sourced from the `frontend/countries/...` API response in Redux (state.country.data),
-  // same as checkout — real currency for whichever country is selected, not a fixed value.
-  const currencySymbol = country?.data?.currency_symbol ?? "";
+  const visitorCode = (isoCode || "").toUpperCase();
+  const isUAE = visitorCode === "AE";
+  // Prices follow visitor geo (force_country). Do not use form shipping country —
+  // selecting UAE was overwriting Redux and showing a Dirham symbol on INR amounts.
+  const currencySymbol =
+    visitorCode === "IN"
+      ? "₹"
+      : country?.data?.currency_symbol ?? "";
+  const formCountryId = countries.find(
+    (c) => c.name.toLowerCase() === formik.values.country.trim().toLowerCase(),
+  )?.id;
 
   // ── Edit mode: load the existing quote (?id=) and prefill this same form ────────
   const editFetchDone = useRef(false);
@@ -845,7 +855,6 @@ export default function CreateQuotationPage() {
     if (cached?.country) {
       formik.setFieldValue("country", cached.country);
       if (cached.city) formik.setFieldValue("city", cached.city);
-      dispatch(fetchCountryByName(cached.country));
       setPendingAddress(cached);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -863,16 +872,16 @@ export default function CreateQuotationPage() {
   }, [cities]);
 
   useEffect(() => {
-    if (!countryId) return;
+    if (!formCountryId) return;
     setCities([]);
     setCitiesLoading(true);
     makeApiRequest<LookupResponse>("frontend/countries/lookup", {
-      params: { country_id: countryId, type: "cities" },
+      params: { country_id: formCountryId, type: "cities" },
     })
       .then((res) => setCities(res.data ?? []))
       .catch(() => setCities([]))
       .finally(() => setCitiesLoading(false));
-  }, [countryId]);
+  }, [formCountryId]);
 
   useEffect(() => {
     if (isEditMode || quoteHydrated.current) return;
@@ -978,8 +987,7 @@ export default function CreateQuotationPage() {
 
   // ── Totals ────────────────────────────────────────────────────────────────────
   const subtotal = products.reduce((s, p) => s + p.price * p.qty, 0);
-  const itemShipping = products.reduce((s, p) => s + p.shippingCost * p.qty, 0);
-  const shipping = isUAE ? getUaeOrderShipping(subtotal) : itemShipping;
+  const shipping = isUAE ? getUaeOrderShipping(subtotal) : 0;
   const freeShippingRemaining = isUAE
     ? Math.max(0, UAE_FREE_SHIPPING_MIN - subtotal)
     : 0;
@@ -1094,7 +1102,7 @@ export default function CreateQuotationPage() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-5 items-start">
-            <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(0,1fr)] gap-5 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-5 items-stretch">
               {/* Customer Information */}
               <section className="rounded-[7px] border border-emerald-200 shadow-sm overflow-hidden h-fit bg-gradient-to-b from-[#e8f6ee] via-white to-[#fff8e8]">
                 <div className="px-4 py-2.5 flex items-center gap-2 bg-[#186737]">
@@ -1208,6 +1216,52 @@ export default function CreateQuotationPage() {
                     )}
                   </Field>
 
+                  <Field label="Nationality" required>
+                    <SearchableSelect
+                      options={countries}
+                      value={formik.values.nationality}
+                      onChange={(name) => {
+                        formik.setFieldValue("nationality", name);
+                        formik.setFieldTouched("nationality", true, false);
+                      }}
+                      placeholder="Select Nationality"
+                      searchPlaceholder="Search country…"
+                      loading={countriesLoading}
+                      error={!!err("nationality")}
+                    />
+                    {err("nationality") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("nationality")}</p>
+                    )}
+                  </Field>
+
+                  <Field label="Gender" required>
+                    <select
+                      name="gender"
+                      className={`${inputCls} h-9 ${
+                        err("gender") ? "border-red-400" : ""
+                      } ${formik.values.gender ? "text-gray-900" : "text-gray-400"}`}
+                      value={formik.values.gender}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
+                   <option value="Male">Male</option>
+<option value="Female">Female</option>
+{/* <option value="Non-binary">Non-binary</option>
+<option value="Transgender Male">Transgender Male</option>
+<option value="Transgender Female">Transgender Female</option>
+<option value="Genderqueer">Genderqueer</option>
+<option value="Genderfluid">Genderfluid</option>
+<option value="Agender">Agender</option>
+<option value="Bigender">Bigender</option> */}
+{/* <option value="Two-Spirit">Two-Spirit</option> */}
+<option value="Other">Other</option>
+{/* <option value="Prefer not to say">Prefer not to say</option> */}
+                    </select>
+                    {err("gender") && (
+                      <p className="text-[11px] text-red-500 mt-1">{err("gender")}</p>
+                    )}
+                  </Field>
+
                   <Field label="Country" required>
                     <SearchableSelect
                       options={countries}
@@ -1217,7 +1271,6 @@ export default function CreateQuotationPage() {
                         formik.setFieldValue("state", "");
                         formik.setFieldValue("city", "");
                         formik.setFieldTouched("country", true, false);
-                        dispatch(fetchCountryByName(name));
                       }}
                       placeholder="Select Country"
                       searchPlaceholder="Search country…"
@@ -1241,7 +1294,7 @@ export default function CreateQuotationPage() {
                         placeholder="Select City"
                         searchPlaceholder="Search city…"
                         loading={citiesLoading}
-                        disabled={!countryId}
+                        disabled={!formCountryId}
                         error={!!err("city")}
                       />
                     ) : (
@@ -1251,8 +1304,8 @@ export default function CreateQuotationPage() {
                         value={formik.values.city}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        placeholder={countryId ? "Enter city" : "Select country first"}
-                        disabled={!countryId && !formik.values.country}
+                        placeholder={formCountryId ? "Enter city" : "Select country first"}
+                        disabled={!formCountryId && !formik.values.country}
                       />
                     )}
                     {err("city") && (
@@ -1289,7 +1342,7 @@ export default function CreateQuotationPage() {
                           className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#186737] focus:ring-[#186737]/30 cursor-pointer"
                         />
                         <span className="text-xs font-medium text-gray-600">
-                          Kindly create an account using the details below so my information can be securely saved for future quotations.
+                          Save your  details for user account. 
                         </span>
                       </label>
                     </div>
@@ -1304,13 +1357,13 @@ export default function CreateQuotationPage() {
                   <h2 className="font-bold text-gray-900 text-sm">
                     Quotation Details
                   </h2>
-                  <span className="mr-auto text-xs text-gray-400 font-medium">
+                  <span className="mr-auto text-xs text-gray-400 font-medium md:block hidden">
                     {products.length} product{products.length !== 1 ? "s" : ""}
                   </span>
                
                   <button
                     onClick={() => setAddModalOpen(true)}
-                    className="flex items-center gap-1.5 bg-transparent text-[#186737] text-sm font-semibold underline underline-offset-2 hover:text-[#145c30] transition-colors"
+                    className="flex items-center gap-1.5 bg-transparent text-[#186737] text-sm font-semibold underline underline-offset-2 hover:text-[#145c30] transition-colors md:text-base text-xs ml-auto"
                   >
                     <Plus size={15} strokeWidth={2.5} />
                     Add More Products
@@ -1427,7 +1480,7 @@ export default function CreateQuotationPage() {
                                   </button>
                                 </div>
                               </td>
-                              <td className="py-4 whitespace-nowrap">
+                              <td className="py-4 whitespace-nowrap pr-2">
                                 <span className="text-sm font-bold text-gray-900">
                                   <CurrencySymbol currency={currencySymbol} fontsize="15px" />
                                   {fmtPrice(p.price * p.qty)}
@@ -1630,21 +1683,19 @@ export default function CreateQuotationPage() {
                         </span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Shipping</span>
-                      {isUAE ? (
-                        shipping > 0 ? (
+                    {isUAE && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Shipping</span>
+                        {shipping > 0 ? (
                           <span className="font-semibold text-gray-900 flex items-center gap-0.5">
                             <CurrencySymbol currency={currencySymbol} fontsize="15px" />
                             {fmtPrice(shipping)}
                           </span>
                         ) : (
                           <span className="font-semibold text-green-600">Free</span>
-                        )
-                      ) : (
-                        <span className="font-semibold text-green-600">Free</span>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
                     {isUAE && freeShippingRemaining > 0 && (
                       <p className="text-[11px] text-gray-500 -mt-1">
                         Add{" "}

@@ -38,7 +38,8 @@ const CTA = () => {
         {/* Call button */}
         <a
           href="tel:+18664467322"
-          className="group flex items-center justify-center w-full h-11 rounded-xl bg-[#186737] hover:bg-[#145c30] active:bg-[#0f4525] transition-all duration-200 overflow-hidden  shadow-md shadow-[#186737]/20 gap-2.5 px-4"
+          className="group flex items-center justify-center w-full h-11 rounded-xl bg-gradient-to-r from-[#ff3b0a] to-[red] transition-all duration-200 overflow-hidden  shadow-md shadow-[#186737]/20 gap-2.5 px-4"
+          // className="group flex items-center justify-center w-full h-11 rounded-xl bg-[#186737] hover:bg-[#145c30] active:bg-[#0f4525] transition-all duration-200 overflow-hidden  shadow-md shadow-[#186737]/20 gap-2.5 px-4"
         >
           {/* Phone icon box */}
           <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
@@ -51,7 +52,7 @@ const CTA = () => {
           {/* Text */}
           <div className="flex items-center gap-2">
             <span className="text-[12.5px] font-bold text-white">Call Now</span>
-            <span className="text-[12px] font-semibold text-white/80">800-467-322</span>
+            <span className="text-[12px] font-semibold text-white">800-467-322</span>
           </div>
 
           {/* Arrow circle */}

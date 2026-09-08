@@ -130,6 +130,8 @@ export const createQuotationSchema = Yup.object({
   mobile_number: Yup.string().required("Cell phone number is required."),
   country: Yup.string().required("Country is required."),
   city: Yup.string().trim().required("City is required."),
+  nationality: Yup.string().required("Nationality is required."),
+  gender: Yup.string().required("Gender is required."),
 });
 
 export const changePasswordSchema = Yup.object({
