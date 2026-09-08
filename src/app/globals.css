@@ -244,6 +244,36 @@ img {
   scroll-behavior: smooth;
 }
 
+.quote-scroll::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+.quote-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.quote-scroll::-webkit-scrollbar-track {
+  background: #e8f5ee !important;
+  border-radius: 999px;
+}
+.quote-scroll::-webkit-scrollbar-thumb {
+  background: #186737 !important;
+  border-radius: 999px;
+}
+.quote-scroll::-webkit-scrollbar-thumb:hover {
+  background: #145c30 !important;
+}
+.quote-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+@supports not selector(::-webkit-scrollbar) {
+  .quote-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #186737 #e8f5ee;
+  }
+}
+
 .normal-row {
   border-left: 3px solid transparent;
 }

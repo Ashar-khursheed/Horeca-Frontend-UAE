@@ -13,6 +13,7 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
+  FileText,
   Package,
   RotateCcw,
   ShieldCheck,
@@ -24,6 +25,7 @@ import type { Accessory, AccessoryItem, VariantItem } from "./types";
 import AddToCartWidget from "@/components/add-to-cart";
 import { CurrencySymbol } from "@/components/currency-symbol";
 import { useAppSelector } from "@/store/hooks";
+import { addToQuote, useQuoteList } from "@/utils/quoteStorage";
 
 type BenefitFeature = { benefit: string; feature: string };
 
@@ -82,6 +84,10 @@ export const ProductInfo = ({
   product,
 }: ProductInfoProps) => {
   const isQuote = !!product?.quote_available;
+  const quoteItems = useQuoteList();
+  const inQuoteList = quoteItems.some((item) => item.id === product?.id);
+  const [quoteAdded, setQuoteAdded] = useState(false);
+  const alreadyInQuote = inQuoteList || quoteAdded;
 
   const [openBenefits, setOpenBenefits] = useState<Set<number>>(new Set([0]));
   const [selectedItems, setSelectedItems] = useState<Record<number, AccessoryItem | null>>({});
@@ -278,6 +284,55 @@ export const ProductInfo = ({
               }`}
               accessoryItemIds={selectedItemIds}
             />
+            <button
+              type="button"
+              onClick={() => {
+                if (alreadyInQuote || !product?.id) return;
+                const supplier = product?.suppliers?.[0];
+                addToQuote({
+                  id: product.id,
+                  name: product.name ?? name,
+                  brand: "",
+                  sku: product.sku ?? "",
+                  image: product.images?.[0] ?? "",
+                  warranty: "—",
+                  deliveryDays: deliveryDays ?? "",
+                  shippingCost: Number(supplier?.shipping_charge ?? 0),
+                  price: activePrice,
+                  qty: product.min_quantity ?? supplier?.min_quantity ?? 1,
+                  vendorId: supplier?.vendor_id,
+                  accessoryItemIds: selectedItemIds,
+                  product,
+                });
+                setQuoteAdded(true);
+              }}
+              className={`w-full mt-2 h-11 rounded-[7px] text-sm font-semibold flex items-center justify-center gap-1.5 text-white transition-all ${
+                alreadyInQuote
+                  ? "bg-[#8B1515]"
+                  : "hover:brightness-110 hover:shadow-md"
+              }`}
+              style={
+                alreadyInQuote
+                  ? undefined
+                  : {
+                      background: "#FD1D1D",
+                      backgroundImage:
+                        "linear-gradient(220deg, rgba(253, 29, 29, 1) 9%, rgba(252, 176, 69, 1) 79%)",
+                    }
+              }
+            >
+              {alreadyInQuote ? (
+                <>
+                  <CheckCircle size={16} strokeWidth={2} />
+                  Added to Quote
+                </>
+              ) : (
+                <>
+                  <FileText size={16} strokeWidth={2} />
+                  Add to Quote
+                </>
+              )}
+            </button>
           </div>
         )}
       </div>

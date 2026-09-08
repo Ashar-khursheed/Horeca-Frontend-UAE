@@ -1,20 +1,25 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { Handshake, FileText } from "lucide-react";
+import { Handshake, FileText, type LucideIcon } from "lucide-react";
 import LangSwitcher from "@/components/LangSwitcher";
 import FinancingModal from "@/components/financing-modal";
 
 type HighlightVariant = "quote" | "partner";
 
-const NAV_LINKS = [
-  { label: "Track your order", href: "/track-order", isModal: false, modalTitle: "", highlight: false, variant: undefined },
-  // { label: "Financing Options", href: "#", isModal: true, modalTitle: "Financing", highlight: false, variant: undefined },
- 
-  { label: "Contact Us", href: "/pages/contact-us", isModal: false, modalTitle: "", highlight: false, variant: undefined },
-  { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false, modalTitle: "", highlight: false, variant: undefined },
-  // { label: "Become a Partner", href: "/register?type=vendor", isModal: false, modalTitle: "", highlight: true, variant: "partner" as HighlightVariant },
-   { label: "Create Quotation", href: "/create-quotation", isModal: false, modalTitle: "", highlight: true, variant: "quote" as HighlightVariant },
+type NavLink = {
+  label: string;
+  href: string;
+  isModal: boolean;
+  modalTitle: string;
+  highlight: boolean;
+  variant?: HighlightVariant;
+};
+
+const NAV_LINKS: NavLink[] = [
+  { label: "Track your order", href: "/track-order", isModal: false, modalTitle: "", highlight: false },
+  { label: "Contact Us", href: "/pages/contact-us", isModal: false, modalTitle: "", highlight: false },
+  { label: "Terms & Conditions", href: "/pages/return-policy", isModal: false, modalTitle: "", highlight: false },
 ];
 
 const linkClass = `
@@ -29,7 +34,7 @@ const linkClass = `
   hover:after:scale-x-100
 `;
 
-const HIGHLIGHT_ICON: Record<HighlightVariant, React.ElementType> = {
+const HIGHLIGHT_ICON: Record<HighlightVariant, LucideIcon> = {
   quote: FileText,
   partner: Handshake,
 };
@@ -80,19 +85,21 @@ const TopBar = () => {
           {/* Right: Nav Links */}
           <ul className="flex items-center">
             {NAV_LINKS.map((link, index) => {
-              const Icon = link.variant ? HIGHLIGHT_ICON[link.variant] : null;
+              const Icon: LucideIcon | undefined = link.variant
+                ? HIGHLIGHT_ICON[link.variant]
+                : undefined;
               const className = link.highlight && link.variant ? highlightLinkClass(link.variant) : linkClass;
 
               return (
                 <li key={link.href + link.label} className="flex items-center">
                   {link.isModal ? (
                     <button onClick={() => handleModalOpen(link.modalTitle)} className={className}>
-                      {Icon && <Icon size={12} />}
+                      {Icon ? <Icon size={12} /> : null}
                       {link.label}
                     </button>
                   ) : (
                     <Link href={link.href} className={className}>
-                      {Icon && <Icon size={12} />}
+                      {Icon ? <Icon size={12} /> : null}
                       {link.label}
                     </Link>
                   )}
