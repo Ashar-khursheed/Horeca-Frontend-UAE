@@ -1,50 +1,46 @@
 "use client";
 
 import { makeApiRequest } from "@/apis/axios-instance";
-import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
-import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
-import {
-  updateProfile,
-  placeOrderWithPayment,
-  parseOrderError,
-} from "./place-order-api";
 import Breadcrumb from "@/components/breadcum";
+import { CurrencySymbol } from "@/components/currency-symbol";
+import { Modal } from "@/components/ui/modal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+  clearApiEntries,
+  clearCart,
   fetchCart,
   hydrateCart,
   resetApiStatus,
-  clearCart,
-  clearApiEntries,
 } from "@/store/slices/cart/cartSlice";
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { fetchAddresses } from "@/store/slices/customer-address/customerAddressSlice";
 import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice";
+import { cartProductImage, cartProductName } from "@/utils/cart-product";
+import { useCartId } from "@/utils/cartId";
+import { trackGtmEvent } from "@/utils/gtm";
 import {
   getDefaultAddressCache,
   getLocationData,
 } from "@/utils/locationStorage";
-import { useCartId } from "@/utils/cartId";
-import { cartProductImage, cartProductName } from "@/utils/cart-product";
+import { persistPaymentAuthBackup, restorePaymentAuthCookies } from "@/utils/payment-auth";
 import {
   getShippingChargeFromAddress,
   getUaeOrderShipping,
   isUaeShippingMarket,
   UAE_FREE_SHIPPING_MIN,
 } from "@/utils/shipping";
+import { UAE_VAT_RATE } from "dirham";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Pencil, Tag, Truck } from "lucide-react";
+import { ChevronRight, Tag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AddressCheckout, AddressCheckoutHandle } from "./address-checkout";
 import CheckoutPayment, {
   CheckoutPaymentHandle,
   CheckoutPaymentSkeleton,
 } from "./checkout-payment";
-import { Modal } from "@/components/ui/modal";
-import { trackGtmEvent } from "@/utils/gtm";
-import { CurrencySymbol } from "@/components/currency-symbol";
-import { UAE_VAT_RATE } from "dirham";
+import OrderProcessingModal, { OrderStep } from "./order-processing-modal";
 import {
   CCAVENUE_CART_KEY,
   CCAVENUE_DELIVERY_OPTIONS_KEY,
@@ -56,8 +52,9 @@ import {
   readCCAvenueCartBackup,
   readCCAvenueDeliveryOptions,
 } from "./payments/ccavenue";
+import { placeCodOrder } from "./payments/cod";
+import { chargeStripe } from "./payments/stripe";
 import {
-  TOURAS_PROCESSED_KEY,
   clearTourasCheckout,
   initiateTourasPayment,
   isTourasReturn,
@@ -66,15 +63,18 @@ import {
   readTourasCheckout,
   redirectToTouras,
   resolveTourasReturn,
+  TOURAS_PROCESSED_KEY,
 } from "./payments/touras";
-import { chargeStripe } from "./payments/stripe";
-import { placeCodOrder } from "./payments/cod";
-import { persistPaymentAuthBackup, restorePaymentAuthCookies } from "@/utils/payment-auth";
 import {
   resolveCurrencyCode,
   toIsoCountry,
   type StripePaymentMethodResult,
 } from "./payments/types";
+import {
+  parseOrderError,
+  placeOrderWithPayment,
+  updateProfile,
+} from "./place-order-api";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
 export const COUPON_KEY = "hc_coupon";
@@ -1502,7 +1502,7 @@ export default function CheckoutPage() {
             Please read our Terms and conditions before proceeding with the
             payments.
           </label>
-          {/* <button
+          <button
             type="button"
             onClick={() => setShowTermsModal(true)}
             className="flex items-center gap-1 text-[#186737] text-sm font-medium hover:underline mt-0.5"
@@ -1511,7 +1511,7 @@ export default function CheckoutPage() {
             <span className="w-4 h-4 rounded-full border border-[#186737] text-[10px] font-bold flex items-center justify-center leading-none">
               ?
             </span>
-          </button> */}
+          </button>
           {termsError && (
             <p className="text-xs text-red-500 mt-1">
               ⚠ Please accept the terms and conditions to proceed
@@ -1964,8 +1964,8 @@ export default function CheckoutPage() {
           </h3>
           <p>
             This Order &amp; Delivery Acknowledgement (&quot;Declaration&quot;)
-            is entered into by the undersigned Customer and The HorecaStore INC,
-            with its registered office in Houston, Texas, United States.
+            is entered into by the undersigned Customer and The HorecaStore Middle East FZC, a company incorporated under the laws of the United Arab Emirates,
+            with its registered office in Al Quoz - Al Quoz Industrial Area 3 - Dubai - United Arab Emirates
           </p>
           <p>
             By placing an order and/or signing this Declaration, the Customer
@@ -1980,7 +1980,7 @@ export default function CheckoutPage() {
             are limited strictly to what is stated on the invoice and order
             confirmation. No verbal assurances, assumptions, or third-party
             statements shall be considered binding unless expressly documented
-            in writing by The HorecaStore INC.
+            in writing by The HorecaStore Middle East FZC.
           </p>
           <h4 className="text-base font-semibold text-gray-900 mt-4">
             2. Delivery Type &amp; Access
