@@ -303,10 +303,11 @@ export const PurchasePanel = ({
             alreadyInQuote
               ? undefined
               : {
-                  background: "#FD1D1D",
-                  backgroundImage:
-                    "linear-gradient(220deg, rgba(253, 29, 29, 1) 9%, rgba(252, 176, 69, 1) 79%)",
+                background: "#b81414",
+                  // backgroundImage:
+                  //   "linear-gradient(220deg, rgba(253, 29, 29, 1) 9%, rgba(252, 176, 69, 1) 79%)",
                 }
+                
           }
         >
           {alreadyInQuote ? (
