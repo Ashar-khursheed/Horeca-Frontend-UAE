@@ -1,15 +1,13 @@
 "use client";
 
-import BannerImg from "@/assets/Desktop/True Refrigeration.webp";
 import NoImage from "@/assets/NoImage.jpg";
-import chefImge from "@/assets/static/chefImg.svg";
-import FinancingModal from "@/components/financing-modal";
-import { Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Autoplay, EffectFade, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import PromotionsSlider, {
+  type MarketingPromotion,
+} from "./promotions-slider";
 
 export interface SliderItem {
   id: number;
@@ -50,370 +48,155 @@ const FALLBACK_SLIDES: SliderItem[] = [
   },
 ];
 
-const CTACard = ({ onQuoteClick }: { onQuoteClick: () => void }) => (
-  <div className="px-3">
-    <div className="flex items-end justify-between">
-      <div className="  relative rounded-[7px] ">
-        <div>
-          {/* <Link
-              href="/starting-a-restaurant"
-              className="no-underline cursor-pointer "
-            > */}
-          <div className=" grid grid-cols-[70%_30%] h-full gap-3  relative  ">
-            {/* <div className="flex items-center relative 2xl:py-9 2xl:px- xl:py-6 xl:px-3 md:py-2.5 md:px-3 py-6.5 px-3  "> */}
-            <div className="flex flex-col items-start justify-center">
-              <h3 className="text-[#186737]  2xl:text-xl font-bold text-base">
-                Opening a Restaurant?
-              </h3>
-              <p className="text-[#666666] 2xl:text-base text-[13px] my-3 font-medium">
-                From kitchen equipment to financing,{" "}
-                <span className="2xl:blocks ">we’ve got you covered.</span>
-              </p>
+const bannerAlt = (title: string | null) =>
+  title && title !== "null"
+    ? title
+    : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore";
 
-              <div
-                className="flex gap-2 items-center cursor-pointer"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Phone className="w-4 h-4 text-[#186737]" />
-                <a
-                  href="tel:+18664467322"
-                  className="text-[#186737] 2xl:text-base text-[13px] underline font-bold"
-                >
-                   800-467-322
-                </a>
-              </div>
-              <div>
-                <Link
-                  href="/create-quotation"
-                  className="no-underline cursor-pointer "
-                >
-                  <button
-                  // onClick={onQuoteClick}
-                  className="bg-[#186737] text-white 2xl:px-4 px-2.5 2xl:py-3 py-1.5 rounded  2xl:text-[14px] text-[12px] mt-4"
-                  // onClick={(e) => 
-                >
-             Create Quotation
-                </button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative flex items-end justify-end">
-              <Image
-                src={chefImge}
-                className="  "
-                alt="chef image"
-                loading="lazy"
-                unoptimized
-              />
-            </div>
+function SideBannerSlider({
+  slides,
+  sizes,
+}: {
+  slides: SliderItem[];
+  sizes: string;
+}) {
+  return (
+    <Swiper
+      id="hero-side"
+      modules={[Autoplay, Pagination, EffectFade]}
+      effect="fade"
+      fadeEffect={{ crossFade: true }}
+      autoplay={{
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      }}
+      pagination={{ clickable: true }}
+      loop={slides.length > 1}
+      className="w-full h-full"
+    >
+      {slides.map((item, index) => {
+        const isValid = item.image?.startsWith("http");
+        const img = (
+          <div className="relative w-full h-full">
+            <Image
+              src={isValid ? item.image : NoImage}
+              alt={bannerAlt(item.title)}
+              fill
+              // className="object-cover"
+              sizes={sizes}
+              priority={index === 0}
+              loading={index === 0 ? "eager" : "lazy"}
+            />
+            {isValid && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+            )}
           </div>
-          {/* </Link> */}
-        </div>
-      </div>
-    </div>
-  </div>
-);
-const BannerImage = () => (
-  <div className="w-full rounded-[7px] overflow-hidden">
-    <Image
-      src={BannerImg}
-      alt="True Refrigeration Banner"
-      className="w-full h-auto block"
-    />
-  </div>
-);
+        );
+
+        return (
+          <SwiperSlide key={item.id}>
+            {item.link ? (
+              <Link href={item.link} className="block w-full h-full outline-none">
+                {img}
+              </Link>
+            ) : (
+              img
+            )}
+          </SwiperSlide>
+        );
+      })}
+    </Swiper>
+  );
+}
 
 export const HeroBanner = ({
   slides = FALLBACK_SLIDES,
   sliderItemsTwo,
+  promotions = [],
 }: {
   slides?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
+  promotions?: MarketingPromotion[];
 }) => {
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const activeSlides = slides.length > 0 ? slides : FALLBACK_SLIDES;
   const activeSlidesTwo =
     sliderItemsTwo && sliderItemsTwo.length > 0
       ? sliderItemsTwo
       : FALLBACK_SLIDES;
 
-  const [isClient, setIsClient] = useState(false);
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    setIsClient(true);
-    setWidth(window.innerWidth);
-    const handleResize = () => setWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   return (
-    <>
-      <section className="global-container mt-3 sm:mt-6">
-        <div className="flex flex-col lg:grid lg:grid-cols-[70%_30%] gap-3 lg:gap-4">
-          {/* ── Hero Swiper (all screens) ── */}
-          <div
-            className="w-full rounded-[7px] overflow-hidden h-full"
-            style={{ aspectRatio: "875/380" }}
+    <section className="global-container mt-3 sm:mt-6">
+      <div className="flex flex-col lg:grid lg:grid-cols-[70%_30%] gap-3 lg:gap-4">
+        <div
+          className="w-full rounded-[7px] overflow-hidden h-full"
+          style={{ aspectRatio: "875/380" }}
+        >
+          <Swiper
+            id="hero-main"
+            modules={[Autoplay, Pagination, Navigation, EffectFade]}
+            effect="fade"
+            fadeEffect={{ crossFade: true }}
+            autoplay={{
+              delay: 3000,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            pagination={{ clickable: true }}
+            loop
+            className="w-full h-full"
           >
-            <Swiper
-              id="hero-main"
-              modules={[Autoplay, Pagination, Navigation, EffectFade]}
-              effect="fade"
-              fadeEffect={{ crossFade: true }}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: false,
-                pauseOnMouseEnter: true,
-              }}
-              pagination={{ clickable: true }}
-              loop
-              className="w-full h-full"
-            >
-              {activeSlides.map((banner, index) => (
+            {activeSlides.map((banner, index) => {
+              const img = (
+                <div className="relative w-full h-full">
+                  <Image
+                    src={banner.image}
+                    alt={bannerAlt(banner.title)}
+                    fill
+                    className="object-cover"
+                    priority={index === 0}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : undefined}
+                    sizes="(max-width: 1024px) 100vw, 70vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                </div>
+              );
+
+              return (
                 <SwiperSlide key={banner.id}>
                   {banner.link ? (
                     <Link
                       href={banner.link}
                       className="block w-full h-full outline-none"
                     >
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={banner.image}
-                          alt={banner.title && banner.title !== "null" ? banner.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
-                          fill
-                          className="object-cover"
-                          priority={index === 0}
-                          loading={index === 0 ? "eager" : "lazy"}
-                          fetchPriority={index === 0 ? "high" : undefined}
-                          sizes="(max-width: 1024px) 100vw, 70vw"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                      </div>
+                      {img}
                     </Link>
                   ) : (
-                    <div className="relative w-full h-full">
-                      <Image
-                        src={banner.image}
-                        alt={banner.title && banner.title !== "null" ? banner.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
-                        fill
-                        className="object-cover"
-                        priority={index === 0}
-                        loading={index === 0 ? "eager" : "lazy"}
-                        fetchPriority={index === 0 ? "high" : undefined}
-                        sizes="(max-width: 1024px) 100vw, 70vw"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                    </div>
+                    img
                   )}
                 </SwiperSlide>
-              ))}
-            </Swiper>
+              );
+            })}
+          </Swiper>
+        </div>
+
+        <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-1 gap-3 h-full">
+          <div className="w-full rounded-[7px] overflow-hidden h-full min-h-[220px] lg:min-h-[240px] bg-white">
+            <PromotionsSlider promotions={promotions} />
           </div>
-
-          {/* ── Right Column ── */}
-          <div className="lg:col-s">
-            {/* MOBILE ONLY — CTACard + activeSlidesTwo images */}
-            <div className="block sm:hidden">
-              {/* <Swiper
-                id="hero-mobile"
-                modules={[Autoplay]}
-                autoplay={{
-                  delay: 9000,
-                  disableOnInteraction: false,
-                  pauseOnMouseEnter: true,
-                }}
-                loop
-                className="w-full rounded-[7px] overflow-hidden"
-              >
-                <SwiperSlide>
-                  <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
-                </SwiperSlide>
-
-                {activeSlidesTwo.map((item) => {
-                  const isValid = item.image?.startsWith("http");
-                  return (
-                    <SwiperSlide key={item.id}>
-                      {item.link ? (
-                        <Link
-                          href={item.link}
-                          className="block w-full outline-none"
-                        >
-                          <div className="relative w-full h-50">
-                            <Image
-                              src={isValid ? item.image : NoImage}
-                              alt={item.title ?? "Banner"}
-                              fill
-                              className="object-covers"
-                              sizes="100vw"
-                              loading="lazy"
-                            />
-                          </div>
-                        </Link>
-                      ) : (
-                        <div className="relative w-full h-50">
-                          <Image
-                            src={isValid ? item.image : NoImage}
-                            alt={item.title ?? "Banner"}
-                            fill
-                            className="object-covers"
-                            sizes="100vw"
-                            loading="lazy"
-                          />
-                        </div>
-                      )}
-                    </SwiperSlide>
-                  );
-                })}
-              </Swiper> */}
-                 <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
-            </div>
-
-            {/* TABLET (sm → lg) — 50/50 grid */}
-            <div className="hidden sm:grid sm:grid-cols-2 lg:hidden gap-3">
-              {/* <Link href="/starting-a-restaurant" className="no-underline"> */}
-              <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
-              {/* </Link> */}
-              {isClient && width >= 640 && width < 1024 && (
-                <Swiper
-                  id="hero-tablet"
-                  modules={[Autoplay, Pagination, EffectFade]}
-                  effect="fade"
-                  fadeEffect={{ crossFade: true }}
-                  autoplay={{
-                    delay: 3000,
-                    disableOnInteraction: false,
-                    pauseOnMouseEnter: true,
-                  }}
-                  pagination={{ clickable: true }}
-                  loop={activeSlidesTwo.length > 1}
-                  className="w-full h-full"
-                >
-                  {activeSlidesTwo.map((item, index) => {
-                    const isValid = item.image?.startsWith("http");
-                    return (
-                      <SwiperSlide key={item.id}>
-                        {item.link ? (
-                          <Link
-                            href={item.link}
-                            className="block w-full h-full outline-none"
-                          >
-                            <div className="relative w-full h-full">
-                              <Image
-                                src={isValid ? item.image : NoImage}
-                                alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
-                                fill
-                                className="object-covera"
-                                sizes="50vw"
-                                priority={index === 0}
-                                loading={index === 0 ? "eager" : "lazy"}
-                              />
-                              {isValid && (
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                              )}
-                            </div>
-                          </Link>
-                        ) : (
-                          <div className="relative w-full h-full">
-                            <Image
-                              src={isValid ? item.image : NoImage}
-                              alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
-                              fill
-                              className="object-covera"
-                              sizes="50vw"
-                              priority={index === 0}
-                              loading={index === 0 ? "eager" : "lazy"}
-                            />
-                          </div>
-                        )}
-                      </SwiperSlide>
-                    );
-                  })}
-                </Swiper>
-              )}
-            </div>
-
-            {/* DESKTOP (lg+) — stacked layout */}
-            <div className="hidden lg:grid grid-rows-[auto_auto] h-full gap-3">
-              <div className="no-underline flex-11s bg-[#e2e8f033] flex justify-between items-center">
-                <CTACard onQuoteClick={() => setQuoteModalOpen(true)} />
-              </div>
-
-              <div
-                className="w-full rounded-[7px] overflow-hidden h-full "
-                style={{ aspectRatio: "875/380" }}
-              >
-                {isClient && width >= 1024 && (
-                  <Swiper
-                    id="hero-desktop"
-                    modules={[Autoplay, Pagination, EffectFade]}
-                    effect="fade"
-                    fadeEffect={{ crossFade: true }}
-                    autoplay={{
-                      delay: 3000,
-                      disableOnInteraction: false,
-                      pauseOnMouseEnter: true,
-                    }}
-                    pagination={{ clickable: true }}
-                    loop={activeSlidesTwo.length > 1}
-                    className="w-full h-full"
-                  >
-                    {activeSlidesTwo.map((item, index) => {
-                       const isValid = item.image?.startsWith("http");
-                       return (
-                        <SwiperSlide key={item.id}>
-                          {item.link ? (
-                            <Link
-                              href={item.link}
-                              className="block w-full h-full outline-none"
-                            >
-                              <div className="relative w-full h-full">
-                                <Image
-                                  src={isValid ? item.image : NoImage}
-                                  alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
-                                  fill
-                                  className="object-covera"
-                                  sizes="30vw"
-                                  priority={index === 0}
-                                  loading={index === 0 ? "eager" : "lazy"}
-                                />
-                                {isValid && (
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                                )}
-                              </div>
-                            </Link>
-                          ) : (
-                            <div className="relative w-full h-full">
-                              <Image
-                                src={isValid ? item.image : NoImage}
-                                alt={item.title && item.title !== "null" ? item.title : "Commercial Kitchen Equipment & Restaurant Supplies - HorecaStore"}
-                                fill
-                                className="object-covera"
-                                sizes="30vw"
-                                priority={index === 0}
-                                loading={index === 0 ? "eager" : "lazy"}
-                              />
-                            </div>
-                          )}
-                        </SwiperSlide>
-                      );
-                    })}
-                  </Swiper>
-                )}
-              </div>
-            </div>
+          <div
+            className="hidden sm:block w-full rounded-[7px] overflow-hidden h-full"
+            style={{ aspectRatio: "875/380" }}
+          >
+            <SideBannerSlider
+              slides={activeSlidesTwo}
+              sizes="(max-width: 1024px) 50vw, 30vw"
+            />
           </div>
         </div>
-      </section>
-      <FinancingModal
-        isOpen={quoteModalOpen}
-        onClose={() => setQuoteModalOpen(false)}
-        title="Opening a Restaurant"
-        
-      />
-    </>
+      </div>
+    </section>
   );
 };
 

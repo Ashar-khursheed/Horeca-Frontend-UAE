@@ -78,7 +78,7 @@ function mapApiResponse(d: HorecaPageApiData): LocationPageData {
     id: d.id,
     heroTitle: d.name,
     heroDescription: d.description ?? "",
-    heroCta: d.link_name ?? "SHOP NOW",
+    heroCta: d.link_name ?? "",
     banner_slug: d.link_url ?? "/",
     banner_image_file: d.banner_url ?? "",
     banner_image_alt_text: d.name,

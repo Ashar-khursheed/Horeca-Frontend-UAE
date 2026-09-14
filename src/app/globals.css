@@ -319,6 +319,16 @@ img {
   border-radius: 4px;
 }
 
+.promo-swiper,
+.promo-swiper .swiper-wrapper,
+.promo-swiper .swiper-slide {
+  height: 100%;
+}
+.promo-swiper .swiper-pagination {
+  bottom: 10px;
+  z-index: 30;
+}
+
 /* ── Nav arrows — shared base ── */
 .swiper-button-prev,
 .swiper-button-next {

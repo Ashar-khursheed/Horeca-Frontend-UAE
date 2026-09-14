@@ -18,6 +18,7 @@ import ShopByCategories from "./shop-by-category";
 import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
 import { HomeBlogsSection } from "./HomeBlogsSection";
 import type { FeaturedCategory } from "@/utils/types";
+import type { MarketingPromotion } from "./hero-banner/promotions-slider";
 import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,15 +27,21 @@ export const Home = ({
   sliderItems = [],
   sliderItemsTwo = [],
   featuredCategories = [],
+  promotions = [],
 }: {
   sliderItems?: SliderItem[];
   sliderItemsTwo?: SliderItem[];
   featuredCategories?: FeaturedCategory[];
+  promotions?: MarketingPromotion[];
 }) => {
   return (
     <>
       {/* HeroBanner is "use client" for Swiper + financing modal state */}
-      <HeroBanner slides={sliderItems} sliderItemsTwo={sliderItemsTwo} />
+      <HeroBanner
+        slides={sliderItems}
+        sliderItemsTwo={sliderItemsTwo}
+        promotions={promotions}
+      />
 
       {/* Pure server HTML — no interactivity needed */}
       <SEOMainContent

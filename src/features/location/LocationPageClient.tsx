@@ -280,6 +280,10 @@ export default function LocationPageClient({
     data.paragraph_4,
   ].filter(Boolean) as string[];
 
+  const heroTitle = data.heroTitle?.trim() ?? "";
+  const heroCta = data.heroCta?.trim() ?? "";
+  const showHeroOverlay = !!(heroTitle || heroCta);
+
   return (
     <>
       <Breadcrumb crumbs={crumbs} />
@@ -293,37 +297,45 @@ export default function LocationPageClient({
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          {showHeroOverlay && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            </>
+          )}
 
-          <div className="absolute inset-0 flex flex-col justify-center px-5 sm:px-10 lg:px-16 global-container mx-auto w-full">
-            <h1 className="text-xl  md:text-3xl font-extrabold text-white mb-4 leading-tight max-w-3xl drop-shadow-lg">
-              {data.heroTitle}
-            </h1>
-            {data.heroDescription && (
-              <div
-                className="text-gray-200 text-sm sm:text-[15px] mb-7 max-w-2xl 2xl:line-clamp-none line-clamp-5  leading-relaxed [&_p]:m-0 [&_a]:text-blue-400 [&_a]:underline [&_a]:hover:text-blue-300 [&_a]:font-medium"
-                dangerouslySetInnerHTML={{ __html: data.heroDescription }}
-              />
-            )}
-            {data.heroCta && (
-              <a
-                href={data.banner_slug}
-                className="w-fit inline-flex items-center gap-2 bg-[#186737] hover:bg-[#186737] active:scale-95 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all duration-200 text-sm uppercase tracking-wider"
-              >
-                {data.heroCta}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M3 8h10M9 4l4 4-4 4"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </a>
-            )}
-          </div>
+          {(heroTitle || data.heroDescription || heroCta) && (
+            <div className="absolute inset-0 flex flex-col justify-center px-5 sm:px-10 lg:px-16 global-container mx-auto w-full">
+              {heroTitle && (
+                <h1 className="text-xl  md:text-3xl font-extrabold text-white mb-4 leading-tight max-w-3xl drop-shadow-lg">
+                  {heroTitle}
+                </h1>
+              )}
+              {data.heroDescription && (
+                <div
+                  className="text-gray-200 text-sm sm:text-[15px] mb-7 max-w-2xl 2xl:line-clamp-none line-clamp-5  leading-relaxed [&_p]:m-0 [&_a]:text-blue-400 [&_a]:underline [&_a]:hover:text-blue-300 [&_a]:font-medium"
+                  dangerouslySetInnerHTML={{ __html: data.heroDescription }}
+                />
+              )}
+              {heroCta && (
+                <a
+                  href={data.banner_slug}
+                  className="w-fit inline-flex items-center gap-2 bg-[#186737] hover:bg-[#186737] active:scale-95 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all duration-200 text-sm uppercase tracking-wider"
+                >
+                  {heroCta}
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3 8h10M9 4l4 4-4 4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </a>
+              )}
+            </div>
+          )}
         </section>
 
         {/* ── Left + Right Para ────────────────────────────────────────── */}

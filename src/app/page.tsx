@@ -4,6 +4,7 @@ import HomePage from "@/features/home";
 import { SliderItem } from "@/features/home/hero-banner";
 import { apiUrls } from "@/apis/api-endpoint";
 import type { FeaturedCategory } from "@/utils/types";
+import type { MarketingPromotion } from "@/features/home/hero-banner/promotions-slider";
 import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
@@ -48,6 +49,7 @@ export default async function Page() {
     slider1,
     slider2,
     featuredCategoriesRes,
+    promotionsRes,
   ] = await Promise.all([
     makeApiCallSSR<{ items: SliderItem[] }>(
       "frontend/sliders/1",
@@ -64,11 +66,17 @@ export default async function Page() {
       { products_limit: 12, limit: 5, min_products: 12 },
       { revalidate: isLoggedIn ? 0 : revalidate, countryCode },
     ),
+    makeApiCallSSR<{ success: boolean; data: MarketingPromotion[] }>(
+      apiUrls.MARKETING_PROMOTIONS_ACTIVE,
+      {},
+      { revalidate: revalidate, countryCode },
+    ),
   ]);
 
   const sliderItems      = slider1?.items ?? [];
   const sliderItemsTwo   = slider2?.items ?? [];
   const featuredCategories = featuredCategoriesRes?.data ?? [];
+  const promotions = promotionsRes?.data ?? [];
 
   const homeSchema = {
     "@context": "https://schema.org",
@@ -162,6 +170,7 @@ export default async function Page() {
           sliderItems={sliderItems}
           sliderItemsTwo={sliderItemsTwo}
           featuredCategories={featuredCategories}
+          promotions={promotions}
         />
       </main>
     </>
