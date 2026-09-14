@@ -89,6 +89,8 @@ export const apiUrls = {
   // Location pages
   HORECA_PAGE_BY_SLUG: (state: string, city: string) =>
     `frontend/horeca-pages-by-slug/locations/${state}/${city}`,
+  HORECA_SALE_PAGE_BY_SLUG: (slug: string) =>
+    `frontend/horeca-pages-by-slug/sale/${slug}`,
   BRAND_CATEGORY_PRODUCTS: (brandSlug: string, categorySlug: string) =>
     `frontend/products/brand/${brandSlug}/category/${categorySlug}`,
 

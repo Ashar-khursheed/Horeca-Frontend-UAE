@@ -256,16 +256,18 @@ export default function LocationPageClient({
   data,
   state,
   city,
+  crumbs: crumbsOverride,
 }: {
   data: LocationPageData;
-  state: string;
-  city: string;
+  state?: string;
+  city?: string;
+  crumbs?: { label: string; href: string | null }[];
 }) {
-  const crumbs = [
+  const crumbs = crumbsOverride ?? [
     { label: "Home", href: "/" },
     { label: "Locations", href: "/locations" },
     {
-      label: state.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      label: (state ?? "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
       href: `/locations/${state}`,
     },
     { label: data.heroTitle, href: null },
