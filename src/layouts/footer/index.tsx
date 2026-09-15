@@ -587,11 +587,10 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       Address
                     </p>
                     <p className="text-[13px] text-gray-700 leading-relaxed">
-                            Showroom 01 - Building No 9 19th Street
+                            FAB Compound, Building 5 - Warehouse Unit 9 A
                       <span className="block">
           
-
-Al Quoz - Al Quoz Industrial Area 3 - Dubai - United Arab Emirates
+ Dubai Investment Park First - Dubai - United Arab Emirates
 
 
                       </span>
