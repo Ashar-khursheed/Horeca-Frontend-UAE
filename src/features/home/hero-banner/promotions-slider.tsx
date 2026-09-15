@@ -67,8 +67,9 @@ function PromoEmptyState() {
 
 function CtaButton({ label }: { label: string }) {
   return (
-    <span className="mt-2 inline-flex w-fit items-center bg-[#186737] hover:bg-[#145c30] text-white font-bold text-xs sm:text-sm px-3.5 py-2 rounded-[6px]">
-      {label}
+    <span className="mega-sale-pill mt-2 relative inline-flex items-center px-4 py-1.5 sm:px-5 sm:py-2 font-extrabold text-white text-xs sm:text-sm tracking-wider">
+      <span className="relative z-10">{label}</span>
+      <span className="confetti-ring" />
     </span>
   );
 }
