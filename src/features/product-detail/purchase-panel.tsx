@@ -192,9 +192,11 @@ export const PurchasePanel = ({
             <div className="flex items-start gap-2 mb-3">
               <Truck size={16} className="text-[#186737] shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-gray-800">
-        Free Delivery in {country?.data?.name}
-                </p>
+                {country?.data?.name === "United Arab Emirates" && (
+                  <p className="text-sm font-semibold text-gray-800">
+                    Free Delivery in {country?.data?.name}
+                  </p>
+                )}
                 <p className="text-xs text-gray-500 mt-0.5">
                   Ships {deliveryDays}
                 </p>

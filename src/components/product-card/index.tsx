@@ -698,11 +698,13 @@ export const ProductCard = ({
         )}
 
         {/* Shipping row */}
-        <p className="mt- text-[12.5px] font-semibold text-[#4B5563] hidden md:flex items-center gap-1">
-          <Truck size={13} className="text-[#186737] flex-shrink-0" />
-          {/* Shipping charges apply */}
-          Free Delivery in {country?.data?.name}
-        </p>
+        {country?.data?.name === "United Arab Emirates" && (
+          <p className="mt- text-[12.5px] font-semibold text-[#4B5563] hidden md:flex items-center gap-1">
+            <Truck size={13} className="text-[#186737] flex-shrink-0" />
+            {/* Shipping charges apply */}
+            Free Delivery in {country?.data?.name}
+          </p>
+        )}
         <p className="mt- text-[12.5px] font-semibold text-[#4B5563] md:hidden flex items-center gap-1">
           <Truck size={13} className="text-[#186737] flex-shrink-0" />
           Shipping Fee

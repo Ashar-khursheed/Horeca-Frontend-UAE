@@ -389,7 +389,7 @@ Street</Text>
       <Text style={S.headerRightText}>Dubai - United Arab Emirates</Text>
       <Text style={S.headerRightText}>Phone:800-467-322
 </Text>
-      <Text style={S.headerRightText}>Email: sales@horecastore.ae</Text>
+      <Text style={S.headerRightText}>Email: smdxb@horecastore.ae / hello@horecastore.ae</Text>
       <Text style={[S.headerRightText, S.footerGreen]}>www.horecastore.ae</Text>
     </View>
   </View>

@@ -282,10 +282,12 @@ const WishlistCard = ({
             )}
             <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 flex-wrap">
               <Truck size={13} className="text-[#186737] shrink-0" />
-              <span className={item.freeShipping ? "text-[#186737]" : ""}>
-              Free Delivery in {country?.data?.name}
-                {/* {item.freeShipping ? "Free Shipping" : "Shipping Charges Apply"} */}
-              </span>
+              {country?.data?.name === "United Arab Emirates" && (
+                <span className={item.freeShipping ? "text-[#186737]" : ""}>
+                  Free Delivery in {country?.data?.name}
+                  {/* {item.freeShipping ? "Free Shipping" : "Shipping Charges Apply"} */}
+                </span>
+              )}
               {item.deliveryDays && (
                 <span className="text-gray-400 font-normal">· Mostly Ships in {item.deliveryDays}</span>
               )}
@@ -320,10 +322,12 @@ const WishlistCard = ({
 
           <div className="sm:hidden mt-2 flex items-center  gap-1 text-[10px] text-gray-400">
             <Truck size={10} className="text-[#186737] shrink-0" />
-            <span className={item.freeShipping ? "text-[#186737] font-medium" : ""}>
-   Free Delivery in {country?.data?.name}
-              {/* {item.freeShipping ? "Free Shipping" : "Shipping Charges Apply"} */}
-            </span>
+            {country?.data?.name === "United Arab Emirates" && (
+              <span className={item.freeShipping ? "text-[#186737] font-medium" : ""}>
+                Free Delivery in {country?.data?.name}
+                {/* {item.freeShipping ? "Free Shipping" : "Shipping Charges Apply"} */}
+              </span>
+            )}
             {item.deliveryDays && <span>· Ships in {item.deliveryDays}</span>}
           </div>
         </div>

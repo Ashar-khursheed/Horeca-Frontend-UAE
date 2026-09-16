@@ -369,7 +369,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                   </div>
                 </a>
                 <a
-                  href="mailto:sales@horecastore.ae"
+                  href="mailto:smdxb@horecastore.ae,hello@horecastore.ae"
                   className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-3 rounded-[7px] transition-all duration-200"
                 >
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -380,7 +380,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       Email Support
                     </p>
                     <p className="text-black font-semibold text-base">
-                      sales@horecastore.ae
+                      smdxb@horecastore.ae / hello@horecastore.ae
                     </p>
                   </div>
                 </a>
@@ -571,10 +571,10 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       Email
                     </p>
                     <a
-                      href="mailto:sales@horecastore.ae"
+                      href="mailto:smdxb@horecastore.ae,hello@horecastore.ae"
                       className="text-[13px] text-gray-700 hover:text-[#186737] transition-colors font-medium"
                     >
-                      sales@horecastore.ae
+                      smdxb@horecastore.ae / hello@horecastore.ae
                     </a>
                   </div>
                 </li>

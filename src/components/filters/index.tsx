@@ -1,7 +1,7 @@
 "use client";
 
-import { Slider } from "@/components/ui/slider";
 import { CurrencySymbol } from "@/components/currency-symbol";
+import { Slider } from "@/components/ui/slider";
 import type { FixedFilterItem, RangeFilterItem } from "@/utils/types";
 import { ChevronDown, ChevronUp, Shield, SlidersHorizontal, Truck, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -324,7 +324,7 @@ export default function FilterSidebar({
             <Truck size={13} className="text-[#186737]" />
             <span className="text-[11px] font-medium text-[#186737]">Fast & Reliable Shipping</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 hidden">
             <Shield size={13} className="text-[#186737]" />
             <span className="text-[11px] font-medium text-[#186737]">NSF & UL Certified Products</span>
           </div>

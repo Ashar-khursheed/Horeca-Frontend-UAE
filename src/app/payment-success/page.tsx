@@ -624,7 +624,7 @@ export default function PaymentSuccessPage() {
                           </div>
                           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                             <Truck size={11} className="text-[#186737]" />
-                            {itemShipping === 0 ? (
+                            {itemShipping === 0 && sate?.name === "United Arab Emirates" ? (
                               <span className="text-[#186737] font-semibold">
                                 Free Delivery in {sate?.name}
                               </span>

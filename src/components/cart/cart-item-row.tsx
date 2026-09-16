@@ -142,16 +142,20 @@ export default function CartItemRow({
 
         {/* Shipping */}
         <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Truck size={12} className="text-[#186737]" />
-            <span className="font-semibold text-gray-700">
-              {/* {item.shippingCost > 0
-                ? `Shipping Charges: $${fmtPrice(item.shippingCost * item.qty)}`
-                : "Shipping Charges Apply"} */}
-              Free Delivery in {country?.data?.name}
-            </span>
-          </div>
-          <span className="text-gray-300">·</span>
+          {country?.data?.name === "United Arab Emirates" && (
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <Truck size={12} className="text-[#186737]" />
+              <span className="font-semibold text-gray-700">
+                {/* {item.shippingCost > 0
+                  ? `Shipping Charges: $${fmtPrice(item.shippingCost * item.qty)}`
+                  : "Shipping Charges Apply"} */}
+                Free Delivery in {country?.data?.name}
+              </span>
+            </div>
+          )}
+          {country?.data?.name === "United Arab Emirates" && (
+            <span className="text-gray-300">·</span>
+          )}
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Calendar size={11} className="text-[#186737]" />
             <span>Ship by {item.shipBy}</span>
