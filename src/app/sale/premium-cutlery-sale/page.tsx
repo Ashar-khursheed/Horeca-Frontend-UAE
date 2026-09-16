@@ -537,9 +537,9 @@ import { useLocale } from "next-intl";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 // import Imag13 from "../../Asset/opporitnytu/landing page-Picsart-AiImageEnhancer.jpg"
-import Imag13 from "@/assets/banners/cuttely/Untitled design (18) (1).jpg";
+import Imag13 from "@/assets/banners/cuttely/Untitled design (19) (1).jpg";
 // import Imag12 from "../../Asset/opporitnytu/main desktop-Picsart-AiImageEnhancer.jpg";
-import Imag12 from "@/assets/banners/cuttely/Untitled design (18) (1).jpg";
+import Imag12 from "@/assets/banners/cuttely/Untitled design (19) (1).jpg";
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MegaSalePage() {
   const locale = useLocale();
