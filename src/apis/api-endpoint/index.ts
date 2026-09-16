@@ -120,6 +120,7 @@ export const apiUrls = {
   PAYMENT_HISTORY:"frontend/payments",
   SCREEN_TRANSACTION:"screen-transaction",
   SALE_CATEGORIES: "frontend/sale-categories",
+  SKU_SALE_PRODUCTS: "frontend/sku-sale-products",
   MARKETING_PROMOTIONS_ACTIVE: "frontend/marketing-promotions/active",
   CUSTOM_SCRIPTS: "frontend/custom-scripts",
   PHONE_VALIDATE: "frontend/phone/validate",

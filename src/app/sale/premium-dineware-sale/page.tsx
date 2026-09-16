@@ -528,6 +528,7 @@
 "use client";
 
 import { makeApiRequest } from "@/apis/axios-instance";
+import { apiUrls } from "@/apis/api-endpoint";
 import FilterSidebar from "@/components/filters";
 import { ProductCardSkeleton } from "@/components/loading-sketlon";
 import Pagination from "@/components/pagination";
@@ -537,9 +538,9 @@ import { useLocale } from "next-intl";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 // import Imag13 from "../../Asset/opporitnytu/landing page-Picsart-AiImageEnhancer.jpg"
-import Imag13 from "@/assets/banners/cuttely/Untitled design (19) (1).jpg";
+import Imag13 from "@/assets/banners/cuttely/Dineware (2)-Picsart-AiImageEnhancer.jpg";
 // import Imag12 from "../../Asset/opporitnytu/main desktop-Picsart-AiImageEnhancer.jpg";
-import Imag12 from "@/assets/banners/cuttely/Untitled design (19) (1).jpg";
+import Imag12 from "@/assets/banners/cuttely/DineWare (3)-Picsart-AiImageEnhancer.jpg";
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MegaSalePage() {
   const locale = useLocale();
@@ -626,15 +627,14 @@ export default function MegaSalePage() {
     const fetchProducts = async () => {
       setLoadingProducts(true);
       try {
-        const endpoint = activeCategoryId
-          ? `frontend/sale-categories/${activeCategoryId}`
-          : "frontend/sku-sale-products";
-
         const params: Record<string, any> = {
           page: currentPage,
           per_page: 20,
         };
 
+        if (activeCategoryId) {
+          params.category_id = activeCategoryId;
+        }
         if (debouncedSearch.trim()) {
           params.search = debouncedSearch.trim();
         }
@@ -659,7 +659,7 @@ export default function MegaSalePage() {
             current_page: number;
             last_page: number;
           };
-        }>(endpoint, { params });
+        }>(apiUrls.SKU_SALE_PRODUCTS, { params });
 
         if (res?.success) {
           setProducts(res.data || []);
