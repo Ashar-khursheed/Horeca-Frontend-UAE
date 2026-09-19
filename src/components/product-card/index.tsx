@@ -665,7 +665,7 @@ export const ProductCard = ({
       <div className="px-3 pb-3 pt-2 md:px-4 md:pb-4 md:pt-2 flex flex-col flex-1 border-t border-gray-100">
         {/* Product name */}
         <Link href={productLink}>
-          <p className="md:font-semibold font-semibold text-[13.5px] lg:text-[14.5px] text-gray-900 line-clamp-2 hover:text-[#186737] transition-colors leading-snug">
+          <p className="md:font-semibold font-semibold text-[13.5px] lg:text-[14.5px] text-gray-900 line-clamp-2 hover:text-[#186737] transition-colors leading-snug" title={name}>
             {name}
           </p>
         </Link>
@@ -681,7 +681,7 @@ export const ProductCard = ({
         )}
 
         {/* Rating — only show if rating exists */}
-        {product.avg_rating ? (
+        {/* {product.avg_rating ? (
           <div className="flex items-center gap-1.5 mt-2 mb-1.5">
             <RatingStars rating={product.avg_rating} />
             <span className="text-[13px] font-bold text-[#4B5563]">
@@ -695,7 +695,7 @@ export const ProductCard = ({
           </div>
         ) : (
           <TickerBadge />
-        )}
+        )} */}
 
         {/* Shipping row */}
         {country?.data?.name === "United Arab Emirates" && (
@@ -736,11 +736,11 @@ export const ProductCard = ({
             <div>
               {/* Main price line: -11%  $19,990.26  /Each */}
               <div className="flex items-baseline gap-2 flex-wrap leading-none">
-                {hasSale && (
+                {/* {hasSale && (
                   <span className="text-red-600 text-[13px] font-semibold relative top-[2px]">
                     -{Math.round(discountPct)}%
                   </span>
-                )}
+                )} */}
                 <div className="flex items-baseline xl:text-[22px]  lg:text-[18px] md:text-base  gap-[1px]">
                   <b
                     className={`font-bold leading-none ${hasSale ? "text-[#186737]" : "text-gray-900"
@@ -767,7 +767,7 @@ export const ProductCard = ({
 
               {/* WAS price */}
               {hasSale ? (
-                <p className="text-[#6B7280] font-semibold text-[13px] line-through mt-1">
+                <p className="text-[#0e1012] font-extrabold text-[13px] line-through mt-1">
                   WAS{" "}
                   {typeof product?.currency === "object"
                     ? <> <CurrencySymbol currency={product.currency?.symbol} weight="bold" fontsize={"14px"} /></>
