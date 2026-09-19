@@ -767,7 +767,7 @@ export const ProductCard = ({
 
               {/* WAS price */}
               {hasSale ? (
-                <p className="text-[#0e1012] font-extrabold text-[13px] line-through mt-1">
+                <p className="text-[#0e1012] font-extrabold text-[13px] line-through decoration-red-500 mt-1">
                   WAS{" "}
                   {typeof product?.currency === "object"
                     ? <> <CurrencySymbol currency={product.currency?.symbol} weight="bold" fontsize={"14px"} /></>

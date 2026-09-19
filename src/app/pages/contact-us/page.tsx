@@ -769,10 +769,10 @@ src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3616.367791343907!2d5
                   Email Us Directly
                 </p>
                 <a
-                  href="mailto:smdxb@horecastore.ae,hello@horecastore.ae"
+                  href="mailto:hello@horecastore.ae"
                   className="text-xs text-[#186737] hover:underline break-all"
                 >
-                  smdxb@horecastore.ae / hello@horecastore.ae
+                  hello@horecastore.ae
                 </a>
               </div>
             </div>
