@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuoteList } from "@/utils/quoteStorage";
-import { ChevronRight, FileText } from "lucide-react";
+import { ChevronRight, FileText, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const HIDDEN_PREFIXES = [
   "/create-quotation",
@@ -17,12 +17,22 @@ const HIDDEN_PREFIXES = [
   "/partner",
 ];
 
+const DISMISS_KEY = "quote-bar-dismissed-ids";
+
+const quoteIdsKey = (ids: number[]) => ids.join(",");
+
 export function QuoteBar() {
   const list = useQuoteList();
   const pathname = usePathname();
+  const [dismissed, setDismissed] = useState(false);
 
   const hidden = HIDDEN_PREFIXES.some((p) => pathname?.startsWith(p));
-  const visible = !hidden && list.length > 0;
+  const visible = !hidden && list.length > 0 && !dismissed;
+
+  useEffect(() => {
+    const ids = quoteIdsKey(list.map((p) => p.id));
+    setDismissed(sessionStorage.getItem(DISMISS_KEY) === ids);
+  }, [list]);
 
   useEffect(() => {
     if (!visible) return;
@@ -38,6 +48,11 @@ export function QuoteBar() {
       document.body.style.paddingBottom = prev;
     };
   }, [visible]);
+
+  const handleClose = () => {
+    sessionStorage.setItem(DISMISS_KEY, quoteIdsKey(list.map((p) => p.id)));
+    setDismissed(true);
+  };
 
   if (!visible) return null;
 
@@ -93,6 +108,14 @@ export function QuoteBar() {
           </Link>
           </div>
         </div>
+        <button
+          type="button"
+          aria-label="Close quote bar"
+          onClick={handleClose}
+          className="absolute -top-2 -right-2 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm hover:bg-gray-100 hover:text-gray-800"
+        >
+          <X size={13} strokeWidth={2.4} />
+        </button>
       </div>
     </aside>
   );
