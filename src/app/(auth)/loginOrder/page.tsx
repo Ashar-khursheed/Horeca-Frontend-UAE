@@ -689,7 +689,8 @@ export default function LoginOrderPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[560px]">
               {/* ── Left: Login ── */}
               <div className="border-b lg:border-b-0 lg:border-r border-gray-100">
-                <LoginPanel />
+                {/* <LoginPanel /> */}
+                <GuestPanel onSuccess={() => router.push("/checkout")} />
               </div>
 
               {/* ── Divider (mobile) ── */}
@@ -709,7 +710,8 @@ export default function LoginOrderPage() {
                     Or
                   </span>
                 </div>
-                <GuestPanel onSuccess={() => router.push("/checkout")} />
+                {/* <GuestPanel onSuccess={() => router.push("/checkout")} /> */}
+                <LoginPanel />
               </div>
             </div>
           </div>
