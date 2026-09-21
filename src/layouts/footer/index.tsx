@@ -352,7 +352,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
               </div>
               <div className="md:flex hidden flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 <a
-                  href="tel:+18664467322"
+                  href="tel:+971529193205"
                   className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-black px-5 py-3 rounded-[7px] transition-all duration-200"
                 >
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -364,7 +364,7 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                     </p>
                     <p className="text-black font-semibold text-base">
                       {" "}
-                      800-467-322
+                      +971529193205
                     </p>
                   </div>
                 </a>
