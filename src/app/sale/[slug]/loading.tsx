@@ -1,32 +1,30 @@
+import { ProductCardSkeleton } from "@/components/loading-sketlon";
+
 export default function SalePageLoading() {
   return (
     <div className="animate-pulse">
-      <div className="relative w-full h-[280px] sm:h-[320px] bg-gray-300">
-        <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-16 gap-4">
-          <div className="w-64 h-8 bg-gray-400 rounded" />
-          <div className="w-96 h-4 bg-gray-400/70 rounded" />
-          <div className="w-80 h-4 bg-gray-400/70 rounded" />
-          <div className="w-36 h-10 bg-gray-400 rounded-[7px] mt-2" />
+      <div className="w-full h-[180px] sm:h-[280px] bg-gray-200" />
+      <div className="bg-[#E2E8F04D] border-b-2 border-[#E2E8F0] py-6">
+        <div className="global-container space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-4 bg-gray-100 rounded w-1/2" />
         </div>
       </div>
-
-      <div className="global-container py-10 space-y-12">
-        <div className="space-y-3">
-          <div className="w-48 h-5 bg-gray-200 rounded" />
-          <div className="w-full h-4 bg-gray-100 rounded" />
-          <div className="w-5/6 h-4 bg-gray-100 rounded" />
-          <div className="w-4/6 h-4 bg-gray-100 rounded" />
-        </div>
-
-        <div className="space-y-5">
-          <div className="w-48 h-6 bg-gray-200 rounded mx-auto" />
-          <div className="flex gap-4 overflow-hidden justify-center flex-wrap">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200" />
-                <div className="w-16 h-3 bg-gray-200 rounded" />
-              </div>
+      <div className="global-container py-8">
+        <div className="flex gap-5 items-start">
+          <div className="hidden lg:block w-60 shrink-0 space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-28 bg-gray-100 rounded-[7px]" />
             ))}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="h-7 bg-gray-200 rounded w-64 mb-5" />
+            <div className="h-10 bg-gray-100 rounded-lg mb-5" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <ProductCardSkeleton key={`sale-skeleton-${idx}`} />
+              ))}
+            </div>
           </div>
         </div>
       </div>

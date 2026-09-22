@@ -1,176 +1,176 @@
 import type { Metadata } from "next";
+import { cookies, headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
-import { apiUrls } from "@/apis/api-endpoint";
-import LocationPageClient from "@/features/location/LocationPageClient";
-import type { LocationPageData } from "@/features/location/LocationPageClient";
-import type { RawApiProduct } from "@/components/product-card";
-import { revalidate } from "@/utils";
+import SaleLandingClient from "@/features/sale/SaleLandingClient";
+import {
+  buildSaleLandingParams,
+  isUsableBanner,
+  mapLandingProduct,
+  normalizeSaleSlug,
+  parseBrandIds,
+  saleLandingFallbackUrl,
+  saleLandingPath,
+  titleFromSlug,
+  type SaleLandingResponse,
+} from "@/features/sale/sale-landing";
 import { SITE_URL } from "@/utils/site-url";
 
 export const dynamic = "force-dynamic";
 
-const COUNTRY_CODE = process.env.NEXT_PUBLIC_FORCE_COUNTRY ?? "AE";
-
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    page?: string;
+    category_id?: string;
+    brand_id?: string;
+    price_min?: string;
+    price_max?: string;
+    discount_min?: string;
+    discount_max?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
+    per_page?: string;
+  }>;
 }
 
-interface HorecaPageProduct extends RawApiProduct {
-  category_url_resolved?: string;
-  parent_category_url_resolved?: string;
-}
-
-interface HorecaPageTranslation {
-  title_tag: string | null;
-  meta_title: string | null;
-  meta_description: string | null;
-  og_title: string | null;
-  og_description: string | null;
-  og_image_url: string | null;
-  paragraph_1: string | null;
-  paragraph_2: string | null;
-  paragraph_3: string | null;
-  paragraph_4: string | null;
-  popular_tag_details: { popularTags: string; popularSlug: string }[] | null;
-}
-
-interface HorecaPageApiData {
-  id: number;
-  name: string;
-  description: string | null;
-  link_name: string | null;
-  link_url: string | null;
-  banner_url: string | null;
-  left_para_description: string | null;
-  right_para_description: string | null;
-  faqs: string;
-  is_active: number;
-  categories: { id: number; name: string; image: string; slug: string; order: number }[];
-  product_types: {
-    id: number;
-    type: string;
-    description: string;
-    order: number;
-    products: HorecaPageProduct[];
-  }[];
-  seo_url: {
-    translations: HorecaPageTranslation[];
-  } | null;
-}
-
-interface HorecaPageResponse {
-  success: boolean;
-  data: HorecaPageApiData;
-}
-
-function mapApiResponse(d: HorecaPageApiData): LocationPageData {
-  const trans = d.seo_url?.translations?.[0];
-
-  let faqs: { question: string; answer: string }[] = [];
-  try {
-    faqs = JSON.parse(d.faqs || "[]");
-  } catch {
-    faqs = [];
-  }
-
-  return {
-    id: d.id,
-    heroTitle: d.name,
-    heroDescription: d.description ?? "",
-    heroCta: d.link_name ?? "",
-    banner_slug: d.link_url ?? "/",
-    banner_image_file: d.banner_url ?? "",
-    banner_image_alt_text: d.name,
-    leftParaDescription: d.left_para_description ?? "",
-    rightParaDescription: d.right_para_description ?? "",
-    categories: (d.categories ?? []).map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      image: c.image,
-    })),
-    productTypes: (d.product_types ?? []).map((pt) => ({
-      id: pt.id,
-      type: pt.type,
-      description: pt.description,
-      products: pt.products.map((p) => ({
-        ...p,
-        category_url: p.category_url_resolved ?? p.category_url,
-        parent_category_url: p.parent_category_url_resolved ?? p.parent_category_url,
-      })),
-    })),
-    faqs,
-    paragraph_1: trans?.paragraph_1 ?? null,
-    paragraph_2: trans?.paragraph_2 ?? null,
-    paragraph_3: trans?.paragraph_3 ?? null,
-    paragraph_4: trans?.paragraph_4 ?? null,
-    popularTag_details: (trans?.popular_tag_details ?? []).filter(
-      (t) => !!(t.popularTags && t.popularSlug),
-    ),
-    whyChoosePoints: [],
-  };
-}
-
-function titleFromSlug(slug: string) {
-  return slug
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const canonical = `${SITE_URL}/sale/${slug}`;
-  const res = await makeApiCallSSR<HorecaPageResponse>(
-    apiUrls.HORECA_SALE_PAGE_BY_SLUG(slug),
-    {},
-    { revalidate, countryCode: COUNTRY_CODE },
+async function getCountryCode() {
+  const [cookieStore, reqHeaders] = await Promise.all([cookies(), headers()]);
+  return (
+    reqHeaders.get("x-country-code") ??
+    cookieStore.get("hc_cc")?.value ??
+    process.env.NEXT_PUBLIC_FORCE_COUNTRY ??
+    "AE"
   );
+}
 
-  if (!res?.success || !res?.data) {
-    return { title: titleFromSlug(slug), alternates: { canonical } };
+async function fetchLanding(
+  slug: string,
+  params: Record<string, string | number>,
+  countryCode: string,
+) {
+  const primary = saleLandingPath(slug);
+  const first = await makeApiCallSSR<SaleLandingResponse>(primary, params, {
+    revalidate: 60,
+    countryCode,
+  });
+  if (first?.success && first.data) {
+    return { res: first, endpoint: primary };
   }
 
-  const trans = res.data.seo_url?.translations?.[0];
-  const title = trans?.title_tag ?? trans?.meta_title ?? res.data.name;
-  const description = trans?.meta_description ?? undefined;
+  const currentBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+  if (!currentBase.includes("test-us.thehorecastore.co")) {
+    const fallback = saleLandingFallbackUrl(slug);
+    const second = await makeApiCallSSR<SaleLandingResponse>(fallback, params, {
+      revalidate: 60,
+      countryCode,
+    });
+    if (second?.success && second.data) {
+      return { res: second, endpoint: fallback };
+    }
+  }
+
+  return { res: first, endpoint: primary };
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug: rawSlug } = await params;
+  const slug = normalizeSaleSlug(rawSlug);
+  const countryCode = await getCountryCode();
+  const { res } = await fetchLanding(slug, { page: 1, per_page: 1 }, countryCode);
+
+  const data = res?.data;
+  const path = data?.seo_url?.startsWith("/")
+    ? data.seo_url
+    : `/sale/${slug}`;
+  const canonical = `${SITE_URL}${path}`;
+  const title = data?.title || titleFromSlug(slug);
+  const description = data?.description || undefined;
+  const index = data?.seo_management?.indexing !== 0;
+  const ogImage = isUsableBanner(data?.desktop_banner)
+    ? data?.desktop_banner
+    : undefined;
 
   return {
     title,
     description,
-    robots: { index: true, follow: true },
+    robots: { index, follow: true },
     alternates: { canonical },
     openGraph: {
-      title: trans?.og_title ?? title ?? undefined,
-      description: trans?.og_description ?? description,
+      title,
+      description,
       url: canonical,
       type: "website",
-      images: res.data.banner_url
-        ? [{ url: res.data.banner_url, alt: res.data.name }]
+      images: ogImage
+        ? [{ url: ogImage, alt: data?.desktop_banner_alt || title }]
         : undefined,
     },
   };
 }
 
-export default async function SaleSlugPage({ params }: PageProps) {
-  const { slug } = await params;
-  const res = await makeApiCallSSR<HorecaPageResponse>(
-    apiUrls.HORECA_SALE_PAGE_BY_SLUG(slug),
-    {},
-    { revalidate, countryCode: COUNTRY_CODE },
+export default async function SaleSlugPage({ params, searchParams }: PageProps) {
+  const { slug: rawSlug } = await params;
+  const query = await searchParams;
+  const slug = normalizeSaleSlug(rawSlug);
+  const countryCode = await getCountryCode();
+  const { res, endpoint } = await fetchLanding(
+    slug,
+    buildSaleLandingParams({
+      category_id: query.category_id,
+      brand_id: query.brand_id,
+      price_min: query.price_min,
+      price_max: query.price_max,
+      discount_min: query.discount_min,
+      discount_max: query.discount_max,
+      search: query.search,
+      sort_by: query.sort_by,
+      sort_order: query.sort_order,
+      page: query.page,
+      per_page: query.per_page,
+    }),
+    countryCode,
   );
 
-  if (!res?.success || !res?.data || !res.data.is_active) notFound();
+  if (!res?.success || !res.data) {
+    notFound();
+  }
+  if (res.data.status && res.data.status.toLowerCase() !== "active") {
+    notFound();
+  }
 
-  const data = mapApiResponse(res.data);
+  const data = res.data;
+  const title = data.title || titleFromSlug(slug);
 
   return (
-    <LocationPageClient
-      data={data}
-      crumbs={[
-        { label: "Home", href: "/" },
-        { label: data.heroTitle || titleFromSlug(slug), href: null },
-      ]}
+    <SaleLandingClient
+      slug={slug}
+      endpoint={endpoint}
+      initialCategoryId={query.category_id ?? null}
+      initialBrandIds={parseBrandIds(query.brand_id)}
+      initialSearch={query.search ?? ""}
+      initialSortBy={query.sort_by ?? ""}
+      initialPriceMin={query.price_min ? Number(query.price_min) : null}
+      initialPriceMax={query.price_max ? Number(query.price_max) : null}
+      data={{
+        title,
+        description: data.description ?? "",
+        desktopBanner: isUsableBanner(data.desktop_banner)
+          ? data.desktop_banner!
+          : null,
+        desktopBannerAlt: data.desktop_banner_alt || title,
+        mobileBanner: isUsableBanner(data.mobile_banner)
+          ? data.mobile_banner!
+          : null,
+        mobileBannerAlt: data.mobile_banner_alt || title,
+        products: (data.products ?? []).map(mapLandingProduct),
+        filters: data.filters ?? {},
+        totalProducts: data.pagination?.total ?? data.products?.length ?? 0,
+        totalPages: data.pagination?.last_page ?? 1,
+        currentPage: data.pagination?.current_page ?? 1,
+      }}
     />
   );
 }

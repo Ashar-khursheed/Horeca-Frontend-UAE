@@ -107,9 +107,10 @@
 
 import { headers, cookies } from "next/headers";
 
-const API_BASE =
+const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://test-us.thehorecastore.co/api";
+  "https://test-us.thehorecastore.co/api/"
+).replace(/\/?$/, "/");
 
 type Params = Record<string, string | number | boolean | undefined | null>;
 
@@ -170,7 +171,7 @@ export async function makeApiCallSSR<T = unknown>(
 
     const base = path.startsWith("http")
       ? path
-      : `${API_BASE}${path}`;
+      : `${API_BASE}${path.replace(/^\//, "")}`;
 
     const url = qs.toString() ? `${base}?${qs}` : base;
 
