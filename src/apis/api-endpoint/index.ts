@@ -91,6 +91,8 @@ export const apiUrls = {
     `frontend/horeca-pages-by-slug/locations/${state}/${city}`,
   HORECA_SALE_PAGE_BY_SLUG: (slug: string) =>
     `frontend/horeca-pages-by-slug/sale/${slug}`,
+  LANDING_PAGE_SALE: (slug: string) =>
+    `frontend/landing-pages/sale/${encodeURIComponent(slug)}`,
   BRAND_CATEGORY_PRODUCTS: (brandSlug: string, categorySlug: string) =>
     `frontend/products/brand/${brandSlug}/category/${categorySlug}`,
 
