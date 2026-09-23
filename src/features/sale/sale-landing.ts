@@ -109,10 +109,6 @@ export function saleLandingPath(slug: string) {
   return `frontend/landing-pages/sale/${encodeURIComponent(slug)}`;
 }
 
-export function saleLandingFallbackUrl(slug: string) {
-  return `https://test-us.thehorecastore.co/api/${saleLandingPath(slug)}`;
-}
-
 export function titleFromSlug(slug: string) {
   return slug
     .replace(/-/g, " ")

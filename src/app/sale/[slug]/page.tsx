@@ -9,7 +9,6 @@ import {
   mapLandingProduct,
   normalizeSaleSlug,
   parseBrandIds,
-  saleLandingFallbackUrl,
   saleLandingPath,
   titleFromSlug,
   type SaleLandingResponse,
@@ -50,28 +49,12 @@ async function fetchLanding(
   params: Record<string, string | number>,
   countryCode: string,
 ) {
-  const primary = saleLandingPath(slug);
-  const first = await makeApiCallSSR<SaleLandingResponse>(primary, params, {
-    revalidate: 60,
+  const endpoint = saleLandingPath(slug);
+  const res = await makeApiCallSSR<SaleLandingResponse>(endpoint, params, {
+    revalidate: 0,
     countryCode,
   });
-  if (first?.success && first.data) {
-    return { res: first, endpoint: primary };
-  }
-
-  const currentBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-  if (!currentBase.includes("test-us.thehorecastore.co")) {
-    const fallback = saleLandingFallbackUrl(slug);
-    const second = await makeApiCallSSR<SaleLandingResponse>(fallback, params, {
-      revalidate: 60,
-      countryCode,
-    });
-    if (second?.success && second.data) {
-      return { res: second, endpoint: fallback };
-    }
-  }
-
-  return { res: first, endpoint: primary };
+  return { res, endpoint };
 }
 
 export async function generateMetadata({
