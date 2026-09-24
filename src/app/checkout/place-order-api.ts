@@ -5,6 +5,8 @@ import {
   getShippingCharge,
   getUaeOrderShipping,
   isUaeShippingMarket,
+  meetsUaeMinOrder,
+  UAE_MIN_ORDER,
 } from "@/utils/shipping";
 import type { OrderStep } from "./order-processing-modal";
 import { updateProfile as updateProfileThunk } from "@/store/slices/my-profile/profileSlice";
@@ -51,29 +53,38 @@ export async function updateProfile(
   }
 }
 
-function buildProducts(rawProducts: any[]) {
+function getRawProductsSubtotal(rawProducts: any[]): number {
+  return rawProducts.reduce((sum, cp) => {
+    const qty = Number(cp.quantity) || 1;
+    const price = parseFloat(cp.unit_price ?? cp.product?.price ?? 0);
+    const accessories = (cp.accessory_charges ?? []).reduce(
+      (s: number, a: any) => s + parseFloat(a.accessory_item_price ?? 0),
+      0,
+    );
+    return sum + (price + accessories) * qty;
+  }, 0);
+}
+
+function isUaeOrder(rawProducts: any[]): boolean {
   const defaultAddr = getDefaultAddressCache();
   const location = getLocationData();
-  const currencySymbol = rawProducts[0]?.product?.currency?.symbol;
-  const uaeShipping = isUaeShippingMarket({
+  return isUaeShippingMarket({
     countryName:
       defaultAddr?.related_country?.name ??
       defaultAddr?.country ??
       location?.country,
     countryCode: location?.countryCode,
-    currencySymbol,
+    currencySymbol: rawProducts[0]?.product?.currency?.symbol,
   });
+}
+
+function buildProducts(rawProducts: any[]) {
+  const defaultAddr = getDefaultAddressCache();
+  const location = getLocationData();
+  const uaeShipping = isUaeOrder(rawProducts);
 
   if (uaeShipping) {
-    const subtotal = rawProducts.reduce((sum, cp) => {
-      const qty = Number(cp.quantity) || 1;
-      const price = parseFloat(cp.unit_price ?? cp.product?.price ?? 0);
-      const accessories = (cp.accessory_charges ?? []).reduce(
-        (s: number, a: any) => s + parseFloat(a.accessory_item_price ?? 0),
-        0,
-      );
-      return sum + (price + accessories) * qty;
-    }, 0);
+    const subtotal = getRawProductsSubtotal(rawProducts);
     const orderShipping = getUaeOrderShipping(subtotal);
     return rawProducts.map((cp: any, index: number) => {
       const qty = Number(cp.quantity) || 1;
@@ -184,6 +195,12 @@ async function fetchFullOrder(orderId: number, fallback: any) {
 
 export async function placeOrderWithPayment(params: PlaceOrderParams): Promise<number> {
   const { onStep } = params;
+
+  if (isUaeOrder(params.rawProducts) && !meetsUaeMinOrder(getRawProductsSubtotal(params.rawProducts))) {
+    throw new Error(
+      `Minimum order is AED ${UAE_MIN_ORDER}. Please add more items to continue.`,
+    );
+  }
 
   onStep("order");
   const orderData = await createOrder(params);

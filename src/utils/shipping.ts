@@ -1,8 +1,18 @@
 import type { DefaultAddressCache } from "./locationStorage";
 
-/** UAE: flat 30 AED shipping below 500 AED subtotal; free at 500+. */
-export const UAE_FREE_SHIPPING_MIN = 500;
+/** UAE: product subtotal must be at least this to place an order. */
+export const UAE_MIN_ORDER = 100;
+/** UAE: flat 30 AED shipping below 100 AED subtotal; free at 100+. */
+export const UAE_FREE_SHIPPING_MIN = 100;
 export const UAE_FLAT_SHIPPING = 30;
+
+export function getUaeMinOrderRemaining(subtotal: number): number {
+  return Math.max(0, UAE_MIN_ORDER - (Number(subtotal) || 0));
+}
+
+export function meetsUaeMinOrder(subtotal: number): boolean {
+  return (Number(subtotal) || 0) >= UAE_MIN_ORDER;
+}
 
 export function isUaeShippingMarket(opts?: {
   countryName?: string | null;

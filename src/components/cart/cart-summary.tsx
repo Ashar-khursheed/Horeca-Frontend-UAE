@@ -21,9 +21,11 @@ import { CartItem, fmtPrice } from "./cart-types";
 import CTA from "../cta";
 import { CurrencySymbol } from "../currency-symbol";
 import {
+  getUaeMinOrderRemaining,
   getUaeOrderShipping,
   isUaeShippingMarket,
-  UAE_FREE_SHIPPING_MIN,
+  meetsUaeMinOrder,
+  UAE_MIN_ORDER,
 } from "@/utils/shipping";
 import { UAE_VAT_RATE } from "dirham";
 
@@ -64,8 +66,9 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const shippingTotal = isUaeShipping
     ? getUaeOrderShipping(subtotal)
     : itemShippingTotal;
-  const freeShippingRemaining = isUaeShipping
-    ? Math.max(0, UAE_FREE_SHIPPING_MIN - subtotal)
+  const belowMinOrder = isUaeShipping && !meetsUaeMinOrder(subtotal);
+  const minOrderRemaining = isUaeShipping
+    ? getUaeMinOrderRemaining(subtotal)
     : 0;
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
@@ -114,6 +117,7 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
 
   // ── Save + navigate on "Confirm & Pay" ────────────────────────────────────
   const handleConfirm = () => {
+    if (belowMinOrder) return;
     try {
       localStorage.setItem(CART_SUMMARY_KEY, JSON.stringify(buildSummary()));
     } catch { /* ignore */ }
@@ -188,16 +192,6 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                         )
                       }
                     />
-                    {freeShippingRemaining > 0 && (
-                      <p className="text-[11px] text-gray-500">
-                        Add{" "}
-                        <CurrencySymbol currency={currencySymbol} fontsize="11px" />
-                        {fmtPrice(freeShippingRemaining)} more for free shipping
-                        (orders of{" "}
-                        <CurrencySymbol currency={currencySymbol} fontsize="11px" />
-                        {fmtPrice(UAE_FREE_SHIPPING_MIN)}+)
-                      </p>
-                    )}
                   </>
                 )}
                 {ratePercent > 0 && (
@@ -269,10 +263,21 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                 )}
               </div>
 
+              {belowMinOrder && (
+                <p className="text-[11px] text-red-500 text-center">
+                  Minimum order is{" "}
+                  <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                  {fmtPrice(UAE_MIN_ORDER)}. Add{" "}
+                  <CurrencySymbol currency={currencySymbol} fontsize="11px" />
+                  {fmtPrice(minOrderRemaining)} more to place your order.
+                </p>
+              )}
+
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="w-full py-3 rounded-[7px] bg-[#186737] hover:bg-[#145c30] text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors duration-200"
+                disabled={belowMinOrder}
+                className="w-full py-3 rounded-[7px] bg-[#186737] hover:bg-[#145c30] disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors duration-200"
               >
                 Confirm &amp; Pay <ArrowRight size={16} />
               </button>

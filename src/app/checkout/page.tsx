@@ -25,9 +25,11 @@ import {
 import { persistPaymentAuthBackup, restorePaymentAuthCookies } from "@/utils/payment-auth";
 import {
   getShippingChargeFromAddress,
+  getUaeMinOrderRemaining,
   getUaeOrderShipping,
   isUaeShippingMarket,
-  UAE_FREE_SHIPPING_MIN,
+  meetsUaeMinOrder,
+  UAE_MIN_ORDER,
 } from "@/utils/shipping";
 import { UAE_VAT_RATE } from "dirham";
 import { AnimatePresence, motion } from "framer-motion";
@@ -449,8 +451,9 @@ export default function CheckoutPage() {
   const baseShipping = isUaeShipping
     ? getUaeOrderShipping(baseSubtotal)
     : (cartSummary?.totalShippingCharges ?? 0);
-  const freeShippingRemaining = isUaeShipping
-    ? Math.max(0, UAE_FREE_SHIPPING_MIN - baseSubtotal)
+  const belowMinOrder = isUaeShipping && !meetsUaeMinOrder(baseSubtotal);
+  const minOrderRemaining = isUaeShipping
+    ? getUaeMinOrderRemaining(baseSubtotal)
     : 0;
   const ratePercent = isUAEUser ? UAE_VAT_RATE * 100 : 0; // VAT applies only within the UAE
   const taxRate = ratePercent / 100;
@@ -658,6 +661,13 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setOrderError(null);
+
+    if (isUaeShipping && !meetsUaeMinOrder(baseSubtotal)) {
+      setOrderError(
+        `Minimum order is AED ${UAE_MIN_ORDER}. Please add more items to continue.`,
+      );
+      return;
+    }
 
     if (!termsAccepted) {
       setTermsError(true);
@@ -1381,15 +1391,6 @@ export default function CheckoutPage() {
                   <span className="font-medium text-[#186737]">Free</span>
                 )}
               </div>
-              {freeShippingRemaining > 0 && (
-                <p className="text-[11px] text-gray-500 -mt-1">
-                  Add{" "}
-                  <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
-                  {usd(freeShippingRemaining)} more for free shipping (orders of{" "}
-                  <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
-                  {usd(UAE_FREE_SHIPPING_MIN)}+)
-                </p>
-              )}
             </>
           )}
           {liftGate && (
@@ -1526,9 +1527,19 @@ export default function CheckoutPage() {
         >
           <ChevronRight size={14} className="rotate-180" /> Return to cart
         </Link>
+        <div className="flex flex-col items-end gap-2">
+        {belowMinOrder && (
+          <p className="text-[11px] text-red-500 text-right max-w-xs">
+            Minimum order is{" "}
+            <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
+            {usd(UAE_MIN_ORDER)}. Add{" "}
+            <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
+            {usd(minOrderRemaining)} more to place your order.
+          </p>
+        )}
         <button
           type="button"
-          disabled={isPlacingOrder}
+          disabled={isPlacingOrder || belowMinOrder}
           className="flex items-center gap-2 bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold px-8 py-3 rounded-md text-sm transition-colors"
           onClick={handlePlaceOrder}
         >
@@ -1559,6 +1570,7 @@ export default function CheckoutPage() {
             "Place Order"
           )}
         </button>
+        </div>
       </div>
     </>
   );
@@ -1790,6 +1802,15 @@ export default function CheckoutPage() {
                   <p className="text-xs text-red-700">{orderError}</p>
                 </div>
               )}
+              {belowMinOrder && (
+                <p className="text-[11px] text-red-500 text-center mb-2">
+                  Minimum order is{" "}
+                  <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
+                  {usd(UAE_MIN_ORDER)}. Add{" "}
+                  <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
+                  {usd(minOrderRemaining)} more to place your order.
+                </p>
+              )}
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -1804,7 +1825,7 @@ export default function CheckoutPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={isPlacingOrder}
+                  disabled={isPlacingOrder || belowMinOrder}
                   onClick={handlePlaceOrder}
                   className="flex-1 flex items-center justify-center gap-2 bg-[#186737] hover:bg-[#145c30] disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98] text-white font-semibold py-3.5 rounded-[7px] text-sm transition-all"
                 >
