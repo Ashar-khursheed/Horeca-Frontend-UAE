@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
+import { isManualCountry } from "@/utils/country";
 
 const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
 const LOCATION_API   = `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/location`;
@@ -42,6 +43,11 @@ export default function AppInitializer() {
     const detectTime = localStorage.getItem(DETECT_KEY);
     const currentCookie = document.cookie
       .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
+
+    if (isManualCountry() && cached?.country) {
+      dispatch(fetchCountryByName(cached.country));
+      return;
+    }
 
     // Bypass cache on localhost so developers toggling VPN see changes instantly on refresh
     const cacheValid = !isLocalhost && cached && detectTime && (Date.now() - Number(detectTime) < DETECT_TTL);

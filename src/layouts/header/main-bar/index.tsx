@@ -47,6 +47,7 @@ import { isUaeAddressCountry } from "@/utils/uae-address";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "./SearchBar";
+import HeaderCountrySelect from "../country-select";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface CategoryName {
@@ -716,6 +717,13 @@ export default function NavigationStatic({
                           </Link>
                         </div>
                       )}
+
+                      <div className="px-5 py-3 border-b border-gray-100 xl:hidden">
+                        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                          Country
+                        </p>
+                        <HeaderCountrySelect fullWidth />
+                      </div>
 
                       {/* Nav links */}
                       {NAV_LINKS.map((link) => {

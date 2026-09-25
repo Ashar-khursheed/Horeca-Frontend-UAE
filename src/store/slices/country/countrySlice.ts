@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { apiUrls } from "@/apis/api-endpoint";
+import { getLocationData } from "@/utils/locationStorage";
 
 export interface CountryData {
   id: number;
@@ -29,8 +30,10 @@ export const fetchCountryByName = createAsyncThunk(
   "country/fetchByName",
   async (countryName: string, { rejectWithValue }) => {
     try {
+      const forceCountry = getLocationData()?.countryCode;
       const res = await makeApiRequest<{ success: boolean; data: CountryData }>(
-        `${apiUrls?.COUNTRIES}/${encodeURIComponent(countryName)}`
+        `${apiUrls?.COUNTRIES}/${encodeURIComponent(countryName)}`,
+        forceCountry ? { params: { force_country: forceCountry } } : undefined,
       );
       return res.data;
     } catch (err: unknown) {

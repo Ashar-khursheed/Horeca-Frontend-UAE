@@ -46,13 +46,16 @@ const ipCache = new Map<string, { country: string; expires: number }>();
 const IP_CACHE_MS = 10 * 60 * 1000; // 10 minutes
 
 async function resolveCountryCode(request: NextRequest): Promise<string> {
+  const cookieCountry = request.cookies.get("hc_cc")?.value;
+  const isManual = request.cookies.get("hc_cc_manual")?.value === "1";
+  if (isManual && cookieCountry) return cookieCountry;
+
   // 1. CDN headers — zero latency, 100% accurate on production
   const geoCountry = request.headers.get("x-vercel-ip-country")
     ?? request.headers.get("cf-ipcountry");
   if (geoCountry && geoCountry !== "XX") return geoCountry;
 
   // 2. Cookie check — avoids slow API calls for returning visitors
-  const cookieCountry = request.cookies.get("hc_cc")?.value;
   if (cookieCountry) return cookieCountry;
 
   // 3. Fallback to GeoIP by client IP (only when not localhost)

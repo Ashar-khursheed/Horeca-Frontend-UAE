@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Handshake, FileText, type LucideIcon } from "lucide-react";
 import LangSwitcher from "@/components/LangSwitcher";
 import FinancingModal from "@/components/financing-modal";
+import HeaderCountrySelect from "../country-select";
 
 type HighlightVariant = "quote" | "partner";
 
@@ -110,6 +111,9 @@ const TopBar = () => {
                 </li>
               );
             })}
+            <li className="flex items-center pl-3">
+              <HeaderCountrySelect />
+            </li>
             <li>
               {/* <LangSwitcher /> */}
             </li>
