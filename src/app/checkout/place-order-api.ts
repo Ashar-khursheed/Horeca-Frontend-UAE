@@ -2,11 +2,11 @@ import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import { getDefaultAddressCache, getLocationData } from "@/utils/locationStorage";
 import {
+  getMarketMinOrder,
   getShippingCharge,
   getUaeOrderShipping,
   isUaeShippingMarket,
-  meetsUaeMinOrder,
-  UAE_MIN_ORDER,
+  meetsMinOrder,
 } from "@/utils/shipping";
 import type { OrderStep } from "./order-processing-modal";
 import { updateProfile as updateProfileThunk } from "@/store/slices/my-profile/profileSlice";
@@ -65,17 +65,21 @@ function getRawProductsSubtotal(rawProducts: any[]): number {
   }, 0);
 }
 
-function isUaeOrder(rawProducts: any[]): boolean {
+function getOrderMarket(rawProducts: any[]) {
   const defaultAddr = getDefaultAddressCache();
   const location = getLocationData();
-  return isUaeShippingMarket({
+  return {
     countryName:
       defaultAddr?.related_country?.name ??
       defaultAddr?.country ??
       location?.country,
     countryCode: location?.countryCode,
     currencySymbol: rawProducts[0]?.product?.currency?.symbol,
-  });
+  };
+}
+
+function isUaeOrder(rawProducts: any[]): boolean {
+  return isUaeShippingMarket(getOrderMarket(rawProducts));
 }
 
 function buildProducts(rawProducts: any[]) {
@@ -196,9 +200,10 @@ async function fetchFullOrder(orderId: number, fallback: any) {
 export async function placeOrderWithPayment(params: PlaceOrderParams): Promise<number> {
   const { onStep } = params;
 
-  if (isUaeOrder(params.rawProducts) && !meetsUaeMinOrder(getRawProductsSubtotal(params.rawProducts))) {
+  const minOrder = getMarketMinOrder(getOrderMarket(params.rawProducts));
+  if (!meetsMinOrder(getRawProductsSubtotal(params.rawProducts), minOrder)) {
     throw new Error(
-      `Minimum order is AED ${UAE_MIN_ORDER}. Please add more items to continue.`,
+      `Minimum order is ${minOrder}. Please add more items to continue.`,
     );
   }
 

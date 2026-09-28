@@ -24,12 +24,12 @@ import {
 } from "@/utils/locationStorage";
 import { persistPaymentAuthBackup, restorePaymentAuthCookies } from "@/utils/payment-auth";
 import {
+  getMarketMinOrder,
+  getMinOrderRemaining,
   getShippingChargeFromAddress,
-  getUaeMinOrderRemaining,
   getUaeOrderShipping,
   isUaeShippingMarket,
-  meetsUaeMinOrder,
-  UAE_MIN_ORDER,
+  meetsMinOrder,
 } from "@/utils/shipping";
 import { UAE_VAT_RATE } from "dirham";
 import { AnimatePresence, motion } from "framer-motion";
@@ -433,9 +433,15 @@ export default function CheckoutPage() {
   const cartItems = isLoggedIn ? apiCartItems : guestCartItems;
   const currencySymbolICON: string =
     (rawProducts[0] as any)?.product?.currency?.symbol ?? "$";
+  const checkoutLocation = getLocationData();
+  const market = {
+    countryName: country?.data?.name ?? checkoutLocation?.country,
+    countryCode: checkoutLocation?.countryCode,
+    currencySymbol: currencySymbolICON,
+  };
   const isUaeShipping = isUaeShippingMarket({
     countryName: country?.data?.name,
-    countryCode: getLocationData()?.countryCode,
+    countryCode: checkoutLocation?.countryCode,
     currencySymbol: currencySymbolICON,
   });
 
@@ -451,10 +457,9 @@ export default function CheckoutPage() {
   const baseShipping = isUaeShipping
     ? getUaeOrderShipping(baseSubtotal)
     : (cartSummary?.totalShippingCharges ?? 0);
-  const belowMinOrder = isUaeShipping && !meetsUaeMinOrder(baseSubtotal);
-  const minOrderRemaining = isUaeShipping
-    ? getUaeMinOrderRemaining(baseSubtotal)
-    : 0;
+  const minOrder = getMarketMinOrder(market);
+  const belowMinOrder = !meetsMinOrder(baseSubtotal, minOrder);
+  const minOrderRemaining = getMinOrderRemaining(baseSubtotal, minOrder);
   const ratePercent = isUAEUser ? UAE_VAT_RATE * 100 : 0; // VAT applies only within the UAE
   const taxRate = ratePercent / 100;
   const liftFee = liftGate ? 75 : 0;
@@ -662,9 +667,9 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setOrderError(null);
 
-    if (isUaeShipping && !meetsUaeMinOrder(baseSubtotal)) {
+    if (!meetsMinOrder(baseSubtotal, minOrder)) {
       setOrderError(
-        `Minimum order is AED ${UAE_MIN_ORDER}. Please add more items to continue.`,
+        `Minimum order is ${minOrder}. Please add more items to continue.`,
       );
       return;
     }
@@ -1532,7 +1537,7 @@ export default function CheckoutPage() {
           <p className="text-[11px] text-red-500 text-right max-w-xs">
             Minimum order is{" "}
             <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
-            {usd(UAE_MIN_ORDER)}. Add{" "}
+            {usd(minOrder)}. Add{" "}
             <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
             {usd(minOrderRemaining)} more to place your order.
           </p>
@@ -1806,7 +1811,7 @@ export default function CheckoutPage() {
                 <p className="text-[11px] text-red-500 text-center mb-2">
                   Minimum order is{" "}
                   <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
-                  {usd(UAE_MIN_ORDER)}. Add{" "}
+                  {usd(minOrder)}. Add{" "}
                   <CurrencySymbol currency={currencySymbolICON} fontsize="11px" />
                   {usd(minOrderRemaining)} more to place your order.
                 </p>

@@ -2,16 +2,47 @@ import type { DefaultAddressCache } from "./locationStorage";
 
 /** UAE: product subtotal must be at least this to place an order. */
 export const UAE_MIN_ORDER = 100;
+/** Saudi Arabia: product subtotal must be at least this to place an order. */
+export const SAUDI_MIN_ORDER = 2000;
 /** UAE: flat 30 AED shipping below 100 AED subtotal; free at 100+. */
 export const UAE_FREE_SHIPPING_MIN = 100;
 export const UAE_FLAT_SHIPPING = 30;
 
+export function isSaudiMarket(opts?: {
+  countryName?: string | null;
+  countryCode?: string | null;
+}): boolean {
+  const name = (opts?.countryName ?? "").toLowerCase();
+  const code = (opts?.countryCode ?? "").toLowerCase();
+  return name.includes("saudi") || code === "sa";
+}
+
+export function getMarketMinOrder(opts?: {
+  countryName?: string | null;
+  countryCode?: string | null;
+  currencySymbol?: string | null;
+}): number {
+  if (isSaudiMarket(opts)) return SAUDI_MIN_ORDER;
+  if (isUaeShippingMarket(opts)) return UAE_MIN_ORDER;
+  return 0;
+}
+
+export function getMinOrderRemaining(subtotal: number, minOrder: number): number {
+  if (!(minOrder > 0)) return 0;
+  return Math.max(0, minOrder - (Number(subtotal) || 0));
+}
+
+export function meetsMinOrder(subtotal: number, minOrder: number): boolean {
+  if (!(minOrder > 0)) return true;
+  return (Number(subtotal) || 0) >= minOrder;
+}
+
 export function getUaeMinOrderRemaining(subtotal: number): number {
-  return Math.max(0, UAE_MIN_ORDER - (Number(subtotal) || 0));
+  return getMinOrderRemaining(subtotal, UAE_MIN_ORDER);
 }
 
 export function meetsUaeMinOrder(subtotal: number): boolean {
-  return (Number(subtotal) || 0) >= UAE_MIN_ORDER;
+  return meetsMinOrder(subtotal, UAE_MIN_ORDER);
 }
 
 export function isUaeShippingMarket(opts?: {

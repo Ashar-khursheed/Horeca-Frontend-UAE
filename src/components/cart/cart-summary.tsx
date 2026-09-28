@@ -21,12 +21,13 @@ import { CartItem, fmtPrice } from "./cart-types";
 import CTA from "../cta";
 import { CurrencySymbol } from "../currency-symbol";
 import {
-  getUaeMinOrderRemaining,
+  getMarketMinOrder,
+  getMinOrderRemaining,
   getUaeOrderShipping,
   isUaeShippingMarket,
-  meetsUaeMinOrder,
-  UAE_MIN_ORDER,
+  meetsMinOrder,
 } from "@/utils/shipping";
+import { getLocationData } from "@/utils/locationStorage";
 import { UAE_VAT_RATE } from "dirham";
 
 const CART_SUMMARY_KEY = "hc_cart_summary";
@@ -48,6 +49,12 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   }, []);
 
   const currencySymbol = cartItems[0]?.currencySymbol ?? "$";
+  const location = getLocationData();
+  const market = {
+    countryName: country?.data?.name ?? location?.country,
+    countryCode: location?.countryCode,
+    currencySymbol,
+  };
   const subtotal = cartItems.reduce((s, c) => {
     const accessoriesTotal = (c.selectedAccessories ?? []).reduce(
       (a, acc) => a + (parseFloat(String(acc.price ?? 0)) || 0),
@@ -66,10 +73,9 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
   const shippingTotal = isUaeShipping
     ? getUaeOrderShipping(subtotal)
     : itemShippingTotal;
-  const belowMinOrder = isUaeShipping && !meetsUaeMinOrder(subtotal);
-  const minOrderRemaining = isUaeShipping
-    ? getUaeMinOrderRemaining(subtotal)
-    : 0;
+  const minOrder = getMarketMinOrder(market);
+  const belowMinOrder = !meetsMinOrder(subtotal, minOrder);
+  const minOrderRemaining = getMinOrderRemaining(subtotal, minOrder);
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0;
   const taxable = subtotal - promoDiscount;
   // Processing fee: 2.95% for UAE addresses, 3.95% for everywhere else
@@ -267,7 +273,7 @@ export default function CartSummary({ cartItems }: { cartItems: CartItem[] }) {
                 <p className="text-[11px] text-red-500 text-center">
                   Minimum order is{" "}
                   <CurrencySymbol currency={currencySymbol} fontsize="11px" />
-                  {fmtPrice(UAE_MIN_ORDER)}. Add{" "}
+                  {fmtPrice(minOrder)}. Add{" "}
                   <CurrencySymbol currency={currencySymbol} fontsize="11px" />
                   {fmtPrice(minOrderRemaining)} more to place your order.
                 </p>

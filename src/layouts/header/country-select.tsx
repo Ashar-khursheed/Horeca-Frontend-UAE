@@ -2,13 +2,10 @@
 
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
-import { useAppDispatch } from "@/store/hooks";
-import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { persistSelectedCountry, readCountryCookie } from "@/utils/country";
 import { countryNameToIso } from "@/utils/country-iso";
 import { useLocationData } from "@/utils/locationStorage";
 import { Check, ChevronDown, MapPin, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export type HeaderCountry = {
@@ -48,8 +45,6 @@ export default function HeaderCountrySelect({
   className?: string;
   fullWidth?: boolean;
 }) {
-  const dispatch = useAppDispatch();
-  const router = useRouter();
   const location = useLocationData();
   const [countries, setCountries] = useState<HeaderCountry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,8 +118,7 @@ export default function HeaderCountrySelect({
     setValue(country.name);
     setOpen(false);
     persistSelectedCountry(country.name, code);
-    dispatch(fetchCountryByName(country.name));
-    router.refresh();
+    window.location.reload();
   };
 
   return (
