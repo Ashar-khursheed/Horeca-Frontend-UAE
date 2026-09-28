@@ -5,6 +5,7 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { persistSelectedCountry, readCountryCookie } from "@/utils/country";
 import { countryNameToIso } from "@/utils/country-iso";
 import { useLocationData } from "@/utils/locationStorage";
+import { refreshGuestCartPrices } from "@/utils/refresh-guest-cart";
 import { Check, ChevronDown, MapPin, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -51,6 +52,7 @@ export default function HeaderCountrySelect({
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [changing, setChanging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -112,12 +114,18 @@ export default function HeaderCountrySelect({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const handleChange = (country: HeaderCountry) => {
+  const handleChange = async (country: HeaderCountry) => {
     const code = countryNameToIso(country.name);
-    if (!code) return;
+    if (!code || country.name === value || changing) return;
     setValue(country.name);
     setOpen(false);
+    setChanging(true);
     persistSelectedCountry(country.name, code);
+    try {
+      await refreshGuestCartPrices(code);
+    } catch {
+      // Keep stored prices if the live refresh fails, then still reload.
+    }
     window.location.reload();
   };
 
@@ -126,8 +134,8 @@ export default function HeaderCountrySelect({
       <button
         type="button"
         aria-label="Select country"
-        disabled={loading}
-        onClick={() => !loading && setOpen((v) => !v)}
+        disabled={loading || changing}
+        onClick={() => !loading && !changing && setOpen((v) => !v)}
         className={
           fullWidth
             ? "flex h-10 w-full items-center justify-between gap-2 rounded-[7px] border border-gray-200 bg-white px-3 text-sm text-gray-700 hover:border-[#186737] disabled:opacity-60"
@@ -136,7 +144,7 @@ export default function HeaderCountrySelect({
       >
         <CountryFlag icon={selected?.icon} name={selected?.name ?? "Country"} />
         <span className="truncate max-w-[120px]">
-          {loading ? "Loading…" : (selected?.name ?? "Country")}
+          {loading ? "Loading…" : changing ? "Updating…" : (selected?.name ?? "Country")}
         </span>
         <ChevronDown
           size={12}
