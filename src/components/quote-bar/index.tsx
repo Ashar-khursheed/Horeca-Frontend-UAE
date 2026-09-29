@@ -120,3 +120,24 @@ export function QuoteBar() {
     </aside>
   );
 }
+
+/** Mobile-only floating quote button — chatbot-style, left side. */
+export function MobileQuoteFab() {
+  const pathname = usePathname();
+  const hidden = HIDDEN_PREFIXES.some((p) => pathname?.startsWith(p));
+  if (hidden) return null;
+
+  return (
+    <Link
+      href="/create-quotation"
+      aria-label="Create quotation"
+      className="fixed left-4 z-40 flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#186737] text-white shadow-[0_8px_24px_rgba(24,103,55,0.45)] active:scale-95 lg:hidden"
+      style={{ bottom: "calc(92px + env(safe-area-inset-bottom))" }}
+    >
+      <FileText size={22} strokeWidth={2.2} />
+      <span className="mt-0.5 text-[8px] font-bold leading-none tracking-wide">
+        Quote
+      </span>
+    </Link>
+  );
+}
