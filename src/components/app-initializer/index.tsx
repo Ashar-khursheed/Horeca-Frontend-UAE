@@ -3,12 +3,15 @@
 import { fetchCountryByName } from "@/store/slices/country/countrySlice";
 import { fetchProfile, setLoading } from "@/store/slices/my-profile/profileSlice";
 import { logoutUser } from "@/store/slices/auth/authSlice";
+import { hydrateCart } from "@/store/slices/cart/cartSlice";
+import { hydrateGuestSaveItems } from "@/store/slices/save-for-later/saveForLaterSlice";
 import { AppDispatch } from "@/store/store";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
-import { isManualCountry, stripCountryQueryFromUrl } from "@/utils/country";
+import { isManualCountry, readCountryCookie, stripCountryQueryFromUrl } from "@/utils/country";
+import { syncGuestCartPricesIfNeeded } from "@/utils/refresh-guest-cart";
 
 const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
 const LOCATION_API   = `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/location`;
@@ -99,9 +102,45 @@ export default function AppInitializer() {
       if (loc?.country) {
         dispatch(fetchCountryByName(loc.country));
       }
+      const token = localStorage.getItem("token")?.trim();
+      const code = loc?.countryCode;
+      if (token || !code) return;
+      syncGuestCartPricesIfNeeded(code)
+        .then((updated) => {
+          if (!updated) return;
+          dispatch(hydrateCart());
+          dispatch(hydrateGuestSaveItems());
+        })
+        .catch(() => {});
     };
     window.addEventListener(LOCATION_EVENT, handler);
     return () => window.removeEventListener(LOCATION_EVENT, handler);
+  }, [dispatch]);
+
+  // Guest cart is localStorage — refetch live prices when country changed.
+  useEffect(() => {
+    const token = localStorage.getItem("token")?.trim();
+    if (token) return;
+
+    const code = (
+      getLocationData()?.countryCode ||
+      readCountryCookie() ||
+      new URLSearchParams(window.location.search).get("cc") ||
+      ""
+    ).toUpperCase();
+    if (!code) return;
+
+    let cancelled = false;
+    syncGuestCartPricesIfNeeded(code)
+      .then((updated) => {
+        if (cancelled || !updated) return;
+        dispatch(hydrateCart());
+        dispatch(hydrateGuestSaveItems());
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [dispatch]);
 
   // Profile: only fetch if token exists — and only for customer accounts,

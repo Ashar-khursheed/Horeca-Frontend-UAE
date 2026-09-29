@@ -3,6 +3,7 @@
 import { Modal } from "@/components/ui/modal";
 import { CurrencySymbol } from "@/components/currency-symbol";
 import type { ApiBrandProduct, SearchProduct } from "@/utils/types";
+import { getCountryCodeClient } from "@/utils/country";
 import { Check, Package, Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -88,7 +89,8 @@ export function AddProductModal({
     setLoading(true);
     setError(false);
     try {
-      const url = `${SEARCH_API}?query=${encodeURIComponent(q.trim() || "hoshizaki")}&page=1&length=10`;
+      const countryCode = await getCountryCodeClient();
+      const url = `${SEARCH_API}?query=${encodeURIComponent(q.trim() || "hoshizaki")}&page=1&length=10&force_country=${countryCode}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("search failed");
       const raw: BackendSearchResponse = await res.json();

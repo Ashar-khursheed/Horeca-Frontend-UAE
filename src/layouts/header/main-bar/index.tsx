@@ -195,15 +195,17 @@ export default function NavigationStatic({
 
   // Priority: live API default → cached localStorage default → locationData
   const resolvedDefault = liveDefault ?? cachedDefault;
-  const isResolvingAddress = !!customer && addressesLoading && !cachedDefault;
+  const isResolvingAddress = !!customer && addressesLoading && !cachedDefault && !locationData;
 
-  const deliverCity = resolvedDefault?.city ?? locationData?.city ?? null;
-  const deliverCountry =
-    resolvedDefault?.country ?? locationData?.countryCode ?? null;
-  const deliverLabel =
-    deliverCity && deliverCountry
-      ? `${deliverCity}, ${deliverCountry}`
-      : (deliverCity ?? deliverCountry ?? null);
+  const deliverCity = (resolvedDefault?.city || locationData?.city || "").trim();
+  const deliverCountry = (
+    resolvedDefault?.country ||
+    resolvedDefault?.related_country?.name ||
+    locationData?.country ||
+    locationData?.countryCode ||
+    ""
+  ).trim();
+  const deliverLabel = [deliverCity, deliverCountry].filter(Boolean).join(", ") || null;
 
   // ── Dynamic counts ──────────────────────────────────────────────────────────
   const countsLoaded = useSelector((s: RootState) => s.customerCounts.loaded);
@@ -310,11 +312,14 @@ export default function NavigationStatic({
                   <MapPin size={15} className="text-[#186737] shrink-0" />
                   <div className="flex flex-col items-start overflow-hidden">
                     <span className="text-[10px] text-gray-400 leading-none">Deliver To</span>
-                    {isResolvingAddress || !deliverLabel ? (
+                    {isResolvingAddress ? (
                       <span className="w-20 h-3 bg-gray-200 animate-pulse rounded inline-block" />
                     ) : (
-                      <span className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-27.5">
-                        {deliverLabel}
+                      <span
+                        suppressHydrationWarning
+                        className="text-xs text-gray-700 font-semibold leading-tight truncate max-w-27.5"
+                      >
+                        {deliverLabel || "Select location"}
                       </span>
                     )}
                   </div>

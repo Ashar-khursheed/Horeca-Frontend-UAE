@@ -125,12 +125,9 @@ export default function HeaderCountrySelect({
     setChanging(true);
     persistSelectedCountry(country.name, code);
     try {
-      await Promise.race([
-        refreshGuestCartPrices(code),
-        new Promise<void>((resolve) => setTimeout(resolve, 3500)),
-      ]);
+      await refreshGuestCartPrices(code);
     } catch {
-      // Keep stored prices if the live refresh fails, then still reload.
+      // After reload, app init will retry if localStorage is still stale.
     }
     reloadForCountry(code);
   };

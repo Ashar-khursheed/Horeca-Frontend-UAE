@@ -30,6 +30,7 @@ import {
   getLocationData,
 } from "@/utils/locationStorage";
 import { getShippingCharge } from "@/utils/shipping";
+import { syncGuestCartPricesIfNeeded } from "@/utils/refresh-guest-cart";
 import {
   ArrowRight,
   ChevronDown,
@@ -207,6 +208,16 @@ export default function CartPage() {
       setIsLoggedIn(false);
       dispatch(hydrateCart());
       dispatch(hydrateGuestSaveItems());
+      const countryCode = (location?.countryCode ?? "").toUpperCase();
+      if (countryCode) {
+        syncGuestCartPricesIfNeeded(countryCode)
+          .then((updated) => {
+            if (!updated) return;
+            dispatch(hydrateCart());
+            dispatch(hydrateGuestSaveItems());
+          })
+          .catch(() => {});
+      }
     }
     setInitialized(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
