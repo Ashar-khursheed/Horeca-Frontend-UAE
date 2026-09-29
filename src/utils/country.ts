@@ -111,9 +111,9 @@ export function persistSelectedCountry(name: string, code: string) {
 }
 
 /** iOS Safari caches location.reload(); a new URL forces a real network fetch. */
-export function reloadForCountry(code: string) {
+export function reloadForCountry(code: string, href?: string) {
   if (typeof window === "undefined") return;
-  const url = new URL(window.location.href);
+  const url = new URL(href || window.location.href, window.location.origin);
   url.searchParams.set(COUNTRY_QUERY_PARAM, code.toUpperCase());
   url.searchParams.delete("_rsc");
   window.location.replace(url.pathname + url.search + url.hash);

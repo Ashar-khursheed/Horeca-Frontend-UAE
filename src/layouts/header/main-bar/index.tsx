@@ -723,7 +723,11 @@ export default function NavigationStatic({
                         </div>
                       )}
 
-                      <div className="px-5 py-3 border-b border-gray-100 xl:hidden">
+                      <div
+                        className="px-5 py-3 border-b border-gray-100 xl:hidden relative z-20"
+                        onClick={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                      >
                         <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">
                           Country
                         </p>

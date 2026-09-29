@@ -42,15 +42,19 @@ function CountryFlag({ icon, name }: { icon?: string | null; name: string }) {
 export default function HeaderCountrySelect({
   className = "",
   fullWidth = false,
+  dropUp = false,
+  defaultOpen = false,
 }: {
   className?: string;
   fullWidth?: boolean;
+  dropUp?: boolean;
+  defaultOpen?: boolean;
 }) {
   const location = useLocationData();
   const [countries, setCountries] = useState<HeaderCountry[]>([]);
   const [loading, setLoading] = useState(true);
   const [value, setValue] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [search, setSearch] = useState("");
   const [changing, setChanging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,8 +124,8 @@ export default function HeaderCountrySelect({
   const handleChange = async (country: HeaderCountry) => {
     const code = countryNameToIso(country.name);
     if (!code || country.name === value || changing) return;
+    const stayAt = window.location.pathname + window.location.search + window.location.hash;
     setValue(country.name);
-    setOpen(false);
     setChanging(true);
     persistSelectedCountry(country.name, code);
     try {
@@ -129,7 +133,7 @@ export default function HeaderCountrySelect({
     } catch {
       // After reload, app init will retry if localStorage is still stale.
     }
-    reloadForCountry(code);
+    reloadForCountry(code, stayAt);
   };
 
   return (
@@ -156,7 +160,13 @@ export default function HeaderCountrySelect({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-60 w-64 rounded-[7px] border border-gray-200 bg-white shadow-lg overflow-hidden">
+        <div
+          className={`z-60 rounded-[7px] border border-gray-200 bg-white shadow-lg overflow-hidden ${
+            defaultOpen
+              ? "relative mt-2 w-full"
+              : `absolute w-64 ${dropUp ? "bottom-full left-0 mb-1" : "right-0 top-full mt-1"} ${fullWidth ? "left-0 right-0 w-full" : ""}`
+          }`}
+        >
           <div className="flex items-center gap-2 px-2.5 py-2 border-b border-gray-100">
             <Search size={12} className="text-gray-400 shrink-0" />
             <input
@@ -179,6 +189,10 @@ export default function HeaderCountrySelect({
                     key={country.id}
                     type="button"
                     onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       void handleChange(country);
