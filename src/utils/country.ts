@@ -6,6 +6,7 @@ const FALLBACK = "IN";
 const COOKIE_NAME = "hc_cc";
 const MANUAL_COOKIE = "hc_cc_manual";
 const MANUAL_KEY = "hc_country_manual";
+export const COUNTRY_QUERY_PARAM = "cc";
 
 interface GeoResponse {
   status: string;
@@ -55,10 +56,17 @@ export function isManualCountry(): boolean {
 }
 
 function writeCookie(name: string, value: string, maxAge: number) {
+  const secure =
+    typeof window !== "undefined" && window.location.protocol === "https:"
+      ? "; Secure"
+      : "";
   const parent = getAuthCookieDomain(window.location.hostname);
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax${
-    parent ? `; Domain=${parent}` : ""
-  }`;
+  // Host-only first — iOS/Safari keeps a separate host cookie from Domain=.
+  // Writing only Domain= leaves the old host cookie, and the server reads that.
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+  if (parent) {
+    document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax; Domain=${parent}${secure}`;
+  }
 }
 
 function writeCountryCookie(code: string, maxAge = 3600) {
@@ -67,9 +75,13 @@ function writeCountryCookie(code: string, maxAge = 3600) {
 
 export function persistSelectedCountry(name: string, code: string) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(CC_KEY, code);
-  localStorage.setItem(CC_TIME_KEY, Date.now().toString());
-  localStorage.setItem(MANUAL_KEY, "1");
+  try {
+    localStorage.setItem(CC_KEY, code);
+    localStorage.setItem(CC_TIME_KEY, Date.now().toString());
+    localStorage.setItem(MANUAL_KEY, "1");
+  } catch {
+    // Private mode on iOS can throw; cookies still carry the country.
+  }
   writeCountryCookie(code, 60 * 60 * 24 * 365);
   writeCookie(MANUAL_COOKIE, "1", 60 * 60 * 24 * 365);
 
@@ -91,7 +103,32 @@ export function persistSelectedCountry(name: string, code: string) {
     as: prev?.as ?? "",
     query: prev?.query ?? "",
   };
-  setLocationData(next);
+  try {
+    setLocationData(next);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+/** iOS Safari caches location.reload(); a new URL forces a real network fetch. */
+export function reloadForCountry(code: string) {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  url.searchParams.set(COUNTRY_QUERY_PARAM, code.toUpperCase());
+  url.searchParams.delete("_rsc");
+  window.location.replace(url.pathname + url.search + url.hash);
+}
+
+export function stripCountryQueryFromUrl() {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has(COUNTRY_QUERY_PARAM)) return;
+  url.searchParams.delete(COUNTRY_QUERY_PARAM);
+  window.history.replaceState(
+    window.history.state,
+    "",
+    url.pathname + url.search + url.hash,
+  );
 }
 
 // Client: detects from browser (correct user IP), caches in localStorage + cookie

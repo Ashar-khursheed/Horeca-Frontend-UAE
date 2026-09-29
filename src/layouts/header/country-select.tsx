@@ -2,7 +2,7 @@
 
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
-import { persistSelectedCountry, readCountryCookie } from "@/utils/country";
+import { persistSelectedCountry, readCountryCookie, reloadForCountry } from "@/utils/country";
 import { countryNameToIso } from "@/utils/country-iso";
 import { useLocationData } from "@/utils/locationStorage";
 import { refreshGuestCartPrices } from "@/utils/refresh-guest-cart";
@@ -104,14 +104,17 @@ export default function HeaderCountrySelect({
       setSearch("");
       return;
     }
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    setTimeout(() => inputRef.current?.focus(), 40);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    const isTouch =
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: coarse)").matches;
+    if (!isTouch) setTimeout(() => inputRef.current?.focus(), 40);
+    return () => document.removeEventListener("pointerdown", handler);
   }, [open]);
 
   const handleChange = async (country: HeaderCountry) => {
@@ -122,11 +125,14 @@ export default function HeaderCountrySelect({
     setChanging(true);
     persistSelectedCountry(country.name, code);
     try {
-      await refreshGuestCartPrices(code);
+      await Promise.race([
+        refreshGuestCartPrices(code),
+        new Promise<void>((resolve) => setTimeout(resolve, 3500)),
+      ]);
     } catch {
       // Keep stored prices if the live refresh fails, then still reload.
     }
-    window.location.reload();
+    reloadForCountry(code);
   };
 
   return (
@@ -138,8 +144,8 @@ export default function HeaderCountrySelect({
         onClick={() => !loading && !changing && setOpen((v) => !v)}
         className={
           fullWidth
-            ? "flex h-10 w-full items-center justify-between gap-2 rounded-[7px] border border-gray-200 bg-white px-3 text-sm text-gray-700 hover:border-[#186737] disabled:opacity-60"
-            : "flex h-7 items-center gap-1 rounded-full border border-gray-200 bg-white px-2 text-[12px] text-gray-600 hover:border-[#186737] hover:text-[#186737] disabled:opacity-60"
+            ? "flex h-10 w-full items-center justify-between gap-2 rounded-[7px] border border-gray-200 bg-white px-3 text-sm text-gray-700 hover:border-[#186737] disabled:opacity-60 touch-manipulation"
+            : "flex h-7 items-center gap-1 rounded-full border border-gray-200 bg-white px-2 text-[12px] text-gray-600 hover:border-[#186737] hover:text-[#186737] disabled:opacity-60 touch-manipulation"
         }
       >
         <CountryFlag icon={selected?.icon} name={selected?.name ?? "Country"} />
@@ -175,8 +181,12 @@ export default function HeaderCountrySelect({
                   <button
                     key={country.id}
                     type="button"
-                    onClick={() => handleChange(country)}
-                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[12px] text-left ${
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      void handleChange(country);
+                    }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[12px] text-left touch-manipulation ${
                       isSelected
                         ? "bg-green-50 text-[#186737] font-semibold"
                         : "text-gray-700 hover:bg-gray-50"

@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
-import { isManualCountry } from "@/utils/country";
+import { isManualCountry, stripCountryQueryFromUrl } from "@/utils/country";
 
 const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
 const LOCATION_API   = `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/location`;
@@ -37,6 +37,10 @@ export default function AppInitializer() {
 
   // Location: detect and cache (with a 10-minute TTL) to avoid redundant requests on every mount
   useEffect(() => {
+    const urlCountry = new URLSearchParams(window.location.search).get("cc");
+    const forcedManual = isManualCountry() || !!urlCountry;
+    stripCountryQueryFromUrl();
+
     const isLocalhost = typeof window !== "undefined" && 
       (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
     const cached = getLocationData();
@@ -44,8 +48,8 @@ export default function AppInitializer() {
     const currentCookie = document.cookie
       .split(";").find(c => c.trim().startsWith("hc_cc="))?.split("=")[1];
 
-    if (isManualCountry() && cached?.country) {
-      dispatch(fetchCountryByName(cached.country));
+    if (forcedManual) {
+      if (cached?.country) dispatch(fetchCountryByName(cached.country));
       return;
     }
 
@@ -71,6 +75,10 @@ export default function AppInitializer() {
           localStorage.setItem("hc_country_code", data.countryCode);
           localStorage.setItem("hc_country_code_time", Date.now().toString());
           document.cookie = `hc_cc=${data.countryCode}; path=/; max-age=3600; SameSite=Lax`;
+          const parentHost = window.location.hostname.replace(/^www\./, "");
+          if (parentHost && parentHost !== "localhost" && parentHost !== "127.0.0.1") {
+            document.cookie = `hc_cc=${data.countryCode}; path=/; max-age=3600; SameSite=Lax; Domain=${parentHost}`;
+          }
           
           if (data.country) {
             dispatch(fetchCountryByName(data.country));

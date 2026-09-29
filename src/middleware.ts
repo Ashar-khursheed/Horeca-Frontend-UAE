@@ -45,7 +45,49 @@ function clearAuthCookies(
 const ipCache = new Map<string, { country: string; expires: number }>();
 const IP_CACHE_MS = 10 * 60 * 1000; // 10 minutes
 
+const COUNTRY_QUERY_PARAM = "cc";
+
+function isIsoCountry(value: string | null): value is string {
+  return !!value && /^[A-Za-z]{2}$/.test(value);
+}
+
+function appendSetCookie(
+  response: NextResponse,
+  name: string,
+  value: string,
+  maxAge: number,
+  domain?: string,
+) {
+  const parts = [
+    `${name}=${value}`,
+    "Path=/",
+    `Max-Age=${maxAge}`,
+    "SameSite=Lax",
+  ];
+  if (domain) parts.push(`Domain=${domain}`);
+  response.headers.append("Set-Cookie", parts.join("; "));
+}
+
+function persistCountryOnResponse(
+  response: NextResponse,
+  hostname: string,
+  code: string,
+  manual: boolean,
+) {
+  const maxAge = 60 * 60 * 24 * 365;
+  const domain = getAuthCookieDomain(hostname);
+  appendSetCookie(response, "hc_cc", code, maxAge);
+  if (domain) appendSetCookie(response, "hc_cc", code, maxAge, domain);
+  if (manual) {
+    appendSetCookie(response, "hc_cc_manual", "1", maxAge);
+    if (domain) appendSetCookie(response, "hc_cc_manual", "1", maxAge, domain);
+  }
+}
+
 async function resolveCountryCode(request: NextRequest): Promise<string> {
+  const queryCountry = request.nextUrl.searchParams.get(COUNTRY_QUERY_PARAM);
+  if (isIsoCountry(queryCountry)) return queryCountry.toUpperCase();
+
   const cookieCountry = request.cookies.get("hc_cc")?.value;
   const isManual = request.cookies.get("hc_cc_manual")?.value === "1";
   if (isManual && cookieCountry) return cookieCountry;
@@ -178,15 +220,13 @@ export async function middleware(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
-  // Always update cookie when country changes (handles VPN switches)
-  if (request.cookies.get("hc_cc")?.value !== countryCode) {
-    const cookieDomain = getAuthCookieDomain(hostname);
-    response.cookies.set("hc_cc", countryCode, {
-      maxAge: 60 * 60 * 24 * 3,
-      path: "/",
-      sameSite: "lax",
-      ...(cookieDomain ? { domain: cookieDomain } : {}),
-    });
+  const queryCountry = request.nextUrl.searchParams.get(COUNTRY_QUERY_PARAM);
+  const fromQuery = isIsoCountry(queryCountry);
+  const cookieCountry = request.cookies.get("hc_cc")?.value;
+  const isManual =
+    fromQuery || request.cookies.get("hc_cc_manual")?.value === "1";
+  if (fromQuery || cookieCountry !== countryCode) {
+    persistCountryOnResponse(response, hostname, countryCode, isManual);
   }
 
   if (token && !isTokenValid) clearAuthCookies(response, hostname);
