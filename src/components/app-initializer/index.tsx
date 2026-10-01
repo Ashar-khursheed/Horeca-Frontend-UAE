@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { getLocationData, setLocationData } from "@/utils/locationStorage";
 import { isManualCountry, readCountryCookie, stripCountryQueryFromUrl } from "@/utils/country";
-import { syncGuestCartPricesIfNeeded } from "@/utils/refresh-guest-cart";
+import { syncGuestCartPricesIfNeeded, syncQuotePricesIfNeeded } from "@/utils/refresh-guest-cart";
 
 const AUTH_MAX_MS    = 24 * 60 * 60 * 1000;
 const LOCATION_API   = `${process.env.NEXT_PUBLIC_API_BASE_URL}frontend/location`;
@@ -104,6 +104,9 @@ export default function AppInitializer() {
       }
       const token = localStorage.getItem("token")?.trim();
       const code = loc?.countryCode;
+      if (code) {
+        syncQuotePricesIfNeeded(code).catch(() => {});
+      }
       if (token || !code) return;
       syncGuestCartPricesIfNeeded(code)
         .then((updated) => {
@@ -117,11 +120,9 @@ export default function AppInitializer() {
     return () => window.removeEventListener(LOCATION_EVENT, handler);
   }, [dispatch]);
 
-  // Guest cart is localStorage — refetch live prices when country changed.
+  // Guest cart + quote list live in localStorage — refetch live prices when country changed.
   useEffect(() => {
     const token = localStorage.getItem("token")?.trim();
-    if (token) return;
-
     const code = (
       getLocationData()?.countryCode ||
       readCountryCookie() ||
@@ -131,6 +132,8 @@ export default function AppInitializer() {
     if (!code) return;
 
     let cancelled = false;
+    syncQuotePricesIfNeeded(code).catch(() => {});
+    if (token) return;
     syncGuestCartPricesIfNeeded(code)
       .then((updated) => {
         if (cancelled || !updated) return;

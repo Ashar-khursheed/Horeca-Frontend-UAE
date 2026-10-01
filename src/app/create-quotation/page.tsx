@@ -49,6 +49,7 @@ import {
   removeFromQuote,
   updateQuoteQty,
 } from "@/utils/quoteStorage";
+import { syncQuotePricesIfNeeded } from "@/utils/refresh-guest-cart";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type QuoteProduct = {
@@ -884,15 +885,25 @@ export default function CreateQuotationPage() {
   }, [formCountryId]);
 
   useEffect(() => {
-    if (isEditMode || quoteHydrated.current) return;
-    quoteHydrated.current = true;
-    const stored = getQuoteList();
-    if (stored.length) {
-      setProducts(
-        stored.map(({ product: _product, ...item }) => item),
-      );
+    if (isEditMode) return;
+    const applyStored = () => {
+      const stored = getQuoteList();
+      if (stored.length) {
+        setProducts(stored.map(({ product: _product, ...item }) => item));
+      }
+    };
+    if (!quoteHydrated.current) {
+      quoteHydrated.current = true;
+      applyStored();
     }
-  }, [isEditMode]);
+    const countryCode = (locationFromRedux?.countryCode ?? "").toUpperCase();
+    if (!countryCode) return;
+    syncQuotePricesIfNeeded(countryCode)
+      .then((updated) => {
+        if (updated) applyStored();
+      })
+      .catch(() => {});
+  }, [isEditMode, locationFromRedux?.countryCode]);
 
   const handleQtyChange = (id: number, qty: number) => {
     setProducts((prev) =>

@@ -5,7 +5,7 @@ import { makeApiRequest } from "@/apis/axios-instance";
 import { persistSelectedCountry, readCountryCookie, reloadForCountry } from "@/utils/country";
 import { countryNameToIso } from "@/utils/country-iso";
 import { useLocationData } from "@/utils/locationStorage";
-import { refreshGuestCartPrices } from "@/utils/refresh-guest-cart";
+import { refreshGuestCartPrices, refreshQuotePrices } from "@/utils/refresh-guest-cart";
 import { Check, ChevronDown, MapPin, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -129,7 +129,7 @@ export default function HeaderCountrySelect({
     setChanging(true);
     persistSelectedCountry(country.name, code);
     try {
-      await refreshGuestCartPrices(code);
+      await Promise.all([refreshGuestCartPrices(code), refreshQuotePrices(code)]);
     } catch {
       // After reload, app init will retry if localStorage is still stale.
     }

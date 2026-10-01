@@ -1,10 +1,16 @@
 import { apiUrls } from "@/apis/api-endpoint";
 import { makeApiRequest } from "@/apis/axios-instance";
 import type { CartItem } from "@/store/slices/cart/cartSlice";
+import {
+  QUOTE_STORAGE_KEY,
+  setQuoteList,
+  type StoredQuoteProduct,
+} from "@/utils/quoteStorage";
 
 const CART_KEY = "horeca_cart";
 const SFL_KEY = "horeca_save_for_later";
 const CART_CC_KEY = "horeca_cart_cc";
+const QUOTE_CC_KEY = "horeca_quote_cc";
 
 type GuestSaveItem = {
   productId: number;
@@ -234,6 +240,75 @@ export async function refreshGuestCartPrices(countryCode: string): Promise<void>
     refreshGuestSaveForLater(countryCode),
   ]);
   if (cartChanged || sflChanged) stampGuestCartCountry(countryCode);
+}
+
+function stampQuoteCountry(countryCode: string) {
+  try {
+    localStorage.setItem(QUOTE_CC_KEY, countryCode.toUpperCase());
+  } catch {
+    // ignore
+  }
+}
+
+function applyLiveQuotePrice(
+  item: StoredQuoteProduct,
+  product: Record<string, any>,
+): StoredQuoteProduct {
+  const { price } = livePrices(product);
+  const supplier0 = product.best_supplier ?? product.suppliers?.[0];
+  return {
+    ...item,
+    price,
+    shippingCost: Number(supplier0?.shipping_charge ?? item.shippingCost ?? 0),
+    deliveryDays: supplier0?.delivery_days ?? item.deliveryDays,
+    product,
+  };
+}
+
+/** Quote list lives in localStorage — refetch live prices for the new country. */
+export async function refreshQuotePrices(countryCode: string): Promise<boolean> {
+  if (typeof window === "undefined" || !countryCode) return false;
+  const items = readJson<StoredQuoteProduct[]>(QUOTE_STORAGE_KEY);
+  if (!Array.isArray(items) || items.length === 0) {
+    stampQuoteCountry(countryCode);
+    return false;
+  }
+
+  let changed = false;
+  const updated = await Promise.all(
+    items.map(async (item) => {
+      const raw = (item.product ?? {}) as Record<string, any>;
+      const product = await fetchLiveProductFromItem(
+        { url: raw.url ?? raw.seo_url, rawProduct: raw },
+        countryCode,
+      );
+      if (!product) return item;
+      changed = true;
+      return applyLiveQuotePrice(item, product);
+    }),
+  );
+
+  if (changed) {
+    setQuoteList(updated);
+    stampQuoteCountry(countryCode);
+  }
+  return changed;
+}
+
+export async function syncQuotePricesIfNeeded(countryCode: string): Promise<boolean> {
+  if (typeof window === "undefined" || !countryCode) return false;
+  const items = readJson<StoredQuoteProduct[]>(QUOTE_STORAGE_KEY);
+  if (!Array.isArray(items) || items.length === 0) {
+    stampQuoteCountry(countryCode);
+    return false;
+  }
+  try {
+    const stamped = localStorage.getItem(QUOTE_CC_KEY);
+    if (stamped && stamped.toUpperCase() === countryCode.toUpperCase()) return false;
+  } catch {
+    // continue
+  }
+  return refreshQuotePrices(countryCode);
 }
 
 /** After reload: update stale guest cart if it still has the previous country. */
