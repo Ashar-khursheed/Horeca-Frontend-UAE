@@ -12,6 +12,8 @@ import type { AppDispatch, RootState } from "@/store/store";
 import { getDefaultAddressCache, useLocationData, type DefaultAddressCache } from "@/utils/locationStorage";
 import {
   getUaeOrderShipping,
+  isSaudiMarket,
+  isUaeShippingMarket,
   UAE_FREE_SHIPPING_MIN,
 } from "@/utils/shipping";
 import { buildQuotePdfFilename } from "@/utils/quote-filename";
@@ -511,6 +513,13 @@ export default function CreateQuotationPage() {
   const dialCode = country.data?.phone_code ?? "";
   const isoCode = locationFromRedux?.countryCode ?? "";
   const detectedCountry = country.data?.name ?? locationFromRedux?.country ?? "";
+  const quoteMarket = {
+    countryName: country.data?.name ?? locationFromRedux?.country,
+    countryCode: isoCode,
+    currencySymbol: country.data?.currency_symbol,
+  };
+  const applyUaeShipping =
+    !isSaudiMarket(quoteMarket) && isUaeShippingMarket(quoteMarket);
 
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
 
@@ -544,7 +553,7 @@ export default function CreateQuotationPage() {
       try {
         const email = values.email.trim();
         const mobile = values.mobile_number.replace(/\D/g, "");
-        const countryIsUAE = (isoCode || "").toUpperCase() === "AE";
+        const countryIsUAE = applyUaeShipping;
         let customerAddressId: number | undefined;
 
         const quoteSubtotal = products.reduce((s, p) => s + p.price * p.qty, 0);
@@ -998,8 +1007,8 @@ export default function CreateQuotationPage() {
 
   // ── Totals ────────────────────────────────────────────────────────────────────
   const subtotal = products.reduce((s, p) => s + p.price * p.qty, 0);
-  const shipping = isUAE ? getUaeOrderShipping(subtotal) : 0;
-  const freeShippingRemaining = isUAE
+  const shipping = applyUaeShipping ? getUaeOrderShipping(subtotal) : 0;
+  const freeShippingRemaining = applyUaeShipping
     ? Math.max(0, UAE_FREE_SHIPPING_MIN - subtotal)
     : 0;
   const cappedDiscount = Math.min(discount, subtotal);
@@ -1694,7 +1703,7 @@ export default function CreateQuotationPage() {
                         </span>
                       </div>
                     )}
-                    {isUAE && (
+                    {applyUaeShipping && (
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Shipping</span>
                         {shipping > 0 ? (
@@ -1707,7 +1716,7 @@ export default function CreateQuotationPage() {
                         )}
                       </div>
                     )}
-                    {isUAE && freeShippingRemaining > 0 && (
+                    {applyUaeShipping && freeShippingRemaining > 0 && (
                       <p className="text-[11px] text-gray-500 -mt-1">
                         Add{" "}
                         <CurrencySymbol currency={currencySymbol} fontsize="11px" />
