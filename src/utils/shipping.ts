@@ -4,9 +4,9 @@ import type { DefaultAddressCache } from "./locationStorage";
 export const UAE_MIN_ORDER = 100;
 /** Saudi Arabia: product subtotal must be at least this to place an order. */
 export const SAUDI_MIN_ORDER = 2000;
-/** UAE: flat 30 AED shipping when subtotal is 499 or below; free at 500+. */
+/** UAE: flat 40 AED shipping when subtotal is 499 or below; free at 500+. */
 export const UAE_FREE_SHIPPING_MIN = 500;
-export const UAE_FLAT_SHIPPING = 30;
+export const UAE_FLAT_SHIPPING = 40;
 
 export function isSaudiMarket(opts?: {
   countryName?: string | null;
