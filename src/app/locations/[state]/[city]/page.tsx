@@ -77,25 +77,82 @@ function stripHtmlTags(str: string | null | undefined): string | undefined {
   return stripped || undefined;
 }
 
+function getSeoField(seoUrl: any, fieldName: string): string | null {
+  if (!seoUrl) return null;
+
+  // 1. Check in translations array (e.g. seoUrl.translations[0].paragraph_1)
+  if (Array.isArray(seoUrl.translations) && seoUrl.translations.length > 0) {
+    const trans = seoUrl.translations.find((t: any) => t.locale === "en") || seoUrl.translations[0];
+    if (trans && trans[fieldName] != null) {
+      const val = trans[fieldName];
+      if (typeof val === "string" && val.trim() !== "") return val;
+      if (typeof val === "object" && val !== null) {
+        const localized = val.en ?? val.ar ?? Object.values(val)[0];
+        if (typeof localized === "string" && localized.trim() !== "") return localized;
+      }
+    }
+  }
+
+  // 2. Check direct property on seoUrl (e.g. seoUrl.paragraph_1)
+  const directVal = seoUrl[fieldName];
+  if (directVal != null) {
+    if (typeof directVal === "string" && directVal.trim() !== "") return directVal;
+    if (typeof directVal === "object" && directVal !== null) {
+      const localized = directVal.en ?? directVal.ar ?? Object.values(directVal)[0];
+      if (typeof localized === "string" && localized.trim() !== "") return localized;
+    }
+  }
+
+  return null;
+}
+
+function getSeoPopularTags(seoUrl: any): { popularTags: string; popularSlug: string }[] {
+  if (!seoUrl) return [];
+
+  let rawTags: any = null;
+
+  if (Array.isArray(seoUrl?.translations) && seoUrl.translations.length > 0) {
+    const trans = seoUrl.translations.find((t: any) => t.locale === "en") || seoUrl.translations[0];
+    if (trans && trans.popular_tag_details != null) {
+      rawTags = trans.popular_tag_details;
+    }
+  }
+
+  if (!rawTags && seoUrl?.popular_tag_details != null) {
+    rawTags = seoUrl.popular_tag_details;
+  }
+
+  if (!rawTags) return [];
+
+  if (typeof rawTags === "object" && !Array.isArray(rawTags) && rawTags !== null) {
+    rawTags = rawTags.en ?? rawTags.ar ?? Object.values(rawTags)[0] ?? null;
+  }
+
+  if (typeof rawTags === "string") {
+    try {
+      rawTags = JSON.parse(rawTags);
+    } catch {
+      return [];
+    }
+  }
+
+  if (Array.isArray(rawTags)) {
+    return rawTags
+      .filter((t: any) => t && (t.popularTags || t.popular_tags) && (t.popularSlug || t.popular_slug))
+      .map((t: any) => ({
+        popularTags: t.popularTags ?? t.popular_tags ?? "",
+        popularSlug: t.popularSlug ?? t.popular_slug ?? "",
+      }));
+  }
+
+  return [];
+}
+
 // ── Mapper ─────────────────────────────────────────────────────────────────────
 
 function mapApiResponse(d: HorecaPageApiData): LocationPageData {
-  const trans = d.seo_url?.translations?.[0];
-
   let faqs: { question: string; answer: string }[] = [];
   try { faqs = JSON.parse(d.faqs || "[]"); } catch { faqs = []; }
-
-  let popularTagDetails: { popularTags: string; popularSlug: string }[] = [];
-  const rawTags = trans?.popular_tag_details;
-  if (typeof rawTags === "string") {
-    try {
-      popularTagDetails = JSON.parse(rawTags);
-    } catch {
-      popularTagDetails = [];
-    }
-  } else if (Array.isArray(rawTags)) {
-    popularTagDetails = rawTags;
-  }
 
   return {
     id: d.id,
@@ -125,13 +182,11 @@ function mapApiResponse(d: HorecaPageApiData): LocationPageData {
       })),
     })),
     faqs,
-    paragraph_1: trans?.paragraph_1 ?? null,
-    paragraph_2: trans?.paragraph_2 ?? null,
-    paragraph_3: trans?.paragraph_3 ?? null,
-    paragraph_4: trans?.paragraph_4 ?? null,
-    popularTag_details: (popularTagDetails ?? []).filter(
-      (t) => !!(t.popularTags && t.popularSlug)
-    ),
+    paragraph_1: getSeoField(d.seo_url, "paragraph_1"),
+    paragraph_2: getSeoField(d.seo_url, "paragraph_2"),
+    paragraph_3: getSeoField(d.seo_url, "paragraph_3"),
+    paragraph_4: getSeoField(d.seo_url, "paragraph_4"),
+    popularTag_details: getSeoPopularTags(d.seo_url),
     whyChoosePoints: [],
   };
 }
@@ -151,10 +206,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!res?.success || !res?.data) return { title: "Page Not Found" };
 
-  const trans = res.data.seo_url?.translations?.[0];
-  const rawTitle = trans?.title_tag ?? trans?.meta_title;
+  const rawTitle = getSeoField(res.data.seo_url, "title_tag") ?? getSeoField(res.data.seo_url, "meta_title");
   const title = stripHtmlTags(rawTitle) ?? res.data.name;
-  const description = stripHtmlTags(trans?.meta_description);
+  const description = stripHtmlTags(getSeoField(res.data.seo_url, "meta_description"));
 
   return {
     title,
@@ -164,8 +218,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       canonical: `https://www.thehorecastore.com/locations/${state}/${city}`,
     },
     openGraph: {
-      title: stripHtmlTags(trans?.og_title) ?? title,
-      description: stripHtmlTags(trans?.og_description) ?? description,
+      title: stripHtmlTags(getSeoField(res.data.seo_url, "og_title")) ?? title,
+      description: stripHtmlTags(getSeoField(res.data.seo_url, "og_description")) ?? description,
       url: `https://www.thehorecastore.com/locations/${state}/${city}`,
       type: "website",
       images: res.data.banner_url
