@@ -62,6 +62,21 @@ interface HorecaPageResponse {
   data: HorecaPageApiData;
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function stripHtmlTags(str: string | null | undefined): string | undefined {
+  if (!str || str === "null" || str === "undefined") return undefined;
+  const stripped = String(str)
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return stripped || undefined;
+}
+
 // ── Mapper ─────────────────────────────────────────────────────────────────────
 
 function mapApiResponse(d: HorecaPageApiData): LocationPageData {
@@ -69,6 +84,18 @@ function mapApiResponse(d: HorecaPageApiData): LocationPageData {
 
   let faqs: { question: string; answer: string }[] = [];
   try { faqs = JSON.parse(d.faqs || "[]"); } catch { faqs = []; }
+
+  let popularTagDetails: { popularTags: string; popularSlug: string }[] = [];
+  const rawTags = trans?.popular_tag_details;
+  if (typeof rawTags === "string") {
+    try {
+      popularTagDetails = JSON.parse(rawTags);
+    } catch {
+      popularTagDetails = [];
+    }
+  } else if (Array.isArray(rawTags)) {
+    popularTagDetails = rawTags;
+  }
 
   return {
     id: d.id,
@@ -102,7 +129,7 @@ function mapApiResponse(d: HorecaPageApiData): LocationPageData {
     paragraph_2: trans?.paragraph_2 ?? null,
     paragraph_3: trans?.paragraph_3 ?? null,
     paragraph_4: trans?.paragraph_4 ?? null,
-    popularTag_details: (trans?.popular_tag_details ?? []).filter(
+    popularTag_details: (popularTagDetails ?? []).filter(
       (t) => !!(t.popularTags && t.popularSlug)
     ),
     whyChoosePoints: [],
@@ -125,8 +152,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!res?.success || !res?.data) return { title: "Page Not Found" };
 
   const trans = res.data.seo_url?.translations?.[0];
-  const title = trans?.title_tag ?? trans?.meta_title ?? res.data.name;
-  const description = trans?.meta_description ?? undefined;
+  const rawTitle = trans?.title_tag ?? trans?.meta_title;
+  const title = stripHtmlTags(rawTitle) ?? res.data.name;
+  const description = stripHtmlTags(trans?.meta_description);
 
   return {
     title,
@@ -136,8 +164,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       canonical: `https://www.thehorecastore.com/locations/${state}/${city}`,
     },
     openGraph: {
-      title: trans?.og_title ?? title ?? undefined,
-      description: trans?.og_description ?? description,
+      title: stripHtmlTags(trans?.og_title) ?? title,
+      description: stripHtmlTags(trans?.og_description) ?? description,
       url: `https://www.thehorecastore.com/locations/${state}/${city}`,
       type: "website",
       images: res.data.banner_url
@@ -159,7 +187,7 @@ export default async function LocationCityPage({ params }: PageProps) {
     {},
     { revalidate: revalidate, countryCode },
   );
-console.log("LocationCityPage res:", res);
+
   if (!res?.success || !res?.data || !res.data.is_active) notFound();
 
   return <LocationPageClient data={mapApiResponse(res.data)} state={state} city={city} />;
