@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { isCallId } from "@/lib/daily";
+import { serverEnv } from "@/lib/server-env";
 
 type CallLinkPayload = {
   room: string;
@@ -7,7 +8,7 @@ type CallLinkPayload = {
 };
 
 export function signCallLink(room: string, exp: number) {
-  const secret = process.env.CALL_LINK_SECRET;
+  const secret = serverEnv("CALL_LINK_SECRET");
   if (!secret) return null;
   const payload = Buffer.from(JSON.stringify({ room, exp })).toString(
     "base64url",
@@ -19,7 +20,7 @@ export function signCallLink(room: string, exp: number) {
 }
 
 export function verifyCallLink(token: string): CallLinkPayload | null {
-  const secret = process.env.CALL_LINK_SECRET;
+  const secret = serverEnv("CALL_LINK_SECRET");
   if (!secret || !token || token.length > 2000) return null;
 
   const dot = token.indexOf(".");

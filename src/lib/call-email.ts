@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { serverEnv } from "@/lib/server-env";
 
 export const SALES_CALL_EMAIL = "webdeveloper01@horecastore.ae";
 
@@ -54,15 +55,15 @@ export async function sendCallEmail(input: {
   requestedAt: string;
   joinUrl: string;
 }) {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASSWORD;
+  const user = serverEnv("SMTP_USER");
+  const pass = serverEnv("SMTP_PASSWORD");
   if (!user || !pass) {
     return { ok: false as const, reason: "missing_config" as const };
   }
 
-  const port = Number(process.env.SMTP_PORT || 587);
+  const port = Number(serverEnv("SMTP_PORT") || 587);
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.office365.com",
+    host: serverEnv("SMTP_HOST") || "smtp.office365.com",
     port,
     secure: port === 465,
     auth: { user, pass },

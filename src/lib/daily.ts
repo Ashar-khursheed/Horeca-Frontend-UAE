@@ -1,3 +1,5 @@
+import { serverEnv } from "@/lib/server-env";
+
 const DAILY_API = "https://api.daily.co/v1";
 
 export const CALL_TTL_SECONDS = 60 * 60;
@@ -10,7 +12,7 @@ export function isCallId(value: string) {
 }
 
 export function dailyHeaders() {
-  const apiKey = process.env.DAILY_API_KEY;
+  const apiKey = serverEnv("DAILY_API_KEY");
   if (!apiKey) return null;
   return {
     Authorization: `Bearer ${apiKey}`,
@@ -74,7 +76,7 @@ export async function createMeetingToken(
 }
 
 export function isTrustedRoomUrl(url: string) {
-  const domain = process.env.DAILY_DOMAIN;
+  const domain = serverEnv("DAILY_DOMAIN");
   if (!domain) return false;
   try {
     return new URL(url).host === domain;

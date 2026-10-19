@@ -10,6 +10,7 @@ import {
   isTrustedRoomUrl,
 } from "@/lib/daily";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { serverEnv } from "@/lib/server-env";
 import { SITE_URL } from "@/utils/site-url";
 
 function sanitizeName(value: unknown) {
@@ -25,8 +26,8 @@ function sanitizeName(value: unknown) {
 const TESTING_ORIGIN = "https://uae-development.dp3yfb9o8vob3.amplifyapp.com";
 
 function joinOrigin(request: Request) {
-  const configured = process.env.CALL_JOIN_ORIGIN?.replace(/\/$/, "");
-  if (configured) return configured;
+  const configured = serverEnv("CALL_JOIN_ORIGIN").replace(/\/$/, "");
+  if (/^https:\/\/[^/\s]+/i.test(configured)) return configured;
 
   const raw =
     request.headers.get("x-forwarded-host") ??
@@ -54,21 +55,18 @@ export async function POST(request: Request) {
     );
   }
 
-  if (
-    !process.env.DAILY_API_KEY ||
-    !process.env.DAILY_DOMAIN ||
-    !process.env.CALL_LINK_SECRET
-  ) {
-    return NextResponse.json(
-      { error: "Video calling is not configured" },
-      { status: 500 },
-    );
-  }
+  const missing = [
+    "DAILY_API_KEY",
+    "DAILY_DOMAIN",
+    "CALL_LINK_SECRET",
+    "SMTP_USER",
+    "SMTP_PASSWORD",
+  ].filter((name) => !serverEnv(name));
 
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+  if (missing.length > 0) {
     return NextResponse.json(
       {
-        error: "Outlook email is not configured, so the call was not started. Please check the SMTP_USER and SMTP_PASSWORD environment variables.",
+        error: `Video calling is not configured. The server cannot see: ${missing.join(", ")}`,
       },
       { status: 500 },
     );
