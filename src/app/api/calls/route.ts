@@ -68,7 +68,7 @@ export async function POST(request: Request) {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
     return NextResponse.json(
       {
-        error: "Outlook email is not configured, so the call was not started.",
+        error: "Outlook email is not configured, so the call was not started. Please check the SMTP_USER and SMTP_PASSWORD environment variables.",
       },
       { status: 500 },
     );
