@@ -427,7 +427,7 @@ useEffect(() => {
 
                 {/* Custom Card — tab2 only */}
                 {blog.custom_card && (
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hidden ">
                     <div className="flex items-center gap-4">
                       {/* Left: text + button */}
                       <div className="flex-1 min-w-0">
