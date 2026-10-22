@@ -121,12 +121,12 @@ function PromoCard({
       <div className="relative flex flex-col justify-center px-3 sm:px-4 pt-3 pb-8">
         <PromoLink target={target} className="outline-none">
           {promo.title && (
-            <h3 className="text-[#186737] font-bold text-base sm:text-lg 2xl:text-xl leading-snug line-clamp-2">
+            <h3 className="text-[#186737] font-bold text-[9px] sm:text-[13px] 2xl:text-[16px] leading-snug line-clamp-2">
               {promo.title}
             </h3>
           )}
           {desc && (
-            <p className="text-[#666666] text-[13px] sm:text-sm 2xl:text-base my-2 font-medium line-clamp-2 leading-relaxed">
+            <p className="text-[#666666] text-[10px] sm:text-[12px] 2xl:text-[14px] my-2 font-medium line-clamp-2s leading-relaxed">
               {desc}
             </p>
           )}
