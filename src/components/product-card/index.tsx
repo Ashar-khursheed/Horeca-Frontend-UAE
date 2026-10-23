@@ -734,7 +734,7 @@ export const ProductCard = ({
         <p className="mt-1 text-[12.5px] text-[#4B5563]">
           {deliveryDays ? (
             <span className="font-bold text-gray-900">
-              Mostly Ships in {deliveryDays}
+           Delivery with in {deliveryDays}
             </span>
           ) : (
             <span className="font-semibold">Now Shipping Faster</span>

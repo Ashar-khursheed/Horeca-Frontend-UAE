@@ -287,8 +287,8 @@ export const AddToCartWidget = ({
     e.preventDefault();
     e.stopPropagation();
     if (isFixed) {
-      if (count + minQty <= 99) setCount(count + minQty);
-    } else if (count < 99) {
+      setCount(count + minQty);
+    } else {
       setCount(count + 1);
     }
   };
@@ -571,7 +571,6 @@ export const AddToCartWidget = ({
     e.preventDefault();
     e.stopPropagation();
     const newQty = isFixed ? currentMobileQty + minQty : currentMobileQty + 1;
-    if (newQty > 99) return;
 
     const token = getToken();
     if (token) {
@@ -710,13 +709,13 @@ export const AddToCartWidget = ({
                     disabled={isFixed || loading}
                     onChange={(e) => {
                       const v = parseInt(e.target.value);
-                      if (!isNaN(v) && v >= 1 && v <= 99) setCount(v);
+                      if (!isNaN(v) && v >= 1) setCount(v);
                     }}
                     className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed text-[14px]"
                   />
                   <button
                     onClick={handleIncrement}
-                    disabled={count >= 99 || loading}
+                    disabled={loading}
                     className={
                       counterButtonClassName ??
                       "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
@@ -830,7 +829,7 @@ export const AddToCartWidget = ({
               {/* Plus */}
               <button
                 onClick={handleMobileIncrement}
-                disabled={mobileLoading || currentMobileQty >= 99}
+                disabled={mobileLoading}
                 className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 <Plus size={14} strokeWidth={2} />

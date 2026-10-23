@@ -1525,9 +1525,14 @@ export default function CheckoutPage() {
           )}
         </div>
       </div>
-      <div className="mb-4 flex items-center justify-between gap-4 rounded-md border border-[#186737]/20 bg-[#f4faf6] p-3">
-        <p className="text-sm leading-relaxed text-gray-700">
-          <span className="font-semibold text-gray-900">
+      <div className="mb-4 flex items-center gap-3 rounded-lg border-2 border-[#25D366] bg-[#e9f9ef] p-3.5 shadow-[0_0_0_4px_rgba(37,211,102,0.15)]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+            <path d="M20.5 3.5A11 11 0 0 0 2.1 16.8L1 23l6.3-1.1A11 11 0 0 0 12 23a11 11 0 0 0 8.5-19.5zM12 21a9 9 0 0 1-4.6-1.3l-.3-.2-3.7.7.7-3.6-.2-.3A9 9 0 1 1 12 21zm5-6.8c-.3-.1-1.6-.8-1.8-.9s-.4-.1-.6.1-.7.9-.8 1-.3.2-.6.1a7.4 7.4 0 0 1-2.2-1.4 8.2 8.2 0 0 1-1.5-1.9c-.2-.3 0-.4.1-.6l.4-.4.2-.4a.5.5 0 0 0 0-.5c-.1-.1-.6-1.4-.8-1.9s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.8 4.8 0 0 0 1 2.5 11 11 0 0 0 4.4 3.9 3.5 3.5 0 0 0 1.6.4 2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.2c-.1-.2-.3-.2-.6-.3z" />
+          </svg>
+        </div>
+        <p className="text-sm leading-relaxed text-gray-800">
+          <span className="font-bold text-[#128C4A]">
             Need help placing your order?
           </span>{" "}
           If you face any issue during checkout, simply tap the WhatsApp button
@@ -1538,8 +1543,11 @@ export default function CheckoutPage() {
           href="https://wa.me/971521423281"
           target="_blank"
           rel="noreferrer"
-          className="shrink-0 rounded-md bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1ebe5d]"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-[#25D366]/40 hover:bg-[#1ebe5d]"
         >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+            <path d="M20.5 3.5A11 11 0 0 0 2.1 16.8L1 23l6.3-1.1A11 11 0 0 0 12 23a11 11 0 0 0 8.5-19.5zM12 21a9 9 0 0 1-4.6-1.3l-.3-.2-3.7.7.7-3.6-.2-.3A9 9 0 1 1 12 21zm5-6.8c-.3-.1-1.6-.8-1.8-.9s-.4-.1-.6.1-.7.9-.8 1-.3.2-.6.1a7.4 7.4 0 0 1-2.2-1.4 8.2 8.2 0 0 1-1.5-1.9c-.2-.3 0-.4.1-.6l.4-.4.2-.4a.5.5 0 0 0 0-.5c-.1-.1-.6-1.4-.8-1.9s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.8 4.8 0 0 0 1 2.5 11 11 0 0 0 4.4 3.9 3.5 3.5 0 0 0 1.6.4 2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.2c-.1-.2-.3-.2-.6-.3z" />
+          </svg>
           WhatsApp
         </a>
       </div>
@@ -1807,9 +1815,14 @@ export default function CheckoutPage() {
                   )}
                 </div>
               </div>
-              <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-[#186737]/20 bg-[#f4faf6] p-3">
-                <p className="text-xs leading-relaxed text-gray-700">
-                  <span className="font-semibold text-gray-900">
+              <div className="mb-3 flex items-center gap-2.5 rounded-lg border-2 border-[#25D366] bg-[#e9f9ef] p-3 shadow-[0_0_0_3px_rgba(37,211,102,0.15)]">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path d="M20.5 3.5A11 11 0 0 0 2.1 16.8L1 23l6.3-1.1A11 11 0 0 0 12 23a11 11 0 0 0 8.5-19.5zM12 21a9 9 0 0 1-4.6-1.3l-.3-.2-3.7.7.7-3.6-.2-.3A9 9 0 1 1 12 21zm5-6.8c-.3-.1-1.6-.8-1.8-.9s-.4-.1-.6.1-.7.9-.8 1-.3.2-.6.1a7.4 7.4 0 0 1-2.2-1.4 8.2 8.2 0 0 1-1.5-1.9c-.2-.3 0-.4.1-.6l.4-.4.2-.4a.5.5 0 0 0 0-.5c-.1-.1-.6-1.4-.8-1.9s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.8 4.8 0 0 0 1 2.5 11 11 0 0 0 4.4 3.9 3.5 3.5 0 0 0 1.6.4 2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.2c-.1-.2-.3-.2-.6-.3z" />
+                  </svg>
+                </div>
+                <p className="text-xs leading-relaxed text-gray-800">
+                  <span className="font-bold text-[#128C4A]">
                     Need help placing your order?
                   </span>{" "}
                   If you face any issue during checkout, simply tap the WhatsApp
@@ -1820,7 +1833,7 @@ export default function CheckoutPage() {
                   href="https://wa.me/971521423281"
                   target="_blank"
                   rel="noreferrer"
-                  className="shrink-0 rounded-md bg-[#25D366] px-3 py-2 text-xs font-semibold text-white"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#25D366] px-3 py-2 text-xs font-bold text-white shadow-md shadow-[#25D366]/40"
                 >
                   WhatsApp
                 </a>
