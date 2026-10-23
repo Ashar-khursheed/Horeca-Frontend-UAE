@@ -686,7 +686,7 @@ export const AddToCartWidget = ({
                 <div
                   className={
                     counterClassName ??
-                    "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]  "
+                    "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[128px] 3xl:h-[44px] xl:w-[118px] xl:h-[35px] w-[108px] h-[29px]  "
                   }
                 >
                   <button

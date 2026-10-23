@@ -197,14 +197,13 @@ export default function CartItemRow({
                   disabled={fixed}
                   onChange={(e) => {
                     const v = parseInt(e.target.value);
-                    if (!isNaN(v) && v >= min && v <= 99) onQty(item.id, v);
+                    if (!isNaN(v) && v >= min) onQty(item.id, v);
                   }}
-                  className="w-9 text-center text-sm font-bold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed"
+                  className="w-12 text-center text-sm font-bold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed"
                 />
                 <button
-                  onClick={() => onQty(item.id, Math.min(99, incQty))}
-                  disabled={item.qty >= 99}
-                  className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => onQty(item.id, incQty)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 transition-colors"
                 >
                   <Plus size={13} className="text-gray-600" strokeWidth={2} />
                 </button>
