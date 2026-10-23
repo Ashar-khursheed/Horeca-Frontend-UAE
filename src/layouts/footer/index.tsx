@@ -350,9 +350,9 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                   We're Always Here To Help
                 </h2>
               </div>
-              <div className="md:flex hidden flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <div className="md:flex hidden flex-row flex-wrap items-center justify-center gap-4">
                 <a
-                  href="tel:+971529193205"
+                  href="tel:+97142245818"
                   className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-black px-5 py-3 rounded-[7px] transition-all duration-200"
                 >
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -363,8 +363,32 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                       Call Us
                     </p>
                     <p className="text-black font-semibold text-base">
-                      {" "}
-                      +971529193205
+                      +971 4 224 5818
+                    </p>
+                  </div>
+                </a>
+                <a
+                  href="https://wa.me/971555915143"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-black px-5 py-3 rounded-[7px] transition-all duration-200"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-4 h-4"
+                      fill="white"
+                      aria-hidden="true"
+                    >
+                      <path d="M20.5 3.5A11 11 0 0 0 2.1 16.8L1 23l6.3-1.1A11 11 0 0 0 12 23a11 11 0 0 0 8.5-19.5zM12 21a9 9 0 0 1-4.6-1.3l-.3-.2-3.7.7.7-3.6-.2-.3A9 9 0 1 1 12 21zm5-6.8c-.3-.1-1.6-.8-1.8-.9s-.4-.1-.6.1-.7.9-.8 1-.3.2-.6.1a7.4 7.4 0 0 1-2.2-1.4 8.2 8.2 0 0 1-1.5-1.9c-.2-.3 0-.4.1-.6l.4-.4.2-.4a.5.5 0 0 0 0-.5c-.1-.1-.6-1.4-.8-1.9s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.8 4.8 0 0 0 1 2.5 11 11 0 0 0 4.4 3.9 3.5 3.5 0 0 0 1.6.4 2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.2c-.1-.2-.3-.2-.6-.3z" />
+                    </svg>
+                  </div>
+                  <div className="text-center md:text-left">
+                    <p className="text-[#7e859b] text-[15px] font-medium uppercase tracking-wide">
+                      WhatsApp
+                    </p>
+                    <p className="text-black font-semibold text-base">
+                      +971 55 591 5143
                     </p>
                   </div>
                 </a>

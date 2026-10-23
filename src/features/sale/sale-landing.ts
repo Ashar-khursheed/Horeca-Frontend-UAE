@@ -56,6 +56,11 @@ export interface SaleLandingPagination {
   last_page?: number;
 }
 
+export type SaleSeoField =
+  | { en?: string | null; ar?: string | null }
+  | string
+  | null;
+
 export interface SaleLandingSeo {
   url?: string | null;
   primary_keyword?: string | null;
@@ -63,6 +68,25 @@ export interface SaleLandingSeo {
   schema_rating?: number | null;
   schema_reviews_count?: number | null;
   banner_slug?: string | null;
+  title_tag?: SaleSeoField;
+  meta_title?: SaleSeoField;
+  meta_description?: SaleSeoField;
+  og_title?: SaleSeoField;
+  og_description?: SaleSeoField;
+  og_image_url?: SaleSeoField;
+  header_description?: SaleSeoField;
+  seo_schema?: SaleSeoField | Record<string, unknown> | null;
+  banner_image_url?: SaleSeoField;
+  banner_image_alt_text?: SaleSeoField;
+}
+
+/** CMS sometimes stores the literal string "undefined". Treat that as empty. */
+export function saleSeoText(value?: SaleSeoField | null): string | undefined {
+  const raw = typeof value === "string" ? value : value?.en;
+  if (!raw) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === "undefined" || trimmed === "null") return undefined;
+  return trimmed;
 }
 
 export interface SaleLandingData {
