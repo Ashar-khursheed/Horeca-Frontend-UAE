@@ -148,6 +148,13 @@ export const AddToCartWidget = ({
   const minQty = product.min_quantity ?? supplier0?.min_quantity ?? 1;
   const isFixed =
     product.is_fixed != null ? !!product.is_fixed : !!supplier0?.is_fixed;
+  const stockCount = Number(
+    (product as RawApiProduct).best_supplier?.inventory,
+  );
+  const maxQty =
+    Number.isFinite(stockCount) && stockCount > 0
+      ? Math.floor(stockCount)
+      : null;
   const isQuote = !!(
     product.quote_available ?? (product as RawApiProduct).for_quotes
   );
@@ -286,11 +293,9 @@ export const AddToCartWidget = ({
   const handleIncrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isFixed) {
-      setCount(count + minQty);
-    } else {
-      setCount(count + 1);
-    }
+    const next = isFixed ? count + minQty : count + 1;
+    if (maxQty != null && next > maxQty) return;
+    setCount(next);
   };
 
   const handleDecrement = (e: React.MouseEvent) => {
@@ -571,6 +576,7 @@ export const AddToCartWidget = ({
     e.preventDefault();
     e.stopPropagation();
     const newQty = isFixed ? currentMobileQty + minQty : currentMobileQty + 1;
+    if (maxQty != null && newQty > maxQty) return;
 
     const token = getToken();
     if (token) {
@@ -686,7 +692,7 @@ export const AddToCartWidget = ({
                 <div
                   className={
                     counterClassName ??
-                    "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[128px] 3xl:h-[44px] xl:w-[118px] xl:h-[35px] w-[108px] h-[29px]  "
+                    "flex items-center border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px] w-[75px] h-[29px]  "
                   }
                 >
                   <button
@@ -694,11 +700,11 @@ export const AddToCartWidget = ({
                     disabled={count <= minQty || loading}
                     className={
                       counterButtonClassName ??
-                      "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+                      "w-6 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
                     }
                   >
                     <Minus
-                      size={counterButtonClassName ? 10 : 15}
+                      size={counterButtonClassName ? 10 : 11}
                       className="text-[#4B5563]"
                       strokeWidth={2}
                     />
@@ -709,20 +715,26 @@ export const AddToCartWidget = ({
                     disabled={isFixed || loading}
                     onChange={(e) => {
                       const v = parseInt(e.target.value);
-                      if (!isNaN(v) && v >= 1) setCount(v);
+                      if (!isNaN(v) && v >= 1) {
+                        setCount(maxQty != null ? Math.min(v, maxQty) : v);
+                      }
                     }}
-                    className="flex-1 min-w-0 text-center text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed text-[14px]"
+                    className={`flex-1 min-w-0 text-center font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed ${count > 100 ? "text-[10px]" : "text-[14px]"}`}
                   />
                   <button
                     onClick={handleIncrement}
-                    disabled={loading}
+                    disabled={
+                      loading ||
+                      (maxQty != null &&
+                        (isFixed ? count + minQty > maxQty : count >= maxQty))
+                    }
                     className={
                       counterButtonClassName ??
-                      "w-8 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
+                      "w-6 h-full flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-transparent border-0"
                     }
                   >
                     <Plus
-                      size={counterButtonClassName ? 10 : 15}
+                      size={counterButtonClassName ? 10 : 11}
                       className="text-[#4B5563]"
                       strokeWidth={2}
                     />
@@ -812,27 +824,30 @@ export const AddToCartWidget = ({
                     : handleMobileDecrement
                 }
                 disabled={mobileLoading}
-                className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="w-8 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {currentMobileQty <= minQty ? (
-                  <Trash2 size={14} strokeWidth={2} />
+                  <Trash2 size={12} strokeWidth={2} />
                 ) : (
-                  <Minus size={14} strokeWidth={2} />
+                  <Minus size={12} strokeWidth={2} />
                 )}
               </button>
 
               {/* Count */}
-              <span className="flex-1 text-center text-white text-[13px] font-semibold select-none">
+              <span className={`flex-1 text-center text-white font-semibold select-none ${currentMobileQty > 100 ? "text-[10px]" : "text-[13px]"}`}>
                 {mobileLoading ? <Loader /> : currentMobileQty}
               </span>
 
               {/* Plus */}
               <button
                 onClick={handleMobileIncrement}
-                disabled={mobileLoading}
-                className="w-10 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                disabled={
+                  mobileLoading ||
+                  (maxQty != null && currentMobileQty >= maxQty)
+                }
+                className="w-8 h-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                <Plus size={14} strokeWidth={2} />
+                <Plus size={12} strokeWidth={2} />
               </button>
             </div>
           ) : isQuote ? (

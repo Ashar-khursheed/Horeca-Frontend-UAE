@@ -259,7 +259,7 @@ export const QuantityCounter = ({
   onChange: (v: number) => void;
   isFixed?: boolean;
 }) => (
-  <div className="flex items-center  border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[128px] 3xl:h-[44px] xl:w-[118px] xl:h-[35px]  w-[108px] h-[29px]">
+  <div className="flex items-center  border border-[#BCE3C9] rounded-[4px] overflow-hidden bg-white flex-shrink-0 3xl:w-[90px] 3xl:h-[44px] xl:w-[85px] xl:h-[35px]  w-[75px] h-[29px]">
     <button
       onClick={onDecrement}
       disabled={count <= min}
@@ -277,7 +277,7 @@ export const QuantityCounter = ({
         const v = parseInt(e.target.value);
         if (!isNaN(v) && v >= 1 && v <= 99) onChange(v);
       }}
-      className="w-8 text-center 3xl:text-[15px] xl:text-[12px] text-[10px] font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed"
+      className={`w-8 text-center font-semibold text-[#186737] border-0 outline-none bg-transparent disabled:cursor-not-allowed ${count > 100 ? "text-[10px]" : "3xl:text-[15px] xl:text-[12px] text-[10px]"}`}
     />
     <button
       onClick={onIncrement}
