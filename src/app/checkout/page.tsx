@@ -1525,6 +1525,24 @@ export default function CheckoutPage() {
           )}
         </div>
       </div>
+      <div className="mb-4 flex items-center justify-between gap-4 rounded-md border border-[#186737]/20 bg-[#f4faf6] p-3">
+        <p className="text-sm leading-relaxed text-gray-700">
+          <span className="font-semibold text-gray-900">
+            Need help placing your order?
+          </span>{" "}
+          If you face any issue during checkout, simply tap the WhatsApp button
+          and let us know. Our team is ready to assist you and make sure your
+          order goes through smoothly.
+        </p>
+        <a
+          href="https://wa.me/971521423281"
+          target="_blank"
+          rel="noreferrer"
+          className="shrink-0 rounded-md bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1ebe5d]"
+        >
+          WhatsApp
+        </a>
+      </div>
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-wrap gap-4">
         <Link
           href={cartHref}
@@ -1788,6 +1806,24 @@ export default function CheckoutPage() {
                     </p>
                   )}
                 </div>
+              </div>
+              <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-[#186737]/20 bg-[#f4faf6] p-3">
+                <p className="text-xs leading-relaxed text-gray-700">
+                  <span className="font-semibold text-gray-900">
+                    Need help placing your order?
+                  </span>{" "}
+                  If you face any issue during checkout, simply tap the WhatsApp
+                  button and let us know. Our team is ready to assist you and
+                  make sure your order goes through smoothly.
+                </p>
+                <a
+                  href="https://wa.me/971521423281"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 rounded-md bg-[#25D366] px-3 py-2 text-xs font-semibold text-white"
+                >
+                  WhatsApp
+                </a>
               </div>
               {orderError && (
                 <div className="mb-2 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">

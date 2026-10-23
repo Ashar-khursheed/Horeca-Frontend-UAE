@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { makeApiCallSSR } from "@/apis/ssr-fetch";
+import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 import SaleLandingClient from "@/features/sale/SaleLandingClient";
 import {
   buildSaleLandingParams,
@@ -10,6 +11,7 @@ import {
   normalizeSaleSlug,
   parseBrandIds,
   saleLandingPath,
+  saleSeoText,
   titleFromSlug,
   type SaleLandingResponse,
 } from "@/features/sale/sale-landing";
@@ -66,25 +68,35 @@ export async function generateMetadata({
   const { res } = await fetchLanding(slug, { page: 1, per_page: 1 }, countryCode);
 
   const data = res?.data;
+  const seo = data?.seo_management;
   const path = data?.seo_url?.startsWith("/")
     ? data.seo_url
     : `/sale/${slug}`;
   const canonical = `${SITE_URL}${path}`;
-  const title = data?.title || titleFromSlug(slug);
-  const description = data?.description || undefined;
-  const index = data?.seo_management?.indexing !== 0;
-  const ogImage = isUsableBanner(data?.desktop_banner)
-    ? data?.desktop_banner
-    : undefined;
+  const title =
+    saleSeoText(seo?.title_tag) ??
+    saleSeoText(seo?.meta_title) ??
+    data?.title ??
+    titleFromSlug(slug);
+  const description =
+    saleSeoText(seo?.meta_description) ?? saleSeoText(data?.description);
+  const ogTitle = saleSeoText(seo?.og_title) ?? title;
+  const ogDescription = saleSeoText(seo?.og_description) ?? description;
+  const ogImage =
+    saleSeoText(seo?.og_image_url) ??
+    (isUsableBanner(data?.desktop_banner) ? data?.desktop_banner : undefined);
+  const index = seo?.indexing !== false && seo?.indexing !== 0;
+  const keyword = saleSeoText(seo?.primary_keyword);
 
   return {
     title,
     description,
+    keywords: keyword,
     robots: { index, follow: true },
     alternates: { canonical },
     openGraph: {
-      title,
-      description,
+      title: ogTitle,
+      description: ogDescription,
       url: canonical,
       type: "website",
       images: ogImage
@@ -126,8 +138,21 @@ export default async function SaleSlugPage({ params, searchParams }: PageProps) 
 
   const data = res.data;
   const title = data.title || titleFromSlug(slug);
+  const schemaValue = data.seo_management?.seo_schema;
+  const schemaEn =
+    schemaValue && typeof schemaValue === "object" && "en" in schemaValue
+      ? schemaValue.en
+      : schemaValue;
+  const schema =
+    typeof schemaEn === "string"
+      ? saleSeoText(schemaEn)
+      : schemaEn && typeof schemaEn === "object"
+        ? schemaEn
+        : undefined;
 
   return (
+    <>
+    {schema ? <ProductJsonLd schema={schema} /> : null}
     <SaleLandingClient
       slug={slug}
       endpoint={endpoint}
@@ -155,5 +180,6 @@ export default async function SaleSlugPage({ params, searchParams }: PageProps) 
         currentPage: data.pagination?.current_page ?? 1,
       }}
     />
+    </>
   );
 }

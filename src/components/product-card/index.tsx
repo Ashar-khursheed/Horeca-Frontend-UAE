@@ -129,6 +129,7 @@ export interface RawApiProduct {
   selling_type?: { attribute_value: LS; attribute_value_unit: LS };
   suppliers?: {
     vendor_id?: number;
+    inventory?: number | string;
     delivery_days?: string;
     free_shipping?: boolean | number;
     min_quantity?: number;
@@ -143,6 +144,7 @@ export interface RawApiProduct {
     price?: number | string;
     min_quantity?: number;
     is_fixed?: number | boolean;
+    inventory?: number | string;
     delivery_days?: string;
     return_policy?: string;
     free_shipping?: boolean | number;
@@ -331,6 +333,7 @@ export const ProductCard = ({
   onAddSuccess,
   onAddedToCart,
 }: ProductCardProps) => {
+  console.log("product", product);
   const locale = useLocale();
   const dispatch = useAppDispatch();
   // const state = useAppSelector((s) => s?.country);
@@ -373,6 +376,13 @@ export const ProductCard = ({
     (product as RawApiProduct).suppliers?.[0] ??
     (product as RawApiProduct).best_supplier;
   const deliveryDays = product.delivery_days ?? supplier0?.delivery_days ?? "";
+  const stockCount = Number(
+    (product as RawApiProduct).best_supplier?.inventory,
+  );
+  const stockLabel =
+    Number.isFinite(stockCount) && stockCount > 0
+      ? Math.floor(stockCount).toLocaleString("en-US")
+      : "";
 
   const sellUnitStr = resolveStr(
     product.selling_type?.attribute_value_unit,
@@ -526,6 +536,7 @@ export const ProductCard = ({
     <div className="bg-white rounded-[7px] shadow-[0_2px_12px_rgba(0,0,0,0.08)] overflow-hidden cursor-pointer flex flex-col h-full border border-transparent hover:border-[#dceee4] hover:shadow-[0_4px_20px_rgba(0,0,0,0.11)] transition-all duration-200">
       {/* ── IMAGE AREA ───────────────────────────────────────────────── */}
       <div className="relative bg-white">
+        <div className="relative">
         {/* Discount badge */}
         {hasSale && discountPct > 0 && (
           <div className="absolute top-3 left-3 z-10">
@@ -640,6 +651,15 @@ export const ProductCard = ({
             )}
           </div>
         </Link>
+        {stockLabel && (
+          <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F5EE]/95 px-2.5 py-1 text-[11px] font-bold leading-none text-[#186737] shadow-sm whitespace-nowrap">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#186737]" />
+              Stock in Hand: {stockLabel} Pcs
+            </span>
+          </div>
+        )}
+        </div>
 
         {/* Slider dots */}
         {hasMultipleImages ? (

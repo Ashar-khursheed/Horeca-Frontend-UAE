@@ -31,6 +31,8 @@ export const FeaturedProducts = ({
     .slice(0, 12)
     .map(mapBrandProductToCardProduct);
 
+    console.log("displayProducts", displayProducts);
+
   if (!categoriesWithProducts.length) return null;
 
   return (
