@@ -90,15 +90,27 @@ export async function POST(request: Request) {
         enable_chat: false,
         enable_screenshare: false,
         enable_knocking: false,
+        enable_recording: "cloud",
         eject_at_room_exp: true,
       },
     }),
   });
 
-  if (!room.ok || !room.data?.url || !isTrustedRoomUrl(room.data.url)) {
+  if (!room.ok || !room.data?.url) {
     await deleteCallRoom(roomName);
     return NextResponse.json(
-      { error: "Could not create the video room" },
+      { error: room.ok ? "Could not create the video room" : room.error },
+      { status: 502 },
+    );
+  }
+
+  if (!isTrustedRoomUrl(room.data.url)) {
+    await deleteCallRoom(roomName);
+    const host = new URL(room.data.url).host;
+    return NextResponse.json(
+      {
+        error: `This Daily key belongs to ${host}. Set DAILY_DOMAIN to ${host} and restart the server.`,
+      },
       { status: 502 },
     );
   }

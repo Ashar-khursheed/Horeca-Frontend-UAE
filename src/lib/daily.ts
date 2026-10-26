@@ -70,6 +70,7 @@ export async function createMeetingToken(
         eject_at_token_exp: true,
         is_owner: isOwner,
         user_name: userName,
+        ...(isOwner ? { enable_recording: "cloud" } : {}),
       },
     }),
   });

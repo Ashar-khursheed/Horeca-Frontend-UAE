@@ -47,6 +47,8 @@ export default function VideoCall({ salesLink }: Props) {
   const [error, setError] = useState("");
   const [needsCard, setNeedsCard] = useState(false);
   const [notified, setNotified] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordBusy, setRecordBusy] = useState(false);
 
   async function destroyCall() {
     const call = callRef.current;
@@ -59,6 +61,27 @@ export default function VideoCall({ salesLink }: Props) {
     }
     call.destroy();
     setInCall(false);
+    setRecording(false);
+  }
+
+  async function toggleRecording() {
+    const call = callRef.current;
+    if (!call || recordBusy) return;
+    setRecordBusy(true);
+    setError("");
+    try {
+      if (recording) {
+        await call.stopRecording();
+      } else {
+        await call.startRecording();
+      }
+    } catch (err) {
+      setError(
+        messageFor(readError(err) || "Recording could not be changed"),
+      );
+    } finally {
+      setRecordBusy(false);
+    }
   }
 
   async function startOrJoin() {
@@ -105,6 +128,13 @@ export default function VideoCall({ salesLink }: Props) {
       });
       callRef.current = frame;
       frame.on("joined-meeting", () => setInCall(true));
+      frame.on("recording-started", () => setRecording(true));
+      frame.on("recording-stopped", () => setRecording(false));
+      frame.on("recording-error", (event) => {
+        setRecording(false);
+        const raw = readError(event);
+        setError(messageFor(raw || "Recording could not start"));
+      });
       frame.on("error", (event) => {
         const raw = readError(event);
         if (raw) reasonRef.current = raw;
@@ -114,6 +144,7 @@ export default function VideoCall({ salesLink }: Props) {
       frame.on("left-meeting", () => {
         setInCall(false);
         frame.destroy();
+        setRecording(false);
         if (callRef.current === frame) callRef.current = null;
       });
 
@@ -145,7 +176,7 @@ export default function VideoCall({ salesLink }: Props) {
       </h1>
       <p className="mt-1 text-sm text-[#4b5563]">
         {salesLink
-          ? "Camera, microphone, and end call. This link expires in one hour."
+          ? "Camera, microphone, recording, and end call. This link expires in one hour."
           : "Start the call and our sales team is emailed a private join link."}
       </p>
 
@@ -163,6 +194,20 @@ export default function VideoCall({ salesLink }: Props) {
         >
           {loading ? "Connecting..." : salesLink ? "Join call" : "Start call"}
         </button>
+        {salesLink && (
+          <button
+            type="button"
+            onClick={toggleRecording}
+            disabled={!inCall || recordBusy}
+            className="rounded-lg bg-[#121212] px-5 py-3 font-semibold text-white disabled:opacity-50"
+          >
+            {recordBusy
+              ? "Please wait..."
+              : recording
+                ? "Stop recording"
+                : "Start recording"}
+          </button>
+        )}
         <button
           type="button"
           onClick={destroyCall}
@@ -172,6 +217,13 @@ export default function VideoCall({ salesLink }: Props) {
           End call
         </button>
       </div>
+
+      {salesLink && recording && (
+        <p className="mt-4 text-sm font-semibold text-[#b42318]">
+          Recording. Everyone on the call can see that it is being recorded.
+          The file is saved in your Daily dashboard.
+        </p>
+      )}
 
       {notified && !error && (
         <p className="mt-4 text-sm text-[#186737]">
