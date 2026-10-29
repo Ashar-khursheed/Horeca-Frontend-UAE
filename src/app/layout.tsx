@@ -4,7 +4,6 @@ import GlobalLayout from "@/layouts/global-layout";
 import type { ApiCategory } from "@/utils/types";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { cookies, headers } from "next/headers";
 
@@ -37,11 +36,6 @@ interface CustomScriptsResponse {
   };
 }
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 export const metadata = {
   verification: {
     google: "i5Slm2IXBKQSZSie_4ILsRhWAc_6JkL3oK54tUM76K8",
@@ -114,8 +108,14 @@ export default async function RootLayout({
   const scripts = customScriptsData?.data;
 
   return (
-    <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className={inter.className} suppressHydrationWarning>
+    <html lang={locale} dir={isRTL ? "rtl" : "ltr"} className="font-sans" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
         <link rel="preconnect" href="https://d1p9kdrbe10xzz.cloudfront.net" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://d1p9kdrbe10xzz.cloudfront.net" />
         <link rel="preconnect" href="https://pim.thehorecastore.co" crossOrigin="anonymous" />

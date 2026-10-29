@@ -11,17 +11,17 @@
 //
 // Blogs load client-side after first paint to keep the homepage HTML smaller.
 
-import SEOMainContent from "@/seo/seo-main-content";
-import FeaturedProducts from "./feature-product";
-import HeroBanner, { SliderItem } from "./hero-banner";
-import ShopByCategories from "./shop-by-category";
-import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
-import { HomeBlogsSection } from "./HomeBlogsSection";
-import type { FeaturedCategory } from "@/utils/types";
-import type { MarketingPromotion } from "./hero-banner/promotions-slider";
-import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
 import Image from "next/image";
 import Link from "next/link";
+import FoodTruckBanner from "@/assets/banners/Food-Truck-Banner.webp";
+import SEOMainContent from "@/seo/seo-main-content";
+import type { FeaturedCategory } from "@/utils/types";
+import FeaturedProducts from "./feature-product";
+import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
+import { HomeBlogsSection } from "./HomeBlogsSection";
+import HeroBanner, { type SliderItem } from "./hero-banner";
+import type { MarketingPromotion } from "./hero-banner/promotions-slider";
+import ShopByCategories from "./shop-by-category";
 
 export const Home = ({
   sliderItems = [],
@@ -42,6 +42,25 @@ export const Home = ({
         sliderItemsTwo={sliderItemsTwo}
         promotions={promotions}
       />
+
+      <section className="w-full py-4 md:py-6 hidden">
+        <div className="global-container">
+          <div className="flex flex-col items-start justify-between gap-4 rounded-xl bg-[#186737] px-5 py-5 text-white md:flex-row md:items-center md:px-6">
+            <div>
+              <h2 className="text-xl font-bold">Talk on a video call</h2>
+              <p className="mt-1 text-sm text-white/90">
+                Start a call and our sales team gets an email to join you.
+              </p>
+            </div>
+            <Link
+              href="/video-call"
+              className="rounded-lg bg-white px-5 py-3 font-semibold text-[#186737]"
+            >
+              Start video call
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Pure server HTML — no interactivity needed */}
       <SEOMainContent
@@ -65,14 +84,15 @@ export const Home = ({
         <div className="global-container">
           <div className="grid grid-cols-1">
             <Link href={"/kitchen-equipment"}>
-            <Image
-              src={FoodTruckBanner}
-              alt="Food Truck Banner"
-              loading="lazy"
-              className="rounded-[7px] w-full h-auto"
-              sizes="100vw"
-              decoding="async"
-            /></Link>
+              <Image
+                src={FoodTruckBanner}
+                alt="Food Truck Banner"
+                loading="lazy"
+                className="rounded-[7px] w-full h-auto"
+                sizes="100vw"
+                decoding="async"
+              />
+            </Link>
           </div>
         </div>
       </div>

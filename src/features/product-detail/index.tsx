@@ -59,8 +59,20 @@ const resolveAttr = (v: any): string => {
   return String(v);
 };
 
+const localeText = (value: unknown, locale: string) => {
+  if (!value) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "object") {
+    const field = value as { en?: string | null; ar?: string | null };
+    const picked = locale === "ar" ? field.ar : field.en;
+    return typeof picked === "string" ? picked.trim() : "";
+  }
+  return "";
+};
+
 const ProductDetailPage = ({
   productData,
+  locale = "en",
   categorySlug,
   subCategorySlug,
   similarProductsGuest = [],
@@ -159,11 +171,13 @@ const ProductDetailPage = ({
   };
 
   const overview = description.join("");
-  const qaItems = (productData.faqs ?? []).map((f) => ({
-    id: f.id,
-    question: f.question,
-    answer: f.answer,
-  }));
+  const qaItems = (productData.faqs ?? [])
+    .map((f) => ({
+      id: f.id,
+      question: localeText(f.question, locale),
+      answer: localeText(f.answer, locale),
+    }))
+    .filter((f) => f.question || f.answer);
 
   const avgRating = productData.avg_rating ?? 0;
   const variantGroups = new Map<string, VariantItem[]>();
