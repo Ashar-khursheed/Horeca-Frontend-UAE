@@ -43,7 +43,7 @@ export const Home = ({
         promotions={promotions}
       />
 
-      <section className="w-full py-4 md:py-6">
+      <section className="w-full py-4 md:py-6 hidden">
         <div className="global-container">
           <div className="flex flex-col items-start justify-between gap-4 rounded-xl bg-[#186737] px-5 py-5 text-white md:flex-row md:items-center md:px-6">
             <div>

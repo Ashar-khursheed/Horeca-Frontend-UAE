@@ -41,9 +41,10 @@ function getLocaleStr(
   locale: string,
 ): string | null {
   if (!obj) return null;
-  if (typeof obj === "string") return obj || null;
+  if (typeof obj === "string") return obj.trim() || null;
   const val = locale === "ar" ? obj.ar : obj.en;
-  return val ?? obj.en ?? obj.ar ?? null;
+  const text = typeof val === "string" ? val.trim() : "";
+  return text || null;
 }
 
 // ─── Popular Searches Component ───────────────────────────────────────────────
@@ -140,9 +141,7 @@ console.log("dataAPI", dataAPI);
   const popularTagsObj = dataAPI.popular_tag_details;
   const popularTags: PopularTagDetail[] = Array.isArray(popularTagsObj)
     ? popularTagsObj
-    : ((locale === "ar" ? popularTagsObj?.ar : popularTagsObj?.en) ??
-      popularTagsObj?.en ??
-      []);
+    : ((locale === "ar" ? popularTagsObj?.ar : popularTagsObj?.en) ?? []);
   const hasPopularTags = popularTags.some((k) => k?.popularTags?.trim());
 
   if (!para1 && !para2 && !para3 && !para4 && !bannerUrl && !hasPopularTags) return null;
