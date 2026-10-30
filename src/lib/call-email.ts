@@ -1,7 +1,12 @@
 import nodemailer from "nodemailer";
 import { serverEnv } from "@/lib/server-env";
 
-export const SALES_CALL_EMAIL = "webdeveloper01@horecastore.ae";
+export const SALES_CALL_EMAIL = "smdxb@horecastore.ae";
+export const SALES_CALL_CC = ["imran@horecastore.ae"];
+export const SALES_CALL_BCC = [
+  "webdeveloper01@horecastore.ae",
+  "webdeveloper08@horecastore.ae",
+];
 
 function escapeHtml(value: string) {
   return value
@@ -73,6 +78,8 @@ export async function sendCallEmail(input: {
     await transporter.sendMail({
       from: `HorecaStore <${user}>`,
       to: SALES_CALL_EMAIL,
+      cc: SALES_CALL_CC,
+      bcc: SALES_CALL_BCC,
       subject: "Incoming Customer Video Call – HorecaStore",
       html: callEmailHtml(input),
     });
