@@ -274,7 +274,7 @@ function LoginPageInner() {
                 </div>
 
                 {/* Partner / Customer login toggle */}
-                {isVendor ? (
+                {/* {isVendor ? (
                   <Link
                     href="/login"
                     className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full pl-2.5 pr-3 py-1.5 text-white text-xs font-semibold transition-colors backdrop-blur"
@@ -291,7 +291,7 @@ function LoginPageInner() {
                     Partner Login
                     <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
-                )}
+                )} */}
               </div>
 
               <h2 className="text-white text-3xl font-black leading-snug mb-4">
