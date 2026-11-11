@@ -21,6 +21,7 @@ import { FeaturedBrandsSection } from "./features-brand/FeaturedBrandsSection";
 import { HomeBlogsSection } from "./HomeBlogsSection";
 import HeroBanner, { type SliderItem } from "./hero-banner";
 import type { MarketingPromotion } from "./hero-banner/promotions-slider";
+import WhatsAppFloat from "@/components/whatsapp-float";
 import ShopByCategories from "./shop-by-category";
 
 export const Home = ({
@@ -103,6 +104,7 @@ export const Home = ({
       <div className="md:block hidden">
         <HomeBlogsSection />
       </div>
+      <WhatsAppFloat />
     </>
   );
 };
