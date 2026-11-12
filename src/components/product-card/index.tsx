@@ -36,7 +36,7 @@ import { fetchCounts } from "@/store/slices/customer-counts/customerCountsSlice"
 import { CurrencySymbol } from "../currency-symbol";
 import { SITE_URL } from "@/utils/site-url";
 
-const WHATSAPP_PHONE = "971555915143";
+const WHATSAPP_PHONE = "971800467322";
 
 const openWhatsAppProduct = (productName: string, productHref: string, qty: number) => {
   const fullLink = `${SITE_URL}${productHref.startsWith("/") ? productHref : `/${productHref}`}`;

@@ -17,6 +17,7 @@ import ForceClear from "@/components/force-clear";
 import { revalidate } from "@/utils";
 import PostHogProvider from "@/components/posthog-provider";
 import { redirect } from "next/navigation";
+import WhatsAppFloat from "@/components/whatsapp-float";
 
 interface CustomScript {
   id: number;
@@ -144,6 +145,7 @@ export default async function RootLayout({
               <CountryDetector />
               <GlobalPrefetch />
               {children}
+              <WhatsAppFloat />
             </GlobalLayout>
           </NextIntlClientProvider>
         </PostHogProvider>

@@ -1,5 +1,5 @@
 const WHATSAPP_URL =
-  "https://api.whatsapp.com/send/?phone=971555915143&text=Hello%20HorecaStore&type=phone_number&app_absent=0";
+  "https://api.whatsapp.com/send/?phone=971800467322&text=Hello%20HorecaStore&type=phone_number&app_absent=0";
 
 export default function WhatsAppFloat() {
   return (

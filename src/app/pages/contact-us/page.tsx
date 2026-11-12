@@ -750,7 +750,7 @@ src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3616.367791343907!2d5
                 support.
               </p>
               <a
-                href="https://api.whatsapp.com/send/?phone=971555915143&text=Hello%20HorecaStore&type=phone_number&app_absent=0"
+                href="https://api.whatsapp.com/send/?phone=971800467322&text=Hello%20HorecaStore&type=phone_number&app_absent=0"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 h-10 w-full rounded-[8px] bg-green-500 hover:bg-green-600 text-white text-xs font-bold transition-all"
