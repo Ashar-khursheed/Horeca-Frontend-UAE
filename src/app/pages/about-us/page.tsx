@@ -140,21 +140,14 @@ export default function AboutUsPage() {
 
       {/* ── Video Hero ─────────────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden bg-[#0f4d26]">
-        {window?.innerWidth < 640 && (
+        {/* Video URL is picked in useEffect: reading window during render
+            threw on the server, so the whole page fell back to client-only
+            rendering and search engines got no About content. */}
+        {videoSrc && (
           <video
+            key={videoSrc}
             className="w-full h-full object-cover"
-            src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/products/440x680+voice+over+2.mp4`}
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
-        )}
-        {window?.innerWidth > 640 && (
-          <video
-            className="w-full h-full object-cover"
-            // src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/Brand/Amana/horecastore.mp4`}
-            src={`https://horecastore-s3-storage.s3.us-west-1.amazonaws.com/production/products/updated+1+1920x500+Voice+over+2.mp4`}
+            src={videoSrc}
             autoPlay
             muted
             loop
@@ -191,9 +184,9 @@ export default function AboutUsPage() {
       {/* ── About Intro ────────────────────────────────────────────────────── */}
       <section className="bg-white py-12">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-sm font-extrabold text-[#186737] mb-2">
+          <h1 className="text-sm font-extrabold text-[#186737] mb-2">
             About HorecaStore — Trusted Restaurant Supply &amp; Commercial Equipment Provider
-          </p>
+          </h1>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
             Empowering Hospitality Businesses with Quality Supplies and Seamless Procurement
           </h2>

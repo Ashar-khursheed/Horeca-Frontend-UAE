@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { labelFromSlug } from "@/utils/seo-jsonld";
 
 export type { ApiCategory, ApiCategoryName };
 
@@ -234,8 +235,12 @@ export default function CategoriesPage({
                   <Link href={img.url || "#"}>
                     <img
                       src={img.image_url}
-                      alt={img.alt}
+                      // The CMS often leaves alt empty; fall back to the
+                      // linked category's name so the image and its link
+                      // have accessible text.
+                      alt={img.alt || labelFromSlug(img.url?.split("?")[0].split("/").filter(Boolean).pop() ?? "")}
                       className="rounded-[7px]"
+                      loading="lazy"
                     />
                   </Link>
                 </div>
@@ -247,9 +252,9 @@ export default function CategoriesPage({
           <div className="global-container">
             {/* Header row with title + nav buttons */}
             <div className="flex items-center justify-between mb-4">
-              <h1 className="heading-font-size font-bold text-gray-900">
+              <h2 className="heading-font-size font-bold text-gray-900">
                 Our Customers&apos; Top Choices
-              </h1>
+              </h2>
               <div className="flex items-center gap-2">
                 <button
                   id="prod-slider-prev"

@@ -40,9 +40,11 @@ export const STATIC_SEO = {
     canonical: `${SITE}/payment-decline`,
   },
   aboutUs: {
-    title: "About HorecaStore | Trusted Commercial Kitchen Equipment Supplier",
+    title: IS_UAE_REGION
+      ? "About HorecaStore | Kitchen Equipment Supplier UAE"
+      : "About HorecaStore | Trusted Commercial Kitchen Equipment Supplier",
     description: IS_UAE_REGION
-      ? "Learn about HorecaStore — a trusted UAE supplier of commercial kitchen equipment, restaurant supplies, and hospitality solutions, serving hotels, restaurants, and cafés from Dubai across the Emirates."
+      ? "HorecaStore is a Dubai-based supplier of commercial kitchen equipment, restaurant supplies and hotel supplies for businesses across the UAE."
       : "Learn about HorecaStore — your trusted U.S. supplier for commercial kitchen equipment, restaurant supplies, and hospitality solutions. Serving hotels, restaurants, and cafés nationwide.",
     robots: { index: true, follow: true },
     canonical: `${SITE}/pages/about-us`,

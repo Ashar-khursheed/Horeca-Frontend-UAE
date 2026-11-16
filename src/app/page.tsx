@@ -13,7 +13,7 @@ import { HOME_SCHEMA } from "@/data/seo/home-schema";
 export const metadata: Metadata = {
   // UAE-specific title/description: the US site (thehorecastore.com) used the
   // identical text, so search engines saw two sites competing for one query.
-  title: "Restaurant Equipment & Kitchen Supplies in Dubai, UAE | HorecaStore",
+  title: "Restaurant Equipment & Supplies in Dubai, UAE | HorecaStore",
   description:
     "Shop commercial kitchen equipment, refrigeration, tableware and hotel supplies for restaurants, hotels and cafés across the UAE. Prices in AED.",
   robots: { index: true, follow: true },
