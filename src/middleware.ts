@@ -57,6 +57,7 @@ function appendSetCookie(
   value: string,
   maxAge: number,
   domain?: string,
+  secure = false,
 ) {
   const parts = [
     `${name}=${value}`,
@@ -65,6 +66,7 @@ function appendSetCookie(
     "SameSite=Lax",
   ];
   if (domain) parts.push(`Domain=${domain}`);
+  if (secure) parts.push("Secure");
   response.headers.append("Set-Cookie", parts.join("; "));
 }
 
@@ -76,11 +78,13 @@ function persistCountryOnResponse(
 ) {
   const maxAge = 60 * 60 * 24 * 365;
   const domain = getAuthCookieDomain(hostname);
-  appendSetCookie(response, "hc_cc", code, maxAge);
-  if (domain) appendSetCookie(response, "hc_cc", code, maxAge, domain);
+  // HTTPS-only on real hosts; local dev (http://localhost) keeps working.
+  const secure = !isLocalHost(hostname);
+  appendSetCookie(response, "hc_cc", code, maxAge, undefined, secure);
+  if (domain) appendSetCookie(response, "hc_cc", code, maxAge, domain, secure);
   if (manual) {
-    appendSetCookie(response, "hc_cc_manual", "1", maxAge);
-    if (domain) appendSetCookie(response, "hc_cc_manual", "1", maxAge, domain);
+    appendSetCookie(response, "hc_cc_manual", "1", maxAge, undefined, secure);
+    if (domain) appendSetCookie(response, "hc_cc_manual", "1", maxAge, domain, secure);
   }
 }
 

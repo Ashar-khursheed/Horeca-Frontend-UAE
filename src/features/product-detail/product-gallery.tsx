@@ -149,7 +149,13 @@ export const ProductGallery = ({
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-contain p-1" />
+                    <img
+                      src={img}
+                      alt={`${productName} - image ${realIndex + 1}`}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-contain p-1"
+                    />
                   </button>
                 );
               })}
@@ -276,7 +282,13 @@ export const ProductGallery = ({
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-contain p-1" />
+                      <img
+                        src={img}
+                        alt={`${productName} - image ${realIndex + 1}`}
+                        width={56}
+                        height={56}
+                        className="w-full h-full object-contain p-1"
+                      />
                     </button>
                   );
                 })}

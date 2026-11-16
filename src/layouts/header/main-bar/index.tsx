@@ -594,7 +594,7 @@ export default function NavigationStatic({
               {/* ── Mobile Right (hamburger) ── */}
               <div className="flex xl:hidden items-center gap-1">
                 {/* Mobile cart icon */}
-                <Link href={"/cart"}>
+                <Link href={"/cart"} aria-label="Cart">
                   <button
                     aria-label="Cart"
                     className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
@@ -607,7 +607,7 @@ export default function NavigationStatic({
                     )}
                   </button>
                 </Link>
-                <Link href={"/wishlist"}>
+                <Link href={"/wishlist"} aria-label="Wishlist">
                   <button
                     aria-label="Wishlist"
                     className="relative w-9 h-9 sm:flex hidden  items-center justify-center rounded-[7px] text-gray-600 hover:bg-gray-100 transition-colors"
