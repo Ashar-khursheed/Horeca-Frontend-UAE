@@ -5,6 +5,7 @@ import BlogDetailClient, { ApiBlogDetail } from "./BlogDetailClient";
 import type { Comment as BlogComment } from "@/components/blog-comments";
 import { revalidate as fetchRevalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
+import { blogPosting, breadcrumbList, plainTextExcerpt } from "@/utils/seo-jsonld";
 
 // Must stay dynamic. Pairing generateStaticParams/ISR with cookies()/headers()
 // (or leftover static shells) made Next.js 16 serve HTTP 500 on every slug.
@@ -119,11 +120,18 @@ export async function generateMetadata({
     ),
   );
 
-  if (!blog) return { title: "Blog Not Found" };
+  // Missing post: let the not-found page's noindex stand on its own.
+  if (!blog) notFound();
 
   const seo = blog.seo;
   const title = seo?.title_tag || seo?.meta_title || blog.title;
-  const description = seo?.meta_description || blog.title;
+  // A description equal to the title adds nothing in search results; fall back
+  // to an excerpt of the article itself.
+  const metaDescription = seo?.meta_description?.trim();
+  const description =
+    metaDescription && metaDescription !== title && metaDescription !== blog.title
+      ? metaDescription
+      : plainTextExcerpt(blog.description) || blog.title;
   const ogImage = seo?.og_image_url || blog.thumbnail || blog.desktop_banner;
   const canonicalUrl = `${SITE_URL}/blog/${slug}`;
 
@@ -173,7 +181,35 @@ export default async function BlogDetailPage({ params }: PageProps) {
   );
 
   const initialComments = commentsRes?.data?.comments ?? [];
-  const jsonLd = jsonLdHtml(blog.seo?.schema);
+
+  // CMS-authored schema wins; otherwise generate BlogPosting so every post has
+  // article markup with author and dates.
+  const canonicalUrl = `${SITE_URL}/blog/${slug}`;
+  const jsonLd =
+    jsonLdHtml(blog.seo?.schema) ??
+    jsonLdHtml(blog.seo?.seo_schema) ??
+    jsonLdHtml(
+      blogPosting({
+        url: canonicalUrl,
+        headline: blog.title,
+        description:
+          blog.seo?.meta_description && blog.seo.meta_description !== blog.title
+            ? blog.seo.meta_description
+            : plainTextExcerpt(blog.description),
+        image: blog.desktop_banner || blog.thumbnail,
+        datePublished: blog.blog_date || blog.created_at,
+        dateModified: blog.seo?.updated_at,
+        authorName: blog.author_name,
+        authorJobTitle: blog.author_designation,
+      }),
+    );
+  const breadcrumbJsonLd = jsonLdHtml(
+    breadcrumbList([
+      { name: "Home", path: "/" },
+      { name: "Blog", path: "/blog" },
+      { name: blog.title, path: `/blog/${slug}` },
+    ]),
+  );
 
   return (
     <>
@@ -181,6 +217,12 @@ export default async function BlogDetailPage({ params }: PageProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLd }}
+        />
+      )}
+      {breadcrumbJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd }}
         />
       )}
       <BlogDetailClient blog={blog} initialComments={initialComments} />

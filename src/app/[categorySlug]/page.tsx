@@ -8,6 +8,7 @@ import type { ApiBrand } from "@/components/brands-section";
 import { cookies, headers } from "next/headers";
 import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
+import { breadcrumbList, labelFromSlug } from "@/utils/seo-jsonld";
 import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 
 
@@ -31,6 +32,19 @@ export async function generateMetadata({
     {},
     { revalidate: revalidate, countryCode },
   );
+
+  // Same existence rule as the page below. Throwing notFound() here keeps a
+  // missing category from emitting "index, follow" next to the not-found
+  // page's noindex. (Status stays 200 because the page streams under
+  // loading.tsx; noindex keeps it out of the index.)
+  if (!res?.success) {
+    const navigationRes = await makeApiCallSSR<{ success: boolean; data: ApiCategory[] }>(
+      apiUrls.NavigationAPI,
+      { slug: categorySlug, with_parent: false },
+      { revalidate: revalidate, countryCode },
+    );
+    if (!navigationRes?.data?.length) notFound();
+  }
 
   const seo = res?.data?.seo;
 
@@ -105,6 +119,12 @@ export default async function CategorySlugPage({ params }: PageProps) {
   return (
     <div>
       <ProductJsonLd schema={schema} />
+      <ProductJsonLd
+        schema={breadcrumbList([
+          { name: "Home", path: "/" },
+          { name: labelFromSlug(categorySlug), path: `/${categorySlug}` },
+        ])}
+      />
       <CategoriesPage
         categories={categories}
         categorySlug={categorySlug}

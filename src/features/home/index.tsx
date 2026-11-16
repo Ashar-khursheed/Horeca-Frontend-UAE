@@ -48,7 +48,7 @@ export const Home = ({
         <div className="global-container">
           <div className="flex flex-col items-start justify-between gap-4 rounded-xl bg-[#186737] px-5 py-5 text-white md:flex-row md:items-center md:px-6">
             <div>
-              <h2 className="text-xl font-bold">Talk on a video call</h2>
+              <div className="text-xl font-bold">Talk on a video call</div>
               <p className="mt-1 text-sm text-white/90">
                 Start a call and our sales team gets an email to join you.
               </p>
@@ -65,7 +65,7 @@ export const Home = ({
 
       {/* Pure server HTML — no interactivity needed */}
       <SEOMainContent
-        categorySlug="Restaurant Supply Store for Commercial Kitchen Equipment & Supplies"
+        categorySlug="Restaurant Supply Store in the UAE for Commercial Kitchen Equipment & Supplies"
         APIDATA={{
           title:
             "Shop Professional Restaurant Equipment, Foodservice Supplies, and Refrigeration Solutions",

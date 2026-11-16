@@ -343,12 +343,12 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                   Our team is here to guide you with the best solutions for your
                   restaurant.
                 </p>
-                <h2 className="text-black text-xl sm:text-2xl font-bold md:hidden block">
+                <div className="text-black text-xl sm:text-2xl font-bold md:hidden block">
                   Need Expert Assistance?
-                </h2>
-                <h2 className="text-black text-xl sm:text-2xl font-bold md:block hidden">
+                </div>
+                <div className="text-black text-xl sm:text-2xl font-bold md:block hidden">
                   We're Always Here To Help
-                </h2>
+                </div>
               </div>
               <div className="md:flex hidden flex-row flex-wrap items-center justify-center gap-4">
                 <a
@@ -434,9 +434,9 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
                   href={getCategoryHref(cat)}
                   className="group flex items-center gap-1 mb-4"
                 >
-                  <h3 className="text-sm font-bold text-gray-900 group-hover:text-[#186737] transition-colors">
+                  <div className="text-sm font-bold text-gray-900 group-hover:text-[#186737] transition-colors">
                     {getName(cat.name, locale)}
-                  </h3>
+                  </div>
                   <ArrowUpRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#186737] transition-colors opacity-0 group-hover:opacity-100" />
                 </Link>
                 <ul className="flex flex-col gap-2">
@@ -516,10 +516,10 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Quick Links — Desktop only */}
             <div className="hidden md:block">
-              <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="w-1 h-4 bg-[#186737] rounded-full inline-block" />
                 Quick Links
-              </h4>
+              </div>
               <ul className="flex flex-col gap-2">
                 {QUICK_LINKS.map((link) => (
                   <li key={link.label}>
@@ -545,10 +545,10 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
 
             {/* Support — Desktop only */}
             <div className="hidden md:block">
-              <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="w-1 h-4 bg-[#186737] rounded-full inline-block" />
                 Customer Support
-              </h4>
+              </div>
               <ul className="flex flex-col gap-2">
                 {SUPPORT_LINKS.map((link) => (
                   <li key={link.href}>
@@ -565,10 +565,10 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
 
             {/* Contact Info — always visible */}
             <div>
-              <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="w-1 h-4 bg-[#186737] rounded-full inline-block" />
                 Contact Info
-              </h4>
+              </div>
               <ul className="flex flex-col gap-3">
                 <li className="flex items-start gap-3">
                   <div className="w-7 h-7 rounded-[7px] bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -626,10 +626,10 @@ export const Footer = ({ navItemData }: { navItemData: ApiCategory[] }) => {
 
             {/* Newsletter — always visible */}
             <div>
-              <h4 className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-2">
+              <div className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-2">
                 <span className="w-1 h-4 bg-[#186737] rounded-full inline-block" />
                 Newsletter
-              </h4>
+              </div>
               <p className="text-[12px] text-gray-400 mb-4 leading-relaxed">
                 Get deals, new products & restaurant tips straight to your
                 inbox.

@@ -1,25 +1,24 @@
-# TheHorecaStore
+# HorecaStore UAE
 
-> TheHorecaStore is a B2B e-commerce platform for restaurant, hotel, and catering equipment.
-> We supply commercial kitchen equipment, refrigeration, smallwares, and more across the United States.
+> HorecaStore (www.horecastore.ae) is a UAE e-commerce store for restaurant, hotel, café and catering equipment, based in Dubai Investment Park, Dubai.
+> We supply commercial kitchen equipment, refrigeration, tableware, smallwares and hotel supplies to businesses across the United Arab Emirates, with prices in AED.
+> Contact: sales@horecastore.ae, +971 4 224 5818, toll-free 800 467322.
 
 - Base URL: https://www.horecastore.ae
 - Generated: 2026-09-02
 - Products file: https://www.horecastore.ae/llms-products.txt
 - Language: English
 
-## Main Pages (10)
+## Main Pages
 
 - [Home](https://www.horecastore.ae/)
-- [Checkout](https://www.horecastore.ae/checkout)
-- [Create Quotation](https://www.horecastore.ae/create-quotation)
-- [Faq](https://www.horecastore.ae/faq)
-- [Payment Decline](https://www.horecastore.ae/payment-decline)
-- [Payment Success](https://www.horecastore.ae/payment-success)
-- [Search](https://www.horecastore.ae/search)
+- [About Us](https://www.horecastore.ae/pages/about-us)
+- [Contact Us](https://www.horecastore.ae/pages/contact-us)
+- [All Brands](https://www.horecastore.ae/brands)
+- [Blog](https://www.horecastore.ae/blog)
+- [FAQ](https://www.horecastore.ae/faq)
+- [Request a Quotation](https://www.horecastore.ae/create-quotation)
 - [Starting A Restaurant](https://www.horecastore.ae/starting-a-restaurant)
-- [Track Order](https://www.horecastore.ae/track-order)
-- [Wishlist](https://www.horecastore.ae/wishlist)
 
 ## Categories (232)
 
@@ -694,7 +693,7 @@
 - [Hirahachi](https://www.horecastore.ae/brands/hirahachi)
 - [Momoya](https://www.horecastore.ae/brands/momoya)
 - [House](https://www.horecastore.ae/brands/house)
-- [S&Amp;B](https://www.horecastore.ae/brands/s&amp;b)
+- [S&B](https://www.horecastore.ae/brands/s%26b)
 - [Lee Kum Kee](https://www.horecastore.ae/brands/lee-kum-kee)
 - [Kadoya](https://www.horecastore.ae/brands/kadoya)
 - [Hamasaen](https://www.horecastore.ae/brands/hamasaen)
@@ -965,28 +964,6 @@
 - [Ace](https://www.horecastore.ae/brands/ace)
 - [Heavy Duty System](https://www.horecastore.ae/brands/heavy-duty-system)
 - [Frostilo](https://www.horecastore.ae/brands/frostilo)
-
-## Authentication
-
-- [Forgot Password](https://www.horecastore.ae/forgot-password)
-- [Login](https://www.horecastore.ae/login)
-- [LoginOrder](https://www.horecastore.ae/loginOrder)
-- [Register](https://www.horecastore.ae/register)
-- [Reset Password](https://www.horecastore.ae/reset-password)
-
-## Dashboard
-
-- [Dashboard](https://www.horecastore.ae/dashboard)
-- [Browsing History](https://www.horecastore.ae/dashboard/browsing-history)
-- [My Profile](https://www.horecastore.ae/dashboard/my-profile)
-- [Orders](https://www.horecastore.ae/dashboard/orders)
-- [[Id]](https://www.horecastore.ae/dashboard/orders/[id])
-- [[Id]](https://www.horecastore.ae/dashboard/orders/cancel-order/[id])
-- [[Id]](https://www.horecastore.ae/dashboard/orders/return-order/[id])
-- [Payments](https://www.horecastore.ae/dashboard/payments)
-- [Quotes](https://www.horecastore.ae/dashboard/quotes)
-- [[Id]](https://www.horecastore.ae/dashboard/quotes/[id])
-- [Support](https://www.horecastore.ae/dashboard/support)
 
 ## Optional
 
