@@ -24,6 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   );
 
   const brand = data?.data;
+  // Missing brand: no "index, follow" next to the not-found page's noindex.
+  if (!brand) notFound();
   const seo   = brand?.seo_url;
 
   const safe = (v?: string | null) => (!v || v === "undefined" ? undefined : v);

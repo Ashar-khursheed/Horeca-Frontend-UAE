@@ -31,6 +31,12 @@ const nextConfig: NextConfig = {
       "",
   },
   compress: true,
+  // Bots matching this get <title>, canonical and robots inside <head>
+  // instead of streamed later into <body>. Next's default list leaves out
+  // Googlebot itself; this is that default list plus the main search and AI
+  // crawlers.
+  htmlLimitedBots:
+    /Googlebot|bingbot|GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-SearchBot|PerplexityBot|[\w-]+-Google|Google-[\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight/i,
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
     minimumCacheTTL: 60 * 60 * 24 * 30,
@@ -40,6 +46,21 @@ const nextConfig: NextConfig = {
     // Next's Image Optimizer reject them with 400. Browsers render the
     // images fine via content-sniffing, so skip the optimizer entirely.
     unoptimized: true,
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // HTTPS only for this host (no includeSubDomains/preload: other
+          // subdomains are not audited).
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
+    ];
   },
   experimental: {
     optimizePackageImports: [

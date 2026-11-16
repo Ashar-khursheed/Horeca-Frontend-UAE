@@ -1,4 +1,6 @@
-const SITE = process.env.NEXT_SITE_URL ?? "https://www.thehorecastore.com";
+import { IS_UAE_REGION, SITE_URL } from "@/utils/site-url";
+
+const SITE = SITE_URL;
 
 export const STATIC_SEO = {
   cart: {
@@ -39,12 +41,16 @@ export const STATIC_SEO = {
   },
   aboutUs: {
     title: "About HorecaStore | Trusted Commercial Kitchen Equipment Supplier",
-    description: "Learn about HorecaStore — your trusted U.S. supplier for commercial kitchen equipment, restaurant supplies, and hospitality solutions. Serving hotels, restaurants, and cafés nationwide.",
+    description: IS_UAE_REGION
+      ? "Learn about HorecaStore — a trusted UAE supplier of commercial kitchen equipment, restaurant supplies, and hospitality solutions, serving hotels, restaurants, and cafés from Dubai across the Emirates."
+      : "Learn about HorecaStore — your trusted U.S. supplier for commercial kitchen equipment, restaurant supplies, and hospitality solutions. Serving hotels, restaurants, and cafés nationwide.",
     robots: { index: true, follow: true },
     canonical: `${SITE}/pages/about-us`,
     og: {
       title: "About HorecaStore – Trusted Commercial Kitchen Equipment Supplier",
-      description: "Discover the story behind HorecaStore. We supply commercial kitchen equipment and restaurant supplies to hospitality businesses across the United States.",
+      description: IS_UAE_REGION
+        ? "Discover the story behind HorecaStore. We supply commercial kitchen equipment and restaurant supplies to hospitality businesses across the UAE."
+        : "Discover the story behind HorecaStore. We supply commercial kitchen equipment and restaurant supplies to hospitality businesses across the United States.",
     },
   },
   contactUs: {

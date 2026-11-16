@@ -42,6 +42,8 @@ export interface ApiBlogSeo {
   og_description: string | null;
   og_image_url: string | null;
   schema: string | null;
+  seo_schema?: unknown;
+  updated_at?: string | null;
 }
 
 export interface CustomCard {
@@ -62,6 +64,7 @@ export interface ApiBlogDetail {
   mobile_banner: string;
   thumbnail: string;
   blog_date: string;
+  created_at?: string | null;
   author_name: string;
   author_description: string;
   author_designation: string | null;

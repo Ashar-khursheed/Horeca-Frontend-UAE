@@ -12,6 +12,7 @@ import { cookies, headers } from "next/headers";
 import ProductJsonLd from "@/features/product-detail/json-ld-schema";
 import { revalidate } from "@/utils";
 import { SITE_URL } from "@/utils/site-url";
+import { breadcrumbList, labelFromSlug } from "@/utils/seo-jsonld";
 
 
 
@@ -66,6 +67,9 @@ export async function generateMetadata({
       countryCode,
     },
   );
+
+  // Same rule as the page below; see the note in app/[categorySlug]/page.tsx.
+  if (!res?.success) notFound();
 
   const seo = res?.seo;
   if (!seo) return { title: subCategorySlug };
@@ -277,6 +281,13 @@ export default async function SubCategorySlugPage({
   return (
     <div>
       <ProductJsonLd schema={schema} />
+      <ProductJsonLd
+        schema={breadcrumbList([
+          { name: "Home", path: "/" },
+          { name: labelFromSlug(categorySlug), path: `/${categorySlug}` },
+          { name: labelFromSlug(subCategorySlug), path: `/${categorySlug}/${subCategorySlug}` },
+        ])}
+      />
       <SubCategoryPage
         subCategories={subCategories}
         categorySlug={categorySlug}

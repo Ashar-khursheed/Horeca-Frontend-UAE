@@ -9,8 +9,9 @@ import ProductJsonLd from '@/features/product-detail/json-ld-schema'
 import type { NutritionFact, ProductDetailResponse } from '@/features/product-detail/types'
 import { cookies, headers } from 'next/headers'
 import { revalidate } from '@/utils'
-import { SITE_URL } from '@/utils/site-url'
-import { liveProductRobots, UNAVAILABLE_PAGE_ROBOTS } from '@/utils/seo-robots'
+import { SITE_URL, STORE_COUNTRY_CODE } from '@/utils/site-url'
+import { normalizeProductSchema } from '@/utils/product-schema'
+import { breadcrumbList, cleanTitle, labelFromSlug } from '@/utils/seo-jsonld'
 
 interface PageProps {
   params: Promise<{
@@ -86,13 +87,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const res = await fetchProduct(productSlug, locale, false, countryCode)
   const product = res?.data
-  if (!product) {
-    return { title: productSlug, robots: UNAVAILABLE_PAGE_ROBOTS }
-  }
+  // Missing product: render the not-found page's noindex without an
+  // "index, follow" from this metadata. (The status stays 200 because the page
+  // streams under loading.tsx; noindex keeps it out of the index.)
+  if (!product) notFound()
 
   const seo = product.seo
 
-  const title = seo?.meta_title || seo?.title_tag || product.name || productSlug
+  // cleanTitle removes doubled spaces/separators left by empty template fields.
+  const title = cleanTitle(seo?.meta_title) || cleanTitle(seo?.title_tag) || product.name || productSlug
   const description = seo?.meta_description || undefined
 
   const ogTitle = seo?.og_title || seo?.meta_title || undefined
@@ -167,13 +170,33 @@ export default async function ProductDetailSlugPage({ params }: PageProps) {
     redirect(canonicalUrl)
   }
 
-  const schema = productData.data.seo?.seo_schema
+  // The API converts prices to the visitor's country but the schema keeps the
+  // store currency, so a visitor (or crawler) outside the store country got a
+  // converted amount labelled AED/USD. Always build structured data from the
+  // store-country response. Guest fetch, cached like the main product fetch.
+  const schemaSource =
+    countryCode === STORE_COUNTRY_CODE
+      ? productData
+      : await fetchProduct(productSlug, locale, false, STORE_COUNTRY_CODE)
+  const canonicalUrl = `${SITE_URL}/${categorySlug}/${subCategorySlug}/${productSlug}`
+  const schema = normalizeProductSchema(
+    schemaSource?.data?.seo?.seo_schema,
+    canonicalUrl,
+  )
 
 
 
   return (
     <>
       <ProductJsonLd schema={schema} />
+      <ProductJsonLd
+        schema={breadcrumbList([
+          { name: 'Home', path: '/' },
+          { name: labelFromSlug(categorySlug), path: `/${categorySlug}` },
+          { name: labelFromSlug(subCategorySlug), path: `/${categorySlug}/${subCategorySlug}` },
+          { name: productData.data.name ?? labelFromSlug(productSlug), path: `/${categorySlug}/${subCategorySlug}/${productSlug}` },
+        ])}
+      />
       <ProductDetailPage
         productData={productData.data}
         locale={locale}

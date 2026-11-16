@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 
-const SITE = (process.env.NEXT_SITE_URL ?? "https://www.thehorecastore.com").replace(/\/$/, "");
+import { SITE_URL } from "@/utils/site-url";
+
+const SITE = SITE_URL;
 
 // /sitemap.xml — static pages only (individual sitemaps at /sitemap-index.xml)
 export default function sitemap(): MetadataRoute.Sitemap {
